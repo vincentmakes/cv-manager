@@ -1,0 +1,344 @@
+/* CV Manager - Shared JavaScript */
+
+// SVG Icons for contact badges
+const icons = {
+    email: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+    phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    location: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    linkedin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
+    languages: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    // Skill category icons (flat style)
+    code: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    server: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
+    database: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+    cloud: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
+    settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    briefcase: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+    cpu: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
+    layers: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+    default: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+};
+
+// Get skill icon based on category name or icon hint
+function getSkillIcon(iconHint, categoryName) {
+    // Map common category names to icons
+    const categoryMap = {
+        'programming': 'code', 'development': 'code', 'languages': 'code', 'coding': 'code',
+        'infrastructure': 'server', 'devops': 'server', 'systems': 'server',
+        'database': 'database', 'data': 'database', 'sql': 'database',
+        'cloud': 'cloud', 'aws': 'cloud', 'azure': 'cloud', 'gcp': 'cloud',
+        'tools': 'settings', 'methodologies': 'settings', 'frameworks': 'settings',
+        'leadership': 'users', 'management': 'users', 'soft skills': 'users', 'team': 'users',
+        'business': 'briefcase', 'enterprise': 'briefcase', 'strategy': 'briefcase',
+        'architecture': 'layers', 'design': 'layers',
+        'ai': 'cpu', 'machine learning': 'cpu', 'artificial intelligence': 'cpu'
+    };
+    
+    // Check if iconHint matches an icon name directly (new format)
+    if (iconHint && icons[iconHint]) {
+        return icons[iconHint];
+    }
+    
+    // Try to match category name for auto-detection (works for legacy emoji icons too)
+    const lowerName = (categoryName || '').toLowerCase();
+    for (const [key, value] of Object.entries(categoryMap)) {
+        if (lowerName.includes(key)) {
+            return icons[value];
+        }
+    }
+    
+    return icons.default;
+}
+
+// API Base
+const API = '';
+
+// API Helper
+async function api(endpoint, options = {}) {
+    const res = await fetch(API + endpoint, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+        body: options.body ? JSON.stringify(options.body) : undefined
+    });
+    return res.json();
+}
+
+// Utility Functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    if (dateStr.match(/^\d{4}$/)) return dateStr;
+    if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        const [y, m] = dateStr.split('-');
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return `${months[parseInt(m)-1]} ${y}`;
+    }
+    return dateStr;
+}
+
+// Load Profile (shared between admin and public)
+async function loadProfile(includePrivate = false) {
+    const p = await api('/api/profile');
+    document.getElementById('profileInitials').textContent = p.initials || 'CV';
+    document.getElementById('profileName').textContent = p.name || '';
+    document.getElementById('profileTitle').textContent = p.title || '';
+    document.getElementById('profileSubtitle').textContent = p.subtitle || '';
+    
+    // Preserve line breaks in bio
+    const bioText = p.bio || '';
+    document.getElementById('aboutText').innerHTML = escapeHtml(bioText).replace(/\n/g, '<br>');
+    
+    // Update page title
+    if (p.name) document.title = `${p.name} - CV`;
+    
+    // Profile picture
+    const pic = document.getElementById('profilePicture');
+    const initials = document.getElementById('profileInitials');
+    pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
+    pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
+    pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
+    
+    // Build contact badges
+    const badges = [];
+    if (includePrivate && p.email) badges.push(`<a href="mailto:${escapeHtml(p.email)}" class="contact-badge" itemprop="email">${icons.email} ${escapeHtml(p.email)}</a>`);
+    if (includePrivate && p.phone) badges.push(`<a href="tel:${escapeHtml(p.phone)}" class="contact-badge" itemprop="telephone">${icons.phone} ${escapeHtml(p.phone)}</a>`);
+    if (p.location) badges.push(`<span class="contact-badge" itemprop="address">${icons.location} ${escapeHtml(p.location)}</span>`);
+    if (p.linkedin) badges.push(`<a href="${escapeHtml(p.linkedin)}" class="contact-badge" target="_blank" rel="noopener" itemprop="url">${icons.linkedin} LinkedIn</a>`);
+    if (p.languages) badges.push(`<span class="contact-badge">${icons.languages} ${escapeHtml(p.languages)}</span>`);
+    document.getElementById('contactBadges').innerHTML = badges.join('');
+}
+
+// Load Timeline
+async function loadTimeline() {
+    const timeline = await api('/api/timeline');
+    const container = document.getElementById('timelineItems');
+    
+    let lastCountry = null;
+    container.innerHTML = timeline.map((item, idx) => {
+        const pos = idx % 2 === 0 ? 'top' : 'bottom';
+        const showFlag = item.countryCode !== lastCountry;
+        lastCountry = item.countryCode;
+        
+        const marker = showFlag 
+            ? `<img src="https://flagcdn.com/w40/${item.countryCode}.png" class="timeline-flag" alt="">`
+            : '<div class="timeline-dot"></div>';
+        
+        const hiddenClass = item.visible === false ? 'hidden-print' : '';
+        
+        return `
+            <div class="timeline-item ${pos} ${hiddenClass}">
+                <div class="timeline-content">
+                    <div class="timeline-company">${escapeHtml(item.company)}</div>
+                    <div class="timeline-role">${escapeHtml(item.role)}</div>
+                    <div class="timeline-period">${escapeHtml(item.period)}</div>
+                </div>
+                ${marker}
+            </div>
+        `;
+    }).join('');
+}
+
+// Load Experiences (read-only version)
+async function loadExperiencesReadOnly() {
+    const experiences = await api('/api/experiences');
+    const container = document.getElementById('experienceList');
+    
+    container.innerHTML = experiences.map(exp => `
+        <article class="item-card" itemscope itemtype="https://schema.org/OrganizationRole">
+            <div class="item-header">
+                <div>
+                    <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
+                    <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
+                        <span itemprop="name">${escapeHtml(exp.company_name)}</span>
+                    </div>
+                </div>
+                <span class="item-date">
+                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
+                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : 'Present'}</time>
+                </span>
+            </div>
+            ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
+            ${exp.highlights && exp.highlights.length ? `
+                <ul class="item-highlights" itemprop="description">
+                    ${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
+                </ul>
+            ` : ''}
+        </article>
+    `).join('');
+}
+
+// Load Certifications (read-only version)
+async function loadCertificationsReadOnly() {
+    const certs = await api('/api/certifications');
+    const container = document.getElementById('certGrid');
+    
+    container.innerHTML = certs.map(cert => `
+        <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+            <div class="cert-header">
+                <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                <time class="cert-date" itemprop="dateCreated">${escapeHtml(cert.issue_date || '')}</time>
+            </div>
+            <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
+        </article>
+    `).join('');
+}
+
+// Load Education (read-only version)
+async function loadEducationReadOnly() {
+    const education = await api('/api/education');
+    const container = document.getElementById('educationList');
+    
+    container.innerHTML = education.map(edu => `
+        <article class="item-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+            <div class="item-header">
+                <div>
+                    <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
+                    <div class="item-subtitle" itemprop="recognizedBy" itemscope itemtype="https://schema.org/EducationalOrganization">
+                        <span itemprop="name">${escapeHtml(edu.institution_name)}</span>
+                    </div>
+                </div>
+                <span class="item-date">
+                    <time datetime="${edu.start_date || ''}">${escapeHtml(edu.start_date || '')}</time> - 
+                    <time datetime="${edu.end_date || ''}">${escapeHtml(edu.end_date || '')}</time>
+                </span>
+            </div>
+            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
+        </article>
+    `).join('');
+}
+
+// Load Skills (read-only version)
+async function loadSkillsReadOnly() {
+    const skills = await api('/api/skills');
+    const container = document.getElementById('skillsGrid');
+    
+    container.innerHTML = skills.map(cat => `
+        <div class="skill-category">
+            <div class="skill-category-title">
+                <span class="skill-icon">${getSkillIcon(cat.icon, cat.name)}</span>
+                ${escapeHtml(cat.name)}
+            </div>
+            <div class="skill-tags" itemscope itemtype="https://schema.org/ItemList">
+                ${cat.skills.map(s => `<span class="skill-tag" itemprop="itemListElement">${escapeHtml(s)}</span>`).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load Projects (read-only version)
+async function loadProjectsReadOnly() {
+    const projects = await api('/api/projects');
+    const container = document.getElementById('projectsGrid');
+    
+    container.innerHTML = projects.map(proj => `
+        <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
+            <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
+            <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
+            <div class="tech-tags">
+                ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
+            </div>
+        </article>
+    `).join('');
+}
+
+// Load Sections visibility
+async function loadSections() {
+    const sections = await api('/api/sections');
+    Object.keys(sections).forEach(section => {
+        const el = document.getElementById(`section-${section}`);
+        if (el && !sections[section]) {
+            el.style.display = 'none';
+        }
+    });
+    return sections;
+}
+
+// Generate ATS-friendly content
+async function generateATSContent() {
+    const cv = await api('/api/cv');
+    const p = cv.profile;
+    
+    let ats = [];
+    
+    ats.push(`CONTACT INFORMATION`);
+    ats.push(`Name: ${p.name || ''}`);
+    if (p.location) ats.push(`Location: ${p.location}`);
+    if (p.linkedin) ats.push(`LinkedIn: ${p.linkedin}`);
+    ats.push('');
+    
+    if (p.bio) {
+        ats.push(`PROFESSIONAL SUMMARY`);
+        ats.push(p.bio);
+        ats.push('');
+    }
+    
+    if (cv.skills && cv.skills.length > 0) {
+        ats.push(`SKILLS`);
+        const allSkills = cv.skills
+            .filter(cat => cat.visible !== false)
+            .flatMap(cat => cat.skills);
+        ats.push(`Keywords: ${allSkills.join(', ')}`);
+        ats.push('');
+    }
+    
+    if (cv.experiences && cv.experiences.length > 0) {
+        ats.push(`WORK EXPERIENCE`);
+        cv.experiences
+            .filter(exp => exp.visible !== false)
+            .forEach(exp => {
+                ats.push(`${exp.job_title} | ${exp.company_name}`);
+                ats.push(`${exp.start_date || ''} - ${exp.end_date || 'Present'}`);
+                if (exp.location) ats.push(`Location: ${exp.location}`);
+                if (exp.highlights && exp.highlights.length > 0) {
+                    exp.highlights.forEach(h => ats.push(`• ${h}`));
+                }
+                ats.push('');
+            });
+    }
+    
+    if (cv.education && cv.education.length > 0) {
+        ats.push(`EDUCATION`);
+        cv.education
+            .filter(edu => edu.visible !== false)
+            .forEach(edu => {
+                ats.push(`${edu.degree_title} | ${edu.institution_name}`);
+                ats.push(`${edu.start_date || ''} - ${edu.end_date || ''}`);
+                if (edu.description) ats.push(edu.description);
+                ats.push('');
+            });
+    }
+    
+    if (cv.certifications && cv.certifications.length > 0) {
+        ats.push(`CERTIFICATIONS`);
+        cv.certifications
+            .filter(cert => cert.visible !== false)
+            .forEach(cert => {
+                ats.push(`${cert.name}${cert.provider ? ' | ' + cert.provider : ''}${cert.issue_date ? ' | ' + cert.issue_date : ''}`);
+            });
+        ats.push('');
+    }
+    
+    if (cv.projects && cv.projects.length > 0) {
+        ats.push(`PROJECTS`);
+        cv.projects
+            .filter(proj => proj.visible !== false)
+            .forEach(proj => {
+                ats.push(`${proj.title}`);
+                if (proj.description) ats.push(proj.description);
+                if (proj.technologies && proj.technologies.length > 0) {
+                    ats.push(`Technologies: ${proj.technologies.join(', ')}`);
+                }
+                ats.push('');
+            });
+    }
+    
+    const atsEl = document.getElementById('ats-content');
+    if (atsEl) atsEl.textContent = ats.join('\n');
+}

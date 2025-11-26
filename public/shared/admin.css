@@ -1,0 +1,407 @@
+/* CV Manager - Admin-Specific Styles */
+
+/* Adjust container for toolbar */
+.container {
+    margin-top: 70px;
+}
+
+/* Toolbar */
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    background: linear-gradient(135deg, var(--primary-dark), var(--dark));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+}
+
+.toolbar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.toolbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: #00b8ff;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--gray-500);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-ghost:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* Section Actions */
+.section-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.icon-btn.active {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.icon-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Item Actions */
+.item-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.item-card:hover .item-actions,
+.cert-card:hover .item-actions,
+.skill-category:hover .item-actions,
+.project-card:hover .item-actions { 
+    opacity: 1; 
+}
+
+.item-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--white);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.item-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.item-btn.delete:hover {
+    background: var(--danger);
+}
+
+.item-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Hidden Print Classes */
+.section.hidden-print {
+    opacity: 0.5;
+    border: 2px dashed var(--gray-300);
+}
+
+.item-card.hidden-print,
+.cert-card.hidden-print,
+.skill-category.hidden-print,
+.project-card.hidden-print {
+    opacity: 0.5;
+    border-left-style: dashed;
+}
+
+.timeline-item.hidden-print { opacity: 0.4; }
+
+/* Add Button */
+.add-btn {
+    width: 100%;
+    padding: 14px;
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--gray-500);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.add-btn:hover {
+    background: var(--very-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,26,77,0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 1;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.modal-body { padding: 24px; }
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+}
+
+.modal-footer-left { display: flex; gap: 10px; }
+.modal-footer-right { display: flex; gap: 10px; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-hint {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--dark);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 3000;
+    font-size: 13px;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+
+/* Dataset Items */
+.dataset-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--very-light);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.dataset-item:hover {
+    background: var(--light);
+}
+
+.dataset-info {
+    flex: 1;
+}
+
+.dataset-name {
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 2px;
+}
+
+.dataset-date {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.dataset-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Responsive adjustments for admin */
+@media (max-width: 768px) {
+    .toolbar { padding: 0 12px; }
+    .toolbar-title { font-size: 15px; }
+    .btn span { display: none; }
+    .container { margin-top: 60px; }
+    .form-row { grid-template-columns: 1fr; }
+}
+
+@media print {
+    .toolbar, .add-btn, .item-actions, .section-actions, .no-print { display: none !important; }
+}

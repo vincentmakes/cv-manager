@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  cv-manager:
+    build: .
+    container_name: cv-manager
+    ports:
+      - "3000:3000"   # Admin interface
+      - "3001:3001"   # Public read-only
+    volumes:
+      # Persist database outside container
+      # Make sure this directory exists on host: mkdir -p ./data
+      - cv-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PUBLIC_PORT=3001
+      - DB_PATH=/app/data/cv.db
+    restart: unless-stopped
+
+volumes:
+  cv-data:

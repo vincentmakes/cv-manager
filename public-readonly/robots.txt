@@ -1,0 +1,9 @@
+# Robots.txt for CV Public Site
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: /sitemap.xml
+
+# Block API endpoints from indexing
+Disallow: /api/

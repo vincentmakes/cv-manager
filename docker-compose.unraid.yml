@@ -1,0 +1,30 @@
+version: '3.8'
+
+# Use this version for Unraid with bind mount to appdata
+# Before starting, create the data directory:
+#   mkdir -p /mnt/user/appdata/cv-manager/data
+
+services:
+  cv-manager:
+    build: .
+    container_name: cv-manager
+    ports:
+      - "3000:3000"   # Admin interface (keep internal/protected)
+      - "3001:3001"   # Public read-only (expose via CF tunnel)
+    volumes:
+      # Bind mount - change path to your Unraid appdata location
+      - /mnt/user/appdata/cv-manager/data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PUBLIC_PORT=3001
+      - DB_PATH=/app/data/cv.db
+    networks:
+      - guac-net
+    # Run as specific user/group if needed (uncomment and adjust)
+    # user: "99:100"  # nobody:users on Unraid
+    restart: unless-stopped
+
+networks:
+  guac-net:
+    external: true

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shared/styles.css">
+    <link rel="stylesheet" href="/shared/admin.css">
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar no-print">
+        <div class="toolbar-title">CV Manager</div>
+        <div class="toolbar-actions">
+            <button class="btn btn-secondary" onclick="openDatasetsModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+                <span>Open...</span>
+            </button>
+            <button class="btn btn-secondary" onclick="saveAsDataset()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                <span>Save As...</span>
+            </button>
+            <button class="btn btn-secondary" onclick="showAllItems()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>Show All</span>
+            </button>
+            <button class="btn btn-secondary" onclick="exportData()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span>Export</span>
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Import</span>
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+            <button class="btn btn-primary" onclick="window.print()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Print / PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container" role="main">
+        <!-- ATS-friendly hidden text version -->
+        <div id="ats-content" class="ats-only" aria-hidden="true"></div>
+        
+        <!-- Header -->
+        <header class="header" id="section-header" itemscope itemtype="https://schema.org/Person">
+            <div class="section-actions no-print">
+                <button class="icon-btn" onclick="editProfile()" title="Edit Profile">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+            </div>
+            <div class="header-content">
+                <div class="profile-image" id="profileImage">
+                    <span id="profileInitials">VV</span>
+                    <img id="profilePicture" src="/uploads/picture.jpeg" alt="" style="display:none;">
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profileName" itemprop="name">Loading...</h1>
+                    <p class="profile-title" id="profileTitle" itemprop="jobTitle"></p>
+                    <p class="profile-subtitle" id="profileSubtitle"></p>
+                    <address class="contact-badges" id="contactBadges"></address>
+                </div>
+            </div>
+        </header>
+
+        <!-- About Section -->
+        <section class="section" id="section-about">
+            <div class="section-header">
+                <h2 class="section-title">Professional Summary</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openModal('profile')" title="Edit About">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                    <button class="icon-btn" onclick="toggleSection('about')" title="Toggle Visibility" id="toggle-about">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <p class="about-text" id="aboutText" itemprop="description"></p>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="section" id="section-timeline">
+            <div class="section-header">
+                <h2 class="section-title">Career Timeline</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('timeline')" title="Toggle Visibility" id="toggle-timeline">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="timeline-container">
+                <div class="timeline-track"></div>
+                <div class="timeline-items" id="timelineItems"></div>
+            </div>
+        </section>
+
+        <!-- Experience Section -->
+        <section class="section" id="section-experience">
+            <div class="section-header">
+                <h2 class="section-title">Work Experience</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('experience')" title="Toggle Visibility" id="toggle-experience">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="items-list" id="experienceList"></div>
+            <button class="add-btn no-print" onclick="openModal('experience')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Experience
+            </button>
+        </section>
+
+        <!-- Certifications Section -->
+        <section class="section" id="section-certifications">
+            <div class="section-header">
+                <h2 class="section-title">Certifications</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('certifications')" title="Toggle Visibility" id="toggle-certifications">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="cert-grid" id="certGrid"></div>
+            <button class="add-btn no-print" onclick="openModal('certification')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Certification
+            </button>
+        </section>
+
+        <!-- Education Section -->
+        <section class="section" id="section-education">
+            <div class="section-header">
+                <h2 class="section-title">Education</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('education')" title="Toggle Visibility" id="toggle-education">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="items-list" id="educationList"></div>
+            <button class="add-btn no-print" onclick="openModal('education')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Education
+            </button>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="section" id="section-skills">
+            <div class="section-header">
+                <h2 class="section-title">Skills & Expertise</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('skills')" title="Toggle Visibility" id="toggle-skills">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="skills-grid" id="skillsGrid"></div>
+            <button class="add-btn no-print" onclick="openModal('skill')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Skill Category
+            </button>
+        </section>
+
+        <!-- Projects Section -->
+        <section class="section" id="section-projects">
+            <div class="section-header">
+                <h2 class="section-title">Featured Projects</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('projects')" title="Toggle Visibility" id="toggle-projects">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="projects-grid" id="projectsGrid"></div>
+            <button class="add-btn no-print" onclick="openModal('project')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Project
+            </button>
+        </section>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Edit</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteItem()" style="display:none">Delete</button>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveItem()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Datasets Modal -->
+    <div class="modal-overlay" id="datasetsModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Saved Datasets</h3>
+                <button class="modal-close" onclick="closeDatasetsModal()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="datasetsModalBody">
+                <div id="datasetsList"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left"></div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeDatasetsModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="/shared/scripts.js"></script>
+    <script src="/shared/admin.js"></script>
+    <script>
+        // Initialize admin on load
+        document.addEventListener('DOMContentLoaded', initAdmin);
+    </script>
+</body>
+</html>

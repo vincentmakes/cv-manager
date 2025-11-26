@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vincent Verdet - CV</title>
+    <meta name="description" content="Professional CV of Vincent Verdet - IT Business Partner, Enterprise Architect">
+    <meta name="robots" content="index, follow">
+    <meta name="google-site-verification" content="wkRswZ6cPvERqrqPeC0nXFH_QP1oTVK09k-ds4stIFQ" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shared/styles.css">
+</head>
+<body>
+    <div class="container" role="main">
+        <!-- ATS-friendly hidden text version -->
+        <div id="ats-content" class="ats-only" aria-hidden="true"></div>
+        
+        <!-- Header -->
+        <header class="header" itemscope itemtype="https://schema.org/Person">
+            <div class="header-content">
+                <div class="profile-image" id="profileImage">
+                    <span id="profileInitials">VV</span>
+                    <img id="profilePicture" src="/uploads/picture.jpeg" alt="" style="display:none;">
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profileName" itemprop="name">Loading...</h1>
+                    <p class="profile-title" id="profileTitle" itemprop="jobTitle"></p>
+                    <p class="profile-subtitle" id="profileSubtitle"></p>
+                    <address class="contact-badges" id="contactBadges"></address>
+                </div>
+            </div>
+        </header>
+
+        <!-- About Section -->
+        <section class="section" id="section-about">
+            <div class="section-header">
+                <h2 class="section-title">Professional Summary</h2>
+            </div>
+            <p class="about-text" id="aboutText" itemprop="description"></p>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="section" id="section-timeline">
+            <div class="section-header">
+                <h2 class="section-title">Career Timeline</h2>
+            </div>
+            <div class="timeline-container">
+                <div class="timeline-track"></div>
+                <div class="timeline-items" id="timelineItems"></div>
+            </div>
+        </section>
+
+        <!-- Experience Section -->
+        <section class="section" id="section-experience">
+            <div class="section-header">
+                <h2 class="section-title">Work Experience</h2>
+            </div>
+            <div class="items-list" id="experienceList"></div>
+        </section>
+
+        <!-- Certifications Section -->
+        <section class="section" id="section-certifications">
+            <div class="section-header">
+                <h2 class="section-title">Certifications</h2>
+            </div>
+            <div class="cert-grid" id="certGrid"></div>
+        </section>
+
+        <!-- Education Section -->
+        <section class="section" id="section-education">
+            <div class="section-header">
+                <h2 class="section-title">Education</h2>
+            </div>
+            <div class="items-list" id="educationList"></div>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="section" id="section-skills">
+            <div class="section-header">
+                <h2 class="section-title">Skills & Expertise</h2>
+            </div>
+            <div class="skills-grid" id="skillsGrid"></div>
+        </section>
+
+        <!-- Projects Section -->
+        <section class="section" id="section-projects">
+            <div class="section-header">
+                <h2 class="section-title">Featured Projects</h2>
+            </div>
+            <div class="projects-grid" id="projectsGrid"></div>
+        </section>
+    </div>
+
+    <script src="/shared/scripts.js"></script>
+    <script>
+        // Public site initialization - read-only, no private data
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSections();
+            await loadProfile(false); // false = don't include email/phone
+            await loadTimeline();
+            await loadExperiencesReadOnly();
+            await loadCertificationsReadOnly();
+            await loadEducationReadOnly();
+            await loadSkillsReadOnly();
+            await loadProjectsReadOnly();
+            await generateATSContent();
+        });
+    </script>
+</body>
+</html>
