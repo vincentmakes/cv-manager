@@ -1,0 +1,238 @@
+{
+  "profile": {
+    "name": "Marcus Chen",
+    "initials": "MC",
+    "title": "Cloud Solutions Architect",
+    "subtitle": "AWS & Azure | DevOps | Platform Engineering",
+    "bio": "Passionate cloud architect with 12+ years of experience designing and implementing scalable, resilient infrastructure for enterprise clients. I specialize in cloud-native solutions, infrastructure as code, and helping organizations modernize their technology stack.\n\nI believe in building systems that are not just technically excellent, but also maintainable and cost-effective. My approach combines deep technical expertise with a strong focus on business outcomes.\n\nWhen I'm not architecting cloud solutions, you'll find me contributing to open-source projects, mentoring junior engineers, or exploring the Swiss Alps.",
+    "location": "Zürich, Switzerland",
+    "linkedin": "https://linkedin.com/in/marcuschen",
+    "email": "marcus.chen@email.com",
+    "phone": "+41 79 123 4567",
+    "languages": "English (Native), German (B2), Mandarin (Native)",
+    "visible": true
+  },
+  "experiences": [
+    {
+      "job_title": "Principal Cloud Architect",
+      "company_name": "SwissBank AG",
+      "start_date": "2022-03",
+      "end_date": null,
+      "location": "Zürich, Switzerland",
+      "country_code": "ch",
+      "highlights": [
+        "Leading cloud transformation initiative for core banking platform serving 2M+ customers",
+        "Designed hybrid cloud architecture reducing infrastructure costs by 40%",
+        "Established Cloud Center of Excellence with 25 engineers across 4 teams",
+        "Implemented zero-trust security model achieving SOC 2 Type II compliance",
+        "Reduced deployment frequency from monthly to daily with GitOps practices"
+      ],
+      "visible": true
+    },
+    {
+      "job_title": "Senior Cloud Engineer",
+      "company_name": "TechScale GmbH",
+      "start_date": "2019-06",
+      "end_date": "2022-02",
+      "location": "Berlin, Germany",
+      "country_code": "de",
+      "highlights": [
+        "Architected multi-region Kubernetes platform handling 50K requests/second",
+        "Built CI/CD pipelines reducing release cycle from 2 weeks to 2 hours",
+        "Migrated 200+ microservices from on-premise to AWS with zero downtime",
+        "Mentored team of 8 engineers in cloud-native development practices",
+        "Implemented cost optimization strategies saving €1.2M annually"
+      ],
+      "visible": true
+    },
+    {
+      "job_title": "DevOps Engineer",
+      "company_name": "DataFlow Systems",
+      "start_date": "2016-09",
+      "end_date": "2019-05",
+      "location": "Amsterdam, Netherlands",
+      "country_code": "nl",
+      "highlights": [
+        "Designed and maintained infrastructure for real-time data processing platform",
+        "Implemented infrastructure as code using Terraform across 3 cloud providers",
+        "Built monitoring and alerting system reducing incident response time by 60%",
+        "Automated disaster recovery procedures achieving 99.99% uptime SLA"
+      ],
+      "visible": true
+    },
+    {
+      "job_title": "Systems Administrator",
+      "company_name": "GlobalTech Solutions",
+      "start_date": "2014-01",
+      "end_date": "2016-08",
+      "location": "London, United Kingdom",
+      "country_code": "gb",
+      "highlights": [
+        "Managed hybrid infrastructure supporting 5,000+ employees globally",
+        "Led VMware to container migration project for development environments",
+        "Implemented centralized logging and monitoring with ELK stack",
+        "Reduced server provisioning time from days to minutes with automation"
+      ],
+      "visible": true
+    },
+    {
+      "job_title": "Junior Systems Engineer",
+      "company_name": "StartUp Hub Inc.",
+      "start_date": "2012-06",
+      "end_date": "2013-12",
+      "location": "San Francisco, USA",
+      "country_code": "us",
+      "highlights": [
+        "Supported rapid growth from 50 to 500 servers in AWS",
+        "Wrote automation scripts reducing manual tasks by 70%",
+        "On-call rotation for production systems serving 1M+ users"
+      ],
+      "visible": true
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Solutions Architect Professional",
+      "provider": "Amazon Web Services",
+      "issue_date": "2023-06",
+      "expiry_date": "2026-06",
+      "credential_id": "AWS-SAP-12345",
+      "visible": true
+    },
+    {
+      "name": "Azure Solutions Architect Expert",
+      "provider": "Microsoft",
+      "issue_date": "2023-01",
+      "expiry_date": "2025-01",
+      "credential_id": "MS-AZ305-67890",
+      "visible": true
+    },
+    {
+      "name": "Certified Kubernetes Administrator (CKA)",
+      "provider": "CNCF",
+      "issue_date": "2022-08",
+      "expiry_date": "2025-08",
+      "credential_id": "CKA-2022-MC",
+      "visible": true
+    },
+    {
+      "name": "HashiCorp Terraform Associate",
+      "provider": "HashiCorp",
+      "issue_date": "2022-03",
+      "expiry_date": "2024-03",
+      "credential_id": "HC-TFA-11111",
+      "visible": true
+    },
+    {
+      "name": "Google Cloud Professional Architect",
+      "provider": "Google",
+      "issue_date": "2021-11",
+      "expiry_date": "2023-11",
+      "credential_id": "GCP-PCA-22222",
+      "visible": true
+    },
+    {
+      "name": "TOGAF 9 Certified",
+      "provider": "The Open Group",
+      "issue_date": "2020-05",
+      "expiry_date": null,
+      "credential_id": "TOGAF-33333",
+      "visible": true
+    }
+  ],
+  "education": [
+    {
+      "degree_title": "Master of Science in Computer Science",
+      "institution_name": "ETH Zürich",
+      "start_date": "2010",
+      "end_date": "2012",
+      "description": "Specialization in Distributed Systems. Thesis: 'Fault-Tolerant Consensus Algorithms for Cloud Environments'",
+      "visible": true
+    },
+    {
+      "degree_title": "Bachelor of Science in Computer Engineering",
+      "institution_name": "University of California, Berkeley",
+      "start_date": "2006",
+      "end_date": "2010",
+      "description": "Minor in Business Administration. Dean's List 2008-2010.",
+      "visible": true
+    }
+  ],
+  "skills": [
+    {
+      "name": "Cloud Platforms",
+      "icon": "cloud",
+      "skills": ["AWS", "Azure", "Google Cloud", "DigitalOcean", "Cloudflare"],
+      "visible": true
+    },
+    {
+      "name": "Infrastructure & DevOps",
+      "icon": "server",
+      "skills": ["Kubernetes", "Docker", "Terraform", "Ansible", "Helm", "ArgoCD"],
+      "visible": true
+    },
+    {
+      "name": "Programming & Scripting",
+      "icon": "code",
+      "skills": ["Python", "Go", "Bash", "TypeScript", "SQL"],
+      "visible": true
+    },
+    {
+      "name": "Data & Monitoring",
+      "icon": "database",
+      "skills": ["PostgreSQL", "Redis", "Elasticsearch", "Prometheus", "Grafana", "Datadog"],
+      "visible": true
+    },
+    {
+      "name": "Architecture & Design",
+      "icon": "layers",
+      "skills": ["Microservices", "Event-Driven", "Domain-Driven Design", "TOGAF", "Well-Architected Framework"],
+      "visible": true
+    },
+    {
+      "name": "Leadership",
+      "icon": "users",
+      "skills": ["Team Management", "Technical Mentoring", "Stakeholder Communication", "Agile/Scrum", "Cost Optimization"],
+      "visible": true
+    }
+  ],
+  "projects": [
+    {
+      "title": "Cloud Migration Factory",
+      "description": "Built an automated platform for migrating legacy applications to cloud-native architecture. Reduced migration time from months to weeks with standardized patterns and tooling.",
+      "technologies": ["AWS", "Terraform", "Python", "Jenkins", "Docker"],
+      "link": "",
+      "visible": true
+    },
+    {
+      "title": "KubeGuard - Open Source",
+      "description": "Created and maintain an open-source Kubernetes security scanner that identifies misconfigurations and compliance violations. 2,500+ GitHub stars.",
+      "technologies": ["Go", "Kubernetes", "OPA", "GitHub Actions"],
+      "link": "https://github.com/marcuschen/kubeguard",
+      "visible": true
+    },
+    {
+      "title": "Real-Time Analytics Platform",
+      "description": "Designed event streaming architecture processing 10M+ events daily for real-time business intelligence dashboards.",
+      "technologies": ["Kafka", "Flink", "ClickHouse", "Grafana", "Kubernetes"],
+      "link": "",
+      "visible": true
+    },
+    {
+      "title": "Infrastructure Cost Optimizer",
+      "description": "Developed ML-powered tool that analyzes cloud spending patterns and recommends optimizations. Deployed across 50+ accounts saving $2M+ annually.",
+      "technologies": ["Python", "AWS Cost Explorer API", "scikit-learn", "React"],
+      "link": "",
+      "visible": true
+    }
+  ],
+  "sectionVisibility": {
+    "about": true,
+    "timeline": true,
+    "experience": true,
+    "certifications": true,
+    "education": true,
+    "skills": true,
+    "projects": true
+  }
+}
