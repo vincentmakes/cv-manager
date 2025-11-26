@@ -181,6 +181,7 @@ body {
     font-size: 13px;
     line-height: 1.7;
     color: var(--gray-700);
+    white-space: pre-line;
 }
 
 /* Timeline */
@@ -627,7 +628,7 @@ body {
     .tech-tag { font-size: 9px; padding: 2px 6px; }
     
     /* About */
-    .about-text { font-size: 11px; line-height: 1.5; }
+    .about-text { font-size: 11px; line-height: 1.5; white-space: pre-line; }
     
     .hidden-print { display: none !important; }
 }
@@ -641,6 +642,12 @@ body {
     .profile-name { font-size: 24px; }
     .contact-badges { justify-content: center; }
     .section { padding: 18px; }
-    .timeline-container { display: none; }
+    #section-timeline { display: none; }
     .cert-grid, .skills-grid, .projects-grid { grid-template-columns: 1fr; }
+}
+
+/* Mobile print - show timeline again */
+@media print {
+    #section-timeline { display: block !important; }
+    .timeline-container { display: block !important; }
 }

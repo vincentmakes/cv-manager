@@ -91,9 +91,8 @@ async function loadProfile(includePrivate = false) {
     document.getElementById('profileTitle').textContent = p.title || '';
     document.getElementById('profileSubtitle').textContent = p.subtitle || '';
     
-    // Preserve line breaks in bio
-    const bioText = p.bio || '';
-    document.getElementById('aboutText').innerHTML = escapeHtml(bioText).replace(/\n/g, '<br>');
+    // Bio - CSS white-space: pre-line handles line breaks
+    document.getElementById('aboutText').textContent = p.bio || '';
     
     // Update page title
     if (p.name) document.title = `${p.name} - CV`;
@@ -123,11 +122,13 @@ async function loadTimeline() {
     let lastCountry = null;
     container.innerHTML = timeline.map((item, idx) => {
         const pos = idx % 2 === 0 ? 'top' : 'bottom';
-        const showFlag = item.countryCode !== lastCountry;
-        lastCountry = item.countryCode;
+        const countryCode = (item.countryCode || '').toLowerCase();
+        const showFlag = countryCode && countryCode !== lastCountry;
+        lastCountry = countryCode;
         
-        const marker = showFlag 
-            ? `<img src="https://flagcdn.com/w40/${item.countryCode}.png" class="timeline-flag" alt="">`
+        // Show flag only when country changes, dot otherwise
+        const marker = showFlag
+            ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
             : '<div class="timeline-dot"></div>';
         
         const hiddenClass = item.visible === false ? 'hidden-print' : '';

@@ -802,6 +802,271 @@ function formatDateTime(dateStr) {
     return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+// ===========================
+// Theme Color Picker
+// ===========================
+
+let currentColor = '#0066ff';
+let colorWheelCtx = null;
+let isDraggingWheel = false;
+
+function initColorPicker() {
+    const canvas = document.getElementById('colorWheel');
+    if (!canvas) return;
+    
+    colorWheelCtx = canvas.getContext('2d');
+    drawColorWheel();
+    
+    // Load saved color from server
+    loadThemeColor();
+    
+    // Canvas events
+    canvas.addEventListener('mousedown', startColorPick);
+    canvas.addEventListener('mousemove', pickColorOnDrag);
+    canvas.addEventListener('mouseup', stopColorPick);
+    canvas.addEventListener('mouseleave', stopColorPick);
+    
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startColorPick(e.touches[0]); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); pickColorOnDrag(e.touches[0]); });
+    canvas.addEventListener('touchend', stopColorPick);
+    
+    // Brightness slider
+    document.getElementById('colorBrightness').addEventListener('input', () => {
+        drawColorWheel();
+    });
+    
+    // Hex input
+    document.getElementById('colorHexInput').addEventListener('change', (e) => {
+        const hex = e.target.value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            currentColor = hex;
+            updateColorPickerUI(hex);
+        }
+    });
+    
+    // Presets
+    document.querySelectorAll('.color-preset').forEach(preset => {
+        preset.addEventListener('click', () => {
+            const color = preset.dataset.color;
+            currentColor = color;
+            updateColorPickerUI(color);
+        });
+    });
+    
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('colorPickerDropdown');
+        const wrapper = document.querySelector('.color-picker-wrapper');
+        if (dropdown.classList.contains('active') && !wrapper.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
+}
+
+async function loadThemeColor() {
+    try {
+        const result = await api('/api/settings/themeColor');
+        if (result.value) {
+            currentColor = result.value;
+            applyColorToCSS(currentColor);
+            updateColorPickerUI(currentColor);
+        }
+    } catch (err) {
+        // Fallback to localStorage
+        const savedColor = localStorage.getItem('cvThemeColor');
+        if (savedColor) {
+            currentColor = savedColor;
+            applyColorToCSS(currentColor);
+            updateColorPickerUI(currentColor);
+        }
+    }
+}
+
+function drawColorWheel() {
+    const canvas = document.getElementById('colorWheel');
+    const ctx = colorWheelCtx;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY);
+    const brightness = document.getElementById('colorBrightness')?.value || 50;
+    
+    // Draw color wheel
+    for (let angle = 0; angle < 360; angle++) {
+        const startAngle = (angle - 1) * Math.PI / 180;
+        const endAngle = (angle + 1) * Math.PI / 180;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        const hslColor = `hsl(${angle}, 100%, ${brightness}%)`;
+        const hslWhite = `hsl(${angle}, 0%, ${brightness}%)`;
+        gradient.addColorStop(0, hslWhite);
+        gradient.addColorStop(1, hslColor);
+        
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
+}
+
+function startColorPick(e) {
+    isDraggingWheel = true;
+    pickColor(e);
+}
+
+function pickColorOnDrag(e) {
+    if (isDraggingWheel) pickColor(e);
+}
+
+function stopColorPick() {
+    isDraggingWheel = false;
+}
+
+function pickColor(e) {
+    const canvas = document.getElementById('colorWheel');
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.pageX) - rect.left;
+    const y = (e.clientY || e.pageY) - rect.top;
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const radius = Math.min(centerX, centerY);
+    
+    if (distance <= radius) {
+        const imageData = colorWheelCtx.getImageData(x, y, 1, 1).data;
+        const hex = rgbToHex(imageData[0], imageData[1], imageData[2]);
+        currentColor = hex;
+        updateColorPickerUI(hex);
+        
+        // Update cursor position
+        const cursor = document.getElementById('colorWheelCursor');
+        cursor.style.left = x + 'px';
+        cursor.style.top = y + 'px';
+    }
+}
+
+function updateColorPickerUI(hex) {
+    document.getElementById('colorPreview').style.backgroundColor = hex;
+    document.getElementById('colorHexInput').value = hex.toUpperCase();
+    
+    // Update preset selection
+    document.querySelectorAll('.color-preset').forEach(preset => {
+        preset.classList.toggle('active', preset.dataset.color.toLowerCase() === hex.toLowerCase());
+    });
+}
+
+function toggleColorPicker() {
+    const dropdown = document.getElementById('colorPickerDropdown');
+    dropdown.classList.toggle('active');
+    if (dropdown.classList.contains('active')) {
+        updateColorPickerUI(currentColor);
+    }
+}
+
+async function applyThemeColor() {
+    applyColorToCSS(currentColor);
+    try {
+        await api('/api/settings/themeColor', { method: 'PUT', body: { value: currentColor } });
+    } catch (err) {
+        // Fallback to localStorage
+        localStorage.setItem('cvThemeColor', currentColor);
+    }
+    document.getElementById('colorPickerDropdown').classList.remove('active');
+    toast('Theme color applied');
+}
+
+async function resetThemeColor() {
+    currentColor = '#0066ff';
+    applyColorToCSS(currentColor);
+    try {
+        await api('/api/settings/themeColor', { method: 'PUT', body: { value: null } });
+    } catch (err) {
+        localStorage.removeItem('cvThemeColor');
+    }
+    updateColorPickerUI(currentColor);
+    document.getElementById('colorPickerDropdown').classList.remove('active');
+    toast('Theme reset to default');
+}
+
+function applyColorToCSS(hex) {
+    const root = document.documentElement;
+    const hsl = hexToHSL(hex);
+    
+    // Generate color variants
+    const primary = hex;
+    const primaryDark = hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10));
+    const primaryLight = hslToHex(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80));
+    const accent = hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l);
+    const dark = hslToHex(hsl.h, hsl.s, 15);
+    const light = hslToHex(hsl.h, 30, 90);
+    const veryLight = hslToHex(hsl.h, 20, 97);
+    
+    root.style.setProperty('--primary', primary);
+    root.style.setProperty('--primary-dark', primaryDark);
+    root.style.setProperty('--primary-light', primaryLight);
+    root.style.setProperty('--accent', accent);
+    root.style.setProperty('--dark', dark);
+    root.style.setProperty('--light', light);
+    root.style.setProperty('--very-light', veryLight);
+}
+
+// Color conversion utilities
+function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+function hexToRGB(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+function hexToHSL(hex) {
+    const rgb = hexToRGB(hex);
+    const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+            case g: h = ((b - r) / d + 2) / 6; break;
+            case b: h = ((r - g) / d + 4) / 6; break;
+        }
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+function hslToHex(h, s, l) {
+    s /= 100;
+    l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+// Initialize color picker when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initColorPicker, 100);
+});
+
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

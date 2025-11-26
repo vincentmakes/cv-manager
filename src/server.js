@@ -76,6 +76,11 @@ db.exec(`
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS experiences (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         job_title TEXT NOT NULL,
@@ -191,6 +196,28 @@ app.put('/api/profile', (req, res) => {
     `);
     
     stmt.run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0);
+    res.json({ success: true });
+});
+
+// ===========================
+// API Routes - Settings
+// ===========================
+
+app.get('/api/settings', (req, res) => {
+    const settings = db.prepare('SELECT * FROM settings').all();
+    const result = {};
+    settings.forEach(s => { result[s.key] = s.value; });
+    res.json(result);
+});
+
+app.get('/api/settings/:key', (req, res) => {
+    const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key);
+    res.json({ value: setting?.value || null });
+});
+
+app.put('/api/settings/:key', (req, res) => {
+    const { value } = req.body;
+    db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(req.params.key, value);
     res.json({ success: true });
 });
 
@@ -965,6 +992,11 @@ publicApp.get('/api/sections', (req, res) => {
     const result = {};
     sections.forEach(s => { result[s.section_name] = !!s.visible; });
     res.json(result);
+});
+
+publicApp.get('/api/settings/:key', (req, res) => {
+    const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key);
+    res.json({ value: setting?.value || null });
 });
 
 publicApp.get('/api/experiences', (req, res) => {

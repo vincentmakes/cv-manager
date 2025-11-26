@@ -15,6 +15,41 @@
     <div class="toolbar no-print">
         <div class="toolbar-title">CV Manager</div>
         <div class="toolbar-actions">
+            <div class="color-picker-wrapper">
+                <button class="btn btn-secondary" onclick="toggleColorPicker()" title="Change Theme Color">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    <span>Theme</span>
+                </button>
+                <div class="color-picker-dropdown" id="colorPickerDropdown">
+                    <div class="color-picker-header">Theme Color</div>
+                    <div class="color-wheel-container">
+                        <canvas id="colorWheel" width="180" height="180"></canvas>
+                        <div class="color-wheel-cursor" id="colorWheelCursor"></div>
+                    </div>
+                    <div class="color-brightness">
+                        <label>Brightness</label>
+                        <input type="range" id="colorBrightness" min="30" max="70" value="50">
+                    </div>
+                    <div class="color-preview-row">
+                        <div class="color-preview" id="colorPreview"></div>
+                        <input type="text" class="color-hex-input" id="colorHexInput" value="#0066ff" maxlength="7">
+                    </div>
+                    <div class="color-presets">
+                        <div class="color-preset" style="background: #0066ff" data-color="#0066ff" title="Blue (Default)"></div>
+                        <div class="color-preset" style="background: #059669" data-color="#059669" title="Emerald"></div>
+                        <div class="color-preset" style="background: #7c3aed" data-color="#7c3aed" title="Purple"></div>
+                        <div class="color-preset" style="background: #dc2626" data-color="#dc2626" title="Red"></div>
+                        <div class="color-preset" style="background: #ea580c" data-color="#ea580c" title="Orange"></div>
+                        <div class="color-preset" style="background: #0891b2" data-color="#0891b2" title="Cyan"></div>
+                        <div class="color-preset" style="background: #4f46e5" data-color="#4f46e5" title="Indigo"></div>
+                        <div class="color-preset" style="background: #be185d" data-color="#be185d" title="Pink"></div>
+                    </div>
+                    <div class="color-picker-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="resetThemeColor()">Reset</button>
+                        <button class="btn btn-primary btn-sm" onclick="applyThemeColor()">Apply</button>
+                    </div>
+                </div>
+            </div>
             <button class="btn btn-secondary" onclick="openDatasetsModal()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
                 <span>Open...</span>

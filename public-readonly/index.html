@@ -97,6 +97,7 @@
     <script>
         // Public site initialization - read-only, no private data
         document.addEventListener('DOMContentLoaded', async () => {
+            await loadThemeColorPublic();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
             await loadTimeline();
@@ -107,6 +108,61 @@
             await loadProjectsReadOnly();
             await generateATSContent();
         });
+        
+        async function loadThemeColorPublic() {
+            try {
+                const result = await api('/api/settings/themeColor');
+                if (result.value) {
+                    applyColorToCSSPublic(result.value);
+                }
+            } catch (err) {
+                // Ignore errors, use default theme
+            }
+        }
+        
+        function applyColorToCSSPublic(hex) {
+            const root = document.documentElement;
+            const hsl = hexToHSLPublic(hex);
+            
+            root.style.setProperty('--primary', hex);
+            root.style.setProperty('--primary-dark', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+            root.style.setProperty('--primary-light', hslToHexPublic(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
+            root.style.setProperty('--accent', hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l));
+            root.style.setProperty('--dark', hslToHexPublic(hsl.h, hsl.s, 15));
+            root.style.setProperty('--light', hslToHexPublic(hsl.h, 30, 90));
+            root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
+        }
+        
+        function hexToHSLPublic(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            const r = parseInt(result[1], 16) / 255;
+            const g = parseInt(result[2], 16) / 255;
+            const b = parseInt(result[3], 16) / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) { h = s = 0; }
+            else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+        }
+        
+        function hslToHexPublic(h, s, l) {
+            s /= 100; l /= 100;
+            const a = s * Math.min(l, 1 - l);
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
     </script>
 </body>
 </html>
