@@ -1,6 +1,17 @@
 # CV Manager
 
-A professional CV management system with a modern blue theme, persistent database storage, and Docker deployment ready for Unraid.
+This is a professional CV management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
+
+<img width="600"  alt="cv1" src="https://github.com/user-attachments/assets/6e20de1e-2001-4097-9844-2aeb611bc53e" />  
+
+<img width="600"  alt="cv2" src="https://github.com/user-attachments/assets/339cec06-2c6b-4024-99dd-5d97f2960478" />  
+
+<img width="600"  alt="cv3" src="https://github.com/user-attachments/assets/5f10edb5-a81e-4715-9d4b-90e8a154de72" />  
+
+<img width="600"  alt="cv4" src="https://github.com/user-attachments/assets/285c131d-2e9b-44e6-abfa-bb45b51ee530" />  
+
+
+
 
 ## Features
 
@@ -8,7 +19,7 @@ A professional CV management system with a modern blue theme, persistent databas
 - **Full CRUD**: Add, edit, delete any item
 - **Visibility Toggles**: Hide items from PDF export while keeping them in database
 - **Print/PDF Export**: Clean print styles, hidden items excluded
-- **Import/Export**: Backup and restore your CV data as JSON
+- **Import/Export**: Backup and restore your CV data as JSON - ideal to process the data via any LLM for optimization
 - **Persistent Storage**: SQLite database survives container restarts
 - **Responsive Design**: Works on desktop and mobile
 - **Auto-Generated Timeline**: Timeline automatically builds from your experiences
