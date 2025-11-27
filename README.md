@@ -1,4 +1,5 @@
 # CV Manager
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vincentvt)  
 
 This is a professional CV management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
 
