@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -197,6 +198,49 @@ app.put('/api/profile', (req, res) => {
     
     stmt.run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0);
     res.json({ success: true });
+});
+
+// Profile Picture Upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadsPath);
+    },
+    filename: function (req, file, cb) {
+        // Always save as picture.jpeg (overwrite existing)
+        cb(null, 'picture.jpeg');
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: function (req, file, cb) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, PNG and WebP are allowed.'));
+        }
+    }
+});
+
+app.post('/api/profile/picture', upload.single('picture'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    res.json({ success: true, filename: req.file.filename });
+});
+
+app.delete('/api/profile/picture', (req, res) => {
+    const picturePath = path.join(uploadsPath, 'picture.jpeg');
+    try {
+        if (fs.existsSync(picturePath)) {
+            fs.unlinkSync(picturePath);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // ===========================
