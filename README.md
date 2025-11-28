@@ -29,7 +29,19 @@ This is a professional CV management system with an editable theme, persistent d
 
 ## Quick Start (Docker)
 
-### Option 1: Docker Compose (Recommended)
+### One-Line Install
+``` bash
+curl -fsSL https://raw.githubusercontent.com/vincentmakes/cv-manager/main/install.sh | bash
+```
+Or download and run:
+
+```bash
+wget https://raw.githubusercontent.com/vincentmakes/cv-manager/main/install.sh
+chmod +x install.sh
+./install.sh
+```
+
+### Manual Option 1: Docker Compose 
 
 ```bash
 # Clone or copy the files
@@ -46,14 +58,14 @@ docker-compose up -d --build
 # - http://localhost:3001 (Public - read-only)
 ```
 
-### Option 2: Docker Compose with Named Volume
+### Manual Option 2: Docker Compose with Named Volume
 
 Use `docker-compose.volume.yml` if you prefer Docker-managed volumes:
 ```bash
 docker-compose -f docker-compose.volume.yml up -d --build
 ```
 
-### Option 3: Docker Run
+### Manual Option 3: Docker Run
 
 ```bash
 # Build the image
