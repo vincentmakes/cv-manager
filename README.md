@@ -263,6 +263,7 @@ Create a JSON file with your CV data and use the Import button, or POST to `/api
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | Server port |
+| `PUBLIC_PORT` | `3001` | Server port Read only|
 | `DB_PATH` | `./data/cv.db` | SQLite database path |
 
 ## Development
