@@ -1,7 +1,7 @@
-# CV Manager
+# CV Manager / Resume Builder
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vincentvt)  
 
-This is a professional CV management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
+This is a CV / Resume management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
 
 <img width="600"  alt="cv1" src="https://github.com/user-attachments/assets/6e20de1e-2001-4097-9844-2aeb611bc53e" />  
 
