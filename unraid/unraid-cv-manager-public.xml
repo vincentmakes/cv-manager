@@ -7,7 +7,7 @@
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-  <Support>https://github.com/vincentmakes/cv-manager/issues</Support>
+  <Support>https://forums.unraid.net/topic/195409-support-cv-manager/</Support>
   <Project>https://github.com/vincentmakes/cv-manager</Project>
   <Overview>CV Manager - Public Read-Only Interface&#xD;
 &#xD;
