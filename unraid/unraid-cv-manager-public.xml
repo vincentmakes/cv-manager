@@ -36,7 +36,6 @@ Default ports: Admin (3000) + Public (3001)</Overview>
   <Requires>CV Manager (admin version) should be installed first</Requires>
   <Config Name="WebUI Port" Target="3001" Default="3001" Mode="tcp" Description="Public interface web port (use different port than admin)" Type="Port" Display="always" Required="true" Mask="false">3001</Config>
   <Config Name="AppData" Target="/app/data" Default="/mnt/user/appdata/cv-manager/data" Mode="ro" Description="Database and uploads storage (read-only). IMPORTANT: Use the SAME path as your CV Manager Admin container!" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/cv-manager/data</Config>
-  <Config Name="Internal Port" Target="PORT" Default="3001" Mode="" Description="Internal server port (must match WebUI Port above)" Type="Variable" Display="always" Required="true" Mask="false">3001</Config>
-  <Config Name="Public Mode" Target="PUBLIC_MODE" Default="true" Mode="" Description="Enable read-only mode (keep as true)" Type="Variable" Display="always" Required="true" Mask="false">true</Config>
+  <Config Name="Public Port" Target="PUBLIC_PORT" Default="3001" Mode="" Description="Public interface port" Type="Variable" Display="always" Required="true" Mask="false">3001</Config>
   <Config Name="Node Environment" Target="NODE_ENV" Default="production" Mode="" Description="Node environment (leave as production)" Type="Variable" Display="advanced" Required="false" Mask="false">production</Config>
 </Container>
