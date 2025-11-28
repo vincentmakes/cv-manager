@@ -31,12 +31,18 @@ fi
 echo "✅ Docker found"
 echo ""
 
-# Ask user which setup they want
+# Ask user which setup they want (fix for curl pipe)
 echo "Which setup do you want?"
 echo "  1) Complete (Admin + Public) - Recommended"
 echo "  2) Admin only"
 echo ""
-read -p "Enter choice [1-2]: " choice
+
+# Read from /dev/tty instead of stdin when piped
+if [ -t 0 ]; then
+    read -p "Enter choice [1-2]: " choice
+else
+    read -p "Enter choice [1-2]: " choice < /dev/tty
+fi
 
 case $choice in
     1)
@@ -131,8 +137,10 @@ echo "   2. Fill in your profile information"
 echo "   3. Add your experience, skills, and projects"
 echo "   4. Export or print your CV when ready!"
 echo ""
-echo "💡 Tip: Use 'docker-compose logs -f' to view logs"
-echo "🛑 Stop: docker-compose down"
+echo "💡 Commands:"
+echo "   View logs:  $COMPOSE_CMD logs -f"
+echo "   Stop:       $COMPOSE_CMD down"
+echo "   Update:     $COMPOSE_CMD pull && $COMPOSE_CMD up -d"
 echo ""
 echo "💖 Support development: https://ko-fi.com/vincentvt"
 echo ""
