@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
   cv-manager-public:
-    image: vincentmakes/cv-manager:latest
+    image: vincentmakes/cv-manager:1.0.0
     container_name: cv-manager-public
     ports:
       - "3001:3001"
@@ -88,7 +88,7 @@ version: '3.8'
 
 services:
   cv-manager:
-    image: vincentmakes/cv-manager:latest
+    image: vincentmakes/cv-manager:1.0.0
     container_name: cv-manager
     ports:
       - "3000:3000"
