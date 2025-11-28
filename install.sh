@@ -53,7 +53,7 @@ version: '3.8'
 
 services:
   cv-manager-admin:
-    image: vincentmakes/cv-manager:latest
+    image: vincentmakes/cv-manager:1.0.0
     container_name: cv-manager-admin
     ports:
       - "3000:3000"
