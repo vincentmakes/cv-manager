@@ -72,8 +72,7 @@ services:
       - cv-data:/app/data
     environment:
       - NODE_ENV=production
-      - PORT=3001
-      - PUBLIC_MODE=true
+      - PUBLIC_PORT=3001
     restart: unless-stopped
 
 volumes:
