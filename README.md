@@ -1,6 +1,7 @@
-# CV Manager
+# CV Manager / Resume Builder
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vincentmakes)  
 
-This is a professional CV management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
+This is a CV / Resume management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
 
 <img width="600"  alt="cv1" src="https://github.com/user-attachments/assets/6e20de1e-2001-4097-9844-2aeb611bc53e" />  
 
@@ -28,7 +29,19 @@ This is a professional CV management system with an editable theme, persistent d
 
 ## Quick Start (Docker)
 
-### Option 1: Docker Compose (Recommended)
+### One-Line Install
+``` bash
+curl -fsSL https://raw.githubusercontent.com/vincentmakes/cv-manager/main/install.sh | bash
+```
+Or download and run:
+
+```bash
+wget https://raw.githubusercontent.com/vincentmakes/cv-manager/main/install.sh
+chmod +x install.sh
+./install.sh
+```
+
+### Manual Option 1: Docker Compose 
 
 ```bash
 # Clone or copy the files
@@ -45,14 +58,14 @@ docker-compose up -d --build
 # - http://localhost:3001 (Public - read-only)
 ```
 
-### Option 2: Docker Compose with Named Volume
+### Manual Option 2: Docker Compose with Named Volume
 
 Use `docker-compose.volume.yml` if you prefer Docker-managed volumes:
 ```bash
 docker-compose -f docker-compose.volume.yml up -d --build
 ```
 
-### Option 3: Docker Run
+### Manual Option 3: Docker Run
 
 ```bash
 # Build the image
@@ -250,6 +263,7 @@ Create a JSON file with your CV data and use the Import button, or POST to `/api
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | Server port |
+| `PUBLIC_PORT` | `3001` | Server port Read only|
 | `DB_PATH` | `./data/cv.db` | SQLite database path |
 
 ## Development

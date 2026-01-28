@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <n>cv-manager-public</n>
+  <Repository>vincentmakes/cv-manager:latest</Repository>
+  <Registry>https://hub.docker.com/r/vincentmakes/cv-manager</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://forums.unraid.net/topic/195409-support-cv-manager/</Support>
+  <Project>https://github.com/vincentmakes/cv-manager</Project>
+  <Overview>CV Manager - Public Read-Only Interface&#xD;
+&#xD;
+Share your professional CV safely with this read-only version. Perfect for:&#xD;
+&#xD;
+• Public exposure via Cloudflare Tunnel&#xD;
+• Sharing with recruiters/employers&#xD;
+• Portfolio website integration&#xD;
+• Job application submissions&#xD;
+&#xD;
+PUBLIC VERSION - Read-only access. All write operations blocked. Safe to expose publicly.&#xD;
+&#xD;
+IMPORTANT: Install "CV Manager" (admin) first, then use the SAME appdata path here to share the data.&#xD;
+&#xD;
+Default ports: Admin (3000) + Public (3001)</Overview>
+  <Category>Productivity: Tools: Status:Stable</Category>
+  <WebUI>http://[IP]:[PORT:3001]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/vincentmakes/cv-manager/main/unraid/cv-manager-public.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/vincentmakes/cv-manager/main/icon-public.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled></DateInstalled>
+  <DonateText>☕ Support Development</DonateText>
+  <DonateLink>https://ko-fi.com/vincentmakes</DonateLink>
+  <Requires>CV Manager (admin version) should be installed first</Requires>
+  <Config Name="WebUI Port" Target="3001" Default="3001" Mode="tcp" Description="Public interface web port (use different port than admin)" Type="Port" Display="always" Required="true" Mask="false">3001</Config>
+  <Config Name="AppData" Target="/app/data" Default="/mnt/user/appdata/cv-manager/data" Mode="ro" Description="Database and uploads storage (read-only). IMPORTANT: Use the SAME path as your CV Manager Admin container!" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/cv-manager/data</Config>
+  <Config Name="Public Port" Target="PUBLIC_PORT" Default="3001" Mode="" Description="Public interface port" Type="Variable" Display="always" Required="true" Mask="false">3001</Config>
+  <Config Name="Node Environment" Target="NODE_ENV" Default="production" Mode="" Description="Node environment (leave as production)" Type="Variable" Display="advanced" Required="false" Mask="false">production</Config>
+</Container>
