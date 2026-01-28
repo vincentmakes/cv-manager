@@ -298,7 +298,7 @@ body {
 
 .item-card {
     background: linear-gradient(135deg, var(--very-light), var(--white));
-    border-radius: var(--radius-md);
+    border-radius: 0;
     padding: 16px;
     border-left: 4px solid var(--primary);
     position: relative;
@@ -375,7 +375,7 @@ body {
 
 .cert-card {
     background: var(--very-light);
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     padding: 12px 14px;
     border-left: 3px solid var(--primary);
     position: relative;
@@ -517,14 +517,32 @@ body {
     font-weight: 500;
 }
 
-/* ATS hidden content */
+/* ATS hidden content - using clip method for better ATS compatibility */
 .ats-only {
     position: absolute;
-    left: -9999px;
-    top: auto;
     width: 1px;
     height: 1px;
+    padding: 0;
+    margin: -1px;
     overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ATS-friendly print version - show structured text for PDF extraction */
+@media print {
+    .ats-only {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: pre-wrap;
+        display: none; /* Hide in print since visual version is better structured now */
+    }
 }
 
 /* Print Styles */
@@ -532,7 +550,7 @@ body {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { background: white !important; margin: 0 !important; padding: 0 !important; }
     .toolbar, .add-btn, .item-actions, .section-actions, .no-print { display: none !important; }
-    .container { max-width: 100%; margin: 0; padding: 0 10px; }
+    .container { max-width: 100% !important; margin: 0 !important; padding: 0 10px !important; margin-top: 0 !important; }
     
     /* Header - keep horizontal layout like desktop */
     .header { 
@@ -556,12 +574,20 @@ body {
     .contact-badges { justify-content: flex-start !important; gap: 5px; }
     .contact-badge { font-size: 9px; padding: 2px 6px; }
     
-    /* Sections */
+    /* Sections - prevent unnecessary page breaks, except for experience which can be long */
     .section { 
         box-shadow: none; 
         margin-bottom: 10px;
         padding: 14px;
         border-radius: var(--radius-md);
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Allow experience section to split across pages since it's usually long */
+    #section-experience {
+        page-break-inside: auto;
+        break-inside: auto;
     }
     .section-header {
         margin-bottom: 10px;
@@ -582,12 +608,13 @@ body {
     .timeline-dot { width: 10px; height: 10px; }
     .timeline-flag { width: 16px; height: 16px; }
     
-    /* Items */
+    /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
         break-inside: avoid;
+        page-break-inside: avoid;
         box-shadow: none;
     }
-    .item-card { padding: 10px; margin-bottom: 6px; }
+    .item-card { padding: 10px; margin-bottom: 6px; border-radius: 0; }
     .items-list { gap: 6px; }
     .item-title { font-size: 13px; }
     .item-subtitle { font-size: 12px; }

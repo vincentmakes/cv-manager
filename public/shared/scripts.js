@@ -83,6 +83,18 @@ function formatDate(dateStr) {
     return dateStr;
 }
 
+// Format date for ATS - consistent format: "Mon YYYY" or "YYYY"
+function formatDateATS(dateStr) {
+    if (!dateStr) return '';
+    if (dateStr.match(/^\d{4}$/)) return dateStr;
+    if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        const [y, m] = dateStr.split('-');
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        return `${months[parseInt(m)-1]} ${y}`;
+    }
+    return dateStr;
+}
+
 // Load Profile (shared between admin and public)
 async function loadProfile(includePrivate = false) {
     const p = await api('/api/profile');
@@ -262,82 +274,110 @@ async function loadSections() {
 }
 
 // Generate ATS-friendly content
+// Improved version with better structure for ATS parsing
 async function generateATSContent() {
     const cv = await api('/api/cv');
     const p = cv.profile;
     
     let ats = [];
     
-    ats.push(`CONTACT INFORMATION`);
-    ats.push(`Name: ${p.name || ''}`);
+    // Header section - clear labels for ATS field mapping
+    ats.push('=== PERSONAL INFORMATION ===');
+    ats.push(`Full Name: ${p.name || ''}`);
+    if (p.title) ats.push(`Job Title: ${p.title}`);
     if (p.location) ats.push(`Location: ${p.location}`);
+    if (p.email) ats.push(`Email: ${p.email}`);
+    if (p.phone) ats.push(`Phone: ${p.phone}`);
     if (p.linkedin) ats.push(`LinkedIn: ${p.linkedin}`);
+    if (p.languages) ats.push(`Languages: ${p.languages}`);
     ats.push('');
     
+    // Professional Summary
     if (p.bio) {
-        ats.push(`PROFESSIONAL SUMMARY`);
-        ats.push(p.bio);
+        ats.push('=== PROFESSIONAL SUMMARY ===');
+        ats.push(p.bio.replace(/\n+/g, ' ').trim());
         ats.push('');
     }
     
+    // Skills - critical for ATS keyword matching
     if (cv.skills && cv.skills.length > 0) {
-        ats.push(`SKILLS`);
+        ats.push('=== SKILLS ===');
+        cv.skills
+            .filter(cat => cat.visible !== false)
+            .forEach(cat => {
+                ats.push(`${cat.name}: ${cat.skills.join(', ')}`);
+            });
+        // Also add a flat keyword list for better ATS matching
         const allSkills = cv.skills
             .filter(cat => cat.visible !== false)
             .flatMap(cat => cat.skills);
+        ats.push('');
         ats.push(`Keywords: ${allSkills.join(', ')}`);
         ats.push('');
     }
     
+    // Work Experience - structured format for ATS
     if (cv.experiences && cv.experiences.length > 0) {
-        ats.push(`WORK EXPERIENCE`);
+        ats.push('=== WORK EXPERIENCE ===');
         cv.experiences
             .filter(exp => exp.visible !== false)
             .forEach(exp => {
-                ats.push(`${exp.job_title} | ${exp.company_name}`);
-                ats.push(`${exp.start_date || ''} - ${exp.end_date || 'Present'}`);
+                ats.push('');
+                ats.push(`Position: ${exp.job_title}`);
+                ats.push(`Company: ${exp.company_name}`);
+                ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : 'Present'}`);
                 if (exp.location) ats.push(`Location: ${exp.location}`);
                 if (exp.highlights && exp.highlights.length > 0) {
-                    exp.highlights.forEach(h => ats.push(`• ${h}`));
+                    ats.push('Responsibilities and Achievements:');
+                    exp.highlights.forEach(h => ats.push(`- ${h}`));
                 }
-                ats.push('');
-            });
-    }
-    
-    if (cv.education && cv.education.length > 0) {
-        ats.push(`EDUCATION`);
-        cv.education
-            .filter(edu => edu.visible !== false)
-            .forEach(edu => {
-                ats.push(`${edu.degree_title} | ${edu.institution_name}`);
-                ats.push(`${edu.start_date || ''} - ${edu.end_date || ''}`);
-                if (edu.description) ats.push(edu.description);
-                ats.push('');
-            });
-    }
-    
-    if (cv.certifications && cv.certifications.length > 0) {
-        ats.push(`CERTIFICATIONS`);
-        cv.certifications
-            .filter(cert => cert.visible !== false)
-            .forEach(cert => {
-                ats.push(`${cert.name}${cert.provider ? ' | ' + cert.provider : ''}${cert.issue_date ? ' | ' + cert.issue_date : ''}`);
             });
         ats.push('');
     }
     
+    // Education - structured format
+    if (cv.education && cv.education.length > 0) {
+        ats.push('=== EDUCATION ===');
+        cv.education
+            .filter(edu => edu.visible !== false)
+            .forEach(edu => {
+                ats.push('');
+                ats.push(`Degree: ${edu.degree_title}`);
+                ats.push(`Institution: ${edu.institution_name}`);
+                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${formatDateATS(edu.end_date)}`);
+                if (edu.description) ats.push(`Details: ${edu.description}`);
+            });
+        ats.push('');
+    }
+    
+    // Certifications - structured format
+    if (cv.certifications && cv.certifications.length > 0) {
+        ats.push('=== CERTIFICATIONS ===');
+        cv.certifications
+            .filter(cert => cert.visible !== false)
+            .forEach(cert => {
+                let certLine = `${cert.name}`;
+                if (cert.provider) certLine += ` - ${cert.provider}`;
+                if (cert.issue_date) certLine += ` (${formatDateATS(cert.issue_date)})`;
+                ats.push(certLine);
+            });
+        ats.push('');
+    }
+    
+    // Projects - structured format
     if (cv.projects && cv.projects.length > 0) {
-        ats.push(`PROJECTS`);
+        ats.push('=== PROJECTS ===');
         cv.projects
             .filter(proj => proj.visible !== false)
             .forEach(proj => {
-                ats.push(`${proj.title}`);
-                if (proj.description) ats.push(proj.description);
+                ats.push('');
+                ats.push(`Project: ${proj.title}`);
+                if (proj.description) ats.push(`Description: ${proj.description}`);
                 if (proj.technologies && proj.technologies.length > 0) {
                     ats.push(`Technologies: ${proj.technologies.join(', ')}`);
                 }
-                ats.push('');
             });
+        ats.push('');
     }
     
     const atsEl = document.getElementById('ats-content');

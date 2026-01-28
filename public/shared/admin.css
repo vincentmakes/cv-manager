@@ -588,6 +588,51 @@
     .form-row { grid-template-columns: 1fr; }
 }
 
+/* Print styles for admin - override container margin and ensure consistency with public version */
 @media print {
+    /* Hide all admin UI elements */
     .toolbar, .add-btn, .item-actions, .section-actions, .no-print { display: none !important; }
+    
+    /* Reset container margin that was added for toolbar */
+    .container { 
+        margin-top: 0 !important; 
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 10px !important;
+    }
+    
+    /* Ensure sections don't break unnecessarily, except experience which can be long */
+    .section {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Allow experience section to split across pages */
+    #section-experience {
+        page-break-inside: auto;
+        break-inside: auto;
+    }
+    
+    /* Allow page breaks between items but not inside them */
+    .item-card, .cert-card, .skill-category, .project-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Keep items list together when possible */
+    .items-list {
+        page-break-inside: auto;
+    }
+    
+    /* Ensure hidden items are truly hidden in print */
+    .hidden-print { display: none !important; }
+    
+    /* Reset any visual indicators used for admin */
+    .section.hidden-print,
+    .item-card.hidden-print,
+    .cert-card.hidden-print,
+    .skill-category.hidden-print,
+    .project-card.hidden-print {
+        display: none !important;
+    }
 }
