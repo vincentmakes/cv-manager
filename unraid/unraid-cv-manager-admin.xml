@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Container version="2">
-  <n>cv-manager</n>
+  <Name>cv-manager</Name>
   <Repository>vincentmakes/cv-manager:latest</Repository>
   <Registry>https://hub.docker.com/r/vincentmakes/cv-manager</Registry>
   <Network>bridge</Network>
