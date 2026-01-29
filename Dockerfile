@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install build dependencies for better-sqlite3
-RUN apk add --no-cache python3 make g++
+# Install build dependencies for better-sqlite3 and curl for healthcheck
+RUN apk add --no-cache python3 make g++ curl
 
 WORKDIR /app
 
@@ -28,9 +28,9 @@ ENV DB_PATH=/app/data/cv.db
 # Expose ports
 EXPOSE 3000 3001
 
-# Health check (use port 3001 which runs in both admin and public-only modes)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/profile || exit 1
+# Health check (port 3001 runs in both admin and public-only modes)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:3001/api/profile || exit 1
 
 # Run as nobody:users (99:100) for Unraid compatibility
 USER 99:100
