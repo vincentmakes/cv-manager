@@ -32,6 +32,7 @@ EXPOSE 3000 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/profile || exit 1
 
-# Run as root for Unraid compatibility with volume mounts
-# (Unraid creates appdata directories with varying ownership)
+# Run as nobody:users (99:100) for Unraid compatibility
+USER 99:100
+
 CMD ["node", "src/server.js"]
