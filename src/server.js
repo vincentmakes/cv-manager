@@ -24,24 +24,27 @@ console.log(`Database path: ${DB_PATH}`);
 console.log(`Public only mode: ${PUBLIC_ONLY}`);
 
 try {
-    if (!fs.existsSync(dataDir)) {
-        if (PUBLIC_ONLY) {
+    if (PUBLIC_ONLY) {
+        // In public-only mode, just check if directory and database exist
+        if (!fs.existsSync(dataDir)) {
             console.error(`Data directory does not exist: ${dataDir}`);
             console.error('In public-only mode, the data directory must already exist (created by admin container).');
             process.exit(1);
         }
-        console.log(`Creating data directory: ${dataDir}`);
-        fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
-    }
-    
-    // Only verify write access if not in public-only mode
-    if (!PUBLIC_ONLY) {
+        if (!fs.existsSync(DB_PATH)) {
+            console.error(`Database does not exist: ${DB_PATH}`);
+            console.error('In public-only mode, the database must already exist (created by admin container).');
+            process.exit(1);
+        }
+        console.log('Data directory exists (public-only mode, skipping write check)');
+    } else {
+        // Admin mode - need write access
+        if (!fs.existsSync(dataDir)) {
+            console.log(`Creating data directory: ${dataDir}`);
+            fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
+        }
         fs.accessSync(dataDir, fs.constants.W_OK);
         console.log('Data directory is writable');
-    } else {
-        // In public-only mode, just verify we can read
-        fs.accessSync(dataDir, fs.constants.R_OK);
-        console.log('Data directory is readable (public-only mode)');
     }
 } catch (err) {
     console.error(`Error with data directory: ${err.message}`);
