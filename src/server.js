@@ -9,42 +9,60 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const PUBLIC_PORT = process.env.PUBLIC_PORT || 3001;
 
-// Check if running in public-only mode (read-only data directory)
-const PUBLIC_ONLY = process.env.PUBLIC_ONLY === 'true' || process.env.PUBLIC_ONLY === '1';
-
 // Resolve database path - use absolute path
 const DB_PATH = process.env.DB_PATH 
     ? path.resolve(process.env.DB_PATH)
     : path.join(__dirname, '..', 'data', 'cv.db');
 
-// Ensure data directory exists
 const dataDir = path.dirname(DB_PATH);
 console.log(`Data directory: ${dataDir}`);
 console.log(`Database path: ${DB_PATH}`);
-console.log(`Public only mode: ${PUBLIC_ONLY}`);
+
+// Auto-detect read-only mode by trying to write a test file
+function isReadOnlyFilesystem(dir) {
+    const testFile = path.join(dir, '.write-test-' + process.pid);
+    try {
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile);
+        return false; // Writable
+    } catch (err) {
+        if (err.code === 'EROFS' || err.code === 'EACCES') {
+            return true; // Read-only
+        }
+        throw err; // Other error
+    }
+}
+
+// Check if explicitly set via env, otherwise auto-detect
+let PUBLIC_ONLY = process.env.PUBLIC_ONLY === 'true' || process.env.PUBLIC_ONLY === '1';
 
 try {
-    if (PUBLIC_ONLY) {
-        // In public-only mode, just check if directory and database exist
-        if (!fs.existsSync(dataDir)) {
+    if (!fs.existsSync(dataDir)) {
+        if (PUBLIC_ONLY) {
             console.error(`Data directory does not exist: ${dataDir}`);
-            console.error('In public-only mode, the data directory must already exist (created by admin container).');
             process.exit(1);
         }
+        console.log(`Creating data directory: ${dataDir}`);
+        fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
+    }
+    
+    // Auto-detect if not explicitly set
+    if (!PUBLIC_ONLY) {
+        PUBLIC_ONLY = isReadOnlyFilesystem(dataDir);
+        if (PUBLIC_ONLY) {
+            console.log('Auto-detected read-only filesystem, running in public-only mode');
+        }
+    }
+    
+    if (PUBLIC_ONLY) {
         if (!fs.existsSync(DB_PATH)) {
             console.error(`Database does not exist: ${DB_PATH}`);
             console.error('In public-only mode, the database must already exist (created by admin container).');
             process.exit(1);
         }
-        console.log('Data directory exists (public-only mode, skipping write check)');
+        console.log('Running in PUBLIC-ONLY mode (read-only)');
     } else {
-        // Admin mode - need write access
-        if (!fs.existsSync(dataDir)) {
-            console.log(`Creating data directory: ${dataDir}`);
-            fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
-        }
-        fs.accessSync(dataDir, fs.constants.W_OK);
-        console.log('Data directory is writable');
+        console.log('Running in ADMIN mode (read-write)');
     }
 } catch (err) {
     console.error(`Error with data directory: ${err.message}`);

@@ -22,6 +22,8 @@ PUBLIC VERSION - Read-only access. All write operations blocked. Safe to expose 
 &#xD;
 IMPORTANT: Install "CV Manager" (admin) first, then use the SAME appdata path here to share the data.&#xD;
 &#xD;
+The app auto-detects read-only mode from the volume mount.&#xD;
+&#xD;
 Default ports: Admin (3000) + Public (3001)</Overview>
   <Category>Productivity: Tools: Status:Stable</Category>
   <WebUI>http://[IP]:[PORT:3001]</WebUI>
@@ -36,7 +38,6 @@ Default ports: Admin (3000) + Public (3001)</Overview>
   <Requires>CV Manager (admin version) should be installed first</Requires>
   <Config Name="WebUI Port" Target="3001" Default="3001" Mode="tcp" Description="Public interface web port (use different port than admin)" Type="Port" Display="always" Required="true" Mask="false">3001</Config>
   <Config Name="AppData" Target="/app/data" Default="/mnt/user/appdata/cv-manager/data" Mode="ro" Description="Database and uploads storage (read-only). IMPORTANT: Use the SAME path as your CV Manager Admin container!" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/cv-manager/data</Config>
-  <Config Name="Public Only Mode" Target="PUBLIC_ONLY" Default="true" Mode="" Description="Run in public-only mode (read-only, required for ro mount)" Type="Variable" Display="always" Required="true" Mask="false">true</Config>
   <Config Name="Public Port" Target="PUBLIC_PORT" Default="3001" Mode="" Description="Public interface port" Type="Variable" Display="always" Required="true" Mask="false">3001</Config>
   <Config Name="Node Environment" Target="NODE_ENV" Default="production" Mode="" Description="Node environment (leave as production)" Type="Variable" Display="advanced" Required="false" Mask="false">production</Config>
 </Container>
