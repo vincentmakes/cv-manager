@@ -16,24 +16,22 @@ COPY src ./src
 COPY public ./public
 COPY public-readonly ./public-readonly
 
-# Create data directory with correct permissions BEFORE switching user
-RUN mkdir -p /app/data && chmod 755 /app/data
+# Create data directory
+RUN mkdir -p /app/data/uploads && chmod 755 /app/data
 
 # Environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV PUBLIC_PORT=3001
 ENV DB_PATH=/app/data/cv.db
 
-# Expose port
-EXPOSE 3000
+# Expose ports
+EXPOSE 3000 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/profile || exit 1
 
-# Run as non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-RUN chown -R nodejs:nodejs /app
-USER nodejs
-
+# Run as root for Unraid compatibility with volume mounts
+# (Unraid creates appdata directories with varying ownership)
 CMD ["node", "src/server.js"]
