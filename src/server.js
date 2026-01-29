@@ -19,17 +19,21 @@ console.log(`Data directory: ${dataDir}`);
 console.log(`Database path: ${DB_PATH}`);
 
 // Auto-detect read-only mode by trying to write a test file
-function isReadOnlyFilesystem(dir) {
+// Returns: { status: 'writable' | 'readonly' | 'permission_denied', error?: string }
+function checkFilesystemAccess(dir) {
     const testFile = path.join(dir, '.write-test-' + process.pid);
     try {
         fs.writeFileSync(testFile, 'test');
         fs.unlinkSync(testFile);
-        return false; // Writable
+        return { status: 'writable' };
     } catch (err) {
-        if (err.code === 'EROFS' || err.code === 'EACCES') {
-            return true; // Read-only
+        if (err.code === 'EROFS') {
+            return { status: 'readonly' }; // Intentional read-only mount
         }
-        throw err; // Other error
+        if (err.code === 'EACCES') {
+            return { status: 'permission_denied', error: err.message };
+        }
+        return { status: 'error', error: err.message };
     }
 }
 
@@ -37,32 +41,94 @@ function isReadOnlyFilesystem(dir) {
 let PUBLIC_ONLY = process.env.PUBLIC_ONLY === 'true' || process.env.PUBLIC_ONLY === '1';
 
 try {
+    // Create data directory if it doesn't exist (only possible in admin mode)
     if (!fs.existsSync(dataDir)) {
         if (PUBLIC_ONLY) {
             console.error(`Data directory does not exist: ${dataDir}`);
+            console.error('In public-only mode, the admin container must be running first.');
             process.exit(1);
         }
-        console.log(`Creating data directory: ${dataDir}`);
-        fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
-    }
-    
-    // Auto-detect if not explicitly set
-    if (!PUBLIC_ONLY) {
-        PUBLIC_ONLY = isReadOnlyFilesystem(dataDir);
-        if (PUBLIC_ONLY) {
-            console.log('Auto-detected read-only filesystem, running in public-only mode');
+        try {
+            console.log(`Creating data directory: ${dataDir}`);
+            fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
+        } catch (mkdirErr) {
+            if (mkdirErr.code === 'EACCES') {
+                console.error('');
+                console.error('='.repeat(60));
+                console.error('ERROR: Cannot create data directory - permission denied!');
+                console.error('='.repeat(60));
+                console.error('');
+                console.error('Please create the directory on the host first:');
+                console.error('');
+                console.error('  mkdir -p /mnt/user/appdata/cv-manager/data');
+                console.error('  chmod 777 /mnt/user/appdata/cv-manager/data');
+                console.error('');
+                console.error('='.repeat(60));
+                process.exit(1);
+            }
+            throw mkdirErr;
         }
     }
     
-    if (PUBLIC_ONLY) {
+    // Auto-detect read-only mode if not explicitly set
+    if (!PUBLIC_ONLY) {
+        const accessCheck = checkFilesystemAccess(dataDir);
+        
+        if (accessCheck.status === 'writable') {
+            console.log('Running in ADMIN mode (read-write)');
+        } else if (accessCheck.status === 'readonly') {
+            // True read-only mount (EROFS) - check if database exists for public mode
+            if (fs.existsSync(DB_PATH)) {
+                console.log('Auto-detected read-only mount with existing database');
+                console.log('Running in PUBLIC-ONLY mode (read-only)');
+                PUBLIC_ONLY = true;
+            } else {
+                console.error('');
+                console.error('='.repeat(60));
+                console.error('ERROR: Read-only mount but no database found!');
+                console.error('='.repeat(60));
+                console.error('');
+                console.error('If this is the PUBLIC container:');
+                console.error('  Install and run the ADMIN container first to create the database.');
+                console.error('');
+                console.error('If this is the ADMIN container:');
+                console.error('  Change the volume mount from read-only (ro) to read-write (rw).');
+                console.error('');
+                console.error('='.repeat(60));
+                process.exit(1);
+            }
+        } else if (accessCheck.status === 'permission_denied') {
+            // Permission issue - not a read-only mount, just can't write
+            console.error('');
+            console.error('='.repeat(60));
+            console.error('ERROR: Permission denied writing to data directory!');
+            console.error('='.repeat(60));
+            console.error('');
+            console.error(`Directory: ${dataDir}`);
+            console.error('');
+            console.error('Please fix permissions on the host:');
+            console.error('');
+            console.error('  chmod -R 777 /mnt/user/appdata/cv-manager');
+            console.error('');
+            console.error('Or create the directory with correct ownership:');
+            console.error('');
+            console.error('  mkdir -p /mnt/user/appdata/cv-manager/data');
+            console.error('  chown -R 1001:1001 /mnt/user/appdata/cv-manager');
+            console.error('');
+            console.error('='.repeat(60));
+            process.exit(1);
+        } else {
+            console.error(`Error checking filesystem access: ${accessCheck.error}`);
+            process.exit(1);
+        }
+    } else {
+        // Explicit PUBLIC_ONLY mode
         if (!fs.existsSync(DB_PATH)) {
             console.error(`Database does not exist: ${DB_PATH}`);
-            console.error('In public-only mode, the database must already exist (created by admin container).');
+            console.error('In public-only mode, the admin container must create the database first.');
             process.exit(1);
         }
         console.log('Running in PUBLIC-ONLY mode (read-only)');
-    } else {
-        console.log('Running in ADMIN mode (read-write)');
     }
 } catch (err) {
     console.error(`Error with data directory: ${err.message}`);
