@@ -7,6 +7,7 @@ const icons = {
     location: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
     linkedin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
     languages: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>',
     // Skill category icons (flat style)
     code: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
     server: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
@@ -252,7 +253,10 @@ async function loadProjectsReadOnly() {
     
     container.innerHTML = projects.map(proj => `
         <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
-            <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
+            <div class="project-header">
+                <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
+                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="View Project">${icons.link}</a>` : ''}
+            </div>
             <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
@@ -376,6 +380,7 @@ async function generateATSContent() {
                 if (proj.technologies && proj.technologies.length > 0) {
                     ats.push(`Technologies: ${proj.technologies.join(', ')}`);
                 }
+                if (proj.link) ats.push(`Link: ${proj.link}`);
             });
         ats.push('');
     }
