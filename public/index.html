@@ -282,6 +282,7 @@
                 <div class="settings-tabs">
                     <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections">Section Order</button>
                     <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom">Custom Sections</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public">Public Site</button>
                 </div>
                 
                 <!-- Section Order Tab -->
@@ -302,6 +303,23 @@
                         Add Custom Section
                     </button>
                     <div id="customSectionsList"></div>
+                </div>
+                
+                <!-- Public Site Tab -->
+                <div class="settings-tab-content" id="settingsTabPublic">
+                    <div class="settings-info">
+                        Configure options for the public read-only version of your CV.
+                    </div>
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title">Show Print/PDF Button</div>
+                            <div class="settings-option-desc">Display a print button on the public site allowing visitors to print or save your CV as PDF.</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingShowPrintButton" onchange="togglePublicSetting('showPublicPrintButton', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

@@ -995,7 +995,19 @@ let draggedItem = null;
 async function openSettingsModal() {
     settingsSectionOrder = await api('/api/sections/order');
     renderSettingsSections();
+    await loadPublicSettings();
     document.getElementById('settingsModalOverlay').classList.add('active');
+}
+
+async function loadPublicSettings() {
+    // Load print button setting
+    const printBtnSetting = await api('/api/settings/showPublicPrintButton');
+    document.getElementById('settingShowPrintButton').checked = printBtnSetting.value === 'true';
+}
+
+async function togglePublicSetting(key, value) {
+    await api(`/api/settings/${key}`, { method: 'PUT', body: { value: value.toString() } });
+    toast('Setting saved');
 }
 
 function closeSettingsModal() {
@@ -1475,6 +1487,7 @@ function switchSettingsTab(tabName) {
     });
     document.getElementById('settingsTabSections').classList.toggle('active', tabName === 'sections');
     document.getElementById('settingsTabCustom').classList.toggle('active', tabName === 'custom');
+    document.getElementById('settingsTabPublic').classList.toggle('active', tabName === 'public');
     
     if (tabName === 'custom') {
         loadCustomSectionsList();

@@ -12,6 +12,11 @@
     <link rel="stylesheet" href="/shared/styles.css">
 </head>
 <body>
+    <!-- Print Button (hidden by default, enabled via admin settings) -->
+    <button class="public-print-btn no-print" id="publicPrintBtn" onclick="window.print()" style="display: none;" title="Print / Save as PDF">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+    </button>
+    
     <div class="container" role="main">
         <!-- ATS-friendly hidden text version -->
         <div id="ats-content" class="ats-only" aria-hidden="true"></div>
@@ -102,6 +107,7 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             await loadThemeColorPublic();
+            await loadPublicPrintButton();
             sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
@@ -115,6 +121,18 @@
             renderSectionsInOrder();
             await generateATSContent();
         });
+        
+        // Load print button setting
+        async function loadPublicPrintButton() {
+            try {
+                const result = await api('/api/settings/showPublicPrintButton');
+                if (result.value === 'true') {
+                    document.getElementById('publicPrintBtn').style.display = 'flex';
+                }
+            } catch (err) {
+                // Ignore errors, button stays hidden
+            }
+        }
         
         // Load section order from API
         async function loadSectionOrder() {

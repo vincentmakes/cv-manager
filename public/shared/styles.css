@@ -754,6 +754,36 @@ body {
     text-decoration: underline;
 }
 
+/* Public Print Button */
+.public-print-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.public-print-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4);
+}
+
+.public-print-btn svg {
+    flex-shrink: 0;
+}
+
 /* ATS hidden content - using clip method for better ATS compatibility */
 .ats-only {
     position: absolute;
