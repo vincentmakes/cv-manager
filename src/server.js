@@ -167,6 +167,47 @@ if (!PUBLIC_ONLY) {
 }
 app.use('/uploads', express.static(uploadsPath));
 
+// Helper function to serve public index.html with dynamic meta tags
+function servePublicIndex(req, res) {
+    try {
+        const profile = db.prepare('SELECT name, title, bio FROM profile WHERE id = 1').get();
+        const name = profile?.name || 'CV';
+        const title = profile?.title || '';
+        const bio = profile?.bio || 'Professional CV';
+        const description = bio.substring(0, 160).replace(/\n/g, ' '); // First 160 chars for meta description
+        
+        let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+        
+        // Replace title tag
+        html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
+        
+        // Replace or add meta description
+        html = html.replace(
+            /<meta name="description" content="[^"]*">/,
+            `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`
+        );
+        
+        // Add Open Graph tags for better link previews (after description meta tag)
+        const ogTags = `
+    <meta property="og:title" content="${name} - CV">
+    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
+    <meta property="og:type" content="profile">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="${name} - CV">
+    <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}">`;
+        
+        html = html.replace(
+            /<meta name="description" content="[^"]*">/,
+            `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`
+        );
+        
+        res.type('html').send(html);
+    } catch (err) {
+        console.error('Error serving public index:', err);
+        res.sendFile(path.join(__dirname, '../public-readonly/index.html'));
+    }
+}
+
 // ===========================
 // Database Schema (only run if not public-only)
 // ===========================
@@ -514,7 +555,7 @@ Disallow: /api/
 
     // Catch-all for public SPA
     publicApp.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../public-readonly/index.html'));
+        servePublicIndex(req, res);
     });
 
     // Start public-only server on PUBLIC_PORT
@@ -1322,7 +1363,7 @@ Disallow: /api/
     });
 
     publicApp.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../public-readonly/index.html'));
+        servePublicIndex(req, res);
     });
 
     // Start both servers
