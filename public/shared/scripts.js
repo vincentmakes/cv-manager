@@ -388,3 +388,118 @@ async function generateATSContent() {
     const atsEl = document.getElementById('ats-content');
     if (atsEl) atsEl.textContent = ats.join('\n');
 }
+
+// ===========================
+// Shared Custom Section Rendering (Public)
+// ===========================
+
+// Render custom sections for public view
+async function renderCustomSectionsPublic(container) {
+    const customSections = await api('/api/custom-sections');
+    const layoutTypes = await api('/api/layout-types');
+    const socialPlatforms = await api('/api/social-platforms');
+    
+    customSections.forEach(section => {
+        const sectionHtml = renderCustomSectionPublic(section, layoutTypes, socialPlatforms);
+        container.insertAdjacentHTML('beforeend', sectionHtml);
+    });
+}
+
+function renderCustomSectionPublic(section, layoutTypes, socialPlatforms) {
+    const items = section.items || [];
+    let contentHtml = '';
+    
+    switch (section.layout_type) {
+        case 'social-links':
+            contentHtml = renderSocialLinksPublic(items, socialPlatforms);
+            break;
+        case 'grid-2':
+            contentHtml = renderGridPublic(items, 2);
+            break;
+        case 'grid-3':
+            contentHtml = renderGridPublic(items, 3);
+            break;
+        case 'list':
+            contentHtml = renderListPublic(items);
+            break;
+        case 'cards':
+            contentHtml = renderCardsPublic(items);
+            break;
+        default:
+            contentHtml = renderGridPublic(items, 3);
+    }
+    
+    return `
+        <section class="section custom-section" id="section-${section.section_key}">
+            <div class="section-header">
+                <h2 class="section-title">${escapeHtml(section.name)}</h2>
+            </div>
+            <div class="custom-section-content" data-layout="${section.layout_type}">
+                ${contentHtml}
+            </div>
+        </section>
+    `;
+}
+
+function renderSocialLinksPublic(items, socialPlatforms) {
+    if (items.length === 0) return '';
+    
+    return `<div class="social-links-grid">${items.map(item => {
+        const platform = item.metadata?.platform || 'custom';
+        const platformData = socialPlatforms.find(p => p.id === platform) || {};
+        const icon = platformData.icon || '🔗';
+        const color = platformData.color || 'var(--primary)';
+        const displayUrl = item.link ? item.link.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') : '';
+        
+        return `
+            <a href="${escapeHtml(item.link || '#')}" class="social-link-item" target="_blank" rel="noopener" style="--social-color: ${color}">
+                <span class="social-link-icon">${icon}</span>
+                <div class="social-link-text">
+                    <span class="social-link-name">${escapeHtml(item.title)}</span>
+                    ${displayUrl ? `<span class="social-link-url">${escapeHtml(displayUrl)}</span>` : ''}
+                </div>
+            </a>
+        `;
+    }).join('')}</div>`;
+}
+
+function renderGridPublic(items, cols) {
+    if (items.length === 0) return '';
+    
+    return `<div class="custom-grid custom-grid-${cols}">${items.map(item => `
+        <div class="custom-grid-item">
+            <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+            ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+            ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+        </div>
+    `).join('')}</div>`;
+}
+
+function renderListPublic(items) {
+    if (items.length === 0) return '';
+    
+    return `<div class="custom-list">${items.map(item => `
+        <div class="custom-list-item">
+            <div class="custom-list-content">
+                <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+                ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+            </div>
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+        </div>
+    `).join('')}</div>`;
+}
+
+function renderCardsPublic(items) {
+    if (items.length === 0) return '';
+    
+    return `<div class="custom-cards">${items.map(item => `
+        <div class="custom-card">
+            <h3 class="custom-card-title">${escapeHtml(item.title)}</h3>
+            ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+            ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
+        </div>
+    `).join('')}</div>`;
+}

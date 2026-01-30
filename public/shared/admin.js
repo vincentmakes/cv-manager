@@ -3,18 +3,209 @@
 // State
 let currentModal = { type: null, id: null };
 let sectionVisibility = {};
+let sectionOrder = [];
 
 // Initialize Admin
 async function initAdmin() {
+    sectionOrder = await loadSectionOrder();
     sectionVisibility = await loadSectionsAdmin();
-    await loadProfile(true); // true = include email/phone
+    await loadProfile(true);
+    await renderSectionsInOrder();
+    await generateATSContent();
+}
+
+// Load section order from API
+async function loadSectionOrder() {
+    const order = await api('/api/sections/order');
+    return order;
+}
+
+// Render sections in the correct order
+async function renderSectionsInOrder() {
+    const container = document.querySelector('.container');
+    
+    // Load all section data
     await loadTimeline();
     await loadExperiences();
     await loadCertifications();
     await loadEducation();
     await loadSkills();
     await loadProjects();
-    await generateATSContent();
+    await loadCustomSections();
+    
+    // Get all section elements (built-in sections)
+    const sectionElements = {
+        'about': document.getElementById('section-about'),
+        'timeline': document.getElementById('section-timeline'),
+        'experience': document.getElementById('section-experience'),
+        'certifications': document.getElementById('section-certifications'),
+        'education': document.getElementById('section-education'),
+        'skills': document.getElementById('section-skills'),
+        'projects': document.getElementById('section-projects')
+    };
+    
+    // Add custom section elements
+    customSections.forEach(cs => {
+        const el = document.getElementById(`section-${cs.section_key}`);
+        if (el) {
+            sectionElements[cs.section_key] = el;
+        }
+    });
+    
+    // Reorder sections based on sectionOrder
+    sectionOrder.forEach(section => {
+        const el = sectionElements[section.key];
+        if (el) {
+            container.appendChild(el);
+        }
+    });
+}
+
+// Load custom sections and render them
+async function loadCustomSections() {
+    await loadCustomSectionsData();
+    
+    // Remove any existing custom sections from DOM
+    document.querySelectorAll('.section.custom-section').forEach(el => el.remove());
+    
+    const container = document.querySelector('.container');
+    
+    customSections.forEach(section => {
+        const sectionHtml = renderCustomSection(section);
+        container.insertAdjacentHTML('beforeend', sectionHtml);
+        
+        // Apply visibility
+        const el = document.getElementById(`section-${section.section_key}`);
+        if (el && !section.visible) {
+            el.classList.add('hidden-print');
+        }
+    });
+}
+
+// Render a custom section based on its layout type
+function renderCustomSection(section) {
+    const layoutType = layoutTypes.find(l => l.id === section.layout_type) || { id: 'grid-3' };
+    const items = section.items || [];
+    const visible = section.visible !== false;
+    
+    let contentHtml = '';
+    
+    switch (section.layout_type) {
+        case 'social-links':
+            contentHtml = renderSocialLinksLayout(items);
+            break;
+        case 'grid-2':
+            contentHtml = renderGridLayout(items, 2);
+            break;
+        case 'grid-3':
+            contentHtml = renderGridLayout(items, 3);
+            break;
+        case 'list':
+            contentHtml = renderListLayout(items);
+            break;
+        case 'cards':
+            contentHtml = renderCardsLayout(items);
+            break;
+        default:
+            contentHtml = renderGridLayout(items, 3);
+    }
+    
+    return `
+        <section class="section custom-section ${visible ? '' : 'hidden-print'}" id="section-${section.section_key}">
+            <div class="section-header">
+                <h2 class="section-title">${escapeHtml(section.name)}</h2>
+                <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="toggleSection('${section.section_key}')" title="Toggle Visibility" id="toggle-${section.section_key}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="custom-section-content" data-layout="${section.layout_type}">
+                ${contentHtml}
+            </div>
+            <button class="add-btn no-print" onclick="manageCustomSectionItems(${section.id})">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Manage Items
+            </button>
+        </section>
+    `;
+}
+
+// Social links layout
+function renderSocialLinksLayout(items) {
+    if (items.length === 0) return '<p class="empty-section">No social links added yet.</p>';
+    
+    return `<div class="social-links-grid">${items.map(item => {
+        const platform = item.metadata?.platform || 'custom';
+        const platformData = socialPlatforms.find(p => p.id === platform) || {};
+        const icon = platformData.icon || '🔗';
+        const color = platformData.color || 'var(--primary)';
+        const visible = item.visible !== false;
+        const displayUrl = item.link ? item.link.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') : '';
+        
+        return `
+            <a href="${escapeHtml(item.link || '#')}" class="social-link-item ${visible ? '' : 'hidden-print'}" target="_blank" rel="noopener" style="--social-color: ${color}">
+                <span class="social-link-icon">${icon}</span>
+                <div class="social-link-text">
+                    <span class="social-link-name">${escapeHtml(item.title)}</span>
+                    ${displayUrl ? `<span class="social-link-url">${escapeHtml(displayUrl)}</span>` : ''}
+                </div>
+            </a>
+        `;
+    }).join('')}</div>`;
+}
+
+// Grid layout (2 or 3 columns)
+function renderGridLayout(items, cols) {
+    if (items.length === 0) return '<p class="empty-section">No items added yet.</p>';
+    
+    return `<div class="custom-grid custom-grid-${cols}">${items.map(item => {
+        const visible = item.visible !== false;
+        return `
+            <div class="custom-grid-item ${visible ? '' : 'hidden-print'}">
+                <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+                ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+            </div>
+        `;
+    }).join('')}</div>`;
+}
+
+// List layout
+function renderListLayout(items) {
+    if (items.length === 0) return '<p class="empty-section">No items added yet.</p>';
+    
+    return `<div class="custom-list">${items.map(item => {
+        const visible = item.visible !== false;
+        return `
+            <div class="custom-list-item ${visible ? '' : 'hidden-print'}">
+                <div class="custom-list-content">
+                    <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+                    ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                    ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+                </div>
+                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+            </div>
+        `;
+    }).join('')}</div>`;
+}
+
+// Cards layout
+function renderCardsLayout(items) {
+    if (items.length === 0) return '<p class="empty-section">No items added yet.</p>';
+    
+    return `<div class="custom-cards">${items.map(item => {
+        const visible = item.visible !== false;
+        return `
+            <div class="custom-card ${visible ? '' : 'hidden-print'}">
+                <h3 class="custom-card-title">${escapeHtml(item.title)}</h3>
+                ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
+                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
+            </div>
+        `;
+    }).join('')}</div>`;
 }
 
 // Load Sections with visibility toggle (admin version)
@@ -184,7 +375,7 @@ async function loadProjects() {
             </div>
             <div class="project-header">
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
-                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="View Project">${linkIcon()}</a>` : ''}
+                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="View Project">${linkIcon()}</a>` : ''}
             </div>
             <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
             <div class="tech-tags">
@@ -572,7 +763,7 @@ async function saveItem() {
         case 'skill':
             data = {
                 name: val('f-name'),
-                icon: val('f-icon') || '💡',
+                icon: val('f-icon') || 'default',
                 skills: val('f-skills').split(',').map(s => s.trim()).filter(s => s),
                 visible: true
             };
@@ -633,12 +824,10 @@ async function confirmDelete(endpoint, id) {
 async function showAllItems() {
     const cv = await api('/api/cv');
     
-    // Show all sections
     for (const section of Object.keys(sectionVisibility)) {
         await api(`/api/sections/${section}`, { method: 'PUT', body: { visible: true } });
     }
     
-    // Show all items
     for (const exp of cv.experiences) {
         await api(`/api/experiences/${exp.id}`, { method: 'PUT', body: { ...exp, visible: true } });
     }
@@ -724,18 +913,12 @@ let pendingProfilePicture = null;
 function previewProfilePicture(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast('Image too large. Maximum size is 5MB.', 'error');
             input.value = '';
             return;
         }
-        
-        // Store for upload on save
         pendingProfilePicture = file;
-        
-        // Preview
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = document.getElementById('profilePreviewImg');
@@ -759,31 +942,17 @@ function removeProfilePicture() {
 
 async function uploadProfilePicture() {
     if (pendingProfilePicture === 'remove') {
-        // Delete the picture
-        try {
-            await fetch('/api/profile/picture', { method: 'DELETE' });
-        } catch (err) {
-            console.error('Failed to delete picture:', err);
-        }
+        try { await fetch('/api/profile/picture', { method: 'DELETE' }); } catch (err) {}
         pendingProfilePicture = null;
         return;
     }
-    
     if (pendingProfilePicture && pendingProfilePicture instanceof File) {
         const formData = new FormData();
         formData.append('picture', pendingProfilePicture);
-        
         try {
-            const response = await fetch('/api/profile/picture', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                throw new Error('Upload failed');
-            }
+            const response = await fetch('/api/profile/picture', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error('Upload failed');
         } catch (err) {
-            console.error('Failed to upload picture:', err);
             toast('Failed to upload picture', 'error');
         }
         pendingProfilePicture = null;
@@ -813,7 +982,149 @@ function deleteIcon() {
 }
 
 function linkIcon() {
-    return '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+}
+
+// ===========================
+// Settings Modal - Section Reordering
+// ===========================
+
+let settingsSectionOrder = [];
+let draggedItem = null;
+
+async function openSettingsModal() {
+    settingsSectionOrder = await api('/api/sections/order');
+    renderSettingsSections();
+    document.getElementById('settingsModalOverlay').classList.add('active');
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModalOverlay').classList.remove('active');
+}
+
+function renderSettingsSections() {
+    const container = document.getElementById('settingsSectionsList');
+    
+    container.innerHTML = settingsSectionOrder.map((section, index) => `
+        <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
+            <div class="settings-section-drag">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                </svg>
+            </div>
+            <div class="settings-section-name">${escapeHtml(section.name)}</div>
+            <div class="settings-section-actions">
+                <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Toggle Visibility">
+                    ${visibilityIcon(section.visible)}
+                </button>
+                <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', -1)" title="Move Up" ${index === 0 ? 'disabled' : ''}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                </button>
+                <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', 1)" title="Move Down" ${index === settingsSectionOrder.length - 1 ? 'disabled' : ''}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add drag-and-drop event listeners
+    const items = container.querySelectorAll('.settings-section-item');
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragenter', handleDragEnter);
+        item.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.key);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.settings-section-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+    draggedItem = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedItem) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    
+    if (draggedItem && this !== draggedItem) {
+        const fromKey = draggedItem.dataset.key;
+        const toKey = this.dataset.key;
+        
+        const fromIndex = settingsSectionOrder.findIndex(s => s.key === fromKey);
+        const toIndex = settingsSectionOrder.findIndex(s => s.key === toKey);
+        
+        if (fromIndex !== -1 && toIndex !== -1) {
+            const [moved] = settingsSectionOrder.splice(fromIndex, 1);
+            settingsSectionOrder.splice(toIndex, 0, moved);
+            renderSettingsSections();
+        }
+    }
+}
+
+function toggleSettingsSectionVisibility(key) {
+    const section = settingsSectionOrder.find(s => s.key === key);
+    if (section) {
+        section.visible = !section.visible;
+        renderSettingsSections();
+    }
+}
+
+function moveSettingsSection(key, direction) {
+    const index = settingsSectionOrder.findIndex(s => s.key === key);
+    const newIndex = index + direction;
+    
+    if (newIndex >= 0 && newIndex < settingsSectionOrder.length) {
+        const [moved] = settingsSectionOrder.splice(index, 1);
+        settingsSectionOrder.splice(newIndex, 0, moved);
+        renderSettingsSections();
+    }
+}
+
+async function saveSettingsSectionOrder() {
+    const sections = settingsSectionOrder.map((s, index) => ({
+        key: s.key,
+        visible: s.visible,
+        sort_order: index
+    }));
+    
+    try {
+        await api('/api/sections/order', { method: 'PUT', body: { sections } });
+        sectionOrder = await loadSectionOrder();
+        sectionVisibility = await loadSectionsAdmin();
+        await renderSectionsInOrder();
+        closeSettingsModal();
+        toast('Section order saved');
+    } catch (err) {
+        toast('Failed to save section order', 'error');
+    }
 }
 
 // ===========================
@@ -917,27 +1228,19 @@ function initColorPicker() {
     
     colorWheelCtx = canvas.getContext('2d');
     drawColorWheel();
-    
-    // Load saved color from server
     loadThemeColor();
     
-    // Canvas events
     canvas.addEventListener('mousedown', startColorPick);
     canvas.addEventListener('mousemove', pickColorOnDrag);
     canvas.addEventListener('mouseup', stopColorPick);
     canvas.addEventListener('mouseleave', stopColorPick);
     
-    // Touch support
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startColorPick(e.touches[0]); });
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); pickColorOnDrag(e.touches[0]); });
     canvas.addEventListener('touchend', stopColorPick);
     
-    // Brightness slider
-    document.getElementById('colorBrightness').addEventListener('input', () => {
-        drawColorWheel();
-    });
+    document.getElementById('colorBrightness').addEventListener('input', () => { drawColorWheel(); });
     
-    // Hex input
     document.getElementById('colorHexInput').addEventListener('change', (e) => {
         const hex = e.target.value;
         if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
@@ -946,7 +1249,6 @@ function initColorPicker() {
         }
     });
     
-    // Presets
     document.querySelectorAll('.color-preset').forEach(preset => {
         preset.addEventListener('click', () => {
             const color = preset.dataset.color;
@@ -955,7 +1257,6 @@ function initColorPicker() {
         });
     });
     
-    // Close on click outside
     document.addEventListener('click', (e) => {
         const dropdown = document.getElementById('colorPickerDropdown');
         const wrapper = document.querySelector('.color-picker-wrapper');
@@ -974,7 +1275,6 @@ async function loadThemeColor() {
             updateColorPickerUI(currentColor);
         }
     } catch (err) {
-        // Fallback to localStorage
         const savedColor = localStorage.getItem('cvThemeColor');
         if (savedColor) {
             currentColor = savedColor;
@@ -992,7 +1292,6 @@ function drawColorWheel() {
     const radius = Math.min(centerX, centerY);
     const brightness = document.getElementById('colorBrightness')?.value || 50;
     
-    // Draw color wheel
     for (let angle = 0; angle < 360; angle++) {
         const startAngle = (angle - 1) * Math.PI / 180;
         const endAngle = (angle + 1) * Math.PI / 180;
@@ -1013,18 +1312,9 @@ function drawColorWheel() {
     }
 }
 
-function startColorPick(e) {
-    isDraggingWheel = true;
-    pickColor(e);
-}
-
-function pickColorOnDrag(e) {
-    if (isDraggingWheel) pickColor(e);
-}
-
-function stopColorPick() {
-    isDraggingWheel = false;
-}
+function startColorPick(e) { isDraggingWheel = true; pickColor(e); }
+function pickColorOnDrag(e) { if (isDraggingWheel) pickColor(e); }
+function stopColorPick() { isDraggingWheel = false; }
 
 function pickColor(e) {
     const canvas = document.getElementById('colorWheel');
@@ -1045,7 +1335,6 @@ function pickColor(e) {
         currentColor = hex;
         updateColorPickerUI(hex);
         
-        // Update cursor position
         const cursor = document.getElementById('colorWheelCursor');
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
@@ -1056,7 +1345,6 @@ function updateColorPickerUI(hex) {
     document.getElementById('colorPreview').style.backgroundColor = hex;
     document.getElementById('colorHexInput').value = hex.toUpperCase();
     
-    // Update preset selection
     document.querySelectorAll('.color-preset').forEach(preset => {
         preset.classList.toggle('active', preset.dataset.color.toLowerCase() === hex.toLowerCase());
     });
@@ -1075,7 +1363,6 @@ async function applyThemeColor() {
     try {
         await api('/api/settings/themeColor', { method: 'PUT', body: { value: currentColor } });
     } catch (err) {
-        // Fallback to localStorage
         localStorage.setItem('cvThemeColor', currentColor);
     }
     document.getElementById('colorPickerDropdown').classList.remove('active');
@@ -1099,36 +1386,22 @@ function applyColorToCSS(hex) {
     const root = document.documentElement;
     const hsl = hexToHSL(hex);
     
-    // Generate color variants
-    const primary = hex;
-    const primaryDark = hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10));
-    const primaryLight = hslToHex(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80));
-    const accent = hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l);
-    const dark = hslToHex(hsl.h, hsl.s, 15);
-    const light = hslToHex(hsl.h, 30, 90);
-    const veryLight = hslToHex(hsl.h, 20, 97);
-    
-    root.style.setProperty('--primary', primary);
-    root.style.setProperty('--primary-dark', primaryDark);
-    root.style.setProperty('--primary-light', primaryLight);
-    root.style.setProperty('--accent', accent);
-    root.style.setProperty('--dark', dark);
-    root.style.setProperty('--light', light);
-    root.style.setProperty('--very-light', veryLight);
+    root.style.setProperty('--primary', hex);
+    root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+    root.style.setProperty('--primary-light', hslToHex(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
+    root.style.setProperty('--accent', hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l));
+    root.style.setProperty('--dark', hslToHex(hsl.h, hsl.s, 15));
+    root.style.setProperty('--light', hslToHex(hsl.h, 30, 90));
+    root.style.setProperty('--very-light', hslToHex(hsl.h, 20, 97));
 }
 
-// Color conversion utilities
 function rgbToHex(r, g, b) {
     return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
 function hexToRGB(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
+    return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
 }
 
 function hexToHSL(hex) {
@@ -1137,9 +1410,8 @@ function hexToHSL(hex) {
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
     let h, s, l = (max + min) / 2;
 
-    if (max === min) {
-        h = s = 0;
-    } else {
+    if (max === min) { h = s = 0; }
+    else {
         const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch (max) {
@@ -1152,8 +1424,7 @@ function hexToHSL(hex) {
 }
 
 function hslToHex(h, s, l) {
-    s /= 100;
-    l /= 100;
+    s /= 100; l /= 100;
     const a = s * Math.min(l, 1 - l);
     const f = n => {
         const k = (n + h / 30) % 12;
@@ -1173,5 +1444,467 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeModal();
         closeDatasetsModal();
+        closeSettingsModal();
+        closeCustomSectionModal();
+        closeCustomItemModal();
     }
 });
+
+// ===========================
+// Custom Sections Management
+// ===========================
+
+let customSections = [];
+let layoutTypes = [];
+let socialPlatforms = [];
+let currentCustomSection = { id: null };
+let currentCustomItem = { sectionId: null, itemId: null };
+let inItemsView = false; // Track if we're in items management view
+
+// Load custom sections data
+async function loadCustomSectionsData() {
+    customSections = await api('/api/custom-sections');
+    layoutTypes = await api('/api/layout-types');
+    socialPlatforms = await api('/api/social-platforms');
+}
+
+// Switch settings tabs
+function switchSettingsTab(tabName) {
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+    });
+    document.getElementById('settingsTabSections').classList.toggle('active', tabName === 'sections');
+    document.getElementById('settingsTabCustom').classList.toggle('active', tabName === 'custom');
+    
+    if (tabName === 'custom') {
+        loadCustomSectionsList();
+    }
+}
+
+// Render custom sections list
+async function loadCustomSectionsList() {
+    await loadCustomSectionsData();
+    const container = document.getElementById('customSectionsList');
+    
+    // Restore the Save button (it may have been changed by manageCustomSectionItems)
+    const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
+    if (saveBtn) {
+        saveBtn.textContent = 'Save';
+        saveBtn.setAttribute('onclick', 'saveCustomSection()');
+        saveBtn.style.display = '';
+    }
+    
+    if (customSections.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No custom sections yet.<br>Click "Add Custom Section" to create one.</p>';
+        return;
+    }
+    
+    container.innerHTML = customSections.map(section => {
+        const layoutType = layoutTypes.find(l => l.id === section.layout_type) || { name: section.layout_type };
+        return `
+            <div class="custom-section-item" data-id="${section.id}">
+                <div class="custom-section-info">
+                    <div class="custom-section-name">${escapeHtml(section.name)}</div>
+                    <div class="custom-section-meta">
+                        <span class="custom-section-layout">${layoutType.name}</span>
+                        <span class="custom-section-count">${section.items?.length || 0} items</span>
+                    </div>
+                </div>
+                <div class="custom-section-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="openCustomSectionModal(${section.id})" title="Edit Section">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="manageCustomSectionItems(${section.id})" title="Manage Items">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Open custom section modal
+async function openCustomSectionModal(id = null) {
+    currentCustomSection.id = id;
+    inItemsView = false; // We're in section edit mode, not items view
+    
+    try {
+        await loadCustomSectionsData();
+    } catch (err) {
+        console.error('Failed to load custom sections data:', err);
+        toast('Failed to load section data', 'error');
+        return;
+    }
+    
+    // Ensure layoutTypes is an array
+    if (!Array.isArray(layoutTypes) || layoutTypes.length === 0) {
+        console.error('layoutTypes is empty or not an array:', layoutTypes);
+        toast('Failed to load layout options', 'error');
+        return;
+    }
+    
+    let section = { name: '', layout_type: 'grid-3', icon: 'default' };
+    if (id) {
+        section = customSections.find(s => s.id === id) || section;
+    }
+    
+    document.getElementById('customSectionModalTitle').textContent = id ? 'Edit Custom Section' : 'Add Custom Section';
+    document.getElementById('deleteCustomSectionBtn').style.display = id ? 'block' : 'none';
+    
+    // Restore the Save button (it may have been changed by manageCustomSectionItems)
+    const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
+    if (saveBtn) {
+        saveBtn.textContent = 'Save';
+        saveBtn.setAttribute('onclick', 'saveCustomSection()');
+        saveBtn.style.display = '';
+    }
+    
+    document.getElementById('customSectionModalBody').innerHTML = `
+        <div class="form-group">
+            <label class="form-label">Section Name</label>
+            <input type="text" class="form-input" id="cs-name" value="${escapeHtml(section.name || '')}" placeholder="e.g., Social Links, Awards, Publications">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Layout Type</label>
+            <div class="layout-type-grid">
+                ${layoutTypes.map(lt => `
+                    <div class="layout-type-option ${section.layout_type === lt.id ? 'selected' : ''}" data-layout="${lt.id}" onclick="selectLayoutType('${lt.id}')">
+                        <div class="layout-type-icon">${lt.icon}</div>
+                        <div class="layout-type-name">${escapeHtml(lt.name)}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <input type="hidden" id="cs-layout" value="${section.layout_type || 'grid-3'}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Section Icon</label>
+            <select class="form-select" id="cs-icon">
+                <option value="default" ${section.icon === 'default' ? 'selected' : ''}>Default</option>
+                <option value="star" ${section.icon === 'star' ? 'selected' : ''}>Star (Awards)</option>
+                <option value="book" ${section.icon === 'book' ? 'selected' : ''}>Book (Publications)</option>
+                <option value="link" ${section.icon === 'link' ? 'selected' : ''}>Link (Social)</option>
+                <option value="globe" ${section.icon === 'globe' ? 'selected' : ''}>Globe (Languages)</option>
+                <option value="heart" ${section.icon === 'heart' ? 'selected' : ''}>Heart (Interests)</option>
+                <option value="award" ${section.icon === 'award' ? 'selected' : ''}>Award</option>
+                <option value="briefcase" ${section.icon === 'briefcase' ? 'selected' : ''}>Briefcase</option>
+            </select>
+        </div>
+    `;
+    
+    document.getElementById('customSectionModalOverlay').classList.add('active');
+}
+
+function selectLayoutType(layoutId) {
+    document.querySelectorAll('.layout-type-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.layout === layoutId);
+    });
+    document.getElementById('cs-layout').value = layoutId;
+}
+
+async function closeCustomSectionModal() {
+    document.getElementById('customSectionModalOverlay').classList.remove('active');
+    
+    const wasInItemsView = inItemsView;
+    currentCustomSection.id = null;
+    inItemsView = false;
+    
+    // Restore buttons for next time
+    const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
+    const cancelBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-ghost');
+    if (saveBtn) {
+        saveBtn.textContent = 'Save';
+        saveBtn.setAttribute('onclick', 'saveCustomSection()');
+        saveBtn.style.display = '';
+    }
+    if (cancelBtn) {
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.setAttribute('onclick', 'closeCustomSectionModal()');
+    }
+    
+    // Refresh custom sections on main page if we were in items view
+    if (wasInItemsView) {
+        await loadCustomSections();
+    }
+}
+
+async function saveCustomSection() {
+    const nameEl = document.getElementById('cs-name');
+    const layoutEl = document.getElementById('cs-layout');
+    const iconEl = document.getElementById('cs-icon');
+    
+    if (!nameEl || !layoutEl || !iconEl) {
+        toast('Form not ready. Please try again.', 'error');
+        return;
+    }
+    
+    const name = nameEl.value.trim();
+    const layout_type = layoutEl.value;
+    const icon = iconEl.value;
+    
+    if (!name) {
+        toast('Please enter a section name', 'error');
+        return;
+    }
+    
+    try {
+        if (currentCustomSection.id) {
+            await api(`/api/custom-sections/${currentCustomSection.id}`, { 
+                method: 'PUT', 
+                body: { name, layout_type, icon } 
+            });
+            toast('Section updated');
+        } else {
+            await api('/api/custom-sections', { 
+                method: 'POST', 
+                body: { name, layout_type, icon } 
+            });
+            toast('Section created');
+        }
+        
+        closeCustomSectionModal();
+        await loadCustomSectionsList();
+        // Refresh section order since custom sections affect it
+        settingsSectionOrder = await api('/api/sections/order');
+        renderSettingsSections();
+    } catch (err) {
+        toast('Failed to save section', 'error');
+    }
+}
+
+async function deleteCustomSection() {
+    if (!currentCustomSection.id) return;
+    
+    if (!confirm('Delete this custom section and all its items? This cannot be undone.')) return;
+    
+    try {
+        await api(`/api/custom-sections/${currentCustomSection.id}`, { method: 'DELETE' });
+        toast('Section deleted');
+        closeCustomSectionModal();
+        await loadCustomSectionsList();
+        settingsSectionOrder = await api('/api/sections/order');
+        renderSettingsSections();
+    } catch (err) {
+        toast('Failed to delete section', 'error');
+    }
+}
+
+// Manage custom section items
+async function manageCustomSectionItems(sectionId) {
+    const section = customSections.find(s => s.id === sectionId);
+    if (!section) return;
+    
+    currentCustomItem.sectionId = sectionId;
+    inItemsView = true; // Mark that we're in items view for refresh on close
+    
+    const layoutType = layoutTypes.find(l => l.id === section.layout_type) || { name: section.layout_type };
+    const items = section.items || [];
+    
+    document.getElementById('customSectionModalTitle').textContent = `${section.name} - Items`;
+    document.getElementById('deleteCustomSectionBtn').style.display = 'none';
+    
+    // Change footer buttons for items view
+    const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
+    const cancelBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-ghost');
+    if (saveBtn) {
+        saveBtn.textContent = 'Done';
+        saveBtn.setAttribute('onclick', 'closeCustomSectionModal()');
+    }
+    if (cancelBtn) {
+        cancelBtn.textContent = 'Close';
+        cancelBtn.setAttribute('onclick', 'closeCustomSectionModal()');
+    }
+    
+    document.getElementById('customSectionModalBody').innerHTML = `
+        <div class="settings-info" style="margin-bottom: 12px;">
+            Layout: <strong>${escapeHtml(layoutType.name)}</strong> | ${items.length} items
+        </div>
+        <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Item
+        </button>
+        <div class="custom-items-list">
+            ${items.length === 0 ? '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>' : items.map(item => `
+                <div class="custom-item-row" data-id="${item.id}">
+                    <div class="custom-item-info">
+                        <div class="custom-item-title">${escapeHtml(item.title || 'Untitled')}</div>
+                        ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                    </div>
+                    <div class="custom-item-actions">
+                        <button class="item-btn" onclick="openCustomItemModal(${sectionId}, ${item.id})" title="Edit">
+                            ${editIcon()}
+                        </button>
+                        <button class="item-btn delete" onclick="confirmDeleteCustomItem(${sectionId}, ${item.id})" title="Delete">
+                            ${deleteIcon()}
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    document.getElementById('customSectionModalOverlay').classList.add('active');
+}
+
+// Close items view and refresh the custom sections on the page (now handled by closeCustomSectionModal with inItemsView flag)
+
+// Custom item modal
+function openCustomItemModal(sectionId, itemId = null) {
+    currentCustomItem.sectionId = sectionId;
+    currentCustomItem.itemId = itemId;
+    
+    const section = customSections.find(s => s.id === sectionId);
+    if (!section) return;
+    
+    let item = { title: '', subtitle: '', description: '', link: '', icon: '', metadata: {} };
+    if (itemId) {
+        item = section.items.find(i => i.id === itemId) || item;
+    }
+    
+    document.getElementById('customItemModalTitle').textContent = itemId ? 'Edit Item' : 'Add Item';
+    document.getElementById('deleteCustomItemBtn').style.display = itemId ? 'block' : 'none';
+    
+    // Different forms based on layout type
+    let formHtml = '';
+    
+    if (section.layout_type === 'social-links') {
+        // Social links form with platform selector
+        const platform = item.metadata?.platform || 'custom';
+        formHtml = `
+            <div class="form-group">
+                <label class="form-label">Platform</label>
+                <select class="form-select" id="ci-platform" onchange="updateSocialPlatformFields()">
+                    ${socialPlatforms.map(p => `<option value="${p.id}" ${platform === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Display Name</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="e.g., @username or My Website">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Link URL</label>
+                <input type="text" class="form-input" id="ci-link" value="${escapeHtml(item.link || '')}" placeholder="https://...">
+            </div>
+        `;
+    } else {
+        // Generic form for other layouts
+        formHtml = `
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subtitle (optional)</label>
+                <input type="text" class="form-input" id="ci-subtitle" value="${escapeHtml(item.subtitle || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description (optional)</label>
+                <textarea class="form-textarea" id="ci-description">${escapeHtml(item.description || '')}</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Link URL (optional)</label>
+                <input type="text" class="form-input" id="ci-link" value="${escapeHtml(item.link || '')}" placeholder="https://...">
+            </div>
+        `;
+    }
+    
+    document.getElementById('customItemModalBody').innerHTML = formHtml;
+    document.getElementById('customItemModalOverlay').classList.add('active');
+}
+
+// Update social platform fields when platform changes
+function updateSocialPlatformFields() {
+    const platformSelect = document.getElementById('ci-platform');
+    const titleInput = document.getElementById('ci-title');
+    
+    if (!platformSelect || !titleInput) return;
+    
+    const platform = platformSelect.value;
+    const platformData = socialPlatforms.find(p => p.id === platform);
+    
+    // Update placeholder based on platform
+    const placeholders = {
+        'linkedin': 'e.g., John Doe',
+        'github': 'e.g., @username',
+        'twitter': 'e.g., @username',
+        'instagram': 'e.g., @username',
+        'youtube': 'e.g., Channel Name',
+        'medium': 'e.g., @username',
+        'devto': 'e.g., @username',
+        'dribbble': 'e.g., @username',
+        'behance': 'e.g., Your Name',
+        'website': 'e.g., My Website',
+        'email': 'e.g., Contact Email',
+        'phone': 'e.g., +1 234 567 8900',
+        'custom': 'e.g., Display Name'
+    };
+    
+    titleInput.placeholder = placeholders[platform] || 'Display Name';
+}
+
+function closeCustomItemModal() {
+    document.getElementById('customItemModalOverlay').classList.remove('active');
+    currentCustomItem.itemId = null;
+}
+
+async function saveCustomItem() {
+    const section = customSections.find(s => s.id === currentCustomItem.sectionId);
+    if (!section) return;
+    
+    const title = document.getElementById('ci-title')?.value?.trim() || '';
+    const subtitle = document.getElementById('ci-subtitle')?.value?.trim() || '';
+    const description = document.getElementById('ci-description')?.value?.trim() || '';
+    const link = document.getElementById('ci-link')?.value?.trim() || '';
+    
+    let metadata = {};
+    if (section.layout_type === 'social-links') {
+        const platform = document.getElementById('ci-platform')?.value || 'custom';
+        const platformData = socialPlatforms.find(p => p.id === platform);
+        metadata = { platform, icon: platformData?.icon, color: platformData?.color };
+    }
+    
+    if (!title) {
+        toast('Please enter a title', 'error');
+        return;
+    }
+    
+    try {
+        if (currentCustomItem.itemId) {
+            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${currentCustomItem.itemId}`, { 
+                method: 'PUT', 
+                body: { title, subtitle, description, link, metadata } 
+            });
+            toast('Item updated');
+        } else {
+            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items`, { 
+                method: 'POST', 
+                body: { title, subtitle, description, link, metadata } 
+            });
+            toast('Item added');
+        }
+        
+        closeCustomItemModal();
+        await loadCustomSectionsData();
+        manageCustomSectionItems(currentCustomItem.sectionId);
+    } catch (err) {
+        toast('Failed to save item', 'error');
+    }
+}
+
+async function confirmDeleteCustomItem(sectionId, itemId) {
+    if (!confirm('Delete this item?')) return;
+    
+    try {
+        await api(`/api/custom-sections/${sectionId}/items/${itemId}`, { method: 'DELETE' });
+        toast('Item deleted');
+        await loadCustomSectionsData();
+        manageCustomSectionItems(sectionId);
+    } catch (err) {
+        toast('Failed to delete item', 'error');
+    }
+}
+
+async function deleteCustomItem() {
+    if (!currentCustomItem.sectionId || !currentCustomItem.itemId) return;
+    await confirmDeleteCustomItem(currentCustomItem.sectionId, currentCustomItem.itemId);
+    closeCustomItemModal();
+}

@@ -95,8 +95,14 @@
     <script src="/shared/scripts.js"></script>
     <script>
         // Public site initialization - read-only, no private data
+        let sectionOrder = [];
+        let customSectionsData = [];
+        let layoutTypesData = [];
+        let socialPlatformsData = [];
+        
         document.addEventListener('DOMContentLoaded', async () => {
             await loadThemeColorPublic();
+            sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
             await loadTimeline();
@@ -105,8 +111,78 @@
             await loadEducationReadOnly();
             await loadSkillsReadOnly();
             await loadProjectsReadOnly();
+            await loadCustomSectionsPublic();
+            renderSectionsInOrder();
             await generateATSContent();
         });
+        
+        // Load section order from API
+        async function loadSectionOrder() {
+            try {
+                return await api('/api/sections/order');
+            } catch (err) {
+                console.error('Failed to load section order:', err);
+                return [];
+            }
+        }
+        
+        // Load custom sections
+        async function loadCustomSectionsPublic() {
+            try {
+                customSectionsData = await api('/api/custom-sections');
+                layoutTypesData = await api('/api/layout-types');
+                socialPlatformsData = await api('/api/social-platforms');
+                
+                const container = document.querySelector('.container');
+                
+                customSectionsData.forEach(section => {
+                    const sectionHtml = renderCustomSectionPublic(section, layoutTypesData, socialPlatformsData);
+                    container.insertAdjacentHTML('beforeend', sectionHtml);
+                });
+            } catch (err) {
+                console.error('Failed to load custom sections:', err);
+            }
+        }
+        
+        // Render sections in correct order in DOM
+        function renderSectionsInOrder() {
+            if (!sectionOrder.length) return;
+            
+            const container = document.querySelector('.container');
+            if (!container) return;
+            
+            const header = document.querySelector('.header');
+            const atsContent = document.getElementById('ats-content');
+            
+            // Get all section elements (built-in)
+            const sectionElements = {
+                'about': document.getElementById('section-about'),
+                'timeline': document.getElementById('section-timeline'),
+                'experience': document.getElementById('section-experience'),
+                'certifications': document.getElementById('section-certifications'),
+                'education': document.getElementById('section-education'),
+                'skills': document.getElementById('section-skills'),
+                'projects': document.getElementById('section-projects')
+            };
+            
+            // Add custom section elements
+            customSectionsData.forEach(cs => {
+                const el = document.getElementById(`section-${cs.section_key}`);
+                if (el) {
+                    sectionElements[cs.section_key] = el;
+                }
+            });
+            
+            // Reorder sections based on sectionOrder (only visible ones from API)
+            let lastInserted = header || atsContent;
+            sectionOrder.forEach(section => {
+                const el = sectionElements[section.key];
+                if (el && lastInserted) {
+                    lastInserted.after(el);
+                    lastInserted = el;
+                }
+            });
+        }
         
         async function loadThemeColorPublic() {
             try {

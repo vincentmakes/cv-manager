@@ -548,6 +548,212 @@ body {
     font-weight: 500;
 }
 
+/* ===========================
+   Custom Section Layouts
+   =========================== */
+
+.custom-section-content {
+    margin-bottom: 12px;
+}
+
+.empty-section {
+    color: var(--gray-500);
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* Social Links Layout */
+.social-links-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.social-link-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--very-light);
+    border-radius: 0;
+    text-decoration: none;
+    color: var(--gray-700);
+    transition: all 0.15s ease;
+    border-left: 4px solid var(--primary);
+}
+
+.social-link-item:hover {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+    transform: translateX(4px);
+}
+
+.social-link-icon {
+    font-size: 18px;
+}
+
+.social-link-name {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.social-link-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.social-link-url {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 400;
+}
+
+.social-link-item:hover .social-link-url {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Grid Layouts (2 and 3 columns) */
+.custom-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.custom-grid-2 {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.custom-grid-3 {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.custom-grid-item {
+    background: linear-gradient(135deg, var(--very-light), var(--white));
+    border-radius: 0;
+    padding: 16px;
+    border-left: 4px solid var(--primary);
+    transition: all 0.15s ease;
+}
+
+.custom-grid-item:hover {
+    background: var(--light);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+}
+
+.custom-item-subtitle {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-bottom: 6px;
+}
+
+.custom-item-description {
+    font-size: 13px;
+    color: var(--gray-700);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.custom-item-link {
+    font-size: 12px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.custom-item-link:hover {
+    text-decoration: underline;
+}
+
+/* List Layout */
+.custom-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.custom-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--very-light), var(--white));
+    border-radius: 0;
+    border-left: 4px solid var(--primary);
+    transition: all 0.15s ease;
+}
+
+.custom-list-item:hover {
+    background: var(--light);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-list-content {
+    flex: 1;
+}
+
+/* Cards Layout */
+.custom-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.custom-card {
+    background: linear-gradient(135deg, var(--very-light), var(--white));
+    border-radius: 0;
+    padding: 18px;
+    border-left: 4px solid var(--primary);
+    transition: all 0.2s ease;
+}
+
+.custom-card:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateX(4px);
+}
+
+.custom-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+}
+
+.custom-card-subtitle {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+}
+
+.custom-card-description {
+    font-size: 13px;
+    color: var(--gray-700);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.custom-card-link {
+    font-size: 12px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.custom-card-link:hover {
+    text-decoration: underline;
+}
+
 /* ATS hidden content - using clip method for better ATS compatibility */
 .ats-only {
     position: absolute;

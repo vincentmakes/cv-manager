@@ -15,6 +15,10 @@
     <div class="toolbar no-print">
         <div class="toolbar-title">CV Manager</div>
         <div class="toolbar-actions">
+            <button class="btn btn-secondary" onclick="openSettingsModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Settings</span>
+            </button>
             <div class="color-picker-wrapper">
                 <button class="btn btn-secondary" onclick="toggleColorPicker()" title="Change Theme Color">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
@@ -222,7 +226,7 @@
         </section>
     </div>
 
-    <!-- Modal -->
+    <!-- Edit Modal -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <div class="modal-header">
@@ -265,13 +269,101 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal-overlay settings-modal" id="settingsModalOverlay">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+                <button class="modal-close" onclick="closeSettingsModal()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections">Section Order</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom">Custom Sections</button>
+                </div>
+                
+                <!-- Section Order Tab -->
+                <div class="settings-tab-content active" id="settingsTabSections">
+                    <div class="settings-info">
+                        Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon.
+                    </div>
+                    <div id="settingsSectionsList"></div>
+                </div>
+                
+                <!-- Custom Sections Tab -->
+                <div class="settings-tab-content" id="settingsTabCustom">
+                    <div class="settings-info">
+                        Create custom sections with different layouts. Custom sections appear in the section order list above.
+                    </div>
+                    <button class="add-btn" onclick="openCustomSectionModal()" style="margin-top: 0; margin-bottom: 16px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add Custom Section
+                    </button>
+                    <div id="customSectionsList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left"></div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeSettingsModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSettingsSectionOrder()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Section Modal -->
+    <div class="modal-overlay" id="customSectionModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="customSectionModalTitle">Add Custom Section</h3>
+                <button class="modal-close" onclick="closeCustomSectionModal()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="customSectionModalBody"></div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <button class="btn btn-danger" id="deleteCustomSectionBtn" onclick="deleteCustomSection()" style="display:none">Delete Section</button>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeCustomSectionModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveCustomSection()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Section Item Modal -->
+    <div class="modal-overlay" id="customItemModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="customItemModalTitle">Add Item</h3>
+                <button class="modal-close" onclick="closeCustomItemModal()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="customItemModalBody"></div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <button class="btn btn-danger" id="deleteCustomItemBtn" onclick="deleteCustomItem()" style="display:none">Delete</button>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeCustomItemModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveCustomItem()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script src="/shared/scripts.js"></script>
     <script src="/shared/admin.js"></script>
     <script>
-        // Initialize admin on load
         document.addEventListener('DOMContentLoaded', initAdmin);
     </script>
 </body>
