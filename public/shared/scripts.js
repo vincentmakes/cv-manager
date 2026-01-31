@@ -320,8 +320,14 @@ async function loadSections() {
     const sections = await api('/api/sections');
     Object.keys(sections).forEach(section => {
         const el = document.getElementById(`section-${section}`);
-        if (el && !sections[section]) {
-            el.style.display = 'none';
+        if (el) {
+            if (!sections[section]) {
+                el.classList.add('hidden-print');
+                el.style.display = 'none';
+            } else {
+                el.classList.remove('hidden-print');
+                el.style.display = '';
+            }
         }
     });
     return sections;

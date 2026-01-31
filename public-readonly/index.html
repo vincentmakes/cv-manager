@@ -180,8 +180,14 @@
                 if (datasetData.sectionVisibility) {
                     Object.keys(datasetData.sectionVisibility).forEach(section => {
                         const el = document.getElementById(`section-${section}`);
-                        if (el && !datasetData.sectionVisibility[section]) {
-                            el.style.display = 'none';
+                        if (el) {
+                            if (!datasetData.sectionVisibility[section]) {
+                                el.classList.add('hidden-print');
+                                el.style.display = 'none';
+                            } else {
+                                el.classList.remove('hidden-print');
+                                el.style.display = '';
+                            }
                         }
                     });
                 }
