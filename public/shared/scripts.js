@@ -145,9 +145,15 @@ async function loadTimeline() {
             : '<div class="timeline-dot"></div>';
         
         const hiddenClass = item.visible === false ? 'hidden-print' : '';
+        const expId = item.id || '';
         
         return `
-            <div class="timeline-item ${pos} ${hiddenClass}">
+            <div class="timeline-item ${pos} ${hiddenClass}" 
+                 onclick="scrollToExperience(this)" 
+                 data-exp-id="${expId}"
+                 data-company="${escapeHtml(item.company)}"
+                 data-role="${escapeHtml(item.role)}"
+                 style="cursor: pointer;">
                 <div class="timeline-content">
                     <div class="timeline-company">${escapeHtml(item.company)}</div>
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
@@ -157,6 +163,50 @@ async function loadTimeline() {
             </div>
         `;
     }).join('');
+}
+
+// Scroll to matching experience card when timeline item is clicked
+function scrollToExperience(timelineItem) {
+    const expId = timelineItem.dataset.expId;
+    const company = timelineItem.dataset.company;
+    const role = timelineItem.dataset.role;
+    
+    let targetCard = null;
+    
+    // Try to find by ID first (admin mode)
+    if (expId) {
+        targetCard = document.querySelector(`.item-card[data-id="${expId}"]`);
+    }
+    
+    // Fall back to matching by company and role (public mode)
+    if (!targetCard && company && role) {
+        const expCards = document.querySelectorAll('#experienceList .item-card');
+        for (const card of expCards) {
+            const cardCompany = card.querySelector('.item-subtitle span')?.textContent || '';
+            const cardRole = card.querySelector('.item-title')?.textContent || '';
+            if (cardCompany === company && cardRole === role) {
+                targetCard = card;
+                break;
+            }
+        }
+    }
+    
+    if (targetCard) {
+        // Scroll to card with offset for toolbar
+        const offset = 100;
+        const targetPosition = targetCard.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+        
+        // Add highlight effect
+        targetCard.classList.remove('highlight-pulse');
+        void targetCard.offsetWidth; // Force reflow to restart animation
+        targetCard.classList.add('highlight-pulse');
+        
+        // Remove class after animation completes
+        setTimeout(() => {
+            targetCard.classList.remove('highlight-pulse');
+        }, 1500);
+    }
 }
 
 // Load Experiences (read-only version)
