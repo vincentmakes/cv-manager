@@ -218,6 +218,12 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (saved_datasets):', err.message); }
 
+    // Step 2c: Migration - fix custom_section_items visibility (some may have NULL or 0)
+    try {
+        db.exec('UPDATE custom_section_items SET visible = 1 WHERE visible IS NULL OR visible = 0');
+        console.log('Migration: Fixed custom_section_items visibility');
+    } catch (err) { console.log('Migration check (custom_section_items):', err.message); }
+
     // Step 3: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
     DEFAULT_SECTION_ORDER.forEach((section, index) => {

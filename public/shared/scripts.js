@@ -146,13 +146,8 @@ async function loadTimeline() {
         
         const hiddenClass = item.visible === false ? 'hidden-print' : '';
         
-        // Add data attributes for matching with experience cards
-        const expId = item.id ? `data-exp-id="${item.id}"` : '';
-        const dataCompany = `data-company="${escapeHtml(item.company)}"`;
-        const dataRole = `data-role="${escapeHtml(item.role)}"`;
-        
         return `
-            <div class="timeline-item ${pos} ${hiddenClass}" ${expId} ${dataCompany} ${dataRole} onclick="scrollToExperience(this)" title="Click to view details">
+            <div class="timeline-item ${pos} ${hiddenClass}">
                 <div class="timeline-content">
                     <div class="timeline-company">${escapeHtml(item.company)}</div>
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
@@ -162,50 +157,6 @@ async function loadTimeline() {
             </div>
         `;
     }).join('');
-}
-
-// Scroll to matching experience card when timeline item is clicked
-function scrollToExperience(timelineItem) {
-    const expId = timelineItem.dataset.expId;
-    const company = timelineItem.dataset.company;
-    const role = timelineItem.dataset.role;
-    
-    let targetCard = null;
-    
-    // Try to find by ID first (admin mode)
-    if (expId) {
-        targetCard = document.querySelector(`.item-card[data-id="${expId}"]`);
-    }
-    
-    // Fall back to matching by company and role (public mode)
-    if (!targetCard && company && role) {
-        const expCards = document.querySelectorAll('#experienceList .item-card');
-        for (const card of expCards) {
-            const cardCompany = card.querySelector('.item-subtitle span')?.textContent || '';
-            const cardRole = card.querySelector('.item-title')?.textContent || '';
-            if (cardCompany === company && cardRole === role) {
-                targetCard = card;
-                break;
-            }
-        }
-    }
-    
-    if (targetCard) {
-        // Scroll to card with offset for toolbar
-        const offset = 100;
-        const targetPosition = targetCard.getBoundingClientRect().top + window.pageYOffset - offset;
-        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-        
-        // Add highlight effect
-        targetCard.classList.remove('highlight-pulse');
-        void targetCard.offsetWidth; // Force reflow to restart animation
-        targetCard.classList.add('highlight-pulse');
-        
-        // Remove class after animation completes
-        setTimeout(() => {
-            targetCard.classList.remove('highlight-pulse');
-        }, 1500);
-    }
 }
 
 // Load Experiences (read-only version)
@@ -556,15 +507,20 @@ function renderCardsPublic(items) {
     `).join('')}</div>`;
 }
 
+// Bullet list layout for public view
 function renderBulletListPublic(items) {
     if (items.length === 0) return '';
     
     return `<div class="custom-bullet-lists">${items.map(item => {
+        const visible = item.visible !== false;
+        const hideTitle = item.metadata?.hideTitle || false;
         const bullets = (item.description || '').split('\n').filter(line => line.trim());
+        
+        if (!visible) return '';
         
         return `
             <div class="custom-bullet-group">
-                ${item.title ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
+                ${item.title && !hideTitle ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${bullets.length > 0 ? `
                     <ul class="custom-bullet-list">
                         ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}

@@ -307,11 +307,12 @@ function renderBulletListLayout(items) {
     
     return `<div class="custom-bullet-lists">${items.map(item => {
         const visible = item.visible !== false;
+        const hideTitle = item.metadata?.hideTitle || false;
         const bullets = (item.description || '').split('\n').filter(line => line.trim());
         
         return `
             <div class="custom-bullet-group ${visible ? '' : 'hidden-print'}">
-                ${item.title ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
+                ${item.title && !hideTitle ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${bullets.length > 0 ? `
                     <ul class="custom-bullet-list">
                         ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
@@ -2015,10 +2016,18 @@ function openCustomItemModal(sectionId, itemId = null) {
         `;
     } else if (section.layout_type === 'bullet-list') {
         // Bullet list form - title for grouping, description becomes bullet points
+        const hideTitle = item.metadata?.hideTitle || false;
         formHtml = `
             <div class="form-group">
-                <label class="form-label">Group Title</label>
+                <label class="form-label">Group Title (optional)</label>
                 <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="e.g., Key Achievements, Technical Skills...">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="ci-hide-title" ${hideTitle ? 'checked' : ''} style="width: 16px; height: 16px;">
+                    <span>Hide group title</span>
+                </label>
+                <div class="form-hint">Display bullet points without the group heading.</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Bullet Points (one per line)</label>
@@ -2100,15 +2109,18 @@ async function saveCustomItem() {
         const platform = document.getElementById('ci-platform')?.value || 'custom';
         const platformData = socialPlatforms.find(p => p.id === platform);
         metadata = { platform, icon: platformData?.icon, color: platformData?.color };
+    } else if (section.layout_type === 'bullet-list') {
+        const hideTitle = document.getElementById('ci-hide-title')?.checked || false;
+        metadata = { hideTitle };
     }
     
-    // Validation
-    if (!title) {
+    // Validation - title not required for bullet-list with hideTitle
+    if (section.layout_type !== 'bullet-list' && !title) {
         toast('Please enter a title', 'error');
         return;
     }
     
-    // Bullet list also requires description (the bullet points)
+    // Bullet list requires description (the bullet points)
     if (section.layout_type === 'bullet-list' && !description) {
         toast('Please enter at least one bullet point', 'error');
         return;
