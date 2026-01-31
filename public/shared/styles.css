@@ -995,18 +995,18 @@ body.has-preview-banner .container {
     }
     .section-title { font-size: 15px; }
     
-    /* Timeline - SHOW it in print */
-    .timeline-container { 
+    /* Timeline - SHOW it in print (only if not hidden by user choice) */
+    #section-timeline:not(.hidden-print) .timeline-container { 
         display: block !important;
         height: 180px; 
         padding: 50px 10px;
     }
-    .timeline-company { font-size: 9px; }
-    .timeline-role { font-size: 8px; }
-    .timeline-period { font-size: 8px; }
-    .timeline-content { padding: 6px 8px; }
-    .timeline-dot { width: 10px; height: 10px; }
-    .timeline-flag { width: 16px; height: 16px; }
+    #section-timeline:not(.hidden-print) .timeline-company { font-size: 9px; }
+    #section-timeline:not(.hidden-print) .timeline-role { font-size: 8px; }
+    #section-timeline:not(.hidden-print) .timeline-period { font-size: 8px; }
+    #section-timeline:not(.hidden-print) .timeline-content { padding: 6px 8px; }
+    #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
+    #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
@@ -1076,10 +1076,10 @@ body.has-preview-banner .container {
     .cert-grid, .skills-grid, .projects-grid { grid-template-columns: 1fr; }
 }
 
-/* Mobile print - show timeline again */
+/* Mobile print - show timeline again (only if not hidden by user choice) */
 @media print {
-    #section-timeline { display: block !important; }
-    .timeline-container { display: block !important; }
+    #section-timeline:not(.hidden-print) { display: block !important; }
+    #section-timeline:not(.hidden-print) .timeline-container { display: block !important; }
 }
 
 /* Print pagination is handled via JavaScript-injected @page rules */
