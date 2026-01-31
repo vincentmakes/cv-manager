@@ -12,6 +12,96 @@ async function initAdmin() {
     await loadProfile(true);
     await renderSectionsInOrder();
     await generateATSContent();
+    await setupPrintPagination();
+}
+
+// Pagination settings cache
+let paginationSettings = {
+    enabled: false,
+    position: 'bottom-center',
+    style: 'simple',
+    cvName: ''
+};
+
+// Setup print pagination with @page rules
+async function setupPrintPagination() {
+    try {
+        const enabled = await api('/api/settings/paginationEnabled');
+        const position = await api('/api/settings/paginationPosition');
+        const style = await api('/api/settings/paginationStyle');
+        const profile = await api('/api/profile');
+        
+        paginationSettings.enabled = enabled.value === 'true';
+        paginationSettings.position = position.value || 'bottom-center';
+        paginationSettings.style = style.value || 'simple';
+        paginationSettings.cvName = profile.name || 'CV';
+    } catch (err) {
+        console.log('Pagination settings not loaded:', err);
+    }
+    
+    // Add print event listeners
+    window.addEventListener('beforeprint', injectPaginationStyles);
+    window.addEventListener('afterprint', removePaginationStyles);
+}
+
+// Inject @page CSS rules for pagination
+function injectPaginationStyles() {
+    if (!paginationSettings.enabled) return;
+    
+    removePaginationStyles();
+    
+    const pos = paginationSettings.position;
+    const style = paginationSettings.style;
+    const name = paginationSettings.cvName;
+    
+    // Determine margin box based on position
+    let marginBox;
+    switch (pos) {
+        case 'top-left': marginBox = '@top-left'; break;
+        case 'top-center': marginBox = '@top-center'; break;
+        case 'top-right': marginBox = '@top-right'; break;
+        case 'bottom-left': marginBox = '@bottom-left'; break;
+        case 'bottom-right': marginBox = '@bottom-right'; break;
+        default: marginBox = '@bottom-center';
+    }
+    
+    // Determine content based on style
+    let content;
+    switch (style) {
+        case 'with-total': content = 'counter(page) " of " counter(pages)'; break;
+        case 'with-name': content = `"${name} | " counter(page)`; break;
+        case 'minimal': content = '"— " counter(page) " —"'; break;
+        default: content = 'counter(page)';
+    }
+    
+    const css = `
+        @page {
+            ${marginBox} {
+                content: ${content};
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                font-size: 10px;
+                color: #6b7280;
+            }
+        }
+    `;
+    
+    const styleEl = document.createElement('style');
+    styleEl.id = 'pagination-print-styles';
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+}
+
+// Remove pagination styles after print
+function removePaginationStyles() {
+    const existing = document.getElementById('pagination-print-styles');
+    if (existing) existing.remove();
+}
+
+// Update pagination settings (called when settings change)
+function updatePaginationSettings(key, value) {
+    if (key === 'paginationEnabled') paginationSettings.enabled = value === true || value === 'true';
+    else if (key === 'paginationPosition') paginationSettings.position = value;
+    else if (key === 'paginationStyle') paginationSettings.style = value;
 }
 
 // Load section order from API
@@ -1035,11 +1125,41 @@ async function loadPublicSettings() {
     // Load print button setting
     const printBtnSetting = await api('/api/settings/showPublicPrintButton');
     document.getElementById('settingShowPrintButton').checked = printBtnSetting.value === 'true';
+    
+    // Load pagination settings
+    const paginationEnabled = await api('/api/settings/paginationEnabled');
+    const paginationPosition = await api('/api/settings/paginationPosition');
+    const paginationStyle = await api('/api/settings/paginationStyle');
+    
+    document.getElementById('settingPaginationEnabled').checked = paginationEnabled.value === 'true';
+    document.getElementById('settingPaginationPosition').value = paginationPosition.value || 'bottom-center';
+    document.getElementById('settingPaginationStyle').value = paginationStyle.value || 'simple';
+    
+    // Show/hide sub-options based on enabled state
+    updatePaginationSubOptions(paginationEnabled.value === 'true');
 }
 
 async function togglePublicSetting(key, value) {
     await api(`/api/settings/${key}`, { method: 'PUT', body: { value: value.toString() } });
+    
+    // Update pagination sub-options visibility when pagination is toggled
+    if (key === 'paginationEnabled') {
+        updatePaginationSubOptions(value);
+    }
+    
+    // Update pagination cache for print
+    if (key.startsWith('pagination')) {
+        updatePaginationSettings(key, value);
+    }
+    
     toast('Setting saved');
+}
+
+function updatePaginationSubOptions(enabled) {
+    const optionsRow = document.getElementById('paginationOptionsRow');
+    if (optionsRow) {
+        optionsRow.style.display = enabled ? 'flex' : 'none';
+    }
 }
 
 function closeSettingsModal() {

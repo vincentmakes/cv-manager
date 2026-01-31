@@ -282,7 +282,7 @@
                 <div class="settings-tabs">
                     <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections">Section Order</button>
                     <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom">Custom Sections</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public">Public Site</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public">Print & Export</button>
                 </div>
                 
                 <!-- Section Order Tab -->
@@ -305,20 +305,54 @@
                     <div id="customSectionsList"></div>
                 </div>
                 
-                <!-- Public Site Tab -->
+                <!-- Print & Export Tab -->
                 <div class="settings-tab-content" id="settingsTabPublic">
-                    <div class="settings-info">
-                        Configure options for the public read-only version of your CV.
-                    </div>
+                    <!-- Print Button Setting -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Show Print/PDF Button</div>
-                            <div class="settings-option-desc">Display a print button on the public site allowing visitors to print or save your CV as PDF.</div>
+                            <div class="settings-option-title">Public Print Button</div>
+                            <div class="settings-option-desc">Show print button on public site</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingShowPrintButton" onchange="togglePublicSetting('showPublicPrintButton', this.checked)">
                             <span class="toggle-slider"></span>
                         </label>
+                    </div>
+                    
+                    <!-- Page Numbers Setting - Compact -->
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title">Page Numbers</div>
+                            <div class="settings-option-desc">Show page numbers when printing</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingPaginationEnabled" onchange="togglePublicSetting('paginationEnabled', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Pagination Options Row (inline) -->
+                    <div class="pagination-options-row" id="paginationOptionsRow" style="display: none;">
+                        <div class="pagination-option-group">
+                            <label class="pagination-option-label">Position</label>
+                            <select class="pagination-select" id="settingPaginationPosition" onchange="togglePublicSetting('paginationPosition', this.value)">
+                                <option value="bottom-center">Bottom Center</option>
+                                <option value="bottom-right">Bottom Right</option>
+                                <option value="bottom-left">Bottom Left</option>
+                                <option value="top-center">Top Center</option>
+                                <option value="top-right">Top Right</option>
+                                <option value="top-left">Top Left</option>
+                            </select>
+                        </div>
+                        <div class="pagination-option-group">
+                            <label class="pagination-option-label">Format</label>
+                            <select class="pagination-select" id="settingPaginationStyle" onchange="togglePublicSetting('paginationStyle', this.value)">
+                                <option value="simple">1</option>
+                                <option value="with-total">1 of 3</option>
+                                <option value="with-name">Name | 1</option>
+                                <option value="minimal">— 1 —</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1081,3 +1081,5 @@ body.has-preview-banner .container {
     #section-timeline { display: block !important; }
     .timeline-container { display: block !important; }
 }
+
+/* Print pagination is handled via JavaScript-injected @page rules */

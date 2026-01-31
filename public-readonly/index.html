@@ -131,6 +131,7 @@
         async function loadLiveData() {
             await loadThemeColorPublic();
             await loadPublicPrintButton();
+            await loadPaginationSettings();
             sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
@@ -160,6 +161,7 @@
                 
                 await loadThemeColorPublic();
                 await loadPublicPrintButton();
+                await loadPaginationSettings();
                 
                 // Load layout types and social platforms for custom sections
                 layoutTypesData = await api('/api/layout-types');
@@ -323,6 +325,94 @@
                 }
             } catch (err) {
                 // Ignore errors, button stays hidden
+            }
+        }
+        
+        // Load pagination settings for print
+        async function loadPaginationSettings() {
+            try {
+                const enabled = await api('/api/settings/paginationEnabled');
+                const position = await api('/api/settings/paginationPosition');
+                const style = await api('/api/settings/paginationStyle');
+                const profile = await api('/api/profile');
+                
+                document.body.setAttribute('data-pagination', enabled.value === 'true' ? 'true' : 'false');
+                document.body.setAttribute('data-pagination-position', position.value || 'bottom-center');
+                document.body.setAttribute('data-pagination-style', style.value || 'simple');
+                document.body.setAttribute('data-cv-name', profile.name || 'CV');
+                
+                // Setup print event handlers
+                setupPrintPagination();
+            } catch (err) {
+                // Ignore errors, pagination stays disabled
+            }
+        }
+        
+        // Setup print pagination event handlers
+        function setupPrintPagination() {
+            window.addEventListener('beforeprint', injectPaginationStyles);
+            window.addEventListener('afterprint', removePaginationStyles);
+        }
+        
+        // Inject @page CSS rules for pagination
+        function injectPaginationStyles() {
+            const enabled = document.body.getAttribute('data-pagination') === 'true';
+            if (!enabled) return;
+            
+            const position = document.body.getAttribute('data-pagination-position') || 'bottom-center';
+            const style = document.body.getAttribute('data-pagination-style') || 'simple';
+            const cvName = document.body.getAttribute('data-cv-name') || 'CV';
+            
+            // Map position to @page margin box
+            const positionMap = {
+                'top-left': '@top-left',
+                'top-center': '@top-center',
+                'top-right': '@top-right',
+                'bottom-left': '@bottom-left',
+                'bottom-center': '@bottom-center',
+                'bottom-right': '@bottom-right'
+            };
+            const marginBox = positionMap[position] || '@bottom-center';
+            
+            // Build content based on style
+            let content;
+            switch (style) {
+                case 'with-total':
+                    content = 'counter(page) " of " counter(pages)';
+                    break;
+                case 'with-name':
+                    content = `"${cvName.replace(/"/g, '\\"')} | " counter(page)`;
+                    break;
+                case 'minimal':
+                    content = '"— " counter(page) " —"';
+                    break;
+                case 'simple':
+                default:
+                    content = 'counter(page)';
+                    break;
+            }
+            
+            // Create and inject style element
+            const styleEl = document.createElement('style');
+            styleEl.id = 'pagination-print-styles';
+            styleEl.textContent = `
+                @page {
+                    ${marginBox} {
+                        content: ${content};
+                        font-family: 'Inter', sans-serif;
+                        font-size: 10pt;
+                        color: #666;
+                    }
+                }
+            `;
+            document.head.appendChild(styleEl);
+        }
+        
+        // Remove pagination styles after print
+        function removePaginationStyles() {
+            const styleEl = document.getElementById('pagination-print-styles');
+            if (styleEl) {
+                styleEl.remove();
             }
         }
         
