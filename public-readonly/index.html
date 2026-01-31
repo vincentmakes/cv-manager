@@ -17,6 +17,18 @@
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
     </button>
     
+    <!-- Preview Banner (only shown for versioned dataset URLs) -->
+    <div class="preview-banner no-print" id="previewBanner" style="display: none;">
+        <div class="preview-banner-content">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <span class="preview-banner-text">Preview Mode — This is a saved version and not publicly accessible</span>
+        </div>
+        <a href="/" class="preview-banner-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Admin
+        </a>
+    </div>
+    
     <div class="container" role="main">
         <!-- ATS-friendly hidden text version -->
         <div id="ats-content" class="ats-only" aria-hidden="true"></div>
@@ -104,8 +116,19 @@
         let customSectionsData = [];
         let layoutTypesData = [];
         let socialPlatformsData = [];
+        let datasetData = null; // Holds dataset data when previewing a saved dataset
         
         document.addEventListener('DOMContentLoaded', async () => {
+            // Check if we're previewing a saved dataset (admin mode only)
+            if (window.DATASET_SLUG) {
+                await loadDatasetPreview();
+            } else {
+                await loadLiveData();
+            }
+        });
+        
+        // Load live data from current CV (normal mode)
+        async function loadLiveData() {
             await loadThemeColorPublic();
             await loadPublicPrintButton();
             sectionOrder = await loadSectionOrder();
@@ -120,7 +143,176 @@
             await loadCustomSectionsPublic();
             renderSectionsInOrder();
             await generateATSContent();
-        });
+        }
+        
+        // Load saved dataset preview (admin mode only)
+        async function loadDatasetPreview() {
+            try {
+                datasetData = await api(`/api/datasets/slug/${window.DATASET_SLUG}`);
+                if (!datasetData || datasetData.error) {
+                    console.error('Failed to load dataset');
+                    return;
+                }
+                
+                // Show preview banner
+                document.getElementById('previewBanner').style.display = 'flex';
+                document.body.classList.add('has-preview-banner');
+                
+                await loadThemeColorPublic();
+                await loadPublicPrintButton();
+                
+                // Load layout types and social platforms for custom sections
+                layoutTypesData = await api('/api/layout-types');
+                socialPlatformsData = await api('/api/social-platforms');
+                
+                // Render from dataset data
+                renderProfileFromData(datasetData.profile);
+                renderTimelineFromData(datasetData.experiences);
+                renderExperiencesFromData(datasetData.experiences);
+                renderCertificationsFromData(datasetData.certifications);
+                renderEducationFromData(datasetData.education);
+                renderSkillsFromData(datasetData.skills);
+                renderProjectsFromData(datasetData.projects);
+                
+                // Handle section visibility from dataset
+                if (datasetData.sectionVisibility) {
+                    Object.keys(datasetData.sectionVisibility).forEach(section => {
+                        const el = document.getElementById(`section-${section}`);
+                        if (el && !datasetData.sectionVisibility[section]) {
+                            el.style.display = 'none';
+                        }
+                    });
+                }
+                
+                // Reorder sections if sectionOrder is in dataset
+                if (datasetData.sectionOrder) {
+                    sectionOrder = datasetData.sectionOrder.filter(s => s.visible !== false).map(s => ({ key: s.key, visible: s.visible }));
+                    renderSectionsInOrder();
+                }
+                
+            } catch (err) {
+                console.error('Error loading dataset preview:', err);
+            }
+        }
+        
+        // Render functions for dataset data
+        function renderProfileFromData(p) {
+            if (!p) return;
+            document.getElementById('profileInitials').textContent = p.initials || 'CV';
+            document.getElementById('profileName').textContent = p.name || '';
+            document.getElementById('profileTitle').textContent = p.title || '';
+            document.getElementById('profileSubtitle').textContent = p.subtitle || '';
+            document.getElementById('aboutText').textContent = p.bio || '';
+            if (p.name) document.title = `${p.name} - CV`;
+            
+            const pic = document.getElementById('profilePicture');
+            const initials = document.getElementById('profileInitials');
+            pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
+            pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
+            pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
+            
+            const badges = [];
+            if (p.location) badges.push(`<span class="contact-badge" itemprop="address">${icons.location} ${escapeHtml(p.location)}</span>`);
+            if (p.linkedin) badges.push(`<a href="${escapeHtml(p.linkedin)}" class="contact-badge" target="_blank" rel="noopener" itemprop="url">${icons.linkedin} LinkedIn</a>`);
+            if (p.languages) badges.push(`<span class="contact-badge">${icons.languages} ${escapeHtml(p.languages)}</span>`);
+            document.getElementById('contactBadges').innerHTML = badges.join('');
+        }
+        
+        function renderTimelineFromData(experiences) {
+            if (!experiences) return;
+            const visible = experiences.filter(e => e.visible !== false);
+            const container = document.getElementById('timelineItems');
+            let lastCountry = null;
+            container.innerHTML = visible.map((exp, idx) => {
+                const pos = idx % 2 === 0 ? 'top' : 'bottom';
+                const countryCode = (exp.country_code || '').toLowerCase();
+                const showFlag = countryCode && countryCode !== lastCountry;
+                lastCountry = countryCode;
+                const marker = showFlag
+                    ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
+                    : '<div class="timeline-dot"></div>';
+                const period = `${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : 'Present'}`;
+                return `<div class="timeline-item ${pos}"><div class="timeline-content"><div class="timeline-company">${escapeHtml(exp.company_name)}</div><div class="timeline-role">${escapeHtml(exp.job_title)}</div><div class="timeline-period">${escapeHtml(period)}</div></div>${marker}</div>`;
+            }).join('');
+        }
+        
+        function renderExperiencesFromData(experiences) {
+            if (!experiences) return;
+            const visible = experiences.filter(e => e.visible !== false);
+            document.getElementById('experienceList').innerHTML = visible.map(exp => `
+                <article class="item-card" data-id="${exp.id || ''}" itemscope itemtype="https://schema.org/OrganizationRole">
+                    <div class="item-header">
+                        <div>
+                            <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
+                            <div class="item-subtitle" itemprop="memberOf"><span itemprop="name">${escapeHtml(exp.company_name)}</span></div>
+                        </div>
+                        <span class="item-date">${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : 'Present'}</span>
+                    </div>
+                    ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
+                    ${exp.highlights && exp.highlights.length ? `<ul class="item-highlights">${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
+                </article>
+            `).join('');
+        }
+        
+        function renderCertificationsFromData(certs) {
+            if (!certs) return;
+            const visible = certs.filter(c => c.visible !== false);
+            document.getElementById('certGrid').innerHTML = visible.map(cert => `
+                <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+                    <div class="cert-header">
+                        <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                        <time class="cert-date" itemprop="dateCreated">${escapeHtml(cert.issue_date || '')}</time>
+                    </div>
+                    <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
+                </article>
+            `).join('');
+        }
+        
+        function renderEducationFromData(education) {
+            if (!education) return;
+            const visible = education.filter(e => e.visible !== false);
+            document.getElementById('educationList').innerHTML = visible.map(edu => `
+                <article class="item-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+                    <div class="item-header">
+                        <div>
+                            <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
+                            <div class="item-subtitle"><span itemprop="name">${escapeHtml(edu.institution_name)}</span></div>
+                        </div>
+                        <span class="item-date">${escapeHtml(edu.start_date || '')} - ${escapeHtml(edu.end_date || '')}</span>
+                    </div>
+                    ${edu.description ? `<div class="item-location">${escapeHtml(edu.description)}</div>` : ''}
+                </article>
+            `).join('');
+        }
+        
+        function renderSkillsFromData(skills) {
+            if (!skills) return;
+            const visible = skills.filter(s => s.visible !== false);
+            document.getElementById('skillsGrid').innerHTML = visible.map(cat => `
+                <div class="skill-category">
+                    <div class="skill-category-title">
+                        <span class="skill-icon">${getSkillIcon(cat.icon, cat.name)}</span>
+                        ${escapeHtml(cat.name)}
+                    </div>
+                    <div class="skill-tags">${cat.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderProjectsFromData(projects) {
+            if (!projects) return;
+            const visible = projects.filter(p => p.visible !== false);
+            document.getElementById('projectsGrid').innerHTML = visible.map(proj => `
+                <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
+                    <div class="project-header">
+                        <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
+                        ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="View Project">${icons.link}</a>` : ''}
+                    </div>
+                    <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
+                    <div class="tech-tags">${(proj.technologies || []).map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`).join('')}</div>
+                </article>
+            `).join('');
+        }
         
         // Load print button setting
         async function loadPublicPrintButton() {

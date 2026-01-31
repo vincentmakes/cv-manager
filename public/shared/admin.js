@@ -1214,13 +1214,68 @@ async function loadDatasetsList() {
             <div class="dataset-info">
                 <div class="dataset-name">${escapeHtml(ds.name)}</div>
                 <div class="dataset-date">Last updated: ${formatDateTime(ds.updated_at)}</div>
+                ${ds.slug ? `<div class="dataset-url">
+                    <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
+                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}')" title="Copy preview URL">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    </button>
+                </div>` : ''}
             </div>
             <div class="dataset-actions">
+                ${ds.slug ? `<button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>` : ''}
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">Load</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">Delete</button>
             </div>
         </div>
     `).join('');
+}
+
+// Preview dataset in new tab (admin only)
+function previewDataset(slug) {
+    window.open(`/v/${slug}`, '_blank');
+}
+
+// Copy dataset URL to clipboard (admin preview URL)
+function copyDatasetUrl(slug) {
+    // Use current origin since preview only works on admin
+    const url = `${window.location.origin}/v/${slug}`;
+    
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            toast('Preview URL copied');
+        }).catch((err) => {
+            console.error('Clipboard API failed:', err);
+            fallbackCopyToClipboard(url);
+        });
+    } else {
+        fallbackCopyToClipboard(url);
+    }
+}
+
+// Fallback copy method for non-HTTPS contexts
+function fallbackCopyToClipboard(text) {
+    try {
+        const input = document.createElement('textarea');
+        input.value = text;
+        input.style.position = 'fixed';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.focus();
+        input.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(input);
+        if (success) {
+            toast('Preview URL copied');
+        } else {
+            toast('Copy failed - URL: ' + text, 'error');
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        toast('Copy failed - URL: ' + text, 'error');
+    }
 }
 
 async function loadDataset(id, name) {

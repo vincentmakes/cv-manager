@@ -855,6 +855,68 @@ body {
     flex-shrink: 0;
 }
 
+/* Preview Banner (for versioned dataset URLs) */
+.preview-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.preview-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.preview-banner-content svg {
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.preview-banner-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.preview-banner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.preview-banner-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.preview-banner-btn svg {
+    flex-shrink: 0;
+}
+
+/* Adjust container margin when banner is shown */
+body.has-preview-banner .container {
+    margin-top: 70px;
+}
+
 /* ATS hidden content - using clip method for better ATS compatibility */
 .ats-only {
     position: absolute;

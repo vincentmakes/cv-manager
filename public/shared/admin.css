@@ -277,7 +277,44 @@
 .dataset-info { flex: 1; }
 .dataset-name { font-weight: 600; color: var(--primary-dark); margin-bottom: 2px; }
 .dataset-date { font-size: 12px; color: var(--gray-500); }
-.dataset-actions { display: flex; gap: 8px; }
+.dataset-actions { display: flex; gap: 8px; align-items: center; }
+
+.dataset-url {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.dataset-url-text {
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--gray-500);
+    background: var(--white);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.dataset-url-copy {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-300);
+    background: var(--white);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.dataset-url-copy:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+}
 
 /* Color Picker */
 .color-picker-wrapper { position: relative; }
