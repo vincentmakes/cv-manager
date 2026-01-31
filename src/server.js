@@ -114,7 +114,8 @@ const SVG_ICONS = {
     phone: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
     edit: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
     dribbble: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>',
-    behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>'
+    behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>',
+    bullets: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l11 0M9 12l11 0M9 18l11 0"/><path d="M5 6l0 .01M5 12l0 .01M5 18l0 .01" stroke-linecap="round"/></svg>'
 };
 
 // Layout types as array for frontend iteration
@@ -123,7 +124,8 @@ const LAYOUT_TYPES = [
     { id: 'grid-2', name: '2-Column Grid', icon: SVG_ICONS.grid2 },
     { id: 'grid-3', name: '3-Column Grid', icon: SVG_ICONS.grid3 },
     { id: 'list', name: 'Vertical List', icon: SVG_ICONS.list },
-    { id: 'cards', name: 'Card Grid', icon: SVG_ICONS.cards }
+    { id: 'cards', name: 'Card Grid', icon: SVG_ICONS.cards },
+    { id: 'bullet-list', name: 'Bullet Points', icon: SVG_ICONS.bullets }
 ];
 
 // Social platform definitions as array for frontend iteration
@@ -280,7 +282,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
-    publicApp.get('/api/timeline', (req, res) => { res.json(db.prepare('SELECT company_name, job_title, start_date, end_date, country_code FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), countryCode: exp.country_code || 'ch', visible: true }))); });
+    publicApp.get('/api/timeline', (req, res) => { res.json(db.prepare('SELECT id, company_name, job_title, start_date, end_date, country_code FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), countryCode: exp.country_code || 'ch', visible: true }))); });
     publicApp.get('/api/custom-sections', (req, res) => {
         const sections = db.prepare('SELECT id, name, section_key, layout_type, icon, sort_order FROM custom_sections WHERE visible = 1 ORDER BY sort_order ASC').all();
         const items = db.prepare('SELECT * FROM custom_section_items WHERE visible = 1 ORDER BY sort_order ASC').all();
@@ -330,8 +332,8 @@ if (PUBLIC_ONLY) {
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
         }))); 
     });
-    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
-    app.put('/api/sections/:name', (req, res) => { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(req.body.visible ? 1 : 0, req.params.name); res.json({ success: true }); });
+    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.put('/api/sections/:name', (req, res) => { const sectionName = req.params.name; const visible = req.body.visible ? 1 : 0; db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName); if (sectionName.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName); } res.json({ success: true }); });
 
     app.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT * FROM experiences ORDER BY start_date DESC, sort_order ASC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible }))); });
     app.get('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT * FROM experiences WHERE id = ?').get(req.params.id); if (!exp) return res.status(404).json({ error: 'Not found' }); res.json({ ...exp, highlights: exp.highlights ? JSON.parse(exp.highlights) : [], visible: !!exp.visible }); });
@@ -511,7 +513,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
-    publicApp.get('/api/timeline', (req, res) => { res.json(db.prepare('SELECT company_name, job_title, start_date, end_date, country_code FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), countryCode: exp.country_code || 'ch', visible: true }))); });
+    publicApp.get('/api/timeline', (req, res) => { res.json(db.prepare('SELECT id, company_name, job_title, start_date, end_date, country_code FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), countryCode: exp.country_code || 'ch', visible: true }))); });
     publicApp.get('/api/custom-sections', (req, res) => {
         const sections = db.prepare('SELECT id, name, section_key, layout_type, icon, sort_order FROM custom_sections WHERE visible = 1 ORDER BY sort_order ASC').all();
         const items = db.prepare('SELECT * FROM custom_section_items WHERE visible = 1 ORDER BY sort_order ASC').all();

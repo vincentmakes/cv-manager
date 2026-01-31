@@ -106,6 +106,9 @@ function renderCustomSection(section) {
         case 'cards':
             contentHtml = renderCardsLayout(items);
             break;
+        case 'bullet-list':
+            contentHtml = renderBulletListLayout(items);
+            break;
         default:
             contentHtml = renderGridLayout(items, 3);
     }
@@ -115,7 +118,7 @@ function renderCustomSection(section) {
             <div class="section-header">
                 <h2 class="section-title">${escapeHtml(section.name)}</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('${section.section_key}')" title="Toggle Visibility" id="toggle-${section.section_key}">
+                    <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="Toggle Visibility" id="toggle-${section.section_key}">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -203,6 +206,27 @@ function renderCardsLayout(items) {
                 ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
+            </div>
+        `;
+    }).join('')}</div>`;
+}
+
+// Bullet list layout - each item's description contains lines that become bullets
+function renderBulletListLayout(items) {
+    if (items.length === 0) return '<p class="empty-section">No bullet points added yet.</p>';
+    
+    return `<div class="custom-bullet-lists">${items.map(item => {
+        const visible = item.visible !== false;
+        const bullets = (item.description || '').split('\n').filter(line => line.trim());
+        
+        return `
+            <div class="custom-bullet-group ${visible ? '' : 'hidden-print'}">
+                ${item.title ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
+                ${bullets.length > 0 ? `
+                    <ul class="custom-bullet-list">
+                        ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
+                    </ul>
+                ` : ''}
             </div>
         `;
     }).join('')}</div>`;
@@ -390,6 +414,14 @@ async function toggleSection(section) {
     const newValue = !sectionVisibility[section];
     await api(`/api/sections/${section}`, { method: 'PUT', body: { visible: newValue } });
     sectionVisibility = await loadSectionsAdmin();
+    
+    // For custom sections, also update the customSections data
+    if (section.startsWith('custom_')) {
+        const customSection = customSections.find(cs => cs.section_key === section);
+        if (customSection) {
+            customSection.visible = newValue;
+        }
+    }
     toast('Section visibility updated');
 }
 
@@ -1679,6 +1711,10 @@ async function saveCustomSection() {
         // Refresh section order since custom sections affect it
         settingsSectionOrder = await api('/api/sections/order');
         renderSettingsSections();
+        // Refresh main page sections
+        sectionOrder = await loadSectionOrder();
+        sectionVisibility = await loadSectionsAdmin();
+        await renderSectionsInOrder();
     } catch (err) {
         toast('Failed to save section', 'error');
     }
@@ -1696,6 +1732,10 @@ async function deleteCustomSection() {
         await loadCustomSectionsList();
         settingsSectionOrder = await api('/api/sections/order');
         renderSettingsSections();
+        // Refresh main page sections
+        sectionOrder = await loadSectionOrder();
+        sectionVisibility = await loadSectionsAdmin();
+        await renderSectionsInOrder();
     } catch (err) {
         toast('Failed to delete section', 'error');
     }
@@ -1798,6 +1838,18 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <input type="text" class="form-input" id="ci-link" value="${escapeHtml(item.link || '')}" placeholder="https://...">
             </div>
         `;
+    } else if (section.layout_type === 'bullet-list') {
+        // Bullet list form - title for grouping, description becomes bullet points
+        formHtml = `
+            <div class="form-group">
+                <label class="form-label">Group Title</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="e.g., Key Achievements, Technical Skills...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bullet Points (one per line)</label>
+                <textarea class="form-textarea" id="ci-description" rows="8" placeholder="First bullet point\nSecond bullet point\nThird bullet point">${escapeHtml(item.description || '')}</textarea>
+            </div>
+        `;
     } else {
         // Generic form for other layouts
         formHtml = `
@@ -1875,8 +1927,15 @@ async function saveCustomItem() {
         metadata = { platform, icon: platformData?.icon, color: platformData?.color };
     }
     
+    // Validation
     if (!title) {
         toast('Please enter a title', 'error');
+        return;
+    }
+    
+    // Bullet list also requires description (the bullet points)
+    if (section.layout_type === 'bullet-list' && !description) {
+        toast('Please enter at least one bullet point', 'error');
         return;
     }
     

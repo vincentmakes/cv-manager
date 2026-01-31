@@ -239,6 +239,23 @@ body {
     z-index: 10;
 }
 
+.timeline-item {
+    cursor: pointer;
+}
+
+/* Highlight animation for scrolled-to experience */
+@keyframes highlightPulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(0, 102, 255, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0); }
+}
+
+.item-card.highlight-pulse {
+    animation: highlightPulse 1.5s ease-out;
+    border-left-color: var(--accent);
+    background: linear-gradient(135deg, var(--light), var(--very-light));
+}
+
 .timeline-company {
     font-size: 11px;
     font-weight: 700;
@@ -752,6 +769,60 @@ body {
 
 .custom-card-link:hover {
     text-decoration: underline;
+}
+
+/* Bullet List Layout */
+.custom-bullet-lists {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.custom-bullet-group {
+    background: linear-gradient(135deg, var(--very-light), var(--white));
+    border-radius: 0;
+    padding: 16px;
+    border-left: 4px solid var(--primary);
+    transition: all 0.15s ease;
+}
+
+.custom-bullet-group:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-bullet-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+}
+
+.custom-bullet-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.custom-bullet-list li {
+    font-size: 13px;
+    color: var(--gray-700);
+    padding-left: 16px;
+    margin-bottom: 6px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.custom-bullet-list li::before {
+    content: '▹';
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.custom-bullet-list li:last-child {
+    margin-bottom: 0;
 }
 
 /* Public Print Button */
