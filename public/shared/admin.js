@@ -5,6 +5,40 @@ let currentModal = { type: null, id: null };
 let sectionVisibility = {};
 let sectionOrder = [];
 
+// Parse date string into comparable numeric value for sorting
+// Handles formats: "2020", "2020-01", "Jan 2020", etc.
+function parseDateForSort(dateStr) {
+    if (!dateStr) return 0;
+    
+    // Format: "YYYY" (year only)
+    if (/^\d{4}$/.test(dateStr)) {
+        return parseInt(dateStr) * 100; // e.g., 2020 -> 202000
+    }
+    
+    // Format: "YYYY-MM" (ISO month)
+    if (/^\d{4}-\d{2}$/.test(dateStr)) {
+        const [year, month] = dateStr.split('-');
+        return parseInt(year) * 100 + parseInt(month); // e.g., 2020-03 -> 202003
+    }
+    
+    // Format: "Mon YYYY" (e.g., "Jan 2020")
+    const monthMatch = dateStr.match(/^([A-Za-z]+)\s+(\d{4})$/);
+    if (monthMatch) {
+        const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const monthIdx = months.indexOf(monthMatch[1].toLowerCase().substring(0, 3));
+        const year = parseInt(monthMatch[2]);
+        return year * 100 + (monthIdx >= 0 ? monthIdx + 1 : 0);
+    }
+    
+    // Fallback: try to extract year
+    const yearMatch = dateStr.match(/(\d{4})/);
+    if (yearMatch) {
+        return parseInt(yearMatch[1]) * 100;
+    }
+    
+    return 0;
+}
+
 // Initialize Admin
 async function initAdmin() {
     sectionOrder = await loadSectionOrder();
@@ -340,8 +374,17 @@ async function loadSectionsAdmin() {
 }
 
 // Load Experiences (admin version with edit controls)
+// Sorted by start_date DESC (newest first)
 async function loadExperiences() {
     const experiences = await api('/api/experiences');
+    
+    // Sort by start_date descending (newest first)
+    experiences.sort((a, b) => {
+        const dateA = parseDateForSort(a.start_date);
+        const dateB = parseDateForSort(b.start_date);
+        return dateB - dateA; // DESC: higher dates first
+    });
+    
     const container = document.getElementById('experienceList');
     
     container.innerHTML = experiences.map(exp => `

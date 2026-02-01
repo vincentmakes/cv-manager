@@ -96,6 +96,40 @@ function formatDateATS(dateStr) {
     return dateStr;
 }
 
+// Parse date string into comparable numeric value for sorting
+// Handles formats: "2020", "2020-01", "Jan 2020", etc.
+function parseDateForSort(dateStr) {
+    if (!dateStr) return 0;
+    
+    // Format: "YYYY" (year only)
+    if (/^\d{4}$/.test(dateStr)) {
+        return parseInt(dateStr) * 100; // e.g., 2020 -> 202000
+    }
+    
+    // Format: "YYYY-MM" (ISO month)
+    if (/^\d{4}-\d{2}$/.test(dateStr)) {
+        const [year, month] = dateStr.split('-');
+        return parseInt(year) * 100 + parseInt(month); // e.g., 2020-03 -> 202003
+    }
+    
+    // Format: "Mon YYYY" (e.g., "Jan 2020")
+    const monthMatch = dateStr.match(/^([A-Za-z]+)\s+(\d{4})$/);
+    if (monthMatch) {
+        const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const monthIdx = months.indexOf(monthMatch[1].toLowerCase().substring(0, 3));
+        const year = parseInt(monthMatch[2]);
+        return year * 100 + (monthIdx >= 0 ? monthIdx + 1 : 0);
+    }
+    
+    // Fallback: try to extract year
+    const yearMatch = dateStr.match(/(\d{4})/);
+    if (yearMatch) {
+        return parseInt(yearMatch[1]) * 100;
+    }
+    
+    return 0;
+}
+
 // Load Profile (shared between admin and public)
 async function loadProfile(includePrivate = false) {
     const p = await api('/api/profile');
@@ -128,8 +162,28 @@ async function loadProfile(includePrivate = false) {
 }
 
 // Load Timeline
+// Sorted by start_date ASC (oldest first - left to right)
 async function loadTimeline() {
     const timeline = await api('/api/timeline');
+    
+    // Sort by start_date ascending (oldest first for timeline)
+    // Timeline API returns 'period' field like "Jan 2020 - Present", extract start date from it
+    timeline.sort((a, b) => {
+        // Extract start date from period string (format: "Jan 2020 - Present" or "2020 - 2022")
+        const getStartFromPeriod = (item) => {
+            if (item.start_date) return parseDateForSort(item.start_date);
+            if (item.period) {
+                const startPart = item.period.split(' - ')[0];
+                return parseDateForSort(startPart);
+            }
+            return 0;
+        };
+        
+        const dateA = getStartFromPeriod(a);
+        const dateB = getStartFromPeriod(b);
+        return dateA - dateB; // ASC: lower dates first (oldest on left)
+    });
+    
     const container = document.getElementById('timelineItems');
     
     let lastCountry = null;
@@ -210,8 +264,17 @@ function scrollToExperience(timelineItem) {
 }
 
 // Load Experiences (read-only version)
+// Sorted by start_date DESC (newest first)
 async function loadExperiencesReadOnly() {
     const experiences = await api('/api/experiences');
+    
+    // Sort by start_date descending (newest first)
+    experiences.sort((a, b) => {
+        const dateA = parseDateForSort(a.start_date);
+        const dateB = parseDateForSort(b.start_date);
+        return dateB - dateA; // DESC: higher dates first
+    });
+    
     const container = document.getElementById('experienceList');
     
     container.innerHTML = experiences.map(exp => `
