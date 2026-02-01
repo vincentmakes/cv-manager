@@ -17,11 +17,13 @@ This is a CV / Resume management system with an editable theme, persistent datab
 ## Features
 
 - **7 Sections**: About, Timeline (auto-generated), Experience, Certifications, Education, Skills, Projects
+- **Custom Sections**: Add your own sections with different layout possibilities
 - **Full CRUD**: Add, edit, delete any item
 - **Visibility Toggles**: Hide items from PDF export while keeping them in database
 - **Print/PDF Export**: Clean print styles, hidden items excluded
 - **Import/Export**: Backup and restore your CV data as JSON - ideal to process the data via any LLM for optimization
 - **Persistent Storage**: SQLite database survives container restarts
+- **Multi CV**: Save different of your CV. Preview them and load them as need be
 - **Responsive Design**: Works on desktop and mobile
 - **Auto-Generated Timeline**: Timeline automatically builds from your experiences
 - **ATS Optimized**: Schema.org markup, semantic HTML, hidden keywords for job site parsing
@@ -112,37 +114,20 @@ The sitemap.xml and robots.txt are automatically generated with the correct doma
 
 ## Unraid Deployment
 
-### Method 1: Docker Compose Manager Plugin
+### Method 1: Install from Unraid Apps
+
+1. In the Apps tab, look for "cv manager". 
+2. Install cv-manager first then cv-manager-public
+
+
+
+### Method 2: Docker Compose Manager Plugin
 
 1. Install the "Docker Compose Manager" plugin from Community Apps
 2. Create a new stack with the `docker-compose.yml` content
 3. Set the path for data persistence (e.g., `/mnt/user/appdata/cv-manager/data`)
 4. Start the stack
 
-### Method 2: Manual Docker Container
-
-1. Copy files to your Unraid server (e.g., `/mnt/user/appdata/cv-manager/`)
-2. Build the image:
-   ```bash
-   cd /mnt/user/appdata/cv-manager
-   docker build -t cv-manager .
-   ```
-3. In Unraid Docker UI, add container:
-   - **Repository**: `cv-manager`
-   - **Port**: `3000` → `3000`
-   - **Path**: `/mnt/user/appdata/cv-manager/data` → `/app/data`
-
-### Method 3: Using Unraid Template
-
-Add a new container with these settings:
-
-| Setting | Value |
-|---------|-------|
-| Name | cv-manager |
-| Repository | cv-manager (after building) |
-| Network Type | Bridge |
-| Port | 3000 → 3000 |
-| Path | /mnt/user/appdata/cv-manager/data → /app/data |
 
 ## Data Persistence
 
