@@ -119,6 +119,8 @@ The sitemap.xml and robots.txt are automatically generated with the correct doma
 1. In the Apps tab, look for "cv manager". 
 2. Install cv-manager first then cv-manager-public
 
+<img width="800" height="357" alt="Screenshot 2026-02-01 at 06 14 29" src="https://github.com/user-attachments/assets/e6358881-86fb-4338-b4e9-367d3020cc7a" />
+
 
 
 ### Method 2: Docker Compose Manager Plugin
