@@ -47,6 +47,18 @@ async function initAdmin() {
     await renderSectionsInOrder();
     await generateATSContent();
     await setupPrintPagination();
+    await loadPageSplitsSetting();
+}
+
+// Load and apply page splits settings on init
+async function loadPageSplitsSetting() {
+    try {
+        const sectionSplits = await api('/api/settings/allowSectionSplits');
+        const itemSplits = await api('/api/settings/allowItemSplits');
+        applySplitSettings(sectionSplits.value === 'true', itemSplits.value === 'true');
+    } catch (err) {
+        // Default to false (prevent splits)
+    }
 }
 
 // Pagination settings cache
@@ -181,6 +193,13 @@ async function renderSectionsInOrder() {
         const el = sectionElements[section.key];
         if (el) {
             container.appendChild(el);
+            
+            // Apply hidden-print class if section is visible but not print_visible
+            if (section.visible && section.print_visible === false) {
+                el.classList.add('hidden-print');
+            } else if (section.visible) {
+                el.classList.remove('hidden-print');
+            }
         }
     });
 }
@@ -1139,6 +1158,12 @@ function visibilityIcon(visible) {
         : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>';
 }
 
+function printerIcon(printVisible) {
+    return printVisible
+        ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>'
+        : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4l16 16"/></svg>';
+}
+
 function editIcon() {
     return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>';
 }
@@ -1181,6 +1206,19 @@ async function loadPublicSettings() {
     
     // Show/hide sub-options based on enabled state
     updatePaginationSubOptions(paginationEnabled.value === 'true');
+    
+    // Load page split settings
+    const allowSectionSplits = await api('/api/settings/allowSectionSplits');
+    const allowItemSplits = await api('/api/settings/allowItemSplits');
+    
+    document.getElementById('settingAllowSectionSplits').checked = allowSectionSplits.value === 'true';
+    document.getElementById('settingAllowItemSplits').checked = allowItemSplits.value === 'true';
+    
+    // Show/hide item splits sub-option
+    updateItemSplitsSubOption(allowSectionSplits.value === 'true');
+    
+    // Apply settings to body
+    applySplitSettings(allowSectionSplits.value === 'true', allowItemSplits.value === 'true');
 }
 
 async function togglePublicSetting(key, value) {
@@ -1197,6 +1235,46 @@ async function togglePublicSetting(key, value) {
     }
     
     toast('Setting saved');
+}
+
+// Handle split settings with sub-option visibility
+async function toggleSplitSetting(key, value) {
+    await api(`/api/settings/${key}`, { method: 'PUT', body: { value: value.toString() } });
+    
+    const sectionSplits = document.getElementById('settingAllowSectionSplits').checked;
+    const itemSplits = document.getElementById('settingAllowItemSplits').checked;
+    
+    // Show/hide item splits sub-option when section splits is toggled
+    if (key === 'allowSectionSplits') {
+        updateItemSplitsSubOption(value);
+        // If section splits is disabled, also disable item splits
+        if (!value && itemSplits) {
+            document.getElementById('settingAllowItemSplits').checked = false;
+            await api('/api/settings/allowItemSplits', { method: 'PUT', body: { value: 'false' } });
+        }
+    }
+    
+    // Apply settings to body
+    applySplitSettings(
+        document.getElementById('settingAllowSectionSplits').checked,
+        document.getElementById('settingAllowItemSplits').checked
+    );
+    
+    toast('Setting saved');
+}
+
+// Show/hide item splits sub-option
+function updateItemSplitsSubOption(sectionSplitsEnabled) {
+    const itemSplitsOption = document.getElementById('itemSplitsOption');
+    if (itemSplitsOption) {
+        itemSplitsOption.style.display = sectionSplitsEnabled ? 'flex' : 'none';
+    }
+}
+
+// Apply split settings classes to body
+function applySplitSettings(sectionSplits, itemSplits) {
+    document.body.classList.toggle('allow-section-splits', sectionSplits);
+    document.body.classList.toggle('allow-item-splits', sectionSplits && itemSplits);
 }
 
 function updatePaginationSubOptions(enabled) {
@@ -1222,8 +1300,11 @@ function renderSettingsSections() {
             </div>
             <div class="settings-section-name">${escapeHtml(section.name)}</div>
             <div class="settings-section-actions">
-                <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Toggle Visibility">
+                <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Show/Hide on Site">
                     ${visibilityIcon(section.visible)}
+                </button>
+                <button class="settings-section-btn ${section.print_visible !== false ? 'active' : ''} ${!section.visible ? 'disabled' : ''}" onclick="toggleSettingsSectionPrintVisibility('${section.key}')" title="Show/Hide in Print" ${!section.visible ? 'disabled' : ''}>
+                    ${printerIcon(section.print_visible !== false)}
                 </button>
                 <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', -1)" title="Move Up" ${index === 0 ? 'disabled' : ''}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
@@ -1301,6 +1382,18 @@ function toggleSettingsSectionVisibility(key) {
     const section = settingsSectionOrder.find(s => s.key === key);
     if (section) {
         section.visible = !section.visible;
+        // If hiding section, also hide from print
+        if (!section.visible) {
+            section.print_visible = false;
+        }
+        renderSettingsSections();
+    }
+}
+
+function toggleSettingsSectionPrintVisibility(key) {
+    const section = settingsSectionOrder.find(s => s.key === key);
+    if (section && section.visible) {
+        section.print_visible = section.print_visible === false ? true : false;
         renderSettingsSections();
     }
 }
@@ -1320,6 +1413,7 @@ async function saveSettingsSectionOrder() {
     const sections = settingsSectionOrder.map((s, index) => ({
         key: s.key,
         visible: s.visible,
+        print_visible: s.print_visible !== false,
         sort_order: index
     }));
     

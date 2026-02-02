@@ -1014,6 +1014,26 @@ body.has-preview-banner .container {
         page-break-inside: avoid;
         box-shadow: none;
     }
+    
+    /* Level 1: Allow section splits (items stay intact) */
+    body.allow-section-splits .section {
+        page-break-inside: auto;
+        break-inside: auto;
+    }
+    
+    /* Level 2: Also allow item splits (maximum compactness) */
+    body.allow-item-splits .item-card,
+    body.allow-item-splits .cert-card,
+    body.allow-item-splits .skill-category,
+    body.allow-item-splits .project-card,
+    body.allow-item-splits .custom-section,
+    body.allow-item-splits .custom-bullet-group,
+    body.allow-item-splits .custom-card,
+    body.allow-item-splits .custom-grid-item,
+    body.allow-item-splits .custom-list-item {
+        page-break-inside: auto;
+        break-inside: auto;
+    }
     .item-card { padding: 10px; margin-bottom: 6px; border-radius: 0; }
     .items-list { gap: 6px; }
     .item-title { font-size: 13px; }

@@ -354,6 +354,30 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- Allow Section Splits Setting -->
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title">Allow Section Splits</div>
+                            <div class="settings-option-desc">Let sections break across pages (items stay intact)</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingAllowSectionSplits" onchange="toggleSplitSetting('allowSectionSplits', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Allow Item Splits Setting (sub-option) -->
+                    <div class="settings-option settings-sub-option" id="itemSplitsOption" style="display: none;">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title">Allow Item Splits</div>
+                            <div class="settings-option-desc">Also let items break across pages for maximum compactness</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingAllowItemSplits" onchange="toggleSplitSetting('allowItemSplits', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

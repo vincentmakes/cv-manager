@@ -132,6 +132,7 @@
             await loadThemeColorPublic();
             await loadPublicPrintButton();
             await loadPaginationSettings();
+            await loadPageSplitsSetting();
             sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
@@ -162,6 +163,7 @@
                 await loadThemeColorPublic();
                 await loadPublicPrintButton();
                 await loadPaginationSettings();
+                await loadPageSplitsSetting();
                 
                 // Load layout types and social platforms for custom sections
                 layoutTypesData = await api('/api/layout-types');
@@ -404,6 +406,22 @@
             }
         }
         
+        // Load page splits settings for print
+        async function loadPageSplitsSetting() {
+            try {
+                const sectionSplits = await api('/api/settings/allowSectionSplits');
+                const itemSplits = await api('/api/settings/allowItemSplits');
+                
+                const sectionEnabled = sectionSplits.value === 'true';
+                const itemEnabled = itemSplits.value === 'true';
+                
+                document.body.classList.toggle('allow-section-splits', sectionEnabled);
+                document.body.classList.toggle('allow-item-splits', sectionEnabled && itemEnabled);
+            } catch (err) {
+                // Default to false (prevent splits)
+            }
+        }
+        
         // Setup print pagination event handlers
         function setupPrintPagination() {
             window.addEventListener('beforeprint', injectPaginationStyles);
@@ -536,6 +554,13 @@
                 if (el && lastInserted) {
                     lastInserted.after(el);
                     lastInserted = el;
+                    
+                    // Apply hidden-print class if section is visible but not print_visible
+                    if (section.visible && section.print_visible === false) {
+                        el.classList.add('hidden-print');
+                    } else {
+                        el.classList.remove('hidden-print');
+                    }
                 }
             });
         }

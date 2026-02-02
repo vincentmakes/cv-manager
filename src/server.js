@@ -234,6 +234,16 @@ if (!PUBLIC_ONLY) {
         console.log('Migration: Fixed custom_section_items visibility');
     } catch (err) { console.log('Migration check (custom_section_items):', err.message); }
 
+    // Step 2d: Migration - add print_visible column to section_visibility if missing
+    try {
+        const sectionVisInfo = db.prepare("PRAGMA table_info(section_visibility)").all();
+        const hasPrintVisible = sectionVisInfo.some(col => col.name === 'print_visible');
+        if (!hasPrintVisible) {
+            console.log('Migrating section_visibility table: adding print_visible column');
+            db.exec('ALTER TABLE section_visibility ADD COLUMN print_visible INTEGER DEFAULT 1');
+        }
+    } catch (err) { console.log('Migration check (print_visible):', err.message); }
+
     // Step 3: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
     DEFAULT_SECTION_ORDER.forEach((section, index) => {
@@ -315,7 +325,8 @@ if (PUBLIC_ONLY) {
         res.json(sections.map(s => ({ 
             key: s.section_name, 
             name: SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name, 
-            visible: !!s.visible, 
+            visible: !!s.visible,
+            print_visible: s.print_visible !== 0,
             sort_order: s.sort_order || 0, 
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
         }))); 
@@ -372,12 +383,13 @@ if (PUBLIC_ONLY) {
         res.json(sections.map(s => ({ 
             key: s.section_name, 
             name: SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name, 
-            visible: !!s.visible, 
+            visible: !!s.visible,
+            print_visible: s.print_visible !== 0,
             sort_order: s.sort_order || 0, 
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
         }))); 
     });
-    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible !== false ? 1 : 0, section.sort_order, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.put('/api/sections/:name', (req, res) => { const sectionName = req.params.name; const visible = req.body.visible ? 1 : 0; db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName); if (sectionName.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName); } res.json({ success: true }); });
 
     app.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT * FROM experiences ORDER BY start_date DESC, sort_order ASC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible }))); });
@@ -600,7 +612,8 @@ if (PUBLIC_ONLY) {
         res.json(sections.map(s => ({ 
             key: s.section_name, 
             name: SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name, 
-            visible: !!s.visible, 
+            visible: !!s.visible,
+            print_visible: s.print_visible !== 0,
             sort_order: s.sort_order || 0, 
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
         }))); 
