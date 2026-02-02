@@ -422,6 +422,36 @@ if (PUBLIC_ONLY) {
     app.put('/api/projects/:id', (req, res) => { const { title, description, technologies, link, visible, sort_order } = req.body; db.prepare(`UPDATE projects SET title = ?, description = ?, technologies = ?, link = ?, visible = ?, sort_order = ? WHERE id = ?`).run(title, description, JSON.stringify(technologies || []), link, visible ? 1 : 0, sort_order || 0, req.params.id); res.json({ success: true }); });
     app.delete('/api/projects/:id', (req, res) => { db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
+    // Generic reorder endpoint for items within sections
+    app.put('/api/reorder/:type', (req, res) => {
+        const { type } = req.params;
+        const { items } = req.body;
+        if (!items || !Array.isArray(items)) return res.status(400).json({ error: 'Invalid items data' });
+        
+        const tableMap = {
+            'certifications': 'certifications',
+            'education': 'education',
+            'skills': 'skill_categories',
+            'projects': 'projects',
+            'custom-items': 'custom_section_items'
+        };
+        
+        const table = tableMap[type];
+        if (!table) return res.status(400).json({ error: 'Invalid type' });
+        
+        try {
+            const updateOrder = db.transaction(() => {
+                items.forEach(item => {
+                    db.prepare(`UPDATE ${table} SET sort_order = ? WHERE id = ?`).run(item.sort_order, item.id);
+                });
+            });
+            updateOrder();
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
     app.get('/api/datasets', (req, res) => { 
         try {
             // Use SELECT * to avoid errors if slug column doesn't exist

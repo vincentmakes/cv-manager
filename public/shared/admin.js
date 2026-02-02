@@ -447,7 +447,8 @@ async function loadCertifications() {
     const container = document.getElementById('certGrid');
     
     container.innerHTML = certs.map(cert => `
-        <article class="cert-card ${cert.visible ? '' : 'hidden-print'}" data-id="${cert.id}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+        <article class="cert-card ${cert.visible ? '' : 'hidden-print'}" data-id="${cert.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('certifications', ${cert.id}, ${!cert.visible})" title="Toggle Visibility">
                     ${visibilityIcon(cert.visible)}
@@ -466,6 +467,9 @@ async function loadCertifications() {
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
     `).join('');
+    
+    // Add drag-and-drop listeners
+    initDragAndDrop(container, 'certifications');
 }
 
 // Load Education (admin version with edit controls)
@@ -474,7 +478,8 @@ async function loadEducation() {
     const container = document.getElementById('educationList');
     
     container.innerHTML = education.map(edu => `
-        <article class="item-card ${edu.visible ? '' : 'hidden-print'}" data-id="${edu.id}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+        <article class="item-card ${edu.visible ? '' : 'hidden-print'}" data-id="${edu.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('education', ${edu.id}, ${!edu.visible})" title="Toggle Visibility">
                     ${visibilityIcon(edu.visible)}
@@ -501,6 +506,9 @@ async function loadEducation() {
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
         </article>
     `).join('');
+    
+    // Add drag-and-drop listeners
+    initDragAndDrop(container, 'education');
 }
 
 // Load Skills (admin version with edit controls)
@@ -509,7 +517,8 @@ async function loadSkills() {
     const container = document.getElementById('skillsGrid');
     
     container.innerHTML = skills.map(cat => `
-        <div class="skill-category ${cat.visible ? '' : 'hidden-print'}" data-id="${cat.id}">
+        <div class="skill-category ${cat.visible ? '' : 'hidden-print'}" data-id="${cat.id}" draggable="true">
+            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('skills', ${cat.id}, ${!cat.visible})" title="Toggle Visibility">
                     ${visibilityIcon(cat.visible)}
@@ -530,6 +539,9 @@ async function loadSkills() {
             </div>
         </div>
     `).join('');
+    
+    // Add drag-and-drop listeners
+    initDragAndDrop(container, 'skills');
 }
 
 // Load Projects (admin version with edit controls)
@@ -538,7 +550,8 @@ async function loadProjects() {
     const container = document.getElementById('projectsGrid');
     
     container.innerHTML = projects.map(proj => `
-        <article class="project-card ${proj.visible ? '' : 'hidden-print'}" data-id="${proj.id}" itemscope itemtype="https://schema.org/CreativeWork">
+        <article class="project-card ${proj.visible ? '' : 'hidden-print'}" data-id="${proj.id}" draggable="true" itemscope itemtype="https://schema.org/CreativeWork">
+            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('projects', ${proj.id}, ${!proj.visible})" title="Toggle Visibility">
                     ${visibilityIcon(proj.visible)}
@@ -560,6 +573,9 @@ async function loadProjects() {
             </div>
         </article>
     `).join('');
+    
+    // Add drag-and-drop listeners
+    initDragAndDrop(container, 'projects');
 }
 
 // Toggle Section Visibility
@@ -1162,6 +1178,168 @@ function printerIcon(printVisible) {
     return printVisible
         ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>'
         : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4l16 16"/></svg>';
+}
+
+function dragHandleIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="2" r="1.5"/><circle cx="10" cy="2" r="1.5"/><circle cx="4" cy="7" r="1.5"/><circle cx="10" cy="7" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="10" cy="12" r="1.5"/></svg>';
+}
+
+// ===========================
+// Drag and Drop for Items
+// ===========================
+let itemDraggedEl = null;
+let itemDragType = null;
+let currentDropTarget = null;
+
+function initDragAndDrop(container, type) {
+    const items = container.querySelectorAll('[draggable="true"]');
+    
+    items.forEach(item => {
+        // Only start drag from the drag handle
+        const handle = item.querySelector('.drag-handle');
+        if (handle) {
+            handle.addEventListener('mousedown', () => {
+                item.setAttribute('draggable', 'true');
+            });
+            handle.addEventListener('mouseup', () => {
+                item.setAttribute('draggable', 'true');
+            });
+        }
+        
+        item.addEventListener('dragstart', (e) => handleItemDragStart(e, type));
+        item.addEventListener('dragend', handleItemDragEnd);
+        item.addEventListener('dragover', (e) => handleItemDragOver(e, container));
+        item.addEventListener('drop', (e) => handleItemDrop(e, type, container));
+    });
+    
+    // Also listen on container for better drop detection
+    container.addEventListener('dragover', (e) => e.preventDefault());
+}
+
+function handleItemDragStart(e, type) {
+    itemDraggedEl = e.target.closest('[draggable="true"]');
+    itemDragType = type;
+    itemDraggedEl.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemDraggedEl.dataset.id);
+    
+    // Slight delay to allow the drag image to be captured before visual changes
+    setTimeout(() => {
+        if (itemDraggedEl) {
+            itemDraggedEl.style.opacity = '0.4';
+        }
+    }, 0);
+}
+
+function handleItemDragEnd(e) {
+    if (itemDraggedEl) {
+        itemDraggedEl.classList.remove('dragging');
+        itemDraggedEl.style.opacity = '';
+    }
+    // Clear all drop indicators
+    document.querySelectorAll('.drag-over, .drag-above, .drag-below, .drag-left, .drag-right').forEach(el => {
+        el.classList.remove('drag-over', 'drag-above', 'drag-below', 'drag-left', 'drag-right');
+    });
+    itemDraggedEl = null;
+    itemDragType = null;
+    currentDropTarget = null;
+}
+
+function isGridLayout(container) {
+    const style = window.getComputedStyle(container);
+    return style.display === 'grid' || style.display === 'inline-grid';
+}
+
+function handleItemDragOver(e, container) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const target = e.target.closest('[draggable="true"]');
+    if (!target || target === itemDraggedEl) {
+        // Clear previous target if we're not over a valid one
+        if (currentDropTarget && currentDropTarget !== target) {
+            currentDropTarget.classList.remove('drag-over', 'drag-above', 'drag-below', 'drag-left', 'drag-right');
+        }
+        currentDropTarget = null;
+        return;
+    }
+    
+    // Clear previous target
+    if (currentDropTarget && currentDropTarget !== target) {
+        currentDropTarget.classList.remove('drag-over', 'drag-above', 'drag-below', 'drag-left', 'drag-right');
+    }
+    
+    currentDropTarget = target;
+    
+    const rect = target.getBoundingClientRect();
+    const isGrid = isGridLayout(container);
+    
+    // Clear all position classes first
+    target.classList.remove('drag-above', 'drag-below', 'drag-left', 'drag-right');
+    target.classList.add('drag-over');
+    
+    if (isGrid) {
+        // For grids, use horizontal detection
+        const midX = rect.left + rect.width / 2;
+        const isLeft = e.clientX < midX;
+        target.classList.add(isLeft ? 'drag-left' : 'drag-right');
+    } else {
+        // For lists, use vertical detection
+        const midY = rect.top + rect.height / 2;
+        const isAbove = e.clientY < midY;
+        target.classList.add(isAbove ? 'drag-above' : 'drag-below');
+    }
+}
+
+async function handleItemDrop(e, type, container) {
+    e.preventDefault();
+    const target = e.target.closest('[draggable="true"]');
+    
+    if (!target || !itemDraggedEl || target === itemDraggedEl) return;
+    
+    const rect = target.getBoundingClientRect();
+    const isGrid = isGridLayout(container);
+    
+    // Determine drop position based on layout type
+    let insertBefore;
+    if (isGrid) {
+        const midX = rect.left + rect.width / 2;
+        insertBefore = e.clientX < midX;
+    } else {
+        const midY = rect.top + rect.height / 2;
+        insertBefore = e.clientY < midY;
+    }
+    
+    // Clear visual feedback
+    target.classList.remove('drag-over', 'drag-above', 'drag-below', 'drag-left', 'drag-right');
+    
+    // Reorder in DOM
+    if (insertBefore) {
+        target.before(itemDraggedEl);
+    } else {
+        target.after(itemDraggedEl);
+    }
+    
+    // Save new order to server
+    await saveItemOrder(type, container);
+}
+
+async function saveItemOrder(type, container) {
+    const items = Array.from(container.querySelectorAll('[draggable="true"]'));
+    const orderData = items.map((item, index) => ({
+        id: parseInt(item.dataset.id),
+        sort_order: index
+    }));
+    
+    try {
+        await api(`/api/reorder/${type}`, { 
+            method: 'PUT', 
+            body: { items: orderData } 
+        });
+        toast('Order saved');
+    } catch (err) {
+        toast('Failed to save order', 'error');
+    }
 }
 
 function editIcon() {
@@ -2088,9 +2266,10 @@ async function manageCustomSectionItems(sectionId) {
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add Item
         </button>
-        <div class="custom-items-list">
+        <div class="custom-items-list" data-section-id="${sectionId}">
             ${items.length === 0 ? '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>' : items.map(item => `
-                <div class="custom-item-row" data-id="${item.id}">
+                <div class="custom-item-row" data-id="${item.id}" draggable="true">
+                    <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
                     <div class="custom-item-info">
                         <div class="custom-item-title">${escapeHtml(item.title || 'Untitled')}</div>
                         ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
@@ -2107,6 +2286,12 @@ async function manageCustomSectionItems(sectionId) {
             `).join('')}
         </div>
     `;
+    
+    // Init drag-and-drop for custom items
+    const itemsContainer = document.querySelector('.custom-items-list');
+    if (itemsContainer && items.length > 0) {
+        initDragAndDrop(itemsContainer, 'custom-items');
+    }
     
     document.getElementById('customSectionModalOverlay').classList.add('active');
 }

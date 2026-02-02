@@ -100,6 +100,130 @@
 .item-btn.delete:hover { background: var(--danger); }
 .item-btn svg { width: 14px; height: 14px; }
 
+/* Drag Handle for Items */
+.drag-handle {
+    position: absolute;
+    top: 50%;
+    left: -24px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+    border-radius: var(--radius-sm);
+    z-index: 5;
+}
+
+.drag-handle:hover {
+    color: var(--primary);
+    background: var(--gray-100);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.item-card:hover .drag-handle,
+.cert-card:hover .drag-handle,
+.skill-category:hover .drag-handle,
+.project-card:hover .drag-handle,
+.custom-item-row:hover .drag-handle {
+    opacity: 1;
+}
+
+/* Dragging States for Items */
+.item-card.dragging,
+.cert-card.dragging,
+.skill-category.dragging,
+.project-card.dragging,
+.custom-item-row.dragging {
+    opacity: 0.4;
+}
+
+/* Drop target indicator - shows insertion line */
+.item-card.drag-over,
+.cert-card.drag-over,
+.skill-category.drag-over,
+.project-card.drag-over,
+.custom-item-row.drag-over {
+    position: relative;
+}
+
+/* Insertion line above (for vertical lists) */
+.item-card.drag-above::before,
+.cert-card.drag-above::before,
+.skill-category.drag-above::before,
+.project-card.drag-above::before,
+.custom-item-row.drag-above::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+    z-index: 10;
+}
+
+/* Insertion line below (for vertical lists) */
+.item-card.drag-below::after,
+.cert-card.drag-below::after,
+.skill-category.drag-below::after,
+.project-card.drag-below::after,
+.custom-item-row.drag-below::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+    z-index: 10;
+}
+
+/* Insertion line left (for grids) */
+.item-card.drag-left::before,
+.cert-card.drag-left::before,
+.skill-category.drag-left::before,
+.project-card.drag-left::before,
+.custom-item-row.drag-left::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    height: auto;
+    background: var(--primary);
+    border-radius: 2px;
+    z-index: 10;
+}
+
+/* Insertion line right (for grids) */
+.item-card.drag-right::after,
+.cert-card.drag-right::after,
+.skill-category.drag-right::after,
+.project-card.drag-right::after,
+.custom-item-row.drag-right::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    height: auto;
+    background: var(--primary);
+    border-radius: 2px;
+    z-index: 10;
+}
+
 /* Hidden Print Classes */
 .section.hidden-print { opacity: 0.5; border: 2px dashed var(--gray-300); }
 .item-card.hidden-print, .cert-card.hidden-print, .skill-category.hidden-print, .project-card.hidden-print { opacity: 0.5; border-left-style: dashed; }
@@ -676,6 +800,8 @@
 .custom-items-list {
     max-height: 300px;
     overflow-y: auto;
+    padding-left: 28px;
+    margin-left: -28px;
 }
 
 .custom-item-row {
@@ -689,6 +815,7 @@
     border-radius: var(--radius-sm);
     margin-bottom: 6px;
     transition: all 0.15s ease;
+    position: relative;
 }
 
 .custom-item-row:hover {
