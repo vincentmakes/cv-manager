@@ -1397,6 +1397,10 @@ async function loadPublicSettings() {
     
     // Apply settings to body
     applySplitSettings(allowSectionSplits.value === 'true', allowItemSplits.value === 'true');
+    
+    // Load tracking code
+    const trackingCode = await api('/api/settings/trackingCode');
+    document.getElementById('settingTrackingCode').value = trackingCode.value || '';
 }
 
 async function togglePublicSetting(key, value) {
@@ -1597,13 +1601,18 @@ async function saveSettingsSectionOrder() {
     
     try {
         await api('/api/sections/order', { method: 'PUT', body: { sections } });
+        
+        // Also save tracking code
+        const trackingCode = document.getElementById('settingTrackingCode').value;
+        await api('/api/settings/trackingCode', { method: 'PUT', body: { value: trackingCode } });
+        
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
         closeSettingsModal();
-        toast('Section order saved');
+        toast('Settings saved');
     } catch (err) {
-        toast('Failed to save section order', 'error');
+        toast('Failed to save settings', 'error');
     }
 }
 
@@ -2011,6 +2020,7 @@ function switchSettingsTab(tabName) {
     document.getElementById('settingsTabSections').classList.toggle('active', tabName === 'sections');
     document.getElementById('settingsTabCustom').classList.toggle('active', tabName === 'custom');
     document.getElementById('settingsTabPublic').classList.toggle('active', tabName === 'public');
+    document.getElementById('settingsTabAdvanced').classList.toggle('active', tabName === 'advanced');
     
     if (tabName === 'custom') {
         loadCustomSectionsList();

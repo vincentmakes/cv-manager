@@ -133,6 +133,7 @@
             await loadPublicPrintButton();
             await loadPaginationSettings();
             await loadPageSplitsSetting();
+            await loadTrackingCode();
             sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
@@ -487,6 +488,42 @@
             const styleEl = document.getElementById('pagination-print-styles');
             if (styleEl) {
                 styleEl.remove();
+            }
+        }
+        
+        // Load and inject tracking code
+        async function loadTrackingCode() {
+            try {
+                const result = await api('/api/settings/trackingCode');
+                if (result.value && result.value.trim()) {
+                    // Create a container for the tracking code
+                    const trackingContainer = document.createElement('div');
+                    trackingContainer.id = 'tracking-code-container';
+                    trackingContainer.innerHTML = result.value;
+                    
+                    // Execute any scripts in the tracking code
+                    const scripts = trackingContainer.querySelectorAll('script');
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        // Copy attributes
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        // Copy inline script content
+                        newScript.textContent = oldScript.textContent;
+                        document.head.appendChild(newScript);
+                    });
+                    
+                    // Append non-script elements to head
+                    Array.from(trackingContainer.children).forEach(child => {
+                        if (child.tagName !== 'SCRIPT') {
+                            document.head.appendChild(child.cloneNode(true));
+                        }
+                    });
+                }
+            } catch (err) {
+                // Silently fail - tracking is optional
+                console.log('Tracking code not loaded:', err.message);
             }
         }
         

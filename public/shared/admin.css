@@ -528,7 +528,7 @@
    Settings Modal Styles
    =========================== */
 
-.settings-modal .modal { max-width: 480px; }
+.settings-modal .modal { max-width: 560px; }
 
 .settings-section-item {
     display: flex;
@@ -888,6 +888,77 @@
     padding-left: 16px;
     border-left: 3px solid var(--primary-light);
     background: var(--gray-50);
+}
+
+/* Settings Field (for textareas and larger inputs) */
+.settings-field {
+    margin-bottom: 16px;
+}
+
+.settings-field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+
+.settings-field-label svg {
+    color: var(--primary);
+}
+
+.settings-field-desc {
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.settings-field-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-top: 8px;
+}
+
+.settings-field-hint svg {
+    flex-shrink: 0;
+}
+
+/* Tracking Code Textarea */
+.tracking-code-input {
+    width: 100%;
+    min-height: 160px;
+    padding: 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--gray-700);
+    background: var(--gray-50);
+    resize: vertical;
+    transition: all 0.15s ease;
+}
+
+.tracking-code-input:hover {
+    border-color: var(--primary-light);
+}
+
+.tracking-code-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.tracking-code-input::placeholder {
+    color: var(--gray-400);
+    font-style: italic;
 }
 
 /* Settings Select Dropdown */

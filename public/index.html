@@ -283,6 +283,7 @@
                     <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections">Section Order</button>
                     <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom">Custom Sections</button>
                     <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public">Print & Export</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('advanced')" data-tab="advanced">Advanced</button>
                 </div>
                 
                 <!-- Section Order Tab -->
@@ -377,6 +378,34 @@
                             <input type="checkbox" id="settingAllowItemSplits" onchange="toggleSplitSetting('allowItemSplits', this.checked)">
                             <span class="toggle-slider"></span>
                         </label>
+                    </div>
+                </div>
+                
+                <!-- Advanced Tab -->
+                <div class="settings-tab-content" id="settingsTabAdvanced">
+                    <div class="settings-info">
+                        Advanced settings for analytics and custom integrations.
+                    </div>
+                    
+                    <!-- Tracking Code Setting -->
+                    <div class="settings-field">
+                        <label class="settings-field-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            Tracking Code
+                        </label>
+                        <div class="settings-field-desc">
+                            Paste your analytics tracking code here (Google Analytics, Matomo, etc.). This code will be injected into the public CV pages.
+                        </div>
+                        <textarea 
+                            id="settingTrackingCode" 
+                            class="tracking-code-input" 
+                            placeholder="<!-- Paste your tracking code here -->&#10;&lt;script&gt;&#10;  // Example: Google Analytics&#10;&lt;/script&gt;"
+                            spellcheck="false"
+                        ></textarea>
+                        <div class="settings-field-hint">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Code is inserted before the closing &lt;/head&gt; tag. Changes are saved when you click "Save Changes".
+                        </div>
                     </div>
                 </div>
             </div>
