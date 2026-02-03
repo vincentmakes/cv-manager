@@ -188,7 +188,7 @@ body {
 .timeline-container {
     position: relative;
     padding: 70px 10px;
-    height: 220px;
+    min-height: 220px;
 }
 
 .timeline-track {
@@ -998,7 +998,8 @@ body.has-preview-banner .container {
     /* Timeline - SHOW it in print (only if not hidden by user choice) */
     #section-timeline:not(.hidden-print) .timeline-container { 
         display: block !important;
-        height: 180px; 
+        min-height: 180px;
+        height: auto;
         padding: 50px 10px;
     }
     #section-timeline:not(.hidden-print) .timeline-company { font-size: 9px; }

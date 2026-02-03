@@ -217,6 +217,33 @@ async function loadTimeline() {
             </div>
         `;
     }).join('');
+    
+    resizeTimelineContainer();
+}
+
+// Dynamically resize timeline container based on content height
+function resizeTimelineContainer() {
+    const container = document.querySelector('.timeline-container');
+    if (!container) return;
+    
+    let maxTopHeight = 0;
+    let maxBottomHeight = 0;
+    
+    container.querySelectorAll('.timeline-item').forEach(item => {
+        const content = item.querySelector('.timeline-content');
+        if (!content) return;
+        const contentHeight = content.offsetHeight;
+        if (item.classList.contains('top')) {
+            maxTopHeight = Math.max(maxTopHeight, contentHeight);
+        } else {
+            maxBottomHeight = Math.max(maxBottomHeight, contentHeight);
+        }
+    });
+    
+    // 16px gap between content and track on each side, plus some breathing room
+    const neededHeight = maxTopHeight + maxBottomHeight + 50;
+    const minHeight = 220;
+    container.style.height = Math.max(minHeight, neededHeight) + 'px';
 }
 
 // Scroll to matching experience card when timeline item is clicked
