@@ -496,29 +496,51 @@
             try {
                 const result = await api('/api/settings/trackingCode');
                 if (result.value && result.value.trim()) {
-                    // Create a container for the tracking code
+                    // Create a container to parse the tracking code
                     const trackingContainer = document.createElement('div');
                     trackingContainer.id = 'tracking-code-container';
                     trackingContainer.innerHTML = result.value;
                     
-                    // Execute any scripts in the tracking code
-                    const scripts = trackingContainer.querySelectorAll('script');
-                    scripts.forEach(oldScript => {
-                        const newScript = document.createElement('script');
-                        // Copy attributes
-                        Array.from(oldScript.attributes).forEach(attr => {
-                            newScript.setAttribute(attr.name, attr.value);
-                        });
-                        // Copy inline script content
-                        newScript.textContent = oldScript.textContent;
-                        document.head.appendChild(newScript);
-                    });
-                    
-                    // Append non-script elements to head
+                    // Append non-script elements to head first (meta tags, etc.)
                     Array.from(trackingContainer.children).forEach(child => {
                         if (child.tagName !== 'SCRIPT') {
                             document.head.appendChild(child.cloneNode(true));
                         }
+                    });
+                    
+                    // Separate external scripts (with src) from inline scripts
+                    const scripts = trackingContainer.querySelectorAll('script');
+                    const externalScripts = [];
+                    const inlineScripts = [];
+                    scripts.forEach(s => {
+                        if (s.src || s.getAttribute('src')) {
+                            externalScripts.push(s);
+                        } else {
+                            inlineScripts.push(s);
+                        }
+                    });
+                    
+                    // Load external scripts first, wait for them to load
+                    await Promise.all(externalScripts.map(oldScript => {
+                        return new Promise((resolve) => {
+                            const newScript = document.createElement('script');
+                            Array.from(oldScript.attributes).forEach(attr => {
+                                newScript.setAttribute(attr.name, attr.value);
+                            });
+                            newScript.onload = resolve;
+                            newScript.onerror = resolve; // Don't block on failure
+                            document.head.appendChild(newScript);
+                        });
+                    }));
+                    
+                    // Then execute inline scripts
+                    inlineScripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        document.head.appendChild(newScript);
                     });
                 }
             } catch (err) {

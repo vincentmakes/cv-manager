@@ -288,12 +288,56 @@ if (PUBLIC_ONLY) {
         next();
     });
 
+    // Dynamic CSP: extract domains from tracking code to allow them
+    function getTrackingDomainsPublicOnly() {
+        try {
+            const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
+            if (!setting || !setting.value) return [];
+            
+            const domains = new Set();
+            const srcMatches = setting.value.match(/src\s*=\s*["'](https?:\/\/[^"'\/]+)/gi);
+            if (srcMatches) {
+                srcMatches.forEach(m => {
+                    const urlMatch = m.match(/["'](https?:\/\/[^"'\/]+)/i);
+                    if (urlMatch) domains.add(urlMatch[1]);
+                });
+            }
+            const urlMatches = setting.value.match(/https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.[a-zA-Z]{2,}/g);
+            if (urlMatches) {
+                urlMatches.forEach(url => {
+                    try {
+                        const origin = new URL(url).origin;
+                        domains.add(origin);
+                    } catch (e) { /* skip invalid URLs */ }
+                });
+            }
+            return Array.from(domains);
+        } catch (err) {
+            console.error('Error reading tracking domains:', err.message);
+            return [];
+        }
+    }
+
+    console.log(`[CSP] Tracking domains detected: ${getTrackingDomainsPublicOnly().length > 0 ? getTrackingDomainsPublicOnly().join(', ') : '(none)'}`);
+
     publicApp.use((req, res, next) => {
+        const trackingDomains = getTrackingDomainsPublicOnly();
+        const trackingStr = trackingDomains.length > 0 ? ' ' + trackingDomains.join(' ') : '';
+        
+        const csp = [
+            `default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com`,
+            `script-src 'self' 'unsafe-inline'${trackingStr}`,
+            `script-src-elem 'self' 'unsafe-inline'${trackingStr}`,
+            `worker-src 'self' blob:${trackingStr}`,
+            `connect-src 'self'${trackingStr}`,
+            `img-src 'self' https://flagcdn.com data:${trackingStr}`
+        ].join('; ');
+        
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('X-Frame-Options', 'DENY');
         res.setHeader('X-XSS-Protection', '1; mode=block');
         res.setHeader('Referrer-Policy', 'no-referrer');
-        res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com; img-src 'self' https://flagcdn.com data:");
+        res.setHeader('Content-Security-Policy', csp);
         next();
     });
 
