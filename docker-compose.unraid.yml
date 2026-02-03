@@ -11,6 +11,8 @@ services:
     ports:
       - "3000:3000"   # Admin interface (keep internal/protected)
       - "3001:3001"   # Public read-only (expose via CF tunnel)
+      # To change the host port, only change the LEFT side (e.g. "8080:3001")
+      # Do NOT change PUBLIC_PORT below - it must match the right side of the port mapping
     volumes:
       # Bind mount - change path to your Unraid appdata location
       - /mnt/user/appdata/cv-manager/data:/app/data

@@ -7,6 +7,8 @@ services:
     ports:
       - "3000:3000"   # Admin interface
       - "3001:3001"   # Public read-only
+      # To change the host port, only change the LEFT side (e.g. "8080:3001")
+      # Do NOT change PUBLIC_PORT below - it must match the right side of the port mapping
     volumes:
       # Persist database outside container
       # Make sure this directory exists on host: mkdir -p ./data
