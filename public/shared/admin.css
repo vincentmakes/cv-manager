@@ -571,11 +571,58 @@
 
 .settings-section-drag:hover { color: var(--gray-600); }
 
-.settings-section-name {
+.settings-section-name-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.settings-section-name-input {
     flex: 1;
     font-size: 14px;
     font-weight: 500;
     color: var(--gray-700);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    outline: none;
+    transition: all 0.15s ease;
+    min-width: 0;
+    font-family: inherit;
+}
+
+.settings-section-name-input:hover {
+    border-color: var(--gray-300);
+    background: var(--white);
+}
+
+.settings-section-name-input:focus {
+    border-color: var(--primary);
+    background: var(--white);
+    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+}
+
+.settings-section-reset-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: var(--gray-100);
+    color: var(--gray-400);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.settings-section-reset-btn:hover {
+    background: var(--primary);
+    color: var(--white);
 }
 
 .settings-section-actions {

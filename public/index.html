@@ -289,7 +289,7 @@
                 <!-- Section Order Tab -->
                 <div class="settings-tab-content active" id="settingsTabSections">
                     <div class="settings-info">
-                        Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon.
+                        Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Click section names to edit headlines.
                     </div>
                     <div id="settingsSectionsList"></div>
                 </div>
@@ -385,6 +385,23 @@
                 <div class="settings-tab-content" id="settingsTabAdvanced">
                     <div class="settings-info">
                         Advanced settings for analytics and custom integrations.
+                    </div>
+                    
+                    <!-- Date Format Setting -->
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title">Date Format</div>
+                            <div class="settings-option-desc">Choose how dates are displayed on your CV</div>
+                        </div>
+                        <select class="pagination-select" id="settingDateFormat" style="min-width: 140px;">
+                            <option value="MMM YYYY">Jan 2020</option>
+                            <option value="MMMM YYYY">January 2020</option>
+                            <option value="MM/YYYY">01/2020</option>
+                            <option value="MM.YYYY">01.2020</option>
+                            <option value="MM-YYYY">01-2020</option>
+                            <option value="YYYY-MM">2020-01</option>
+                            <option value="YYYY">2020 (year only)</option>
+                        </select>
                     </div>
                     
                     <!-- Tracking Code Setting -->

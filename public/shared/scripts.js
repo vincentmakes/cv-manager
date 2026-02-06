@@ -73,13 +73,38 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Global date format setting - loaded from settings API
+let dateFormatSetting = 'MMM YYYY'; // default: "Jan 2020"
+
+const DATE_FORMAT_OPTIONS = [
+    { value: 'MMM YYYY', label: 'Jan 2020', example: 'Jan 2020' },
+    { value: 'MMMM YYYY', label: 'January 2020', example: 'January 2020' },
+    { value: 'MM/YYYY', label: '01/2020', example: '01/2020' },
+    { value: 'MM.YYYY', label: '01.2020', example: '01.2020' },
+    { value: 'MM-YYYY', label: '01-2020', example: '01-2020' },
+    { value: 'YYYY-MM', label: '2020-01', example: '2020-01' },
+    { value: 'YYYY', label: '2020 (year only)', example: '2020' }
+];
+
 function formatDate(dateStr) {
     if (!dateStr) return '';
     if (dateStr.match(/^\d{4}$/)) return dateStr;
     if (dateStr.match(/^\d{4}-\d{2}$/)) {
         const [y, m] = dateStr.split('-');
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        return `${months[parseInt(m)-1]} ${y}`;
+        const monthIdx = parseInt(m) - 1;
+        const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const monthsFull = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        
+        switch (dateFormatSetting) {
+            case 'MMMM YYYY': return `${monthsFull[monthIdx]} ${y}`;
+            case 'MM/YYYY': return `${m}/${y}`;
+            case 'MM.YYYY': return `${m}.${y}`;
+            case 'MM-YYYY': return `${m}-${y}`;
+            case 'YYYY-MM': return `${y}-${m}`;
+            case 'YYYY': return y;
+            case 'MMM YYYY':
+            default: return `${monthsShort[monthIdx]} ${y}`;
+        }
     }
     return dateStr;
 }
@@ -128,6 +153,42 @@ function parseDateForSort(dateStr) {
     }
     
     return 0;
+}
+
+// Apply custom section titles from section order data to the DOM
+function applySectionTitles(sectionOrderData) {
+    if (!sectionOrderData || !sectionOrderData.length) return;
+    sectionOrderData.forEach(section => {
+        const el = document.getElementById(`section-${section.key}`);
+        if (el && section.name) {
+            const titleEl = el.querySelector('.section-title');
+            if (titleEl) {
+                titleEl.textContent = section.name;
+            }
+        }
+    });
+}
+
+// Load date format setting from API
+async function loadDateFormatSetting() {
+    try {
+        const result = await api('/api/settings/dateFormat');
+        if (result.value) {
+            dateFormatSetting = result.value;
+        }
+    } catch (err) {
+        // Use default format
+    }
+}
+
+// Format timeline period - always uses year only (YYYY)
+function formatTimelinePeriod(item) {
+    if (item.start_date) {
+        const startYear = item.start_date.substring(0, 4);
+        const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
+        return `${startYear} - ${endYear}`;
+    }
+    return item.period || '';
 }
 
 // Load Profile (shared between admin and public)
@@ -211,7 +272,7 @@ async function loadTimeline() {
                 <div class="timeline-content">
                     <div class="timeline-company">${escapeHtml(item.company)}</div>
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
-                    <div class="timeline-period">${escapeHtml(item.period)}</div>
+                    <div class="timeline-period">${escapeHtml(formatTimelinePeriod(item))}</div>
                 </div>
                 ${marker}
             </div>
@@ -337,7 +398,7 @@ async function loadCertificationsReadOnly() {
         <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="cert-header">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                <time class="cert-date" itemprop="dateCreated">${escapeHtml(cert.issue_date || '')}</time>
+                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
             </div>
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
@@ -359,8 +420,8 @@ async function loadEducationReadOnly() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time datetime="${edu.start_date || ''}">${escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${escapeHtml(edu.end_date || '')}</time>
+                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
+                    <time datetime="${edu.end_date || ''}">${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}

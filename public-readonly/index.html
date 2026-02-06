@@ -130,6 +130,7 @@
         // Load live data from current CV (normal mode)
         async function loadLiveData() {
             await loadThemeColorPublic();
+            await loadDateFormatSetting();
             await loadPublicPrintButton();
             await loadPaginationSettings();
             await loadPageSplitsSetting();
@@ -145,6 +146,7 @@
             await loadProjectsReadOnly();
             await loadCustomSectionsPublic();
             renderSectionsInOrder();
+            applySectionTitles(sectionOrder);
             await generateATSContent();
         }
         
@@ -162,6 +164,7 @@
                 document.body.classList.add('has-preview-banner');
                 
                 await loadThemeColorPublic();
+                await loadDateFormatSetting();
                 await loadPublicPrintButton();
                 await loadPaginationSettings();
                 await loadPageSplitsSetting();
@@ -197,8 +200,9 @@
                 
                 // Reorder sections if sectionOrder is in dataset
                 if (datasetData.sectionOrder) {
-                    sectionOrder = datasetData.sectionOrder.filter(s => s.visible !== false).map(s => ({ key: s.key, visible: s.visible }));
+                    sectionOrder = datasetData.sectionOrder.filter(s => s.visible !== false).map(s => ({ key: s.key, visible: s.visible, name: s.display_name || s.name }));
                     renderSectionsInOrder();
+                    applySectionTitles(sectionOrder);
                 }
                 
             } catch (err) {
@@ -348,7 +352,7 @@
                 <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
                     <div class="cert-header">
                         <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                        <time class="cert-date" itemprop="dateCreated">${escapeHtml(cert.issue_date || '')}</time>
+                        <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
                     </div>
                     <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
                 </article>
@@ -365,7 +369,7 @@
                             <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
                             <div class="item-subtitle"><span itemprop="name">${escapeHtml(edu.institution_name)}</span></div>
                         </div>
-                        <span class="item-date">${escapeHtml(edu.start_date || '')} - ${escapeHtml(edu.end_date || '')}</span>
+                        <span class="item-date">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')} - ${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</span>
                     </div>
                     ${edu.description ? `<div class="item-location">${escapeHtml(edu.description)}</div>` : ''}
                 </article>
@@ -648,6 +652,9 @@
                     }
                 }
             });
+            
+            // Apply custom section titles
+            applySectionTitles(sectionOrder);
         }
         
         async function loadThemeColorPublic() {

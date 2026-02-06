@@ -41,6 +41,7 @@ function parseDateForSort(dateStr) {
 
 // Initialize Admin
 async function initAdmin() {
+    await loadDateFormatSetting();
     sectionOrder = await loadSectionOrder();
     sectionVisibility = await loadSectionsAdmin();
     await loadProfile(true);
@@ -202,6 +203,9 @@ async function renderSectionsInOrder() {
             }
         }
     });
+    
+    // Apply custom section titles
+    applySectionTitles(sectionOrder);
 }
 
 // Load custom sections and render them
@@ -462,7 +466,7 @@ async function loadCertifications() {
             </div>
             <div class="cert-header">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                <time class="cert-date" itemprop="dateCreated">${escapeHtml(cert.issue_date || '')}</time>
+                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
             </div>
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
@@ -499,8 +503,8 @@ async function loadEducation() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time datetime="${edu.start_date || ''}">${escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${escapeHtml(edu.end_date || '')}</time>
+                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
+                    <time datetime="${edu.end_date || ''}">${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
@@ -1401,6 +1405,10 @@ async function loadPublicSettings() {
     // Load tracking code
     const trackingCode = await api('/api/settings/trackingCode');
     document.getElementById('settingTrackingCode').value = trackingCode.value || '';
+    
+    // Load date format setting
+    const dateFormat = await api('/api/settings/dateFormat');
+    document.getElementById('settingDateFormat').value = dateFormat.value || 'MMM YYYY';
 }
 
 async function togglePublicSetting(key, value) {
@@ -1480,7 +1488,18 @@ function renderSettingsSections() {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
                 </svg>
             </div>
-            <div class="settings-section-name">${escapeHtml(section.name)}</div>
+            <div class="settings-section-name-wrap">
+                <input type="text" class="settings-section-name-input" 
+                    value="${escapeHtml(section.name)}" 
+                    data-key="${section.key}"
+                    data-default="${escapeHtml(section.default_name || section.name)}"
+                    onchange="updateSettingsSectionName('${section.key}', this.value)"
+                    title="Click to edit section headline"
+                />
+                ${section.name !== section.default_name ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="Reset to default: ${escapeHtml(section.default_name || section.name)}">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                </button>` : ''}
+            </div>
             <div class="settings-section-actions">
                 <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Show/Hide on Site">
                     ${visibilityIcon(section.visible)}
@@ -1591,12 +1610,34 @@ function moveSettingsSection(key, direction) {
     }
 }
 
+function updateSettingsSectionName(key, newName) {
+    const section = settingsSectionOrder.find(s => s.key === key);
+    if (section) {
+        const trimmed = newName.trim();
+        section.name = trimmed || section.default_name;
+        // Only re-render if we need to show/hide the reset button
+        if ((trimmed !== section.default_name) !== (section._hadCustomName)) {
+            section._hadCustomName = trimmed !== section.default_name;
+            renderSettingsSections();
+        }
+    }
+}
+
+function resetSettingsSectionName(key) {
+    const section = settingsSectionOrder.find(s => s.key === key);
+    if (section) {
+        section.name = section.default_name;
+        renderSettingsSections();
+    }
+}
+
 async function saveSettingsSectionOrder() {
     const sections = settingsSectionOrder.map((s, index) => ({
         key: s.key,
         visible: s.visible,
         print_visible: s.print_visible !== false,
-        sort_order: index
+        sort_order: index,
+        display_name: (s.name && s.name !== s.default_name) ? s.name : null
     }));
     
     try {
@@ -1605,6 +1646,11 @@ async function saveSettingsSectionOrder() {
         // Also save tracking code
         const trackingCode = document.getElementById('settingTrackingCode').value;
         await api('/api/settings/trackingCode', { method: 'PUT', body: { value: trackingCode } });
+        
+        // Also save date format
+        const dateFormat = document.getElementById('settingDateFormat').value;
+        await api('/api/settings/dateFormat', { method: 'PUT', body: { value: dateFormat } });
+        dateFormatSetting = dateFormat;
         
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
