@@ -825,6 +825,21 @@ body {
     margin-bottom: 0;
 }
 
+/* Free Text Layout */
+.custom-free-text-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.custom-free-text-content {
+    font-size: 13.5px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    white-space: pre-line;
+    margin: 0;
+}
+
 /* Public Print Button */
 .public-print-btn {
     position: fixed;
@@ -1080,6 +1095,9 @@ body.has-preview-banner .container {
     
     /* About */
     .about-text { font-size: 11px; line-height: 1.5; white-space: pre-line; }
+    
+    /* Free Text */
+    .custom-free-text-content { font-size: 11px; line-height: 1.5; white-space: pre-line; }
     
     .hidden-print { display: none !important; }
 }

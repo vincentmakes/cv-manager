@@ -120,7 +120,8 @@ const SVG_ICONS = {
     edit: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
     dribbble: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>',
     behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>',
-    bullets: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l11 0M9 12l11 0M9 18l11 0"/><path d="M5 6l0 .01M5 12l0 .01M5 18l0 .01" stroke-linecap="round"/></svg>'
+    bullets: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l11 0M9 12l11 0M9 18l11 0"/><path d="M5 6l0 .01M5 12l0 .01M5 18l0 .01" stroke-linecap="round"/></svg>',
+    freetext: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>'
 };
 
 // Layout types as array for frontend iteration
@@ -130,7 +131,8 @@ const LAYOUT_TYPES = [
     { id: 'grid-3', name: '3-Column Grid', icon: SVG_ICONS.grid3 },
     { id: 'list', name: 'Vertical List', icon: SVG_ICONS.list },
     { id: 'cards', name: 'Card Grid', icon: SVG_ICONS.cards },
-    { id: 'bullet-list', name: 'Bullet Points', icon: SVG_ICONS.bullets }
+    { id: 'bullet-list', name: 'Bullet Points', icon: SVG_ICONS.bullets },
+    { id: 'free-text', name: 'Free Text', icon: SVG_ICONS.freetext }
 ];
 
 // Social platform definitions as array for frontend iteration

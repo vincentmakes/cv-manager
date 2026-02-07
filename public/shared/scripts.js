@@ -635,6 +635,9 @@ function renderCustomSectionPublic(section, layoutTypes, socialPlatforms) {
         case 'bullet-list':
             contentHtml = renderBulletListPublic(items);
             break;
+        case 'free-text':
+            contentHtml = renderFreeTextPublic(items);
+            break;
         default:
             contentHtml = renderGridPublic(items, 3);
     }
@@ -742,6 +745,22 @@ function renderBulletListPublic(items) {
                         ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
                     </ul>
                 ` : ''}
+            </div>
+        `;
+    }).join('')}</div>`;
+}
+
+// Free text layout for public view
+function renderFreeTextPublic(items) {
+    if (items.length === 0) return '';
+    
+    return `<div class="custom-free-text-blocks">${items.map(item => {
+        const visible = item.visible !== false;
+        if (!visible) return '';
+        
+        return `
+            <div class="custom-free-text">
+                <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
             </div>
         `;
     }).join('')}</div>`;

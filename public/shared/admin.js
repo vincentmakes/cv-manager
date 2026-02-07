@@ -256,6 +256,9 @@ function renderCustomSection(section) {
         case 'bullet-list':
             contentHtml = renderBulletListLayout(items);
             break;
+        case 'free-text':
+            contentHtml = renderFreeTextLayout(items);
+            break;
         default:
             contentHtml = renderGridLayout(items, 3);
     }
@@ -378,6 +381,20 @@ function renderBulletListLayout(items) {
                         ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
                     </ul>
                 ` : ''}
+            </div>
+        `;
+    }).join('')}</div>`;
+}
+
+// Free text layout - plain text with preserved line breaks, no title
+function renderFreeTextLayout(items) {
+    if (items.length === 0) return '<p class="empty-section">No text added yet.</p>';
+    
+    return `<div class="custom-free-text-blocks">${items.map(item => {
+        const visible = item.visible !== false;
+        return `
+            <div class="custom-free-text ${visible ? '' : 'hidden-print'}">
+                <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
             </div>
         `;
     }).join('')}</div>`;
@@ -2426,6 +2443,15 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <textarea class="form-textarea" id="ci-description" rows="8" placeholder="First bullet point\nSecond bullet point\nThird bullet point">${escapeHtml(item.description || '')}</textarea>
             </div>
         `;
+    } else if (section.layout_type === 'free-text') {
+        // Free text form - just a textarea, no title
+        formHtml = `
+            <div class="form-group">
+                <label class="form-label">Text Content</label>
+                <textarea class="form-textarea" id="ci-description" rows="10" placeholder="Enter your text here. Line breaks will be preserved.">${escapeHtml(item.description || '')}</textarea>
+                <div class="form-hint">Line breaks are preserved as displayed.</div>
+            </div>
+        `;
     } else {
         // Generic form for other layouts
         const hideTitle = item.metadata?.hideTitle || false;
@@ -2514,15 +2540,15 @@ async function saveCustomItem() {
         metadata = { hideTitle };
     }
     
-    // Validation - title not required when hideTitle is checked
-    if (section.layout_type !== 'bullet-list' && !metadata.hideTitle && !title) {
+    // Validation - title not required for bullet-list, free-text, or when hideTitle is checked
+    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && !metadata.hideTitle && !title) {
         toast('Please enter a title', 'error');
         return;
     }
     
-    // Bullet list requires description (the bullet points)
-    if (section.layout_type === 'bullet-list' && !description) {
-        toast('Please enter at least one bullet point', 'error');
+    // Bullet list and free text require description
+    if ((section.layout_type === 'bullet-list' || section.layout_type === 'free-text') && !description) {
+        toast(section.layout_type === 'free-text' ? 'Please enter some text' : 'Please enter at least one bullet point', 'error');
         return;
     }
     
