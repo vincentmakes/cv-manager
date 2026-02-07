@@ -676,42 +676,51 @@ function renderSocialLinksPublic(items, socialPlatforms) {
 function renderGridPublic(items, cols) {
     if (items.length === 0) return '';
     
-    return `<div class="custom-grid custom-grid-${cols}">${items.map(item => `
+    return `<div class="custom-grid custom-grid-${cols}">${items.map(item => {
+        const hideTitle = item.metadata?.hideTitle || false;
+        return `
         <div class="custom-grid-item">
-            <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+            ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
             ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
         </div>
-    `).join('')}</div>`;
+    `;
+    }).join('')}</div>`;
 }
 
 function renderListPublic(items) {
     if (items.length === 0) return '';
     
-    return `<div class="custom-list">${items.map(item => `
+    return `<div class="custom-list">${items.map(item => {
+        const hideTitle = item.metadata?.hideTitle || false;
+        return `
         <div class="custom-list-item">
             <div class="custom-list-content">
-                <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+                ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
             </div>
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
         </div>
-    `).join('')}</div>`;
+    `;
+    }).join('')}</div>`;
 }
 
 function renderCardsPublic(items) {
     if (items.length === 0) return '';
     
-    return `<div class="custom-cards">${items.map(item => `
+    return `<div class="custom-cards">${items.map(item => {
+        const hideTitle = item.metadata?.hideTitle || false;
+        return `
         <div class="custom-card">
-            <h3 class="custom-card-title">${escapeHtml(item.title)}</h3>
+            ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
             ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
         </div>
-    `).join('')}</div>`;
+    `;
+    }).join('')}</div>`;
 }
 
 // Bullet list layout for public view

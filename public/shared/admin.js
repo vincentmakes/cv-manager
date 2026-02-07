@@ -311,9 +311,10 @@ function renderGridLayout(items, cols) {
     
     return `<div class="custom-grid custom-grid-${cols}">${items.map(item => {
         const visible = item.visible !== false;
+        const hideTitle = item.metadata?.hideTitle || false;
         return `
             <div class="custom-grid-item ${visible ? '' : 'hidden-print'}">
-                <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+                ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
@@ -328,10 +329,11 @@ function renderListLayout(items) {
     
     return `<div class="custom-list">${items.map(item => {
         const visible = item.visible !== false;
+        const hideTitle = item.metadata?.hideTitle || false;
         return `
             <div class="custom-list-item ${visible ? '' : 'hidden-print'}">
                 <div class="custom-list-content">
-                    <h3 class="custom-item-title">${escapeHtml(item.title)}</h3>
+                    ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                     ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                     ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
                 </div>
@@ -347,9 +349,10 @@ function renderCardsLayout(items) {
     
     return `<div class="custom-cards">${items.map(item => {
         const visible = item.visible !== false;
+        const hideTitle = item.metadata?.hideTitle || false;
         return `
             <div class="custom-card ${visible ? '' : 'hidden-print'}">
-                <h3 class="custom-card-title">${escapeHtml(item.title)}</h3>
+                ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
@@ -2414,10 +2417,18 @@ function openCustomItemModal(sectionId, itemId = null) {
         `;
     } else {
         // Generic form for other layouts
+        const hideTitle = item.metadata?.hideTitle || false;
         formHtml = `
             <div class="form-group">
                 <label class="form-label">Title</label>
                 <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="ci-hide-title" ${hideTitle ? 'checked' : ''} style="width: 16px; height: 16px;">
+                    <span>Hide title</span>
+                </label>
+                <div class="form-hint">Display the item without its title heading.</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Subtitle (optional)</label>
@@ -2487,13 +2498,13 @@ async function saveCustomItem() {
         const platform = document.getElementById('ci-platform')?.value || 'custom';
         const platformData = socialPlatforms.find(p => p.id === platform);
         metadata = { platform, icon: platformData?.icon, color: platformData?.color };
-    } else if (section.layout_type === 'bullet-list') {
+    } else {
         const hideTitle = document.getElementById('ci-hide-title')?.checked || false;
         metadata = { hideTitle };
     }
     
-    // Validation - title not required for bullet-list with hideTitle
-    if (section.layout_type !== 'bullet-list' && !title) {
+    // Validation - title not required when hideTitle is checked
+    if (section.layout_type !== 'bullet-list' && !metadata.hideTitle && !title) {
         toast('Please enter a title', 'error');
         return;
     }
