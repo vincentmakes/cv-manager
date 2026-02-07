@@ -384,7 +384,7 @@
                 <!-- Advanced Tab -->
                 <div class="settings-tab-content" id="settingsTabAdvanced">
                     <div class="settings-info">
-                        Advanced settings for analytics and custom integrations.
+                        Advanced settings for formatting, SEO, analytics and custom integrations.
                     </div>
                     
                     <!-- Date Format Setting -->
@@ -402,6 +402,26 @@
                             <option value="YYYY-MM">2020-01</option>
                             <option value="YYYY">2020 (year only)</option>
                         </select>
+                    </div>
+                    
+                    <!-- Search Engine Indexing (Robots Meta) Setting -->
+                    <div class="settings-option" style="align-items: flex-start;">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title">Search Engine Indexing</div>
+                            <div class="settings-option-desc">Control how search engines handle your public CV page</div>
+                        </div>
+                        <select class="pagination-select" id="settingRobotsMeta" style="min-width: 160px;">
+                            <option value="index, follow">Index, Follow</option>
+                            <option value="noindex, follow">No Index, Follow</option>
+                            <option value="index, nofollow">Index, No Follow</option>
+                            <option value="noindex, nofollow">No Index, No Follow</option>
+                        </select>
+                    </div>
+                    <div class="settings-robots-hints">
+                        <div class="settings-robots-hint"><strong>Index</strong> — Search engines can list your CV in results</div>
+                        <div class="settings-robots-hint"><strong>No Index</strong> — Search engines won't list your CV (stays private in search)</div>
+                        <div class="settings-robots-hint"><strong>Follow</strong> — Search engines will follow links on your CV (e.g. LinkedIn, GitHub)</div>
+                        <div class="settings-robots-hint"><strong>No Follow</strong> — Search engines won't follow outbound links</div>
                     </div>
                     
                     <!-- Tracking Code Setting -->

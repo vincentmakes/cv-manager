@@ -977,6 +977,27 @@
 }
 
 /* Tracking Code Textarea */
+
+.settings-robots-hints {
+    padding: 8px 12px;
+    margin-top: -4px;
+    margin-bottom: 8px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+}
+
+.settings-robots-hint {
+    font-size: 11.5px;
+    color: var(--gray-500);
+    line-height: 1.7;
+}
+
+.settings-robots-hint strong {
+    color: var(--gray-700);
+    font-weight: 600;
+}
+
 .tracking-code-input {
     width: 100%;
     min-height: 160px;

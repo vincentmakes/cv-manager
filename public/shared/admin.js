@@ -1412,6 +1412,11 @@ async function loadPublicSettings() {
     // Load date format setting
     const dateFormat = await api('/api/settings/dateFormat');
     document.getElementById('settingDateFormat').value = dateFormat.value || 'MMM YYYY';
+    
+    // Load robots meta setting
+    const robotsMeta = await api('/api/settings/robotsMeta');
+    const robotsEl = document.getElementById('settingRobotsMeta');
+    if (robotsEl) robotsEl.value = robotsMeta.value || 'index, follow';
 }
 
 async function togglePublicSetting(key, value) {
@@ -1654,6 +1659,12 @@ async function saveSettingsSectionOrder() {
         const dateFormat = document.getElementById('settingDateFormat').value;
         await api('/api/settings/dateFormat', { method: 'PUT', body: { value: dateFormat } });
         dateFormatSetting = dateFormat;
+        
+        // Also save robots meta
+        const robotsMetaEl = document.getElementById('settingRobotsMeta');
+        if (robotsMetaEl) {
+            await api('/api/settings/robotsMeta', { method: 'PUT', body: { value: robotsMetaEl.value } });
+        }
         
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();

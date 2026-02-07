@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CV</title>
     <meta name="description" content="Professional CV">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" id="metaRobots" content="index, follow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -135,6 +135,7 @@
             await loadPaginationSettings();
             await loadPageSplitsSetting();
             await loadTrackingCode();
+            await loadRobotsMeta();
             sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
@@ -576,6 +577,18 @@
             } catch (err) {
                 // Silently fail - tracking is optional
                 console.log('Tracking code not loaded:', err.message);
+            }
+        }
+        
+        async function loadRobotsMeta() {
+            try {
+                const result = await api('/api/settings/robotsMeta');
+                if (result.value) {
+                    const metaEl = document.getElementById('metaRobots');
+                    if (metaEl) metaEl.setAttribute('content', result.value);
+                }
+            } catch (err) {
+                // Default remains index, follow
             }
         }
         

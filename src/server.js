@@ -89,6 +89,11 @@ function servePublicIndex(req, res) {
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
         
+        // Inject robots meta from settings
+        const robotsSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
+        const robotsValue = robotsSetting?.value || 'index, follow';
+        html = html.replace(/<meta name="robots"[^>]*>/, `<meta name="robots" id="metaRobots" content="${robotsValue}">`);
+        
         const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
         
@@ -361,12 +366,20 @@ if (PUBLIC_ONLY) {
     publicApp.get('/robots.txt', (req, res) => {
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
         const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+        const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
+        const metaValue = robotsMeta?.value || 'index, follow';
+        const isNoIndex = metaValue.includes('noindex');
         res.setHeader('Content-Type', 'text/plain');
-        res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`);
+        if (isNoIndex) {
+            res.send(`User-agent: *\nDisallow: /`);
+        } else {
+            res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`);
+        }
     });
 
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
-    publicApp.use(express.static(path.join(__dirname, '../public-readonly')));
+    publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
+    publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
 
     publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get() || {}); });
@@ -686,9 +699,10 @@ if (PUBLIC_ONLY) {
     publicApp.use((req, res, next) => { const ip = req.ip || req.connection.remoteAddress; const now = Date.now(); if (!rateLimit[ip]) rateLimit[ip] = { count: 1, start: now }; else if (now - rateLimit[ip].start > 60000) rateLimit[ip] = { count: 1, start: now }; else { rateLimit[ip].count++; if (rateLimit[ip].count > 60) return res.status(429).json({ error: 'Too many requests' }); } next(); });
     publicApp.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('X-Frame-Options', 'DENY'); res.setHeader('X-XSS-Protection', '1; mode=block'); res.setHeader('Referrer-Policy', 'no-referrer'); res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com; img-src 'self' https://flagcdn.com data:"); next(); });
     publicApp.get('/sitemap.xml', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; res.setHeader('Content-Type', 'application/xml'); res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${protocol}://${host}/</loc><lastmod>${new Date().toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>`); });
-    publicApp.get('/robots.txt', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; res.setHeader('Content-Type', 'text/plain'); res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`); });
+    publicApp.get('/robots.txt', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta'); const metaValue = robotsMeta?.value || 'index, follow'; const isNoIndex = metaValue.includes('noindex'); res.setHeader('Content-Type', 'text/plain'); if (isNoIndex) { res.send(`User-agent: *\nDisallow: /`); } else { res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`); } });
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
-    publicApp.use(express.static(path.join(__dirname, '../public-readonly')));
+    publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
+    publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
     publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
