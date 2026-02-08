@@ -239,7 +239,7 @@ Click **Save As...** in the toolbar, enter a name (e.g., "Technical CV", "Market
 Click **Open...** to see all saved datasets. Each dataset shows:
 
 - Name and creation date
-- A **shareable preview URL** (e.g., `/v/technical-cv-1`) — visitors can view this version without affecting your main CV
+- A **preview URL** (e.g., `/v/technical-cv-1`)
 - **Load** button — replaces your current active CV with this dataset
 - **Delete** button — permanently removes the dataset
 
@@ -379,9 +379,6 @@ Yes. Most items support drag-and-drop reordering. The order is saved automatical
 **Q: How do I add bullet points to an experience?**
 Edit the experience and enter highlights in the **Highlights** field — one bullet point per line.
 
-**Q: What does the "Show All" button do?**
-It temporarily reveals all hidden items and sections in the admin view so you can review what's been toggled off. This doesn't affect the print or public output.
-
 **Q: I accidentally deleted something. Can I undo it?**
 There's no undo feature. If you have a previous export or saved dataset, you can restore from that. It's good practice to export your CV regularly as a backup.
 
@@ -402,7 +399,7 @@ Yes. Edit the section and select a different layout. Note that some fields may n
 The print output uses dedicated print styles optimized for paper. Some visual effects (hover states, animations, gradients) are simplified. Hidden items and admin controls are automatically removed.
 
 **Q: How do I fit my CV on fewer pages?**
-Try enabling **Allow Section Splits** and **Allow Item Splits** in Print & Export settings. You can also hide less important items or sections, or use more compact custom section layouts.
+Try enabling **Allow Section Splits** and **Allow Item Splits** in Print & Export settings. You can also hide less important items or sections, or use more compact custom section layouts. Also scale the print via the print modal from any browser. (sometimes a bit hidden)
 
 **Q: Why are some items missing from my printed CV?**
 Check if those items have been toggled to hidden (eye icon). Hidden items are excluded from print output and the public view.
