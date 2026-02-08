@@ -315,9 +315,9 @@ function scrollToExperience(timelineItem) {
     
     let targetCard = null;
     
-    // Try to find by ID first (admin mode)
+    // Try to find by ID first (scoped to experience section)
     if (expId) {
-        targetCard = document.querySelector(`.item-card[data-id="${expId}"]`);
+        targetCard = document.querySelector(`#experienceList .item-card[data-id="${expId}"]`);
     }
     
     // Fall back to matching by company and role (public mode)
@@ -366,7 +366,7 @@ async function loadExperiencesReadOnly() {
     const container = document.getElementById('experienceList');
     
     container.innerHTML = experiences.map(exp => `
-        <article class="item-card" itemscope itemtype="https://schema.org/OrganizationRole">
+        <article class="item-card" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
             <div class="item-header">
                 <div>
                     <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
