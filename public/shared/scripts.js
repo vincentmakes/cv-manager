@@ -88,6 +88,61 @@ const DATE_FORMAT_OPTIONS = [
     { value: 'YYYY', label: '2020 (year only)', example: '2020' }
 ];
 
+// Normalize a date string to ISO format (YYYY-MM or YYYY)
+// Returns { value: normalizedString } on success, { error: message } on failure
+function normalizeDate(dateStr) {
+    if (!dateStr) return { value: '' };
+    const s = dateStr.trim();
+    if (!s) return { value: '' };
+
+    // Already ISO: YYYY-MM
+    if (/^\d{4}-\d{2}$/.test(s)) {
+        const m = parseInt(s.split('-')[1]);
+        if (m >= 1 && m <= 12) return { value: s };
+        return { error: `Invalid month in "${s}". Use 01-12.` };
+    }
+
+    // Year only: YYYY
+    if (/^\d{4}$/.test(s)) return { value: s };
+
+    const monthsShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const monthsFull = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+
+    // MMM YYYY or MMMM YYYY (e.g., "Jan 2020", "January 2020")
+    const wordMonth = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+    if (wordMonth) {
+        const mName = wordMonth[1].toLowerCase();
+        let idx = monthsShort.indexOf(mName.substring(0, 3));
+        if (idx === -1) idx = monthsFull.indexOf(mName);
+        if (idx >= 0) {
+            return { value: `${wordMonth[2]}-${String(idx + 1).padStart(2, '0')}` };
+        }
+        return { error: `Unrecognized month "${wordMonth[1]}". Use e.g. Jan, February, etc.` };
+    }
+
+    // MM/YYYY, MM.YYYY, MM-YYYY, MM YYYY (e.g., "01/2020", "01.2020")
+    const numMonth = s.match(/^(\d{1,2})[\/.\-\s](\d{4})$/);
+    if (numMonth) {
+        const m = parseInt(numMonth[1]);
+        if (m >= 1 && m <= 12) {
+            return { value: `${numMonth[2]}-${String(m).padStart(2, '0')}` };
+        }
+        return { error: `Invalid month "${numMonth[1]}". Use 01-12.` };
+    }
+
+    // YYYY/MM, YYYY.MM (e.g., "2020/01")
+    const reverseNum = s.match(/^(\d{4})[\/.](\d{1,2})$/);
+    if (reverseNum) {
+        const m = parseInt(reverseNum[2]);
+        if (m >= 1 && m <= 12) {
+            return { value: `${reverseNum[1]}-${String(m).padStart(2, '0')}` };
+        }
+        return { error: `Invalid month "${reverseNum[2]}". Use 01-12.` };
+    }
+
+    return { error: `Unrecognized date format "${s}". Use YYYY-MM (e.g. 2020-01), MMM YYYY (e.g. Jan 2020), or YYYY.` };
+}
+
 function formatDate(dateStr) {
     if (!dateStr) return '';
     if (dateStr.match(/^\d{4}$/)) return dateStr;
@@ -191,8 +246,10 @@ async function loadDateFormatSetting() {
 }
 
 // Format timeline period - uses year only if setting enabled, otherwise global date format
+// Handles both ISO dates (YYYY-MM, YYYY) and legacy formats (MMM YYYY) via period fallback
 function formatTimelinePeriod(item) {
-    if (item.start_date) {
+    const isISODate = (d) => d && /^\d{4}(-\d{2})?$/.test(d);
+    if (item.start_date && isISODate(item.start_date)) {
         if (timelineYearOnly) {
             const startYear = item.start_date.substring(0, 4);
             const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';

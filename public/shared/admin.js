@@ -932,11 +932,17 @@ async function saveItem() {
             break;
 
         case 'experience':
+            // Normalize dates
+            const expStart = normalizeDate(val('f-start_date'));
+            if (expStart.error) { toast(expStart.error, 'error'); return; }
+            const expEnd = normalizeDate(val('f-end_date'));
+            if (expEnd.error) { toast(expEnd.error, 'error'); return; }
+
             data = {
                 job_title: val('f-job_title'),
                 company_name: val('f-company_name'),
-                start_date: val('f-start_date'),
-                end_date: val('f-end_date'),
+                start_date: expStart.value,
+                end_date: expEnd.value,
                 location: val('f-location'),
                 country_code: val('f-country_code') || 'ch',
                 highlights: val('f-highlights').split('\n').filter(h => h.trim()),
@@ -952,11 +958,17 @@ async function saveItem() {
             break;
 
         case 'certification':
+            // Normalize dates
+            const certIssue = normalizeDate(val('f-issue_date'));
+            if (certIssue.error) { toast(certIssue.error, 'error'); return; }
+            const certExpiry = normalizeDate(val('f-expiry_date'));
+            if (certExpiry.error) { toast(certExpiry.error, 'error'); return; }
+
             data = {
                 name: val('f-name'),
                 provider: val('f-provider'),
-                issue_date: val('f-issue_date'),
-                expiry_date: val('f-expiry_date'),
+                issue_date: certIssue.value,
+                expiry_date: certExpiry.value,
                 credential_id: val('f-credential_id'),
                 visible: true
             };
@@ -969,11 +981,17 @@ async function saveItem() {
             break;
 
         case 'education':
+            // Normalize dates
+            const eduStart = normalizeDate(val('f-start_date'));
+            if (eduStart.error) { toast(eduStart.error, 'error'); return; }
+            const eduEnd = normalizeDate(val('f-end_date'));
+            if (eduEnd.error) { toast(eduEnd.error, 'error'); return; }
+
             data = {
                 degree_title: val('f-degree_title'),
                 institution_name: val('f-institution_name'),
-                start_date: val('f-start_date'),
-                end_date: val('f-end_date'),
+                start_date: eduStart.value,
+                end_date: eduEnd.value,
                 description: val('f-description'),
                 visible: true
             };
