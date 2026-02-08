@@ -289,7 +289,7 @@
                 const marker = showFlag
                     ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
                     : '<div class="timeline-dot"></div>';
-                const period = `${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : 'Present'}`;
+                const period = formatTimelinePeriod({ start_date: exp.start_date, end_date: exp.end_date });
                 return `<div class="timeline-item ${pos}"><div class="timeline-content"><div class="timeline-company">${escapeHtml(exp.company_name)}</div><div class="timeline-role">${escapeHtml(exp.job_title)}</div><div class="timeline-period">${escapeHtml(period)}</div></div>${marker}</div>`;
             }).join('');
             

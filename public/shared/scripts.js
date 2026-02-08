@@ -75,9 +75,11 @@ function escapeHtml(text) {
 
 // Global date format setting - loaded from settings API
 let dateFormatSetting = 'MMM YYYY'; // default: "Jan 2020"
+let timelineYearOnly = true; // default: show years only in timeline
 
 const DATE_FORMAT_OPTIONS = [
     { value: 'MMM YYYY', label: 'Jan 2020', example: 'Jan 2020' },
+    { value: 'MMM YY', label: 'Jan 20', example: 'Jan 20' },
     { value: 'MMMM YYYY', label: 'January 2020', example: 'January 2020' },
     { value: 'MM/YYYY', label: '01/2020', example: '01/2020' },
     { value: 'MM.YYYY', label: '01.2020', example: '01.2020' },
@@ -97,6 +99,7 @@ function formatDate(dateStr) {
         
         switch (dateFormatSetting) {
             case 'MMMM YYYY': return `${monthsFull[monthIdx]} ${y}`;
+            case 'MMM YY': return `${monthsShort[monthIdx]} ${y.slice(-2)}`;
             case 'MM/YYYY': return `${m}/${y}`;
             case 'MM.YYYY': return `${m}.${y}`;
             case 'MM-YYYY': return `${m}-${y}`;
@@ -179,11 +182,22 @@ async function loadDateFormatSetting() {
     } catch (err) {
         // Use default format
     }
+    try {
+        const result = await api('/api/settings/timelineYearOnly');
+        timelineYearOnly = result.value !== 'false';
+    } catch (err) {
+        // Use default (false)
+    }
 }
 
-// Format timeline period - uses the global date format setting
+// Format timeline period - uses year only if setting enabled, otherwise global date format
 function formatTimelinePeriod(item) {
     if (item.start_date) {
+        if (timelineYearOnly) {
+            const startYear = item.start_date.substring(0, 4);
+            const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
+            return `${startYear} - ${endYear}`;
+        }
         const startFormatted = formatDate(item.start_date);
         const endFormatted = item.end_date ? formatDate(item.end_date) : 'Present';
         return `${startFormatted} - ${endFormatted}`;

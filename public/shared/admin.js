@@ -1430,6 +1430,11 @@ async function loadPublicSettings() {
     const dateFormat = await api('/api/settings/dateFormat');
     document.getElementById('settingDateFormat').value = dateFormat.value || 'MMM YYYY';
     
+    // Load timeline year only setting
+    const timelineYearOnlySetting = await api('/api/settings/timelineYearOnly');
+    const timelineYearOnlyEl = document.getElementById('settingTimelineYearOnly');
+    if (timelineYearOnlyEl) timelineYearOnlyEl.checked = timelineYearOnlySetting.value === 'true';
+    
     // Load robots meta setting
     const robotsMeta = await api('/api/settings/robotsMeta');
     const robotsEl = document.getElementById('settingRobotsMeta');
@@ -1676,6 +1681,13 @@ async function saveSettingsSectionOrder() {
         const dateFormat = document.getElementById('settingDateFormat').value;
         await api('/api/settings/dateFormat', { method: 'PUT', body: { value: dateFormat } });
         dateFormatSetting = dateFormat;
+        
+        // Also save timeline year only
+        const timelineYearOnlyEl = document.getElementById('settingTimelineYearOnly');
+        if (timelineYearOnlyEl) {
+            await api('/api/settings/timelineYearOnly', { method: 'PUT', body: { value: timelineYearOnlyEl.checked.toString() } });
+            timelineYearOnly = timelineYearOnlyEl.checked;
+        }
         
         // Also save robots meta
         const robotsMetaEl = document.getElementById('settingRobotsMeta');

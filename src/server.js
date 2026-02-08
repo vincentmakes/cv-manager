@@ -292,6 +292,7 @@ function formatDateShort(dateStr) {
         
         switch (fmt) {
             case 'MMMM YYYY': return `${monthsFull[monthIdx]} ${y}`;
+            case 'MMM YY': return `${monthsShort[monthIdx]} ${y.slice(-2)}`;
             case 'MM/YYYY': return `${m}/${y}`;
             case 'MM.YYYY': return `${m}.${y}`;
             case 'MM-YYYY': return `${m}-${y}`;
