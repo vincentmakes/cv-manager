@@ -661,14 +661,14 @@ body {
 }
 
 .custom-item-title {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--primary-dark);
     margin-bottom: 4px;
 }
 
 .custom-item-subtitle {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--gray-500);
     margin-bottom: 6px;
 }
@@ -748,7 +748,7 @@ body {
 }
 
 .custom-card-subtitle {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--gray-500);
     margin-bottom: 8px;
 }
@@ -792,7 +792,7 @@ body {
 }
 
 .custom-bullet-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--primary-dark);
     margin-bottom: 10px;
@@ -1098,6 +1098,14 @@ body.has-preview-banner .container {
     
     /* Free Text */
     .custom-free-text-content { font-size: 11px; line-height: 1.5; white-space: pre-line; }
+    
+    /* Custom Sections */
+    .custom-item-title, .custom-card-title, .custom-bullet-title { font-size: 13px; }
+    .custom-item-subtitle, .custom-card-subtitle { font-size: 12px; }
+    .custom-item-description, .custom-card-description { font-size: 11px; }
+    .custom-bullet-list li { font-size: 11px; margin-bottom: 2px; }
+    .custom-item-link, .custom-card-link { font-size: 10px; }
+    .custom-grid-item, .custom-list-item, .custom-card, .custom-bullet-group { padding: 10px; }
     
     .hidden-print { display: none !important; }
 }

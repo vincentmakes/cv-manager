@@ -876,7 +876,7 @@
 
 .custom-item-info { flex: 1; min-width: 0; }
 
-.custom-item-title {
+.custom-item-row .custom-item-title {
     font-size: 13px;
     font-weight: 500;
     color: var(--gray-700);
@@ -885,7 +885,7 @@
     text-overflow: ellipsis;
 }
 
-.custom-item-subtitle {
+.custom-item-row .custom-item-subtitle {
     font-size: 11px;
     color: var(--gray-500);
     white-space: nowrap;
