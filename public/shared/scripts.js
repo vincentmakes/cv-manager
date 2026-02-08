@@ -318,15 +318,19 @@ async function loadTimeline() {
     
     const container = document.getElementById('timelineItems');
     
+    // Determine if flags should be shown: only when multiple countries exist
+    const uniqueCountries = new Set(timeline.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
+    const showFlags = uniqueCountries.size > 1;
+    
     let lastCountry = null;
     container.innerHTML = timeline.map((item, idx) => {
         const pos = idx % 2 === 0 ? 'top' : 'bottom';
         const countryCode = (item.countryCode || '').toLowerCase();
-        const showFlag = countryCode && countryCode !== lastCountry;
-        lastCountry = countryCode;
+        const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
+        lastCountry = countryCode || lastCountry;
         
-        // Show flag only when country changes, dot otherwise
-        const marker = showFlag
+        // Show flag at first entry and at country transitions, only if multiple countries exist
+        const marker = showFlags && isFirstOrChanged && countryCode
             ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
             : '<div class="timeline-dot"></div>';
         
@@ -828,9 +832,12 @@ function renderFreeTextPublic(items) {
     return `<div class="custom-free-text-blocks">${items.map(item => {
         const visible = item.visible !== false;
         if (!visible) return '';
+        const hideTitle = item.metadata?.hideTitle !== false; // default true for free-text
+        const showTitle = item.title && !hideTitle;
         
         return `
             <div class="custom-free-text">
+                ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
                 <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
             </div>
         `;

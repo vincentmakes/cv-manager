@@ -280,13 +280,19 @@
             });
             
             const container = document.getElementById('timelineItems');
+            
+            // Determine if flags should be shown: only when multiple countries exist
+            const uniqueCountries = new Set(visible.map(e => (e.country_code || '').toLowerCase()).filter(Boolean));
+            const showFlags = uniqueCountries.size > 1;
+            
             let lastCountry = null;
             container.innerHTML = visible.map((exp, idx) => {
                 const pos = idx % 2 === 0 ? 'top' : 'bottom';
                 const countryCode = (exp.country_code || '').toLowerCase();
-                const showFlag = countryCode && countryCode !== lastCountry;
-                lastCountry = countryCode;
-                const marker = showFlag
+                const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
+                lastCountry = countryCode || lastCountry;
+                
+                const marker = showFlags && isFirstOrChanged && countryCode
                     ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
                     : '<div class="timeline-dot"></div>';
                 const period = formatTimelinePeriod({ start_date: exp.start_date, end_date: exp.end_date });

@@ -33,6 +33,7 @@
     border: none;
     cursor: pointer;
     transition: all 0.15s ease;
+    text-decoration: none;
 }
 
 .btn-primary { background: var(--accent); color: var(--white); }
@@ -441,7 +442,7 @@
 }
 
 /* Color Picker */
-.color-picker-wrapper { position: relative; }
+.color-picker-wrapper { position: relative; display: flex; }
 
 .color-picker-dropdown {
     position: absolute;

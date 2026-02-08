@@ -392,8 +392,11 @@ function renderFreeTextLayout(items) {
     
     return `<div class="custom-free-text-blocks">${items.map(item => {
         const visible = item.visible !== false;
+        const hideTitle = item.metadata?.hideTitle !== false; // default true for free-text
+        const showTitle = item.title && !hideTitle;
         return `
             <div class="custom-free-text ${visible ? '' : 'hidden-print'}">
+                ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
                 <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
             </div>
         `;
@@ -772,7 +775,7 @@ function experienceForm(d) {
             </div>
             <div class="form-group">
                 <label class="form-label">Country Code</label>
-                <input type="text" class="form-input" id="f-country_code" value="${escapeHtml(d.country_code || 'ch')}" maxlength="2" placeholder="ch, fr, us...">
+                <input type="text" class="form-input" id="f-country_code" value="${escapeHtml(d.country_code || '')}" maxlength="2" placeholder="ch, fr, us... (optional)">
             </div>
         </div>
         <div class="form-row">
@@ -944,7 +947,7 @@ async function saveItem() {
                 start_date: expStart.value,
                 end_date: expEnd.value,
                 location: val('f-location'),
-                country_code: val('f-country_code') || 'ch',
+                country_code: val('f-country_code') || '',
                 highlights: val('f-highlights').split('\n').filter(h => h.trim()),
                 visible: true
             };
@@ -2474,8 +2477,20 @@ function openCustomItemModal(sectionId, itemId = null) {
             </div>
         `;
     } else if (section.layout_type === 'free-text') {
-        // Free text form - just a textarea, no title
+        // Free text form - title with hide option (hidden by default), plus textarea
+        const hideTitle = item.metadata?.hideTitle !== false; // default true for free-text
         formHtml = `
+            <div class="form-group">
+                <label class="form-label">Title (optional)</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="ci-hide-title" ${hideTitle ? 'checked' : ''} style="width: 16px; height: 16px;">
+                    <span>Hide title</span>
+                </label>
+                <div class="form-hint">Display the item without its title heading.</div>
+            </div>
             <div class="form-group">
                 <label class="form-label">Text Content</label>
                 <textarea class="form-textarea" id="ci-description" rows="10" placeholder="Enter your text here. Line breaks will be preserved.">${escapeHtml(item.description || '')}</textarea>
