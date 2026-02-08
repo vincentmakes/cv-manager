@@ -671,8 +671,8 @@ if (PUBLIC_ONLY) {
     });
 
     app.put('/api/custom-sections/:id/items/:itemId', (req, res) => {
-        const { title, subtitle, description, link, icon, image, metadata, visible, sort_order } = req.body;
-        db.prepare(`UPDATE custom_section_items SET title = ?, subtitle = ?, description = ?, link = ?, icon = ?, image = ?, metadata = ?, visible = ?, sort_order = ? WHERE id = ? AND section_id = ?`).run(title, subtitle, description, link, icon, image, metadata ? JSON.stringify(metadata) : null, visible ? 1 : 0, sort_order || 0, req.params.itemId, req.params.id);
+        const { title, subtitle, description, link, icon, image, metadata, sort_order } = req.body;
+        db.prepare(`UPDATE custom_section_items SET title = ?, subtitle = ?, description = ?, link = ?, icon = ?, image = ?, metadata = ?, visible = 1, sort_order = ? WHERE id = ? AND section_id = ?`).run(title, subtitle, description, link, icon, image, metadata ? JSON.stringify(metadata) : null, sort_order || 0, req.params.itemId, req.params.id);
         res.json({ success: true });
     });
 
