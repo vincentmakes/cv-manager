@@ -277,7 +277,30 @@ function formatPeriod(startDate, endDate) {
 function formatDateShort(dateStr) {
     if (!dateStr) return '';
     if (dateStr.match(/^\d{4}$/)) return dateStr;
-    if (dateStr.match(/^\d{4}-\d{2}$/)) return dateStr.split('-')[0];
+    if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        const [y, m] = dateStr.split('-');
+        const monthIdx = parseInt(m) - 1;
+        const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const monthsFull = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        
+        // Read date format setting from DB, default to MMM YYYY
+        let fmt = 'MMM YYYY';
+        try {
+            const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('dateFormat');
+            if (setting?.value) fmt = setting.value;
+        } catch { /* use default */ }
+        
+        switch (fmt) {
+            case 'MMMM YYYY': return `${monthsFull[monthIdx]} ${y}`;
+            case 'MM/YYYY': return `${m}/${y}`;
+            case 'MM.YYYY': return `${m}.${y}`;
+            case 'MM-YYYY': return `${m}-${y}`;
+            case 'YYYY-MM': return `${y}-${m}`;
+            case 'YYYY': return y;
+            case 'MMM YYYY':
+            default: return `${monthsShort[monthIdx]} ${y}`;
+        }
+    }
     try { return new Date(dateStr).getFullYear().toString(); } catch { return dateStr; }
 }
 

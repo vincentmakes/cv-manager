@@ -181,12 +181,12 @@ async function loadDateFormatSetting() {
     }
 }
 
-// Format timeline period - always uses year only (YYYY)
+// Format timeline period - uses the global date format setting
 function formatTimelinePeriod(item) {
     if (item.start_date) {
-        const startYear = item.start_date.substring(0, 4);
-        const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
-        return `${startYear} - ${endYear}`;
+        const startFormatted = formatDate(item.start_date);
+        const endFormatted = item.end_date ? formatDate(item.end_date) : 'Present';
+        return `${startFormatted} - ${endFormatted}`;
     }
     return item.period || '';
 }
