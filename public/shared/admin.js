@@ -157,20 +157,11 @@ async function loadSectionOrder() {
     return order;
 }
 
-// Render sections in the correct order
-async function renderSectionsInOrder() {
+// Reorder DOM section elements based on sectionOrder (lightweight, no data reload)
+function reorderSectionElements() {
     const container = document.querySelector('.container');
     
-    // Load all section data
-    await loadTimeline();
-    await loadExperiences();
-    await loadCertifications();
-    await loadEducation();
-    await loadSkills();
-    await loadProjects();
-    await loadCustomSections();
-    
-    // Get all section elements (built-in sections)
+    // Collect all section elements
     const sectionElements = {
         'about': document.getElementById('section-about'),
         'timeline': document.getElementById('section-timeline'),
@@ -181,21 +172,16 @@ async function renderSectionsInOrder() {
         'projects': document.getElementById('section-projects')
     };
     
-    // Add custom section elements
     customSections.forEach(cs => {
         const el = document.getElementById(`section-${cs.section_key}`);
-        if (el) {
-            sectionElements[cs.section_key] = el;
-        }
+        if (el) sectionElements[cs.section_key] = el;
     });
     
-    // Reorder sections based on sectionOrder
+    // Reorder based on sectionOrder
     sectionOrder.forEach(section => {
         const el = sectionElements[section.key];
         if (el) {
             container.appendChild(el);
-            
-            // Apply hidden-print class if section is visible but not print_visible
             if (section.visible && section.print_visible === false) {
                 el.classList.add('hidden-print');
             } else if (section.visible) {
@@ -204,8 +190,21 @@ async function renderSectionsInOrder() {
         }
     });
     
-    // Apply custom section titles
     applySectionTitles(sectionOrder);
+}
+
+// Render sections in the correct order
+async function renderSectionsInOrder() {
+    // Load all section data
+    await loadTimeline();
+    await loadExperiences();
+    await loadCertifications();
+    await loadEducation();
+    await loadSkills();
+    await loadProjects();
+    await loadCustomSections();
+    
+    reorderSectionElements();
 }
 
 // Load custom sections and render them
@@ -2280,6 +2279,7 @@ async function closeCustomSectionModal() {
     // Refresh custom sections on main page if we were in items view
     if (wasInItemsView) {
         await loadCustomSections();
+        reorderSectionElements();
     }
 }
 
