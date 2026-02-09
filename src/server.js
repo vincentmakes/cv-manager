@@ -9,6 +9,47 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const PUBLIC_PORT = process.env.PUBLIC_PORT || 3001;
 
+// Version from package.json
+const CURRENT_VERSION = require(path.join(__dirname, '..', 'package.json')).version;
+
+// Cached version check (in-memory only, never persisted)
+let versionCache = { latest: null, checkedAt: null, changelog: null };
+const VERSION_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+const VERSION_URL = 'https://raw.githubusercontent.com/vincentmakes/cv-manager/main/version.json';
+
+async function checkLatestVersion() {
+    // Return cached if fresh enough
+    if (versionCache.checkedAt && (Date.now() - versionCache.checkedAt) < VERSION_CHECK_INTERVAL) {
+        return versionCache;
+    }
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        const res = await fetch(VERSION_URL, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (res.ok) {
+            const data = await res.json();
+            versionCache = { latest: data.version || null, checkedAt: Date.now(), changelog: data.changelog || null };
+        }
+    } catch (err) {
+        // Silently fail - no internet, timeout, etc.
+        if (!versionCache.checkedAt) {
+            versionCache = { latest: null, checkedAt: Date.now(), changelog: null };
+        }
+    }
+    return versionCache;
+}
+
+function compareVersions(a, b) {
+    const pa = a.split('.').map(Number);
+    const pb = b.split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+        if ((pa[i] || 0) < (pb[i] || 0)) return -1;
+        if ((pa[i] || 0) > (pb[i] || 0)) return 1;
+    }
+    return 0;
+}
+
 const DB_PATH = process.env.DB_PATH 
     ? path.resolve(process.env.DB_PATH)
     : path.join(__dirname, '..', 'data', 'cv.db');
@@ -469,6 +510,13 @@ if (PUBLIC_ONLY) {
     app.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     app.put('/api/settings/:key', (req, res) => { db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(req.params.key, req.body.value); res.json({ success: true }); });
 
+    // Version check endpoint (admin only)
+    app.get('/api/version', async (req, res) => {
+        const cache = await checkLatestVersion();
+        const updateAvailable = cache.latest ? compareVersions(CURRENT_VERSION, cache.latest) < 0 : false;
+        res.json({ current: CURRENT_VERSION, latest: cache.latest, updateAvailable, changelog: cache.changelog });
+    });
+
     app.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     app.get('/api/sections/order', (req, res) => { 
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); 
@@ -775,7 +823,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights FROM experiences WHERE visible = 1 ORDER BY start_date DESC, sort_order ASC').all(); const certifications = db.prepare('SELECT name, provider, issue_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
 
-    app.listen(PORT, '0.0.0.0', () => { console.log(`CV Manager (Admin) running at http://localhost:${PORT}`); });
+    app.listen(PORT, '0.0.0.0', () => { console.log(`CV Manager v${CURRENT_VERSION} (Admin) running at http://localhost:${PORT}`); });
     publicApp.listen(PUBLIC_PORT, '0.0.0.0', () => { console.log(`CV Manager (Public Read-Only) running at http://localhost:${PUBLIC_PORT}`); });
 }
 

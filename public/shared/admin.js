@@ -49,6 +49,43 @@ async function initAdmin() {
     await generateATSContent();
     await setupPrintPagination();
     await loadPageSplitsSetting();
+    
+    // Non-blocking version check — fire and forget
+    checkForUpdates();
+}
+
+// Check for updates (non-blocking)
+function checkForUpdates() {
+    fetch('/api/version')
+        .then(res => res.json())
+        .then(data => {
+            if (data.updateAvailable && data.latest) {
+                const banner = document.getElementById('updateBanner');
+                const text = document.getElementById('updateBannerText');
+                const link = document.getElementById('updateBannerLink');
+                if (banner && text) {
+                    text.textContent = `Update available: v${data.latest} (you're on v${data.current})`;
+                    if (data.changelog && link) {
+                        link.href = data.changelog;
+                        link.style.display = '';
+                    } else if (link) {
+                        link.style.display = 'none';
+                    }
+                    banner.style.display = '';
+                    // Push container below the banner
+                    const bannerHeight = banner.offsetHeight;
+                    document.querySelector('.container').style.marginTop = (70 + bannerHeight) + 'px';
+                }
+            }
+        })
+        .catch(() => { /* silently ignore */ });
+}
+
+function dismissUpdateBanner() {
+    const banner = document.getElementById('updateBanner');
+    if (banner) banner.style.display = 'none';
+    // Restore original container margin
+    document.querySelector('.container').style.marginTop = '';
 }
 
 // Load and apply page splits settings on init

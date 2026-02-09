@@ -86,6 +86,16 @@
         </div>
     </div>
 
+    <!-- Update Banner (hidden by default) -->
+    <div id="updateBanner" class="update-banner no-print" style="display: none;">
+        <div class="update-banner-content">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span id="updateBannerText"></span>
+            <a id="updateBannerLink" href="#" target="_blank" rel="noopener noreferrer" class="update-banner-link">What's new</a>
+            <button class="update-banner-dismiss" onclick="dismissUpdateBanner()" title="Dismiss">&times;</button>
+        </div>
+    </div>
+
     <!-- Main Container -->
     <div class="container" role="main">
         <!-- ATS-friendly hidden text version -->

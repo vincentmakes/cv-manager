@@ -386,6 +386,46 @@
 .toast.success { background: var(--success); }
 .toast.error { background: var(--danger); }
 
+/* Update Banner */
+.update-banner {
+    position: fixed;
+    top: 54px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    background: linear-gradient(135deg, var(--very-light), var(--light));
+    border-bottom: 1px solid var(--gray-300);
+    padding: 8px 20px;
+}
+.update-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 13px;
+    color: var(--gray-700);
+}
+.update-banner-content svg { flex-shrink: 0; color: var(--primary); }
+.update-banner-link {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.update-banner-link:hover { text-decoration: underline; }
+.update-banner-dismiss {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+.update-banner-dismiss:hover { color: var(--gray-700); }
+
 /* Dataset Items */
 .dataset-item {
     display: flex;
