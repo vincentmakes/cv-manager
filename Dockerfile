@@ -11,6 +11,7 @@ RUN npm install --omit=dev --no-audit --no-fund
 COPY src ./src
 COPY public ./public
 COPY public-readonly ./public-readonly
+COPY icon.png icon-public.png ./
 
 
 # ---------- runtime ----------

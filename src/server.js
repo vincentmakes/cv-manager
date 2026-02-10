@@ -115,6 +115,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Favicon and icons (admin uses icon.png with pencil badge)
+const adminIconPath = path.join(__dirname, '../icon.png');
+app.get('/favicon.ico', (req, res) => res.sendFile(adminIconPath));
+app.get('/favicon.png', (req, res) => res.sendFile(adminIconPath));
+app.get('/apple-touch-icon.png', (req, res) => res.sendFile(adminIconPath));
+
 const uploadsPath = path.join(dataDir, 'uploads');
 if (!PUBLIC_ONLY && !fs.existsSync(uploadsPath)) { fs.mkdirSync(uploadsPath, { recursive: true }); }
 app.use('/uploads', express.static(uploadsPath));
@@ -445,6 +451,11 @@ if (PUBLIC_ONLY) {
     });
 
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
+    // Favicon and icons (public uses icon-public.png with eye badge)
+    const publicIconPathA = path.join(__dirname, '../icon-public.png');
+    publicApp.get('/favicon.ico', (req, res) => res.sendFile(publicIconPathA));
+    publicApp.get('/favicon.png', (req, res) => res.sendFile(publicIconPathA));
+    publicApp.get('/apple-touch-icon.png', (req, res) => res.sendFile(publicIconPathA));
     publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
@@ -785,6 +796,11 @@ if (PUBLIC_ONLY) {
     publicApp.get('/sitemap.xml', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; res.setHeader('Content-Type', 'application/xml'); res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${protocol}://${host}/</loc><lastmod>${new Date().toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>`); });
     publicApp.get('/robots.txt', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta'); const metaValue = robotsMeta?.value || 'index, follow'; const isNoIndex = metaValue.includes('noindex'); res.setHeader('Content-Type', 'text/plain'); if (isNoIndex) { res.send(`User-agent: *\nDisallow: /`); } else { res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`); } });
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
+    // Favicon and icons (public uses icon-public.png with eye badge)
+    const publicIconPathB = path.join(__dirname, '../icon-public.png');
+    publicApp.get('/favicon.ico', (req, res) => res.sendFile(publicIconPathB));
+    publicApp.get('/favicon.png', (req, res) => res.sendFile(publicIconPathB));
+    publicApp.get('/apple-touch-icon.png', (req, res) => res.sendFile(publicIconPathB));
     publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
