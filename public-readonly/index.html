@@ -162,9 +162,11 @@
                     return;
                 }
                 
-                // Show preview banner
-                document.getElementById('previewBanner').style.display = 'flex';
-                document.body.classList.add('has-preview-banner');
+                // Show preview banner only in admin preview mode (not on public-facing versioned URLs)
+                if (window.DATASET_PREVIEW) {
+                    document.getElementById('previewBanner').style.display = 'flex';
+                    document.body.classList.add('has-preview-banner');
+                }
                 
                 await loadThemeColorPublic();
                 await loadDateFormatSetting();

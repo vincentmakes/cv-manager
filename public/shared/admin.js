@@ -1496,6 +1496,11 @@ async function loadPublicSettings() {
     const robotsMeta = await api('/api/settings/robotsMeta');
     const robotsEl = document.getElementById('settingRobotsMeta');
     if (robotsEl) robotsEl.value = robotsMeta.value || 'index, follow';
+    
+    // Load slugs index setting (default: off = noindex for versioned URLs)
+    const slugsIndex = await api('/api/settings/slugsIndex');
+    const slugsIndexEl = document.getElementById('settingSlugsIndex');
+    if (slugsIndexEl) slugsIndexEl.checked = slugsIndex.value === 'true';
 }
 
 async function togglePublicSetting(key, value) {
@@ -1752,6 +1757,12 @@ async function saveSettingsSectionOrder() {
             await api('/api/settings/robotsMeta', { method: 'PUT', body: { value: robotsMetaEl.value } });
         }
         
+        // Save slugs index setting
+        const slugsIndexEl = document.getElementById('settingSlugsIndex');
+        if (slugsIndexEl) {
+            await api('/api/settings/slugsIndex', { method: 'PUT', body: { value: slugsIndexEl.checked.toString() } });
+        }
+        
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
@@ -1807,15 +1818,21 @@ async function loadDatasetsList() {
                 <div class="dataset-date">Last updated: ${formatDateTime(ds.updated_at)}</div>
                 ${ds.slug ? `<div class="dataset-url">
                     <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
-                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}')" title="Copy preview URL">
+                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                     </button>
+                    ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
                 </div>` : ''}
             </div>
             <div class="dataset-actions">
-                ${ds.slug ? `<button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                </button>` : ''}
+                ${ds.slug ? `
+                    <label class="toggle-switch dataset-toggle" title="${ds.is_public ? 'Public — visible on public site' : 'Private — admin preview only'}">
+                        <input type="checkbox" ${ds.is_public ? 'checked' : ''} onchange="toggleDatasetPublic(${ds.id}, this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>` : ''}
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">Load</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">Delete</button>
             </div>
@@ -1828,21 +1845,41 @@ function previewDataset(slug) {
     window.open(`/v/${slug}`, '_blank');
 }
 
-// Copy dataset URL to clipboard (admin preview URL)
-function copyDatasetUrl(slug) {
-    // Use current origin since preview only works on admin
+// Copy dataset URL to clipboard
+function copyDatasetUrl(slug, isPublic) {
+    // Use current origin — works for both admin preview and public site
     const url = `${window.location.origin}/v/${slug}`;
     
     // Try modern clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
-            toast('Preview URL copied');
+            toast(isPublic ? 'Public URL copied' : 'Preview URL copied');
         }).catch((err) => {
             console.error('Clipboard API failed:', err);
             fallbackCopyToClipboard(url);
         });
     } else {
         fallbackCopyToClipboard(url);
+    }
+}
+
+// Toggle dataset public visibility
+async function toggleDatasetPublic(id, isPublic) {
+    try {
+        const result = await api(`/api/datasets/${id}/public`, {
+            method: 'PUT',
+            body: { is_public: isPublic }
+        });
+        if (result.success) {
+            toast(isPublic ? 'Dataset is now public' : 'Dataset is now private');
+            await loadDatasetsList();
+        } else {
+            toast(result.error || 'Failed to update', 'error');
+            await loadDatasetsList(); // Revert toggle state
+        }
+    } catch (err) {
+        toast('Failed to update visibility', 'error');
+        await loadDatasetsList(); // Revert toggle state
     }
 }
 

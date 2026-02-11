@@ -481,6 +481,22 @@
     color: var(--white);
 }
 
+.dataset-public-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dataset-toggle {
+    transform: scale(0.85);
+}
+
 /* Color Picker */
 .color-picker-wrapper { position: relative; display: flex; }
 

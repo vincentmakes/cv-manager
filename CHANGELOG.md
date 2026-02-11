@@ -4,10 +4,26 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2025-02-11
+
+### Added
+- **Versioned URL indexing control**: New "Index Versioned URLs" toggle in Advanced settings. When off (default), public `/v/slug` pages get `noindex, nofollow` to prevent search engine crawling
+
+## [1.3.0] - 2025-02-11
+
+### Added
+- **Public versioned CVs**: Datasets can now be toggled as "public" via the Open modal, making them accessible at `/v/{slug}` on the public site with proper OG meta tags and SEO
+- **Public toggle in datasets modal**: Toggle switch per dataset to control public visibility, with "Public" badge indicator
+- **Public dataset API**: `/api/datasets/slug/:slug` endpoint on public server for public datasets (is_public=1 only)
+
+### Changed
+- **Preview banner**: Only shows on admin preview, not on publicly shared versioned URLs
+- **Copy URL toast**: Differentiates between "Public URL copied" and "Preview URL copied"
+
 ## [1.2.0] - 2025-02-10
 
 ### Added
-- **Favicon and icons**: Admin and public sites now show distinct favicons and apple-touch-icons (pencil badge for admin, eye badge for public)
+- **Favicon and icons**: Admin and public sites now show distinct favicons and apple-touch-icons (pencil badge for admin, eye badge for public), served via Express routes from repo-root icon files
 
 ### Fixed
 - **Update banner positioning**: Banner now renders below the fixed toolbar instead of hidden behind it, with dynamic container margin adjustment
