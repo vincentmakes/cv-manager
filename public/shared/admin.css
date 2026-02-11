@@ -461,17 +461,17 @@
     border-radius: var(--radius-sm);
     border: 1px solid rgba(0, 102, 255, 0.25);
 }
-.active-dataset-actions { margin-left: auto; display: flex; gap: 6px; }
-.active-dataset-save-btn {
-    font-size: 12px !important;
-    padding: 3px 10px !important;
-    border-color: var(--primary) !important;
-    color: var(--primary) !important;
+.active-dataset-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.active-dataset-status {
+    font-size: 11px;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.3s ease;
 }
-.active-dataset-save-btn:hover {
-    background: var(--primary) !important;
-    color: var(--white) !important;
-}
+.active-dataset-status.saving { color: var(--primary); }
+.active-dataset-status.saved { color: var(--success); }
 
 /* Dataset Items */
 .dataset-item {

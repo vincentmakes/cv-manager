@@ -175,22 +175,43 @@ function hideActiveDatasetBanner() {
     updateBannerMargins();
 }
 
-// Save current live CV data back to the active dataset (explicit save)
-async function saveActiveDataset() {
-    if (!activeDatasetId) {
-        toast('No active dataset to save to', 'error');
-        return;
-    }
-    try {
-        const result = await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
-        if (result.success) {
-            toast(`Saved to: ${result.name}`);
-        } else {
-            toast(result.error || 'Failed to save', 'error');
+// Auto-save active dataset (debounced)
+let autoSaveTimer = null;
+let savedStatusTimer = null;
+
+function autoSaveActiveDataset() {
+    if (!activeDatasetId) return;
+    
+    // Clear any pending save
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    
+    // Debounce: wait 1.5s after last mutation before saving
+    autoSaveTimer = setTimeout(async () => {
+        const statusEl = document.getElementById('activeDatasetStatus');
+        try {
+            if (statusEl) {
+                statusEl.textContent = 'Saving…';
+                statusEl.className = 'active-dataset-status saving';
+            }
+            const result = await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
+            if (result.success && statusEl) {
+                statusEl.textContent = '✓ Saved';
+                statusEl.className = 'active-dataset-status saved';
+                // Clear the "Saved" message after 3 seconds
+                if (savedStatusTimer) clearTimeout(savedStatusTimer);
+                savedStatusTimer = setTimeout(() => {
+                    statusEl.textContent = '';
+                    statusEl.className = 'active-dataset-status';
+                }, 3000);
+            }
+        } catch (err) {
+            console.error('Auto-save failed:', err);
+            if (statusEl) {
+                statusEl.textContent = 'Save failed';
+                statusEl.className = 'active-dataset-status';
+            }
         }
-    } catch (err) {
-        toast('Failed to save dataset', 'error');
-    }
+    }, 1500);
 }
 
 // Load and apply page splits settings on init
@@ -760,6 +781,7 @@ async function toggleSection(section) {
         }
     }
     toast('Section visibility updated');
+    autoSaveActiveDataset();
 }
 
 // Toggle Item Visibility
@@ -771,6 +793,7 @@ async function toggleVisibility(endpoint, id, visible) {
     });
     await reloadSection(endpoint);
     toast('Visibility updated');
+    autoSaveActiveDataset();
 }
 
 // Modal Functions
@@ -1189,6 +1212,7 @@ async function saveItem() {
 
     closeModal();
     toast('Saved successfully');
+    autoSaveActiveDataset();
 }
 
 // Delete Item
@@ -1203,6 +1227,7 @@ async function deleteItem() {
         await reloadSection(endpoint);
         if (endpoint === 'experiences') await loadTimeline();
         toast('Deleted');
+        autoSaveActiveDataset();
     }
 }
 
@@ -1212,6 +1237,7 @@ async function confirmDelete(endpoint, id) {
         await reloadSection(endpoint);
         if (endpoint === 'experiences') await loadTimeline();
         toast('Deleted');
+        autoSaveActiveDataset();
     }
 }
 
@@ -1241,6 +1267,7 @@ async function showAllItems() {
     
     await initAdmin();
     toast('All items visible');
+    autoSaveActiveDataset();
 }
 
 // Export/Import
@@ -1538,6 +1565,7 @@ async function saveItemOrder(type, container) {
             body: { items: orderData } 
         });
         toast('Order saved');
+        autoSaveActiveDataset();
     } catch (err) {
         toast('Failed to save order', 'error');
     }
@@ -1888,6 +1916,7 @@ async function saveSettingsSectionOrder() {
         await renderSectionsInOrder();
         closeSettingsModal();
         toast('Settings saved');
+        autoSaveActiveDataset();
     } catch (err) {
         toast('Failed to save settings', 'error');
     }
@@ -2582,6 +2611,7 @@ async function saveCustomSection() {
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
+        autoSaveActiveDataset();
     } catch (err) {
         toast('Failed to save section', 'error');
     }
@@ -2603,6 +2633,7 @@ async function deleteCustomSection() {
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
+        autoSaveActiveDataset();
     } catch (err) {
         toast('Failed to delete section', 'error');
     }
@@ -2871,6 +2902,7 @@ async function saveCustomItem() {
         closeCustomItemModal();
         await loadCustomSectionsData();
         manageCustomSectionItems(currentCustomItem.sectionId);
+        autoSaveActiveDataset();
     } catch (err) {
         toast('Failed to save item', 'error');
     }
@@ -2884,6 +2916,7 @@ async function confirmDeleteCustomItem(sectionId, itemId) {
         toast('Item deleted');
         await loadCustomSectionsData();
         manageCustomSectionItems(sectionId);
+        autoSaveActiveDataset();
     } catch (err) {
         toast('Failed to delete item', 'error');
     }
