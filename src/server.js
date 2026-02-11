@@ -248,7 +248,7 @@ const SOCIAL_PLATFORMS = [
 if (!PUBLIC_ONLY) {
     // Step 1: Create tables (without sort_order in section_visibility for compatibility)
     db.exec(`
-        CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, profile_picture_enabled INTEGER DEFAULT 1, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
         CREATE TABLE IF NOT EXISTS experiences (id INTEGER PRIMARY KEY AUTOINCREMENT, job_title TEXT NOT NULL, company_name TEXT NOT NULL, start_date TEXT, end_date TEXT, location TEXT, country_code TEXT DEFAULT '', highlights TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS certifications (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, provider TEXT, issue_date TEXT, expiry_date TEXT, credential_id TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
@@ -364,6 +364,16 @@ if (!PUBLIC_ONLY) {
             db.exec('ALTER TABLE section_visibility ADD COLUMN display_name TEXT');
         }
     } catch (err) { console.log('Migration check (display_name):', err.message); }
+
+    // Step 2f: Migration - add profile_picture_enabled column to profile if missing
+    try {
+        const profilePicEnabledInfo = db.prepare("PRAGMA table_info(profile)").all();
+        const hasProfilePicEnabled = profilePicEnabledInfo.some(col => col.name === 'profile_picture_enabled');
+        if (!hasProfilePicEnabled) {
+            console.log('Migrating profile table: adding profile_picture_enabled');
+            db.exec('ALTER TABLE profile ADD COLUMN profile_picture_enabled INTEGER DEFAULT 1');
+        }
+    } catch (err) { console.log('Migration check (profile_picture_enabled):', err.message); }
 
     // Step 3: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
@@ -517,7 +527,7 @@ if (PUBLIC_ONLY) {
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
 
-    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get() || {}); });
+    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => { 
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); 
@@ -571,7 +581,7 @@ if (PUBLIC_ONLY) {
 } else {
     // ADMIN Mode
     app.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT * FROM profile WHERE id = 1').get()); });
-    app.put('/api/profile', (req, res) => { const { name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible } = req.body; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, visible = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`).run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0); res.json({ success: true }); });
+    app.put('/api/profile', (req, res) => { const { name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible, profile_picture_enabled } = req.body; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, visible = ?, profile_picture_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`).run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0, profile_picture_enabled ? 1 : 0); res.json({ success: true }); });
 
     const storage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => cb(null, 'picture.jpeg') });
     const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
@@ -876,7 +886,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
-    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get() || {}); });
+    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => { 
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); 

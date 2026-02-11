@@ -277,11 +277,17 @@ async function loadProfile(includePrivate = false) {
     if (p.name) document.title = `${p.name} - CV`;
     
     // Profile picture
-    const pic = document.getElementById('profilePicture');
-    const initials = document.getElementById('profileInitials');
-    pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
-    pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
-    pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
+    const profileImg = document.getElementById('profileImage');
+    if (p.profile_picture_enabled == 1) { 
+        const pic = document.getElementById('profilePicture');
+        const initials = document.getElementById('profileInitials');
+        pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
+        pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
+        pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
+        profileImg.style.display = 'flex';
+    } else {
+        profileImg.style.display = 'none';
+    }
     
     // Build contact badges
     const badges = [];

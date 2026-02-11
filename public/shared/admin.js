@@ -736,6 +736,13 @@ function profileForm(d) {
                     <div class="profile-preview-initials" id="profilePreviewInitials" style="display:none;">${escapeHtml(d.initials || 'CV')}</div>
                 </div>
                 <div class="profile-upload-actions">
+                    <div>
+                        Show Profile Picture
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="f-profilePictureEnabled" ${d.profile_picture_enabled == 1 ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                     <input type="file" id="f-picture" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfilePicture(this)">
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-picture').click()">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -963,7 +970,8 @@ async function saveItem() {
                 linkedin: val('f-linkedin'),
                 email: val('f-email'),
                 phone: val('f-phone'),
-                visible: true
+                visible: true,
+                profile_picture_enabled: checked('f-profilePictureEnabled')
             };
             await api('/api/profile', { method: 'PUT', body: data });
             await uploadProfilePicture();
@@ -1187,6 +1195,11 @@ async function reloadSection(endpoint) {
 function val(id) {
     const el = document.getElementById(id);
     return el ? el.value : '';
+}
+
+function checked(id) {
+    const el = document.getElementById(id);
+    return el ? el.checked ? true : false : false;
 }
 
 // Profile Picture Functions

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-02-11
+
+### Added
+- **Show profile picture toggle**: Profile picture can be toggled to be shown or disabled.
+
 ## [1.4.0] - 2025-02-11
 
 ### Added
