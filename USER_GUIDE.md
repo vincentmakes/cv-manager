@@ -238,14 +238,29 @@ Click **Save As...** in the toolbar, enter a name (e.g., "Technical CV", "Market
 
 Click **Open...** to see all saved datasets. Each dataset shows:
 
-- Name and creation date
-- A **preview URL** (e.g., `/v/technical-cv-1`)
+- Name and last-updated date
+- A **versioned URL** (e.g., `/v/technical-cv-1`)
+- A **public toggle** — makes this version accessible on the public site
+- **Preview** button — opens the saved version in a new tab (admin only)
 - **Load** button — replaces your current active CV with this dataset
 - **Delete** button — permanently removes the dataset
 
-### Preview URLs
+### Public Versioned URLs
 
-Each saved dataset gets a unique URL path (e.g., `/v/technical-cv-1`). These preview URLs are **only accessible from the admin interface** — they are not publicly shareable. Use them to quickly preview different versions of your CV before deciding which one to load as your active CV.
+Each saved dataset gets a unique URL path (e.g., `/v/technical-cv-1`). By default, these are **private** — only accessible from the admin interface for previewing.
+
+To share a specific version publicly:
+
+1. Open the **Open...** modal
+2. Find the dataset you want to share
+3. Toggle the **switch** next to it — it turns blue and a green **Public** badge appears
+4. The `/v/slug` URL is now accessible on the **public site** (port 3001)
+
+This lets you share tailored CV versions with different audiences. For example, you might make a "Technical CV" public for engineering roles while keeping a "Management CV" private until needed — all without changing your main live CV.
+
+**Copying the URL**: Click the copy icon next to the slug to copy the full URL to your clipboard. The toast message will tell you whether you copied a public or preview-only URL.
+
+> **Note**: The main public page at `/` always shows your current live CV. Public versioned URLs are additional pages served alongside it.
 
 ---
 
@@ -277,6 +292,12 @@ Control how search engines interact with your public CV in **Settings → Advanc
 | **No Index, No Follow** | Fully invisible to search engines |
 
 This setting affects both the `<meta name="robots">` tag and the `/robots.txt` file, and is applied server-side for compatibility with all search engine crawlers.
+
+### Versioned URL Indexing
+
+By default, public versioned URLs (`/v/slug`) are **not indexed** by search engines — they get a `noindex, nofollow` meta tag. This is useful if you want to share direct links without those pages appearing in search results.
+
+To allow search engines to crawl versioned URLs, enable **Index Versioned URLs** in **Settings → Advanced**. This setting is independent of the main Search Engine Indexing option above, which only affects the main `/` page.
 
 ### Tracking Code
 
@@ -424,18 +445,27 @@ Make sure the **Country Code** field on the experience is set to a valid 2-lette
 Loading a dataset replaces your current active CV with the saved snapshot. Your current unsaved changes will be lost — save them first if needed.
 
 **Q: Can visitors see my saved datasets?**
-No. Dataset previews are only accessible from the admin interface. The public site (port 3001) only ever shows your currently active/live CV.
+Only if you make them public. Each dataset has a toggle in the Open modal. When set to public, that version becomes accessible at `/v/slug` on the public site (port 3001). Private datasets are only previewable from the admin interface.
+
+**Q: How do I share a specific CV version with someone?**
+Open the **Open...** modal, toggle the dataset to public, then click the copy icon next to the slug URL. Share that link — it works on the public site without exposing your admin interface.
+
+**Q: Can I have multiple public versions at the same time?**
+Yes. You can make as many datasets public as you want. Each gets its own URL (e.g., `/v/technical-cv-1`, `/v/marketing-cv-2`). The main `/` page continues to show your live CV.
 
 **Q: Can I edit a dataset without loading it?**
 No. To edit a dataset, load it first, make changes, then save it again with the same name (it will update the existing dataset).
 
+**Q: Will search engines index my versioned URLs?**
+By default, no — versioned pages get `noindex, nofollow`. To allow indexing, enable **Index Versioned URLs** in Settings → Advanced.
+
 ### Public Site & SEO
 
 **Q: How do I share my CV?**
-Share the URL of your public server (port 3001). If you've set up a domain with Cloudflare Tunnel or a reverse proxy, share that domain.
+Share the URL of your public server (port 3001). If you've set up a domain with Cloudflare Tunnel or a reverse proxy, share that domain. You can also share specific versions using public versioned URLs (see Datasets section above).
 
 **Q: Will search engines index my CV?**
-By default, yes. The public site includes proper meta tags, a sitemap, and robots.txt. To prevent indexing, change the **Search Engine Indexing** setting to "No Index" in Settings → Advanced.
+By default, yes — the main public page includes proper meta tags, a sitemap, and robots.txt. To prevent indexing, change the **Search Engine Indexing** setting to "No Index" in Settings → Advanced. Public versioned URLs (`/v/slug`) are **not indexed** by default; enable **Index Versioned URLs** if you want them crawled.
 
 **Q: Can I add Google Analytics to my CV?**
 Yes. Paste your tracking code in **Settings → Advanced → Tracking Code**. It's injected only on the public-facing pages.
