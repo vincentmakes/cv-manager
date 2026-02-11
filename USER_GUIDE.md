@@ -230,24 +230,58 @@ Toggle **Settings → Print & Export → Public Print Button** to show or hide a
 
 ## Datasets (Multiple CV Versions)
 
-### Saving a Dataset
+### How Datasets Work
 
-Click **Save As...** in the toolbar, enter a name (e.g., "Technical CV", "Marketing Role"), and your current CV state is saved as a snapshot.
+Datasets are saved snapshots of your CV. One dataset is always the **default** — this is the version visitors see at your root URL (`/`). You can create additional datasets for different audiences (e.g., a technical CV, a management CV) and share them at their own URLs.
 
-### Loading a Dataset
+When you first install CV Manager, a "Default" dataset is automatically created from your CV data. All edits you make in the admin are **auto-saved** back to the active dataset — there's no separate "save" step.
 
-Click **Open...** to see all saved datasets. Each dataset shows:
+### The Active Dataset Banner
 
-- Name and last-updated date
-- A **versioned URL** (e.g., `/v/technical-cv-1`)
-- A **public toggle** — makes this version accessible on the public site
-- **Preview** button — opens the saved version in a new tab (admin only)
-- **Load** button — replaces your current active CV with this dataset
-- **Delete** button — permanently removes the dataset
+A banner below the toolbar shows which dataset you're currently editing. It displays:
+
+- The **dataset name** (e.g., "Default", "Technical CV")
+- A **"Default" badge** if this dataset is the one served at `/`
+- An **auto-save status** — briefly shows "Saving…" then "✓ Saved" after each edit
+
+Every change you make (adding items, editing content, reordering, toggling visibility) is automatically saved to the active dataset after a short delay.
+
+### Saving a New Dataset
+
+Click **Save As...** in the toolbar, enter a name (e.g., "Technical CV", "Marketing Role"), and your current CV state is saved as a new snapshot. The new dataset becomes the active one.
+
+### The Open Modal
+
+Click **Open...** to see all saved datasets. A **legend** at the top explains the three controls:
+
+| Control | Purpose |
+|---------|---------|
+| **Radio button** | Select which dataset is served at your root URL `/` (the default) |
+| **Toggle** | Share other datasets at their own `/v/slug` URL |
+| **Eye button** | Preview a saved dataset without making it public |
+
+Each dataset row shows:
+
+- **Name** and last-updated date
+- **"Default" badge** — on the dataset selected with the radio button
+- **"Editing" badge** — on the dataset currently loaded in the admin
+- A **versioned URL** (e.g., `/v/technical-cv-1`) — hidden for the default dataset since it's served at `/`
+- **Load** button — switches to this dataset (shows "Reload" if already active)
+- **Delete** button — permanently removes the dataset (disabled for the current default)
+
+### Setting the Default Dataset
+
+The default dataset is the version visitors see when they visit your root URL (`/`). To change it:
+
+1. Open the **Open...** modal
+2. Click the **radio button** next to the dataset you want as your public CV
+3. The change takes effect immediately — the public site now serves that dataset
+
+This decouples your public CV from your editing. You can freely edit content in the admin without visitors seeing work-in-progress changes until you're ready.
 
 ### Public Versioned URLs
 
-Each saved dataset gets a unique URL path (e.g., `/v/technical-cv-1`). By default, these are **private** — only accessible from the admin interface for previewing.
+Each saved dataset (other than the default) gets a unique URL path (e.g., `/v/technical-cv-1`). By default, these are **private** — only accessible from the admin interface for previewing.
 
 To share a specific version publicly:
 
@@ -256,11 +290,11 @@ To share a specific version publicly:
 3. Toggle the **switch** next to it — it turns blue and a green **Public** badge appears
 4. The `/v/slug` URL is now accessible on the **public site** (port 3001)
 
-This lets you share tailored CV versions with different audiences. For example, you might make a "Technical CV" public for engineering roles while keeping a "Management CV" private until needed — all without changing your main live CV.
+This lets you share tailored CV versions with different audiences. For example, you might make a "Technical CV" public for engineering roles while keeping a "Management CV" private until needed.
 
 **Copying the URL**: Click the copy icon next to the slug to copy the full URL to your clipboard. The toast message will tell you whether you copied a public or preview-only URL.
 
-> **Note**: The main public page at `/` always shows your current live CV. Public versioned URLs are additional pages served alongside it.
+> **Note**: The main public page at `/` always shows the **default dataset** — not your live edits. This means you can safely experiment in the admin without affecting what visitors see.
 
 ---
 
@@ -401,7 +435,7 @@ Yes. Most items support drag-and-drop reordering. The order is saved automatical
 Edit the experience and enter highlights in the **Highlights** field — one bullet point per line.
 
 **Q: I accidentally deleted something. Can I undo it?**
-There's no undo feature. If you have a previous export or saved dataset, you can restore from that. It's good practice to export your CV regularly as a backup.
+There's no undo feature. Since edits are auto-saved to the active dataset, the change is persisted immediately. If you have a previous export or a separate saved dataset, you can restore from that. It's good practice to export your CV regularly as a backup.
 
 ### Custom Sections
 
@@ -441,8 +475,17 @@ Make sure the **Country Code** field on the experience is set to a valid 2-lette
 
 ### Datasets / Multiple CVs
 
+**Q: What is the "Default" dataset?**
+The default dataset is the version of your CV that visitors see at your root URL (`/`). On first install, CV Manager automatically creates a "Default" dataset from your CV data. You can change which dataset is the default at any time using the radio button in the Open modal.
+
+**Q: Are my edits saved automatically?**
+Yes. Every change you make in the admin (adding, editing, deleting, reordering, toggling visibility) is automatically saved back to the active dataset after a short delay. The banner shows "Saving…" then "✓ Saved" to confirm.
+
 **Q: What happens when I "Load" a dataset?**
-Loading a dataset replaces your current active CV with the saved snapshot. Your current unsaved changes will be lost — save them first if needed.
+Loading a dataset switches your working copy to that dataset. Your previous edits were already auto-saved, so nothing is lost.
+
+**Q: Can visitors see my edits in real time?**
+No. The public site serves the frozen default dataset, not your live edits. Visitors only see changes after auto-save writes them to the default dataset. If you're editing a non-default dataset, visitors won't see those changes at all until you set it as the default.
 
 **Q: Can visitors see my saved datasets?**
 Only if you make them public. Each dataset has a toggle in the Open modal. When set to public, that version becomes accessible at `/v/slug` on the public site (port 3001). Private datasets are only previewable from the admin interface.
@@ -451,10 +494,10 @@ Only if you make them public. Each dataset has a toggle in the Open modal. When 
 Open the **Open...** modal, toggle the dataset to public, then click the copy icon next to the slug URL. Share that link — it works on the public site without exposing your admin interface.
 
 **Q: Can I have multiple public versions at the same time?**
-Yes. You can make as many datasets public as you want. Each gets its own URL (e.g., `/v/technical-cv-1`, `/v/marketing-cv-2`). The main `/` page continues to show your live CV.
+Yes. You can make as many datasets public as you want. Each gets its own URL (e.g., `/v/technical-cv-1`, `/v/marketing-cv-2`). The main `/` page shows the default dataset.
 
-**Q: Can I edit a dataset without loading it?**
-No. To edit a dataset, load it first, make changes, then save it again with the same name (it will update the existing dataset).
+**Q: Can I delete the default dataset?**
+No. The dataset currently selected as default (via the radio button) cannot be deleted. Set a different dataset as default first, then delete the old one.
 
 **Q: Will search engines index my versioned URLs?**
 By default, no — versioned pages get `noindex, nofollow`. To allow indexing, enable **Index Versioned URLs** in Settings → Advanced.
@@ -462,7 +505,7 @@ By default, no — versioned pages get `noindex, nofollow`. To allow indexing, e
 ### Public Site & SEO
 
 **Q: How do I share my CV?**
-Share the URL of your public server (port 3001). If you've set up a domain with Cloudflare Tunnel or a reverse proxy, share that domain. You can also share specific versions using public versioned URLs (see Datasets section above).
+Share the URL of your public server (port 3001). If you've set up a domain with Cloudflare Tunnel or a reverse proxy, share that domain. The root URL always shows your default dataset. You can also share specific versions using public versioned URLs (see Datasets section above).
 
 **Q: Will search engines index my CV?**
 By default, yes — the main public page includes proper meta tags, a sitemap, and robots.txt. To prevent indexing, change the **Search Engine Indexing** setting to "No Index" in Settings → Advanced. Public versioned URLs (`/v/slug`) are **not indexed** by default; enable **Index Versioned URLs** if you want them crawled.
@@ -473,7 +516,7 @@ Yes. Paste your tracking code in **Settings → Advanced → Tracking Code**. It
 ### Docker & Infrastructure
 
 **Q: My changes aren't appearing on the public site?**
-Both servers read the same database. Try a hard refresh (`Ctrl+Shift+R`) on the public site. If running separate containers, make sure they share the same data volume.
+The public site serves the **default dataset**, which is updated automatically when you edit in the admin. Try a hard refresh (`Ctrl+Shift+R`) on the public site. If running separate containers, make sure they share the same data volume.
 
 **Q: I'm getting a "port already in use" error?**
 Change the host port mapping in your Docker configuration. For example, map to `3010:3000` and `3011:3001`. Do **not** change the `PUBLIC_PORT` environment variable — that's the internal container port.
