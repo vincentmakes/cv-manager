@@ -98,6 +98,22 @@
         </div>
     </div>
 
+    <!-- Active Dataset Banner (hidden by default) -->
+    <div id="activeDatasetBanner" class="active-dataset-banner no-print" style="display: none;">
+        <div class="active-dataset-banner-content">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <span class="active-dataset-label">Editing:</span>
+            <span id="activeDatasetName" class="active-dataset-name"></span>
+            <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;">Default</span>
+            <div class="active-dataset-actions">
+                <button class="btn btn-ghost btn-sm active-dataset-save-btn" onclick="saveActiveDataset()" title="Save current changes to this dataset">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Container -->
     <div class="container" role="main">
         <!-- ATS-friendly hidden text version -->
@@ -274,6 +290,20 @@
                 </button>
             </div>
             <div class="modal-body" id="datasetsModalBody">
+                <div class="datasets-legend">
+                    <div class="datasets-legend-item">
+                        <span class="radio-dot radio-dot-preview"></span>
+                        <span><strong>Radio button</strong> — select which dataset visitors see at your root URL <code>/</code></span>
+                    </div>
+                    <div class="datasets-legend-item">
+                        <span class="toggle-preview"><span class="toggle-preview-knob"></span></span>
+                        <span><strong>Toggle</strong> — share other datasets at their own <code>/v/slug</code> URL</span>
+                    </div>
+                    <div class="datasets-legend-item">
+                        <svg class="legend-icon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span><strong>Eye</strong> — preview a saved dataset without making it public</span>
+                    </div>
+                </div>
                 <div id="datasetsList"></div>
             </div>
             <div class="modal-footer">

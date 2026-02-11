@@ -4,6 +4,24 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-02-11
+
+### Added
+- **Default dataset**: Datasets can now be designated as the "default" via a radio button in the Open modal. The default dataset is served at the root URL `/` on the public site, decoupling the public CV from live admin edits
+- **Active dataset banner**: Persistent banner below the toolbar shows which dataset is currently being edited, with an explicit "Save" button to write changes back to the active dataset
+- **Save to dataset**: New `POST /api/datasets/:id/save` endpoint writes the current live CV state back into any existing dataset without creating a new one
+- **Auto-migration**: Existing users automatically get a "Default" dataset created from their current CV data on first startup. Users with existing datasets get their most recent one promoted to default
+- **Dataset state tracking**: Admin tracks which dataset is loaded, updates the banner on load/save/import, and shows "Editing" badge in the datasets modal
+
+### Changed
+- **Public page serving**: Root URL `/` now serves from the frozen default dataset JSON instead of live database tables, isolating the public CV from in-progress edits
+- **Datasets modal redesign**: Radio button column for default selection, visual badges for "Default" and "Editing" states, slug URLs hidden for default dataset, disabled delete on default
+- **Banner stacking**: Update banner and active dataset banner stack dynamically with proper margin calculation
+- **CV data gathering**: Extracted `gatherCvData()` helper to eliminate duplicated snapshot logic across save, load, and migration code paths
+
+### Fixed
+- **Delete protection**: Default dataset cannot be deleted — server returns a clear error message, delete button is disabled in the UI
+
 ## [1.5.0] - 2026-02-11
 
 ### Added

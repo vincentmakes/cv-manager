@@ -127,6 +127,38 @@ app.use('/uploads', express.static(uploadsPath));
 
 function servePublicIndex(req, res) {
     try {
+        // Check if a default dataset exists — serve from it instead of live DB
+        let defaultDataset = null;
+        try {
+            defaultDataset = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1').get();
+        } catch (e) { /* is_default column may not exist yet */ }
+
+        if (defaultDataset && defaultDataset.slug) {
+            const data = JSON.parse(defaultDataset.data);
+            const name = data.profile?.name || defaultDataset.name;
+            const bio = data.profile?.bio || 'Professional CV';
+            const description = bio.substring(0, 160).replace(/\n/g, ' ');
+            
+            let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+            html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
+            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
+            
+            // Inject robots meta from settings
+            const robotsSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
+            const robotsValue = robotsSetting?.value || 'index, follow';
+            html = html.replace(/<meta name="robots"[^>]*>/, `<meta name="robots" id="metaRobots" content="${robotsValue}">`);
+            
+            const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
+            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
+            
+            // Inject default dataset slug (no DATASET_PREVIEW = no preview banner)
+            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}";</script>`;
+            html = html.replace('</head>', `${datasetScript}</head>`);
+            
+            return res.type('html').send(html);
+        }
+
+        // Fallback: serve from live DB (no default dataset set)
         const profile = db.prepare('SELECT name, title, bio FROM profile WHERE id = 1').get();
         const name = profile?.name || 'CV';
         const bio = profile?.bio || 'Professional CV';
@@ -151,7 +183,7 @@ function servePublicIndex(req, res) {
 // Serve a public dataset page by slug (for /v/:slug on public server)
 function serveDatasetPage(req, res) {
     try {
-        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND is_public = 1').get(req.params.slug);
+        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND (is_public = 1 OR is_default = 1)').get(req.params.slug);
         if (!dataset) return res.status(404).send('Not found');
         
         const data = JSON.parse(dataset.data);
@@ -186,7 +218,8 @@ function serveDatasetPage(req, res) {
 // Serve dataset data as JSON for public slug API
 function serveDatasetData(req, res) {
     try {
-        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND is_public = 1').get(req.params.slug);
+        // Allow access if dataset is public OR is the default (default = served at /)
+        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND (is_public = 1 OR is_default = 1)').get(req.params.slug);
         if (!dataset) return res.status(404).json({ error: 'Not found' });
         const data = JSON.parse(dataset.data);
         res.json({ name: dataset.name, slug: dataset.slug, ...data });
@@ -257,7 +290,7 @@ if (!PUBLIC_ONLY) {
         CREATE TABLE IF NOT EXISTS skills (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER NOT NULL, name TEXT NOT NULL, sort_order INTEGER DEFAULT 0, FOREIGN KEY (category_id) REFERENCES skill_categories(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS projects (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT, technologies TEXT, link TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS section_visibility (section_name TEXT PRIMARY KEY, visible INTEGER DEFAULT 1);
-        CREATE TABLE IF NOT EXISTS saved_datasets (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, data TEXT NOT NULL, slug TEXT UNIQUE, is_public INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS saved_datasets (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, data TEXT NOT NULL, slug TEXT UNIQUE, is_public INTEGER DEFAULT 0, is_default INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         
         -- Custom sections tables
         CREATE TABLE IF NOT EXISTS custom_sections (
@@ -375,11 +408,45 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (profile_picture_enabled):', err.message); }
 
+    // Step 2g: Migration - add is_default column to saved_datasets if missing
+    try {
+        const dsDefaultInfo = db.prepare("PRAGMA table_info(saved_datasets)").all();
+        if (!dsDefaultInfo.some(col => col.name === 'is_default')) {
+            console.log('Migrating saved_datasets table: adding is_default column');
+            db.exec('ALTER TABLE saved_datasets ADD COLUMN is_default INTEGER DEFAULT 0');
+        }
+    } catch (err) { console.log('Migration check (is_default):', err.message); }
+
     // Step 3: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
     DEFAULT_SECTION_ORDER.forEach((section, index) => {
         db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, 1, ?)').run(section, index);
     });
+
+    // Step 4: Auto-create "Default" dataset from live DB if no default exists
+    // Runs AFTER Step 3 so that profile and section_visibility rows are guaranteed to exist.
+    // Creates a Default dataset on every install (fresh or existing) so the Open modal is never empty.
+    try {
+        const hasDefault = db.prepare('SELECT id FROM saved_datasets WHERE is_default = 1').get();
+        if (!hasDefault) {
+            console.log('Auto-creating default dataset from live CV data');
+            const cvData = gatherCvData();
+            const existingDefault = db.prepare('SELECT id FROM saved_datasets WHERE name = ?').get('Default');
+            if (existingDefault) {
+                // A dataset named "Default" already exists — update it and mark as default
+                db.prepare('UPDATE saved_datasets SET data = ?, is_default = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existingDefault.id);
+                console.log(`Updated existing "Default" dataset (id: ${existingDefault.id}) and set as default`);
+            } else {
+                const result = db.prepare('INSERT INTO saved_datasets (name, data, is_default, is_public) VALUES (?, ?, 1, 0)').run('Default', JSON.stringify(cvData));
+                const newId = result.lastInsertRowid;
+                try {
+                    const slug = generateSlug('Default', newId);
+                    db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId);
+                } catch (slugErr) { console.log('Slug update skipped for auto-created default:', slugErr.message); }
+                console.log(`Auto-created default dataset (id: ${newId})`);
+            }
+        }
+    } catch (err) { console.log('Auto-create default dataset:', err.message); }
 }
 
 function formatPeriod(startDate, endDate) {
@@ -417,6 +484,34 @@ function formatDateShort(dateStr) {
         }
     }
     try { return new Date(dateStr).getFullYear().toString(); } catch { return dateStr; }
+}
+
+// Gather current CV data from live DB into a JSON-serializable snapshot
+function gatherCvData() {
+    const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get();
+    const experiences = db.prepare('SELECT * FROM experiences ORDER BY start_date DESC, sort_order ASC').all();
+    const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all();
+    const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all();
+    const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all();
+    const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
+    const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all();
+    const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
+    const sectionVisibility = {};
+    const sectionOrderData = [];
+    sections.forEach(s => {
+        sectionVisibility[s.section_name] = !!s.visible;
+        sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null });
+    });
+    return {
+        profile,
+        experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })),
+        certifications,
+        education,
+        skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })),
+        projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })),
+        sectionVisibility,
+        sectionOrder: sectionOrderData
+    };
 }
 
 // Generate URL-safe slug from dataset name
@@ -683,23 +778,69 @@ if (PUBLIC_ONLY) {
         try {
             // Use SELECT * to avoid errors if slug column doesn't exist
             const datasets = db.prepare('SELECT * FROM saved_datasets ORDER BY updated_at DESC').all();
-            res.json(datasets.map(d => ({ id: d.id, name: d.name, slug: d.slug || null, is_public: !!d.is_public, created_at: d.created_at, updated_at: d.updated_at })));
+            res.json(datasets.map(d => ({ id: d.id, name: d.name, slug: d.slug || null, is_public: !!d.is_public, is_default: !!d.is_default, created_at: d.created_at, updated_at: d.updated_at })));
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     });
-    app.post('/api/datasets', (req, res) => { const { name } = req.body; if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' }); const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY start_date DESC, sort_order ASC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const cvData = { profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData }; try { const existing = db.prepare('SELECT id FROM saved_datasets WHERE name = ?').get(name.trim()); if (existing) { db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existing.id); const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(existing.id); res.json({ success: true, id: existing.id, slug: ds.slug || null, updated: true }); } else { const result = db.prepare('INSERT INTO saved_datasets (name, data) VALUES (?, ?)').run(name.trim(), JSON.stringify(cvData)); const newId = result.lastInsertRowid; let slug = null; try { slug = generateSlug(name.trim(), newId); db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId); } catch (slugErr) { console.log('Slug update skipped (column may not exist):', slugErr.message); } res.json({ success: true, id: newId, slug, created: true }); } } catch (err) { res.status(500).json({ error: err.message }); } });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible !== false ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible !== false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible !== false ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible !== false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible !== false ? 1 : 0); }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible !== false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, name: dataset.name }); } catch (err) { res.status(500).json({ error: err.message }); } });
-    app.delete('/api/datasets/:id', (req, res) => { db.prepare('DELETE FROM saved_datasets WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+    app.post('/api/datasets', (req, res) => { const { name } = req.body; if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' }); const cvData = gatherCvData(); try { const existing = db.prepare('SELECT id FROM saved_datasets WHERE name = ?').get(name.trim()); if (existing) { db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existing.id); const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(existing.id); res.json({ success: true, id: existing.id, slug: ds.slug || null, is_default: !!ds.is_default, updated: true }); } else { const result = db.prepare('INSERT INTO saved_datasets (name, data) VALUES (?, ?)').run(name.trim(), JSON.stringify(cvData)); const newId = result.lastInsertRowid; let slug = null; try { slug = generateSlug(name.trim(), newId); db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId); } catch (slugErr) { console.log('Slug update skipped (column may not exist):', slugErr.message); } res.json({ success: true, id: newId, slug, is_default: false, created: true }); } } catch (err) { res.status(500).json({ error: err.message }); } });
+
+    // Set a dataset as the default (public at /)
+    app.put('/api/datasets/:id/default', (req, res) => {
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            
+            // Clear any existing default, then set the new one (atomic)
+            const setDefault = db.transaction(() => {
+                db.prepare('UPDATE saved_datasets SET is_default = 0 WHERE is_default = 1').run();
+                db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE id = ?').run(req.params.id);
+            });
+            setDefault();
+            
+            const updated = db.prepare('SELECT id, name, slug, is_public, is_default FROM saved_datasets WHERE id = ?').get(req.params.id);
+            res.json({ success: true, id: updated.id, name: updated.name, slug: updated.slug, is_default: !!updated.is_default });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    // Get the current default dataset info
+    app.get('/api/datasets/default', (req, res) => {
+        try {
+            const dataset = db.prepare('SELECT id, name, slug, is_public, is_default, updated_at FROM saved_datasets WHERE is_default = 1').get();
+            if (!dataset) return res.json({ exists: false });
+            res.json({ exists: true, id: dataset.id, name: dataset.name, slug: dataset.slug, is_public: !!dataset.is_public, updated_at: dataset.updated_at });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    // Save current live CV data back into an existing dataset (explicit save)
+    app.post('/api/datasets/:id/save', (req, res) => {
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            const cvData = gatherCvData();
+            db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), req.params.id);
+            res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible !== false ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible !== false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible !== false ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible !== false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible !== false ? 1 : 0); }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible !== false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.delete('/api/datasets/:id', (req, res) => {
+        try {
+            const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!ds) return res.status(404).json({ error: 'Dataset not found' });
+            if (ds.is_default) return res.status(400).json({ error: 'Cannot delete the default dataset. Set another dataset as default first.' });
+            db.prepare('DELETE FROM saved_datasets WHERE id = ?').run(req.params.id);
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
 
     // Toggle dataset public visibility
     app.put('/api/datasets/:id/public', (req, res) => {
         const { is_public } = req.body;
         try {
             db.prepare('UPDATE saved_datasets SET is_public = ? WHERE id = ?').run(is_public ? 1 : 0, req.params.id);
-            const ds = db.prepare('SELECT id, name, slug, is_public FROM saved_datasets WHERE id = ?').get(req.params.id);
+            const ds = db.prepare('SELECT id, name, slug, is_public, is_default FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!ds) return res.status(404).json({ error: 'Dataset not found' });
-            res.json({ success: true, id: ds.id, slug: ds.slug, is_public: !!ds.is_public });
+            res.json({ success: true, id: ds.id, slug: ds.slug, is_public: !!ds.is_public, is_default: !!ds.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 

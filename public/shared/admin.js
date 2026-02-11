@@ -4,6 +4,10 @@
 let currentModal = { type: null, id: null };
 let sectionVisibility = {};
 let sectionOrder = [];
+let activeDatasetId = null;
+let activeDatasetName = null;
+let activeDatasetIsDefault = false;
+let adminInitialized = false; // tracks whether first init has completed
 
 // Parse date string into comparable numeric value for sorting
 // Handles formats: "2020", "2020-01", "Jan 2020", etc.
@@ -41,6 +45,28 @@ function parseDateForSort(dateStr) {
 
 // Initialize Admin
 async function initAdmin() {
+    // On first load only, try to load the default dataset
+    if (!adminInitialized) {
+        adminInitialized = true;
+        await loadDefaultDatasetOnStartup();
+        // Only render here if no default dataset was loaded (loadDefaultDatasetOnStartup handles its own render)
+        if (activeDatasetId === null) {
+            await renderAdminUI();
+        }
+    } else {
+        // Re-init after loadDataset or importData — just re-render
+        await renderAdminUI();
+        if (activeDatasetId !== null) {
+            showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
+        }
+    }
+    
+    // Non-blocking version check — fire and forget
+    checkForUpdates();
+}
+
+// Render admin UI from current live DB state
+async function renderAdminUI() {
     await loadDateFormatSetting();
     sectionOrder = await loadSectionOrder();
     sectionVisibility = await loadSectionsAdmin();
@@ -49,9 +75,6 @@ async function initAdmin() {
     await generateATSContent();
     await setupPrintPagination();
     await loadPageSplitsSetting();
-    
-    // Non-blocking version check — fire and forget
-    checkForUpdates();
 }
 
 // Check for updates (non-blocking)
@@ -72,9 +95,7 @@ function checkForUpdates() {
                         link.style.display = 'none';
                     }
                     banner.style.display = '';
-                    // Push container below the banner
-                    const bannerHeight = banner.offsetHeight;
-                    document.querySelector('.container').style.marginTop = (70 + bannerHeight) + 'px';
+                    updateBannerMargins();
                 }
             }
         })
@@ -84,8 +105,92 @@ function checkForUpdates() {
 function dismissUpdateBanner() {
     const banner = document.getElementById('updateBanner');
     if (banner) banner.style.display = 'none';
-    // Restore original container margin
-    document.querySelector('.container').style.marginTop = '';
+    updateBannerMargins();
+}
+
+// Recalculate container margin based on visible banners
+function updateBannerMargins() {
+    const toolbarHeight = 54;
+    const baseMargin = 70; // 54px toolbar + 16px gap
+    let extraHeight = 0;
+    
+    const updateBanner = document.getElementById('updateBanner');
+    const datasetBanner = document.getElementById('activeDatasetBanner');
+    
+    // Stack banners: update banner sits right below toolbar, dataset banner below that
+    if (updateBanner && updateBanner.style.display !== 'none') {
+        extraHeight += updateBanner.offsetHeight;
+    }
+    if (datasetBanner && datasetBanner.style.display !== 'none') {
+        // Position dataset banner below update banner (or toolbar if no update banner)
+        datasetBanner.style.top = (toolbarHeight + (updateBanner && updateBanner.style.display !== 'none' ? updateBanner.offsetHeight : 0)) + 'px';
+        extraHeight += datasetBanner.offsetHeight;
+    }
+    
+    document.querySelector('.container').style.marginTop = (baseMargin + extraHeight) + 'px';
+}
+
+// Load default dataset on admin startup
+async function loadDefaultDatasetOnStartup() {
+    try {
+        const defaultDs = await api('/api/datasets/default');
+        if (defaultDs && defaultDs.exists) {
+            // Load the default dataset into the working copy
+            const result = await api(`/api/datasets/${defaultDs.id}/load`, { method: 'POST' });
+            if (result.success) {
+                activeDatasetId = result.id;
+                activeDatasetName = result.name;
+                activeDatasetIsDefault = !!result.is_default;
+                
+                // Render UI from the now-loaded data
+                await renderAdminUI();
+                showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
+            }
+        }
+    } catch (err) {
+        console.log('No default dataset to load:', err.message);
+    }
+}
+
+// Show the active dataset banner
+function showActiveDatasetBanner(id, name, isDefault) {
+    const banner = document.getElementById('activeDatasetBanner');
+    const nameEl = document.getElementById('activeDatasetName');
+    const defaultBadge = document.getElementById('activeDatasetDefaultBadge');
+    if (!banner || !nameEl) return;
+    
+    nameEl.textContent = name;
+    defaultBadge.style.display = isDefault ? '' : 'none';
+    banner.style.display = '';
+    updateBannerMargins();
+}
+
+// Hide the active dataset banner
+function hideActiveDatasetBanner() {
+    const banner = document.getElementById('activeDatasetBanner');
+    if (banner) banner.style.display = 'none';
+    activeDatasetId = null;
+    activeDatasetName = null;
+    activeDatasetIsDefault = false;
+    updateBannerMargins();
+}
+
+// Save current live CV data back to the active dataset (explicit save)
+async function saveActiveDataset() {
+    if (!activeDatasetId) {
+        toast('No active dataset to save to', 'error');
+        return;
+    }
+    try {
+        const result = await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
+        if (result.success) {
+            toast(`Saved to: ${result.name}`);
+        } else {
+            toast(result.error || 'Failed to save', 'error');
+        }
+    } catch (err) {
+        toast('Failed to save dataset', 'error');
+    }
 }
 
 // Load and apply page splits settings on init
@@ -1160,6 +1265,8 @@ async function importData(event) {
         try {
             const data = JSON.parse(e.target.result);
             await api('/api/import', { method: 'POST', body: data });
+            // Clear active dataset — imported data doesn't belong to any dataset
+            hideActiveDatasetBanner();
             await initAdmin();
             toast('Imported successfully');
         } catch (err) {
@@ -1797,6 +1904,11 @@ async function saveAsDataset() {
     try {
         const result = await api('/api/datasets', { method: 'POST', body: { name: name.trim() } });
         if (result.success) {
+            // Set the newly saved dataset as active
+            activeDatasetId = result.id;
+            activeDatasetName = name.trim();
+            activeDatasetIsDefault = !!result.is_default;
+            showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             toast(result.updated ? 'Dataset updated' : 'Dataset saved');
         } else {
             toast(result.error || 'Failed to save', 'error');
@@ -1824,33 +1936,54 @@ async function loadDatasetsList() {
         return;
     }
     
-    container.innerHTML = datasets.map(ds => `
-        <div class="dataset-item" data-id="${ds.id}">
+    container.innerHTML = datasets.map(ds => {
+        const isActive = ds.id === activeDatasetId;
+        const isDefault = !!ds.is_default;
+        const showSlugUrl = ds.slug && !isDefault;
+        const showPublicToggle = ds.slug && !isDefault;
+        
+        return `
+        <div class="dataset-item ${isActive ? 'dataset-item-active' : ''} ${isDefault ? 'dataset-item-is-default' : ''}" data-id="${ds.id}">
+            <div class="dataset-default-radio">
+                <label class="radio-label" title="${isDefault ? 'This dataset is currently served at the root URL /' : 'Click to make this dataset the one served at the root URL /'}">
+                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">
+                    <span class="radio-dot"></span>
+                </label>
+            </div>
             <div class="dataset-info">
-                <div class="dataset-name">${escapeHtml(ds.name)}</div>
+                <div class="dataset-name-row">
+                    <span class="dataset-name">${escapeHtml(ds.name)}</span>
+                    ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
+                    ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
+                </div>
                 <div class="dataset-date">Last updated: ${formatDateTime(ds.updated_at)}</div>
-                ${ds.slug ? `<div class="dataset-url">
+                ${showSlugUrl ? `<div class="dataset-url">
                     <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
                     <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                     </button>
                     ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
                 </div>` : ''}
+                ${isDefault ? '<div class="dataset-default-hint">Served at root URL <code>/</code></div>' : ''}
             </div>
             <div class="dataset-actions">
-                ${ds.slug ? `
-                    <label class="toggle-switch dataset-toggle" title="${ds.is_public ? 'Public — visible on public site' : 'Private — admin preview only'}">
-                        <input type="checkbox" ${ds.is_public ? 'checked' : ''} onchange="toggleDatasetPublic(${ds.id}, this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
+                ${showPublicToggle ? `
+                    <div class="dataset-toggle-group">
+                        <label class="toggle-switch dataset-toggle" title="When enabled, this version is accessible at its /v/ slug URL">
+                            <input type="checkbox" ${ds.is_public ? 'checked' : ''} onchange="toggleDatasetPublic(${ds.id}, this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="dataset-toggle-label">${ds.is_public ? 'Shared' : 'Private'}</span>
+                    </div>` : ''}
+                ${ds.slug && !isDefault ? `
                     <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>` : ''}
-                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">Load</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">Delete</button>
+                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">${isActive ? 'Reload' : 'Load'}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 // Preview dataset in new tab (admin only)
@@ -1896,6 +2029,32 @@ async function toggleDatasetPublic(id, isPublic) {
     }
 }
 
+// Set a dataset as the default (served at root URL /)
+async function setDatasetDefault(id, name) {
+    try {
+        const result = await api(`/api/datasets/${id}/default`, { method: 'PUT' });
+        if (result.success) {
+            toast(`"${result.name}" is now the default`);
+            // If the active dataset was previously default, update its flag
+            if (activeDatasetId === id) {
+                activeDatasetIsDefault = true;
+                showActiveDatasetBanner(activeDatasetId, activeDatasetName, true);
+            } else if (activeDatasetIsDefault) {
+                // Active dataset lost its default status
+                activeDatasetIsDefault = false;
+                showActiveDatasetBanner(activeDatasetId, activeDatasetName, false);
+            }
+            await loadDatasetsList();
+        } else {
+            toast(result.error || 'Failed to set default', 'error');
+            await loadDatasetsList(); // Revert radio state
+        }
+    } catch (err) {
+        toast('Failed to set default', 'error');
+        await loadDatasetsList(); // Revert radio state
+    }
+}
+
 // Fallback copy method for non-HTTPS contexts
 function fallbackCopyToClipboard(text) {
     try {
@@ -1920,11 +2079,13 @@ function fallbackCopyToClipboard(text) {
 }
 
 async function loadDataset(id, name) {
-    if (!confirm(`Load dataset "${name}"? This will replace your current CV data.`)) return;
-    
     try {
         const result = await api(`/api/datasets/${id}/load`, { method: 'POST' });
         if (result.success) {
+            // Set active dataset state BEFORE initAdmin (so initAdmin skips auto-load)
+            activeDatasetId = result.id;
+            activeDatasetName = result.name;
+            activeDatasetIsDefault = !!result.is_default;
             closeDatasetsModal();
             await initAdmin();
             toast(`Loaded: ${result.name}`);
@@ -1940,7 +2101,15 @@ async function deleteDataset(id, name) {
     if (!confirm(`Delete dataset "${name}"? This cannot be undone.`)) return;
     
     try {
-        await api(`/api/datasets/${id}`, { method: 'DELETE' });
+        const result = await api(`/api/datasets/${id}`, { method: 'DELETE' });
+        if (result.error) {
+            toast(result.error, 'error');
+            return;
+        }
+        // If we deleted the active dataset, clear the banner
+        if (activeDatasetId === id) {
+            hideActiveDatasetBanner();
+        }
         await loadDatasetsList();
         toast('Dataset deleted');
     } catch (err) {
