@@ -613,6 +613,21 @@ function gatherCvData() {
         sectionVisibility[s.section_name] = !!s.visible;
         sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null });
     });
+    // Custom sections with items
+    let customSections = [];
+    try {
+        const csRows = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
+        const csItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all();
+        customSections = csRows.map(s => ({
+            ...s,
+            visible: !!s.visible,
+            items: csItems.filter(i => i.section_id === s.id).map(i => ({
+                ...i,
+                visible: !!i.visible,
+                metadata: i.metadata ? JSON.parse(i.metadata) : null
+            }))
+        }));
+    } catch (err) { /* custom_sections table may not exist yet */ }
     return {
         profile,
         experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })),
@@ -621,7 +636,8 @@ function gatherCvData() {
         skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })),
         projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })),
         sectionVisibility,
-        sectionOrder: sectionOrderData
+        sectionOrder: sectionOrderData,
+        customSections
     };
 }
 

@@ -187,6 +187,21 @@
                 renderSkillsFromData(datasetData.skills);
                 renderProjectsFromData(datasetData.projects);
                 
+                // Render custom sections from dataset (or fallback to live API for older snapshots)
+                if (datasetData.customSections) {
+                    customSectionsData = datasetData.customSections.filter(s => s.visible !== false);
+                    const container = document.querySelector('.container');
+                    customSectionsData.forEach(section => {
+                        const visibleItems = (section.items || []).filter(i => i.visible !== false);
+                        const sectionWithVisibleItems = { ...section, items: visibleItems };
+                        const sectionHtml = renderCustomSectionPublic(sectionWithVisibleItems, layoutTypesData, socialPlatformsData);
+                        container.insertAdjacentHTML('beforeend', sectionHtml);
+                    });
+                } else {
+                    // Fallback for datasets saved before custom sections were included in snapshots
+                    await loadCustomSectionsPublic();
+                }
+                
                 // Handle section visibility from dataset
                 if (datasetData.sectionVisibility) {
                     Object.keys(datasetData.sectionVisibility).forEach(section => {

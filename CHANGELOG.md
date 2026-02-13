@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.3] - 2026-02-13
+
+### Fixed
+- **Custom sections on public site**: Custom sections (social links, grids, lists, etc.) were missing from the public site when served from a saved dataset. The `gatherCvData()` snapshot now includes custom sections with their items, and the dataset rendering path now renders them on the public page. Older datasets without custom section data fall back to loading from the live database
+
 ## [1.6.2] - 2026-02-13
 
 ### Fixed
