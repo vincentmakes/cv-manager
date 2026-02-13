@@ -9,6 +9,52 @@ let activeDatasetName = null;
 let activeDatasetIsDefault = false;
 let adminInitialized = false; // tracks whether first init has completed
 
+// Mobile menu toggle
+let mobileMenuOpen = false;
+
+function toggleMobileMenu(e) {
+    if (e) e.stopPropagation(); // Prevent document click handlers from firing
+    const actions = document.getElementById('toolbarActions');
+    const hamburger = document.getElementById('toolbarHamburger');
+    mobileMenuOpen = !mobileMenuOpen;
+    actions.classList.toggle('mobile-open', mobileMenuOpen);
+    // Swap hamburger icon to X when open
+    hamburger.innerHTML = mobileMenuOpen
+        ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+        : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+}
+
+function closeMobileMenu() {
+    if (!mobileMenuOpen) return;
+    mobileMenuOpen = false;
+    const actions = document.getElementById('toolbarActions');
+    const hamburger = document.getElementById('toolbarHamburger');
+    if (actions) actions.classList.remove('mobile-open');
+    if (hamburger) hamburger.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', (e) => {
+    if (!mobileMenuOpen) return;
+    const actions = document.getElementById('toolbarActions');
+    const hamburger = document.getElementById('toolbarHamburger');
+    if (!actions || !hamburger) return;
+    if (actions.contains(e.target) || hamburger.contains(e.target)) return;
+    closeMobileMenu();
+});
+
+// Auto-close mobile menu when action buttons are clicked (except color picker)
+document.addEventListener('click', (e) => {
+    if (!mobileMenuOpen) return;
+    const actions = document.getElementById('toolbarActions');
+    if (!actions) return;
+    const btn = e.target.closest('.btn, a.btn');
+    if (!btn || !actions.contains(btn)) return;
+    // Don't close for color picker interactions
+    if (btn.closest('.color-picker-wrapper')) return;
+    setTimeout(closeMobileMenu, 50);
+});
+
 // Parse date string into comparable numeric value for sorting
 // Handles formats: "2020", "2020-01", "Jan 2020", etc.
 function parseDateForSort(dateStr) {

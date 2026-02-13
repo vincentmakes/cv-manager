@@ -4,13 +4,25 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] - 2026-02-13
+
+### Changed
+- **Mobile toolbar**: Replaced icon-only buttons with a hamburger menu that opens a full-width dropdown with labeled actions. Print button remains always visible in the toolbar for quick access
+- **Mobile modals**: Restructured modal layout so header and footer stay fixed while only the body scrolls, preventing the close button from being clipped by border-radius. Uses `dvh` units for proper sizing on iOS Safari with the bottom address bar
+
+### Fixed
+- **Datasets modal legend**: Added visual legend explaining the three controls (radio button, toggle, eye icon) with miniature icon previews
+- **Toggle labels**: Public/private toggle in datasets modal now shows an explicit "Shared" / "Private" text label next to the switch
+- **Banner opacity**: Active dataset banner background changed from semi-transparent to opaque so content doesn't bleed through when scrolling
+
 ## [1.6.0] - 2026-02-11
 
 ### Added
 - **Default dataset**: Datasets can now be designated as the "default" via a radio button in the Open modal. The default dataset is served at the root URL `/` on the public site, decoupling the public CV from live admin edits
-- **Active dataset banner**: Persistent banner below the toolbar shows which dataset is currently being edited, with an explicit "Save" button to write changes back to the active dataset
+- **Active dataset banner**: Persistent banner below the toolbar shows which dataset is currently being edited, with auto-save status indicator
+- **Auto-save**: Every edit (save, delete, reorder, visibility toggle) automatically saves back to the active dataset after a short debounce, eliminating the need for a separate "save to dataset" step
 - **Save to dataset**: New `POST /api/datasets/:id/save` endpoint writes the current live CV state back into any existing dataset without creating a new one
-- **Auto-migration**: Existing users automatically get a "Default" dataset created from their current CV data on first startup. Users with existing datasets get their most recent one promoted to default
+- **Auto-migration**: On first startup, a "Default" dataset is automatically created from the current CV data so the Open modal is never empty
 - **Dataset state tracking**: Admin tracks which dataset is loaded, updates the banner on load/save/import, and shows "Editing" badge in the datasets modal
 
 ### Changed
