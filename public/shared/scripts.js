@@ -246,18 +246,37 @@ async function loadDateFormatSetting() {
 }
 
 // Format timeline period - uses year only if setting enabled, otherwise global date format
-// Handles both ISO dates (YYYY-MM, YYYY) and legacy formats (MMM YYYY) via period fallback
+// Handles ISO dates (YYYY-MM, YYYY), legacy formats (MMM YYYY, Jan 2020), and period fallback
 function formatTimelinePeriod(item) {
     const isISODate = (d) => d && /^\d{4}(-\d{2})?$/.test(d);
-    if (item.start_date && isISODate(item.start_date)) {
-        if (timelineYearOnly) {
-            const startYear = item.start_date.substring(0, 4);
-            const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
-            return `${startYear} - ${endYear}`;
+    
+    // Extract a 4-digit year from any date string (ISO, legacy, or freeform)
+    const extractYear = (d) => {
+        if (!d) return null;
+        const m = d.match(/\d{4}/);
+        return m ? m[0] : null;
+    };
+    
+    if (item.start_date) {
+        if (isISODate(item.start_date)) {
+            if (timelineYearOnly) {
+                const startYear = item.start_date.substring(0, 4);
+                const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
+                return `${startYear} - ${endYear}`;
+            }
+            const startFormatted = formatDate(item.start_date);
+            const endFormatted = item.end_date ? formatDate(item.end_date) : 'Present';
+            return `${startFormatted} - ${endFormatted}`;
         }
-        const startFormatted = formatDate(item.start_date);
-        const endFormatted = item.end_date ? formatDate(item.end_date) : 'Present';
-        return `${startFormatted} - ${endFormatted}`;
+        // Non-ISO date (legacy format like "Jan 2020") — extract year or use as-is
+        if (timelineYearOnly) {
+            const startYear = extractYear(item.start_date);
+            const endYear = item.end_date ? extractYear(item.end_date) || 'Present' : 'Present';
+            if (startYear) return `${startYear} - ${endYear}`;
+        }
+        // Use the raw date strings as-is for non-ISO when not year-only
+        const endStr = item.end_date || 'Present';
+        return `${item.start_date} - ${endStr}`;
     }
     return item.period || '';
 }

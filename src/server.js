@@ -417,6 +417,117 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (is_default):', err.message); }
 
+    // Step 2h: Migration - normalize legacy date formats (e.g., "Jan 2020" → "2020-01")
+    // Runs once; creates a flag in settings to avoid re-running on every startup
+    try {
+        const migrated = db.prepare("SELECT value FROM settings WHERE key = 'dates_normalized'").get();
+        if (!migrated) {
+            console.log('Normalizing legacy date formats...');
+            const monthsShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+            function normalizeDateValue(d) {
+                if (!d || typeof d !== 'string') return d;
+                const s = d.trim();
+                if (!s) return s;
+                // Already ISO
+                if (/^\d{4}(-\d{2})?$/.test(s)) return s;
+                // "Jan 2020", "January 2020"
+                const wordMonth = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+                if (wordMonth) {
+                    const idx = monthsShort.indexOf(wordMonth[1].toLowerCase().substring(0, 3));
+                    if (idx >= 0) return `${wordMonth[2]}-${String(idx + 1).padStart(2, '0')}`;
+                }
+                // "01/2020", "01.2020", "01-2020"
+                const numMonth = s.match(/^(\d{1,2})[\/.\-](\d{4})$/);
+                if (numMonth) {
+                    const m = parseInt(numMonth[1]);
+                    if (m >= 1 && m <= 12) return `${numMonth[2]}-${String(m).padStart(2, '0')}`;
+                }
+                // "2020/01", "2020.01"
+                const reverseNum = s.match(/^(\d{4})[\/.](\d{1,2})$/);
+                if (reverseNum) {
+                    const m = parseInt(reverseNum[2]);
+                    if (m >= 1 && m <= 12) return `${reverseNum[1]}-${String(m).padStart(2, '0')}`;
+                }
+                return s; // leave unrecognized formats untouched
+            }
+
+            // Normalize experiences table
+            let expCount = 0;
+            const exps = db.prepare('SELECT id, start_date, end_date FROM experiences').all();
+            exps.forEach(e => {
+                const ns = normalizeDateValue(e.start_date);
+                const ne = normalizeDateValue(e.end_date);
+                if (ns !== e.start_date || ne !== e.end_date) {
+                    db.prepare('UPDATE experiences SET start_date = ?, end_date = ? WHERE id = ?').run(ns, ne, e.id);
+                    expCount++;
+                }
+            });
+
+            // Normalize education table
+            let eduCount = 0;
+            const edus = db.prepare('SELECT id, start_date, end_date FROM education').all();
+            edus.forEach(e => {
+                const ns = normalizeDateValue(e.start_date);
+                const ne = normalizeDateValue(e.end_date);
+                if (ns !== e.start_date || ne !== e.end_date) {
+                    db.prepare('UPDATE education SET start_date = ?, end_date = ? WHERE id = ?').run(ns, ne, e.id);
+                    eduCount++;
+                }
+            });
+
+            // Normalize certifications table
+            let certCount = 0;
+            const certs = db.prepare('SELECT id, issue_date FROM certifications').all();
+            certs.forEach(c => {
+                const nd = normalizeDateValue(c.issue_date);
+                if (nd !== c.issue_date) {
+                    db.prepare('UPDATE certifications SET issue_date = ? WHERE id = ?').run(nd, c.id);
+                    certCount++;
+                }
+            });
+
+            // Normalize dates inside saved dataset JSON blobs
+            let dsCount = 0;
+            try {
+                const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+                datasets.forEach(ds => {
+                    try {
+                        const data = JSON.parse(ds.data);
+                        let changed = false;
+                        if (data.experiences) {
+                            data.experiences.forEach(e => {
+                                const ns = normalizeDateValue(e.start_date);
+                                const ne = normalizeDateValue(e.end_date);
+                                if (ns !== e.start_date || ne !== e.end_date) { e.start_date = ns; e.end_date = ne; changed = true; }
+                            });
+                        }
+                        if (data.education) {
+                            data.education.forEach(e => {
+                                const ns = normalizeDateValue(e.start_date);
+                                const ne = normalizeDateValue(e.end_date);
+                                if (ns !== e.start_date || ne !== e.end_date) { e.start_date = ns; e.end_date = ne; changed = true; }
+                            });
+                        }
+                        if (data.certifications) {
+                            data.certifications.forEach(c => {
+                                const nd = normalizeDateValue(c.issue_date);
+                                if (nd !== c.issue_date) { c.issue_date = nd; changed = true; }
+                            });
+                        }
+                        if (changed) {
+                            db.prepare('UPDATE saved_datasets SET data = ? WHERE id = ?').run(JSON.stringify(data), ds.id);
+                            dsCount++;
+                        }
+                    } catch (parseErr) { /* skip unparseable datasets */ }
+                });
+            } catch (dsErr) { /* saved_datasets table may not exist yet */ }
+
+            db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('dates_normalized', '1')").run();
+            console.log(`Date normalization complete: ${expCount} experiences, ${eduCount} education, ${certCount} certifications, ${dsCount} datasets updated`);
+        }
+    } catch (err) { console.log('Migration check (date normalization):', err.message); }
+
     // Step 3: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
     DEFAULT_SECTION_ORDER.forEach((section, index) => {

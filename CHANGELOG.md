@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.2] - 2026-02-13
+
+### Fixed
+- **Timeline periods on public site**: Fixed empty year/period text in the career timeline when served from a saved dataset. Legacy date formats (e.g., "Jan 2020") are now automatically migrated to ISO format ("2020-01") in the database and inside saved dataset snapshots on first startup. The `formatTimelinePeriod` function also handles non-ISO dates gracefully as a safety net
+
 ## [1.6.1] - 2026-02-13
 
 ### Changed
