@@ -173,6 +173,8 @@
                 await loadPublicPrintButton();
                 await loadPaginationSettings();
                 await loadPageSplitsSetting();
+                await loadTrackingCode();
+                await loadRobotsMeta();
                 
                 // Load layout types and social platforms for custom sections
                 layoutTypesData = await api('/api/layout-types');

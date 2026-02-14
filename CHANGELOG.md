@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.4] - 2026-02-14
+
+### Fixed
+- **Tracking code (Google Analytics, etc.)**: Fixed two issues preventing tracking scripts from loading on the public site. The dual-server CSP was hardcoded without tracking domain support, blocking external scripts. Additionally, the dataset rendering path was missing the `loadTrackingCode()` call. Both paths now dynamically extract domains from the tracking snippet and add them to the Content-Security-Policy
+
 ## [1.6.3] - 2026-02-13
 
 ### Fixed

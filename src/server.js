@@ -1142,7 +1142,48 @@ if (PUBLIC_ONLY) {
     publicApp.use((req, res, next) => { if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' }); next(); });
     const rateLimit = {};
     publicApp.use((req, res, next) => { const ip = req.ip || req.connection.remoteAddress; const now = Date.now(); if (!rateLimit[ip]) rateLimit[ip] = { count: 1, start: now }; else if (now - rateLimit[ip].start > 60000) rateLimit[ip] = { count: 1, start: now }; else { rateLimit[ip].count++; if (rateLimit[ip].count > 60) return res.status(429).json({ error: 'Too many requests' }); } next(); });
-    publicApp.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('X-Frame-Options', 'DENY'); res.setHeader('X-XSS-Protection', '1; mode=block'); res.setHeader('Referrer-Policy', 'no-referrer'); res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com; img-src 'self' https://flagcdn.com data:"); next(); });
+
+    // Dynamic CSP: extract domains from tracking code to allow them
+    function getTrackingDomainsDual() {
+        try {
+            const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
+            if (!setting || !setting.value) return [];
+            const domains = new Set();
+            const srcMatches = setting.value.match(/src\s*=\s*["'](https?:\/\/[^"'\/]+)/gi);
+            if (srcMatches) {
+                srcMatches.forEach(m => {
+                    const urlMatch = m.match(/["'](https?:\/\/[^"'\/]+)/i);
+                    if (urlMatch) domains.add(urlMatch[1]);
+                });
+            }
+            const urlMatches = setting.value.match(/https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.[a-zA-Z]{2,}/g);
+            if (urlMatches) {
+                urlMatches.forEach(url => {
+                    try { domains.add(new URL(url).origin); } catch (e) { /* skip */ }
+                });
+            }
+            return Array.from(domains);
+        } catch (err) { return []; }
+    }
+
+    publicApp.use((req, res, next) => {
+        const trackingDomains = getTrackingDomainsDual();
+        const trackingStr = trackingDomains.length > 0 ? ' ' + trackingDomains.join(' ') : '';
+        const csp = [
+            `default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com`,
+            `script-src 'self' 'unsafe-inline'${trackingStr}`,
+            `script-src-elem 'self' 'unsafe-inline'${trackingStr}`,
+            `worker-src 'self' blob:${trackingStr}`,
+            `connect-src 'self'${trackingStr}`,
+            `img-src 'self' https://flagcdn.com data:${trackingStr}`
+        ].join('; ');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('X-XSS-Protection', '1; mode=block');
+        res.setHeader('Referrer-Policy', 'no-referrer');
+        res.setHeader('Content-Security-Policy', csp);
+        next();
+    });
     publicApp.get('/sitemap.xml', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; res.setHeader('Content-Type', 'application/xml'); res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${protocol}://${host}/</loc><lastmod>${new Date().toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>`); });
     publicApp.get('/robots.txt', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta'); const metaValue = robotsMeta?.value || 'index, follow'; const isNoIndex = metaValue.includes('noindex'); res.setHeader('Content-Type', 'text/plain'); if (isNoIndex) { res.send(`User-agent: *\nDisallow: /`); } else { res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`); } });
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
