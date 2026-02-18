@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.5] - 2026-02-18
+
+### Fixed
+- **Google Analytics data collection blocked by CSP**: The CSP extractor only whitelisted domains found in the tracking snippet (e.g., `googletagmanager.com`), but analytics providers make requests to additional companion domains not present in the snippet (e.g., `google-analytics.com`, `region1.google-analytics.com`). Added automatic companion domain detection for Google Analytics, Plausible, and Matomo. Refactored CSP domain extraction into a single shared function used by both server modes
+
+### Changed
+- **Tracking code now injected server-side**: Tracking code is now written directly into the HTML response right after `<head>`, instead of being injected client-side via JavaScript. This ensures Google Tag Assistant and other verification tools can detect the tracking snippet in the raw page source. Client-side injection is skipped when server-side injection is present to avoid duplicate scripts
+
 ## [1.6.4] - 2026-02-14
 
 ### Fixed

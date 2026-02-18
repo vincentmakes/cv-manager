@@ -125,6 +125,14 @@ const uploadsPath = path.join(dataDir, 'uploads');
 if (!PUBLIC_ONLY && !fs.existsSync(uploadsPath)) { fs.mkdirSync(uploadsPath, { recursive: true }); }
 app.use('/uploads', express.static(uploadsPath));
 
+// Get tracking code from settings for server-side injection
+function getTrackingCode() {
+    try {
+        const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
+        return (setting?.value && setting.value.trim()) ? setting.value.trim() : '';
+    } catch (e) { return ''; }
+}
+
 function servePublicIndex(req, res) {
     try {
         // Check if a default dataset exists — serve from it instead of live DB
@@ -151,6 +159,12 @@ function servePublicIndex(req, res) {
             const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
             
+            // Inject tracking code right after <head> (server-side for GA verification)
+            const trackingCode = getTrackingCode();
+            if (trackingCode) {
+                html = html.replace('<head>', `<head>\n${trackingCode}`);
+            }
+            
             // Inject default dataset slug (no DATASET_PREVIEW = no preview banner)
             const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}";</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
@@ -175,6 +189,12 @@ function servePublicIndex(req, res) {
         
         const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
+        
+        // Inject tracking code right after <head> (server-side for GA verification)
+        const trackingCode = getTrackingCode();
+        if (trackingCode) {
+            html = html.replace('<head>', `<head>\n${trackingCode}`);
+        }
         
         res.type('html').send(html);
     } catch (err) { res.sendFile(path.join(__dirname, '../public-readonly/index.html')); }
@@ -206,6 +226,12 @@ function serveDatasetPage(req, res) {
         const slugsIndexSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('slugsIndex');
         if (!slugsIndexSetting || slugsIndexSetting.value !== 'true') {
             html = html.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" id="metaRobots" content="noindex, nofollow">');
+        }
+        
+        // Inject tracking code right after <head> (server-side for GA verification)
+        const trackingCode = getTrackingCode();
+        if (trackingCode) {
+            html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
         
         res.type('html').send(html);
@@ -650,6 +676,68 @@ function generateSlug(name, id) {
     return base ? `${base}-${id}` : `dataset-${id}`;
 }
 
+// Known analytics providers and their required companion domains
+// These domains are used internally by the provider scripts for data collection,
+// beacons, and API calls but don't appear in the user-pasted snippet
+const ANALYTICS_COMPANION_DOMAINS = {
+    'www.googletagmanager.com': [
+        'https://www.google-analytics.com',
+        'https://analytics.google.com',
+        'https://region1.google-analytics.com',
+        'https://stats.g.doubleclick.net'
+    ],
+    'www.google-analytics.com': [
+        'https://www.googletagmanager.com',
+        'https://analytics.google.com',
+        'https://region1.google-analytics.com',
+        'https://stats.g.doubleclick.net'
+    ],
+    'plausible.io': [
+        'https://plausible.io'
+    ],
+    'cdn.matomo.cloud': [
+        'https://*.matomo.cloud'
+    ]
+};
+
+// Extract domains from tracking code and add known companion domains
+function getTrackingDomains() {
+    try {
+        const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
+        if (!setting || !setting.value) return [];
+
+        const domains = new Set();
+        const srcMatches = setting.value.match(/src\s*=\s*["'](https?:\/\/[^"'\/]+)/gi);
+        if (srcMatches) {
+            srcMatches.forEach(m => {
+                const urlMatch = m.match(/["'](https?:\/\/[^"'\/]+)/i);
+                if (urlMatch) domains.add(urlMatch[1]);
+            });
+        }
+        const urlMatches = setting.value.match(/https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.[a-zA-Z]{2,}/g);
+        if (urlMatches) {
+            urlMatches.forEach(url => {
+                try { domains.add(new URL(url).origin); } catch (e) { /* skip */ }
+            });
+        }
+
+        // Add companion domains for known analytics providers
+        domains.forEach(d => {
+            try {
+                const hostname = new URL(d).hostname;
+                if (ANALYTICS_COMPANION_DOMAINS[hostname]) {
+                    ANALYTICS_COMPANION_DOMAINS[hostname].forEach(cd => domains.add(cd));
+                }
+            } catch (e) { /* skip */ }
+        });
+
+        return Array.from(domains);
+    } catch (err) {
+        console.error('Error reading tracking domains:', err.message);
+        return [];
+    }
+}
+
 if (PUBLIC_ONLY) {
     const publicApp = express();
     publicApp.use(cors({ methods: ['GET'], credentials: false }));
@@ -665,40 +753,10 @@ if (PUBLIC_ONLY) {
         next();
     });
 
-    // Dynamic CSP: extract domains from tracking code to allow them
-    function getTrackingDomainsPublicOnly() {
-        try {
-            const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
-            if (!setting || !setting.value) return [];
-            
-            const domains = new Set();
-            const srcMatches = setting.value.match(/src\s*=\s*["'](https?:\/\/[^"'\/]+)/gi);
-            if (srcMatches) {
-                srcMatches.forEach(m => {
-                    const urlMatch = m.match(/["'](https?:\/\/[^"'\/]+)/i);
-                    if (urlMatch) domains.add(urlMatch[1]);
-                });
-            }
-            const urlMatches = setting.value.match(/https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.[a-zA-Z]{2,}/g);
-            if (urlMatches) {
-                urlMatches.forEach(url => {
-                    try {
-                        const origin = new URL(url).origin;
-                        domains.add(origin);
-                    } catch (e) { /* skip invalid URLs */ }
-                });
-            }
-            return Array.from(domains);
-        } catch (err) {
-            console.error('Error reading tracking domains:', err.message);
-            return [];
-        }
-    }
-
-    console.log(`[CSP] Tracking domains detected: ${getTrackingDomainsPublicOnly().length > 0 ? getTrackingDomainsPublicOnly().join(', ') : '(none)'}`);
+    console.log(`[CSP] Tracking domains detected: ${getTrackingDomains().length > 0 ? getTrackingDomains().join(', ') : '(none)'}`);
 
     publicApp.use((req, res, next) => {
-        const trackingDomains = getTrackingDomainsPublicOnly();
+        const trackingDomains = getTrackingDomains();
         const trackingStr = trackingDomains.length > 0 ? ' ' + trackingDomains.join(' ') : '';
         
         const csp = [
@@ -1143,31 +1201,8 @@ if (PUBLIC_ONLY) {
     const rateLimit = {};
     publicApp.use((req, res, next) => { const ip = req.ip || req.connection.remoteAddress; const now = Date.now(); if (!rateLimit[ip]) rateLimit[ip] = { count: 1, start: now }; else if (now - rateLimit[ip].start > 60000) rateLimit[ip] = { count: 1, start: now }; else { rateLimit[ip].count++; if (rateLimit[ip].count > 60) return res.status(429).json({ error: 'Too many requests' }); } next(); });
 
-    // Dynamic CSP: extract domains from tracking code to allow them
-    function getTrackingDomainsDual() {
-        try {
-            const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
-            if (!setting || !setting.value) return [];
-            const domains = new Set();
-            const srcMatches = setting.value.match(/src\s*=\s*["'](https?:\/\/[^"'\/]+)/gi);
-            if (srcMatches) {
-                srcMatches.forEach(m => {
-                    const urlMatch = m.match(/["'](https?:\/\/[^"'\/]+)/i);
-                    if (urlMatch) domains.add(urlMatch[1]);
-                });
-            }
-            const urlMatches = setting.value.match(/https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.[a-zA-Z]{2,}/g);
-            if (urlMatches) {
-                urlMatches.forEach(url => {
-                    try { domains.add(new URL(url).origin); } catch (e) { /* skip */ }
-                });
-            }
-            return Array.from(domains);
-        } catch (err) { return []; }
-    }
-
     publicApp.use((req, res, next) => {
-        const trackingDomains = getTrackingDomainsDual();
+        const trackingDomains = getTrackingDomains();
         const trackingStr = trackingDomains.length > 0 ? ' ' + trackingDomains.join(' ') : '';
         const csp = [
             `default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com`,

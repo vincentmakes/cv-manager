@@ -552,6 +552,10 @@
         // Load and inject tracking code
         async function loadTrackingCode() {
             try {
+                // Skip if tracking code was already injected server-side
+                if (document.querySelector('script[src*="googletagmanager.com"], script[src*="google-analytics.com"], script[src*="plausible.io"], script[src*="matomo"]')) {
+                    return;
+                }
                 const result = await api('/api/settings/trackingCode');
                 if (result.value && result.value.trim()) {
                     // Create a container to parse the tracking code
