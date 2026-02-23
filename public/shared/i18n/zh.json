@@ -134,6 +134,8 @@
     "settings.tab.language": "语言",
 
     "settings.sections.info": "拖拽板块以调整顺序，或使用箭头按钮。点击眼睛图标切换可见性。点击板块名称编辑标题。",
+    "settings.sections.click_to_edit": "点击编辑板块标题",
+    "settings.sections.reset_default": "恢复默认",
     "settings.custom.info": "创建不同布局的自定义板块。自定义板块将显示在上方的板块排序列表中。",
     "settings.custom.add": "添加自定义板块",
     "settings.custom.no_sections": "暂无自定义板块。\n点击「添加自定义板块」以创建。",

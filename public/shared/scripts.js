@@ -213,15 +213,24 @@ function parseDateForSort(dateStr) {
     return 0;
 }
 
+// Get the translated default name for a built-in section, or fall back to the English default
+function getTranslatedSectionName(key, fallback) {
+    const i18nKey = `section.${key}`;
+    const translated = t(i18nKey);
+    return translated !== i18nKey ? translated : (fallback || key);
+}
+
 // Apply custom section titles from section order data to the DOM
 function applySectionTitles(sectionOrderData) {
     if (!sectionOrderData || !sectionOrderData.length) return;
     sectionOrderData.forEach(section => {
         const el = document.getElementById(`section-${section.key}`);
-        if (el && section.name) {
+        if (el) {
             const titleEl = el.querySelector('.section-title');
             if (titleEl) {
-                titleEl.textContent = section.name;
+                // Use custom name if user set one, otherwise use translated default
+                const isCustom = section.name && section.name !== section.default_name;
+                titleEl.textContent = isCustom ? section.name : getTranslatedSectionName(section.key, section.name);
             }
         }
     });

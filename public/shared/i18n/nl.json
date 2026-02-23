@@ -134,6 +134,8 @@
     "settings.tab.language": "Taal",
 
     "settings.sections.info": "Sleep secties om ze te herschikken, of gebruik de pijlknoppen. Schakel zichtbaarheid in of uit met het oogicoon. Klik op sectienamen om koppen te bewerken.",
+    "settings.sections.click_to_edit": "Klik om sectiekop te bewerken",
+    "settings.sections.reset_default": "Standaard herstellen",
     "settings.custom.info": "Maak aangepaste secties met verschillende indelingen. Aangepaste secties verschijnen in de sectievolgordelijst hierboven.",
     "settings.custom.add": "Aangepaste sectie toevoegen",
     "settings.custom.no_sections": "Nog geen aangepaste secties.\nKlik op \"Aangepaste sectie toevoegen\" om er een te maken.",

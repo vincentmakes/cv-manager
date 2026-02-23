@@ -134,6 +134,8 @@
     "settings.tab.language": "Lingua",
 
     "settings.sections.info": "Trascina le sezioni per riordinarle o usa i pulsanti freccia. Attiva o disattiva la visibilità con l'icona dell'occhio. Clicca sui nomi delle sezioni per modificare i titoli.",
+    "settings.sections.click_to_edit": "Clicca per modificare il titolo della sezione",
+    "settings.sections.reset_default": "Ripristina predefinito",
     "settings.custom.info": "Crea sezioni personalizzate con layout diversi. Le sezioni personalizzate appaiono nell'elenco di ordinamento delle sezioni sopra.",
     "settings.custom.add": "Aggiungi sezione personalizzata",
     "settings.custom.no_sections": "Nessuna sezione personalizzata.\nClicca \"Aggiungi sezione personalizzata\" per crearne una.",

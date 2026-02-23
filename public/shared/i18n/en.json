@@ -134,6 +134,8 @@
     "settings.tab.language": "Language",
 
     "settings.sections.info": "Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Click section names to edit headlines.",
+    "settings.sections.click_to_edit": "Click to edit section headline",
+    "settings.sections.reset_default": "Reset to default",
     "settings.custom.info": "Create custom sections with different layouts. Custom sections appear in the section order list above.",
     "settings.custom.add": "Add Custom Section",
     "settings.custom.no_sections": "No custom sections yet.\nClick \"Add Custom Section\" to create one.",

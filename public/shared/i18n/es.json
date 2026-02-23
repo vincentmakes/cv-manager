@@ -134,6 +134,8 @@
     "settings.tab.language": "Idioma",
 
     "settings.sections.info": "Arrastra las secciones para reordenarlas o usa los botones de flecha. Alterna la visibilidad con el icono de ojo. Haz clic en los nombres de sección para editar los encabezados.",
+    "settings.sections.click_to_edit": "Haz clic para editar el encabezado de la sección",
+    "settings.sections.reset_default": "Restablecer a predeterminado",
     "settings.custom.info": "Crea secciones personalizadas con diferentes diseños. Las secciones personalizadas aparecen en la lista de orden de secciones de arriba.",
     "settings.custom.add": "Añadir sección personalizada",
     "settings.custom.no_sections": "Aún no hay secciones personalizadas.\nHaz clic en \"Añadir sección personalizada\" para crear una.",

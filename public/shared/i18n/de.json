@@ -134,6 +134,8 @@
     "settings.tab.language": "Sprache",
 
     "settings.sections.info": "Abschnitte per Drag & Drop neu anordnen oder die Pfeiltasten verwenden. Sichtbarkeit mit dem Augensymbol umschalten. Auf Abschnittsnamen klicken, um Überschriften zu bearbeiten.",
+    "settings.sections.click_to_edit": "Klicken, um Abschnittsüberschrift zu bearbeiten",
+    "settings.sections.reset_default": "Auf Standard zurücksetzen",
     "settings.custom.info": "Erstellen Sie benutzerdefinierte Abschnitte mit verschiedenen Layouts. Benutzerdefinierte Abschnitte erscheinen in der Abschnittsreihenfolge oben.",
     "settings.custom.add": "Benutzerdefinierten Abschnitt hinzufügen",
     "settings.custom.no_sections": "Noch keine benutzerdefinierten Abschnitte.\nKlicken Sie auf \"Benutzerdefinierten Abschnitt hinzufügen\", um einen zu erstellen.",

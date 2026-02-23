@@ -1766,8 +1766,12 @@ function closeSettingsModal() {
 
 function renderSettingsSections() {
     const container = document.getElementById('settingsSectionsList');
-    
-    container.innerHTML = settingsSectionOrder.map((section, index) => `
+
+    container.innerHTML = settingsSectionOrder.map((section, index) => {
+        const isCustomName = section.name !== section.default_name;
+        const translatedDefault = getTranslatedSectionName(section.key, section.default_name);
+        const displayName = isCustomName ? section.name : translatedDefault;
+        return `
         <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
             <div class="settings-section-drag">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1775,14 +1779,14 @@ function renderSettingsSections() {
                 </svg>
             </div>
             <div class="settings-section-name-wrap">
-                <input type="text" class="settings-section-name-input" 
-                    value="${escapeHtml(section.name)}" 
+                <input type="text" class="settings-section-name-input"
+                    value="${escapeHtml(displayName)}"
                     data-key="${section.key}"
-                    data-default="${escapeHtml(section.default_name || section.name)}"
+                    data-default="${escapeHtml(translatedDefault)}"
                     onchange="updateSettingsSectionName('${section.key}', this.value)"
-                    title="Click to edit section headline"
+                    title="${t('settings.sections.click_to_edit')}"
                 />
-                ${section.name !== section.default_name ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="Reset to default: ${escapeHtml(section.default_name || section.name)}">
+                ${isCustomName ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="${t('settings.sections.reset_default')}: ${escapeHtml(translatedDefault)}">
                     <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
                 </button>` : ''}
             </div>
@@ -1801,8 +1805,8 @@ function renderSettingsSections() {
                 </button>
             </div>
         </div>
-    `).join('');
-    
+    `}).join('');
+
     // Add drag-and-drop event listeners
     const items = container.querySelectorAll('.settings-section-item');
     items.forEach(item => {
@@ -1900,10 +1904,16 @@ function updateSettingsSectionName(key, newName) {
     const section = settingsSectionOrder.find(s => s.key === key);
     if (section) {
         const trimmed = newName.trim();
-        section.name = trimmed || section.default_name;
-        // Only re-render if we need to show/hide the reset button
-        if ((trimmed !== section.default_name) !== (section._hadCustomName)) {
-            section._hadCustomName = trimmed !== section.default_name;
+        const translatedDefault = getTranslatedSectionName(key, section.default_name);
+        const wasCustom = section.name !== section.default_name;
+        // Treat empty, English default, or translated default as "reset to default"
+        if (!trimmed || trimmed === section.default_name || trimmed === translatedDefault) {
+            section.name = section.default_name;
+        } else {
+            section.name = trimmed;
+        }
+        const isCustom = section.name !== section.default_name;
+        if (wasCustom !== isCustom) {
             renderSettingsSections();
         }
     }

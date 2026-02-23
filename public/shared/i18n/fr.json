@@ -134,6 +134,8 @@
     "settings.tab.language": "Langue",
 
     "settings.sections.info": "Faites glisser les sections pour les réorganiser, ou utilisez les boutons fléchés. Basculez la visibilité avec l'icône en forme d'œil. Cliquez sur les noms de section pour modifier les titres.",
+    "settings.sections.click_to_edit": "Cliquer pour modifier le titre de la section",
+    "settings.sections.reset_default": "Réinitialiser par défaut",
     "settings.custom.info": "Créez des sections personnalisées avec différentes mises en page. Les sections personnalisées apparaissent dans la liste d'ordre des sections ci-dessus.",
     "settings.custom.add": "Ajouter une section personnalisée",
     "settings.custom.no_sections": "Aucune section personnalisée pour le moment.\nCliquez sur « Ajouter une section personnalisée » pour en créer une.",

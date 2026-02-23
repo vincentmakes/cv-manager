@@ -224,7 +224,7 @@
                 
                 // Reorder sections if sectionOrder is in dataset
                 if (datasetData.sectionOrder) {
-                    sectionOrder = datasetData.sectionOrder.filter(s => s.visible !== false).map(s => ({ key: s.key, visible: s.visible, name: s.display_name || s.name }));
+                    sectionOrder = datasetData.sectionOrder.filter(s => s.visible !== false).map(s => ({ key: s.key, visible: s.visible, name: s.display_name || s.name, default_name: s.default_name || s.name }));
                     renderSectionsInOrder();
                     applySectionTitles(sectionOrder);
                 }
@@ -399,7 +399,7 @@
                             <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
                             <div class="item-subtitle"><span itemprop="name">${escapeHtml(edu.institution_name)}</span></div>
                         </div>
-                        <span class="item-date">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')} - ${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</span>
+                        <span class="item-date">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')} - ${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</span>
                     </div>
                     ${edu.description ? `<div class="item-location">${escapeHtml(edu.description)}</div>` : ''}
                 </article>
