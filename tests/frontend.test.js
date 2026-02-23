@@ -101,4 +101,95 @@ describe('Frontend files', () => {
             assert.ok(fs.existsSync(file), 'Dockerfile should exist');
         });
     });
+
+    describe('i18n translation files', () => {
+        const i18nDir = path.join(ROOT, 'public', 'shared', 'i18n');
+        const enFile = path.join(i18nDir, 'en.json');
+
+        it('en.json exists and is valid JSON', () => {
+            assert.ok(fs.existsSync(enFile), 'en.json should exist');
+            const data = JSON.parse(fs.readFileSync(enFile, 'utf8'));
+            assert.ok(Object.keys(data).length > 0, 'en.json should have keys');
+        });
+
+        it('i18n.js registers languages that have matching JSON files', () => {
+            const i18nJs = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n.js'), 'utf8');
+            const codeMatches = i18nJs.match(/code:\s*'([a-z]{2})'/g) || [];
+            const registeredCodes = codeMatches.map(m => m.match(/'([a-z]{2})'/)[1]);
+            assert.ok(registeredCodes.length >= 2, 'should have at least 2 registered languages');
+            for (const code of registeredCodes) {
+                const file = path.join(i18nDir, `${code}.json`);
+                assert.ok(fs.existsSync(file), `${code}.json should exist for registered language '${code}'`);
+            }
+        });
+
+        it('all locale files have the exact same keys as en.json', () => {
+            const en = JSON.parse(fs.readFileSync(enFile, 'utf8'));
+            const enKeys = Object.keys(en).sort();
+            const localeFiles = fs.readdirSync(i18nDir).filter(f => f.endsWith('.json') && f !== 'en.json');
+
+            assert.ok(localeFiles.length > 0, 'should have at least one non-English locale');
+
+            for (const file of localeFiles) {
+                const locale = file.replace('.json', '');
+                const data = JSON.parse(fs.readFileSync(path.join(i18nDir, file), 'utf8'));
+                const localeKeys = Object.keys(data).sort();
+
+                const missingKeys = enKeys.filter(k => !localeKeys.includes(k));
+                const extraKeys = localeKeys.filter(k => !enKeys.includes(k));
+
+                assert.deepStrictEqual(
+                    missingKeys, [],
+                    `${locale}.json is missing keys: ${missingKeys.join(', ')}`
+                );
+                assert.deepStrictEqual(
+                    extraKeys, [],
+                    `${locale}.json has extra keys not in en.json: ${extraKeys.join(', ')}`
+                );
+            }
+        });
+
+        it('no translation values are empty strings', () => {
+            const localeFiles = fs.readdirSync(i18nDir).filter(f => f.endsWith('.json'));
+            for (const file of localeFiles) {
+                const locale = file.replace('.json', '');
+                const data = JSON.parse(fs.readFileSync(path.join(i18nDir, file), 'utf8'));
+                const emptyKeys = Object.entries(data)
+                    .filter(([, v]) => typeof v === 'string' && v.trim() === '')
+                    .map(([k]) => k);
+                assert.deepStrictEqual(
+                    emptyKeys, [],
+                    `${locale}.json has empty values for: ${emptyKeys.join(', ')}`
+                );
+            }
+        });
+
+        it('interpolation placeholders match between en.json and all locales', () => {
+            const en = JSON.parse(fs.readFileSync(enFile, 'utf8'));
+            const placeholderRe = /\{\{(\w+)\}\}/g;
+
+            const getPlaceholders = (str) => {
+                const matches = [];
+                let m;
+                while ((m = placeholderRe.exec(str)) !== null) matches.push(m[1]);
+                return matches.sort();
+            };
+
+            const localeFiles = fs.readdirSync(i18nDir).filter(f => f.endsWith('.json') && f !== 'en.json');
+            for (const file of localeFiles) {
+                const locale = file.replace('.json', '');
+                const data = JSON.parse(fs.readFileSync(path.join(i18nDir, file), 'utf8'));
+                for (const key of Object.keys(en)) {
+                    if (!data[key]) continue;
+                    const enPlaceholders = getPlaceholders(en[key]);
+                    if (enPlaceholders.length === 0) continue;
+                    const localePlaceholders = getPlaceholders(data[key]);
+                    assert.deepStrictEqual(
+                        localePlaceholders, enPlaceholders,
+                        `${locale}.json key "${key}" has mismatched placeholders: expected {{${enPlaceholders.join('}}, {{')}}} but got {{${localePlaceholders.join('}}, {{')}}}`
+                    );
+                }
+            }
+        });
+    });
 });

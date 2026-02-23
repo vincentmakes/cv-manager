@@ -166,6 +166,38 @@ Keys use dot-separated namespaces:
 
 Parameter interpolation uses `{{variable}}` syntax.
 
+### i18n Checklist for Code Changes
+
+Every PR that adds or modifies user-visible strings **must** follow this checklist:
+
+1. **No hardcoded English in JS** — Use `t('key')` for every user-visible string in `admin.js` and `scripts.js`. This includes button labels, titles, placeholders, empty-state messages, toasts, and confirmation dialogs.
+
+2. **No hardcoded English in HTML** — Use `data-i18n="key"` (text), `data-i18n-title="key"` (title attribute), or `data-i18n-placeholder="key"` (placeholder) on every element with static English text.
+
+3. **Add the key to `en.json` first** — Add the new key to `public/shared/i18n/en.json` under the appropriate namespace. This is the source of truth.
+
+4. **Add the key to every other locale file** — All translation files must have the exact same set of keys. Add the translated value to each of: `de.json`, `fr.json`, `nl.json`, `es.json`, `it.json`, `pt.json`, `zh.json`. If you don't know the correct translation, use the English value as a placeholder — it will still be functional since English is the fallback.
+
+5. **Key parity is enforced by tests** — `npm run test:frontend` validates that every locale file has the same keys as `en.json` and no extra keys. The CI will fail if keys are missing or mismatched.
+
+6. **Namespace your keys** — Follow the existing conventions (`toolbar.*`, `section.*`, `form.*`, `toast.*`, etc.). For new feature areas, create a new namespace.
+
+**Quick example — adding a new button:**
+```js
+// In admin.js — WRONG:
+button.title = "Duplicate";
+
+// In admin.js — RIGHT:
+button.title = t('action.duplicate');
+```
+Then add to **all 8** JSON files:
+```json
+"action.duplicate": "Duplicate"          // en.json
+"action.duplicate": "Duplizieren"        // de.json
+"action.duplicate": "Dupliquer"          // fr.json
+// ... etc for nl, es, it, pt, zh
+```
+
 ## Key Patterns
 
 ### API Conventions
