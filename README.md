@@ -1,5 +1,7 @@
 # CV Manager / Resume Builder
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/vincentmakes)  
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/vincentmakes)
+[![CI](https://github.com/vincentmakes/cv-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/vincentmakes/cv-manager/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 This is a CV / Resume management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
 
