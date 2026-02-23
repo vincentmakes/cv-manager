@@ -54,7 +54,11 @@ jobs:
       - name: Verify container starts
         run: |
           docker run -d --name cv-test -p 3000:3000 -p 3001:3001 cv-manager:test
-          sleep 3
+          for i in 1 2 3 4 5; do
+            curl -sf http://localhost:3000/api/profile && break
+            echo "Waiting for server to start (attempt $i)..."
+            sleep 3
+          done
           curl -f http://localhost:3000/api/profile || (docker logs cv-test && exit 1)
           curl -f http://localhost:3001/api/profile || (docker logs cv-test && exit 1)
           docker stop cv-test
