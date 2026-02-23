@@ -521,7 +521,7 @@ async function loadEducationReadOnly() {
                 </div>
                 <span class="item-date">
                     <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</time>
+                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
@@ -636,7 +636,7 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Position: ${exp.job_title}`);
                 ats.push(`Company: ${exp.company_name}`);
-                ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : 'Present'}`);
+                ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : t('present')}`);
                 if (exp.location) ats.push(`Location: ${exp.location}`);
                 if (exp.highlights && exp.highlights.length > 0) {
                     ats.push('Responsibilities and Achievements:');
@@ -655,7 +655,7 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Degree: ${edu.degree_title}`);
                 ats.push(`Institution: ${edu.institution_name}`);
-                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${formatDateATS(edu.end_date)}`);
+                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${edu.end_date ? formatDateATS(edu.end_date) : t('present')}`);
                 if (edu.description) ats.push(`Details: ${edu.description}`);
             });
         ats.push('');
