@@ -15,7 +15,7 @@
 </head>
 <body>
     <!-- Print Button (hidden by default, enabled via admin settings) -->
-    <button class="public-print-btn no-print" id="publicPrintBtn" onclick="window.print()" style="display: none;" title="Print / Save as PDF">
+    <button class="public-print-btn no-print" id="publicPrintBtn" onclick="window.print()" style="display: none;" data-i18n-title="toolbar.print" title="Print / Save as PDF">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
     </button>
     
@@ -54,7 +54,7 @@
         <!-- About Section -->
         <section class="section" id="section-about">
             <div class="section-header">
-                <h2 class="section-title">Professional Summary</h2>
+                <h2 class="section-title" data-i18n="section.about">Professional Summary</h2>
             </div>
             <p class="about-text" id="aboutText" itemprop="description"></p>
         </section>
@@ -62,7 +62,7 @@
         <!-- Timeline Section -->
         <section class="section" id="section-timeline">
             <div class="section-header">
-                <h2 class="section-title">Career Timeline</h2>
+                <h2 class="section-title" data-i18n="section.timeline">Career Timeline</h2>
             </div>
             <div class="timeline-container">
                 <div class="timeline-track"></div>
@@ -73,7 +73,7 @@
         <!-- Experience Section -->
         <section class="section" id="section-experience">
             <div class="section-header">
-                <h2 class="section-title">Work Experience</h2>
+                <h2 class="section-title" data-i18n="section.experience">Work Experience</h2>
             </div>
             <div class="items-list" id="experienceList"></div>
         </section>
@@ -81,7 +81,7 @@
         <!-- Certifications Section -->
         <section class="section" id="section-certifications">
             <div class="section-header">
-                <h2 class="section-title">Certifications</h2>
+                <h2 class="section-title" data-i18n="section.certifications">Certifications</h2>
             </div>
             <div class="cert-grid" id="certGrid"></div>
         </section>
@@ -89,7 +89,7 @@
         <!-- Education Section -->
         <section class="section" id="section-education">
             <div class="section-header">
-                <h2 class="section-title">Education</h2>
+                <h2 class="section-title" data-i18n="section.education">Education</h2>
             </div>
             <div class="items-list" id="educationList"></div>
         </section>
@@ -97,7 +97,7 @@
         <!-- Skills Section -->
         <section class="section" id="section-skills">
             <div class="section-header">
-                <h2 class="section-title">Skills & Expertise</h2>
+                <h2 class="section-title" data-i18n="section.skills">Skills & Expertise</h2>
             </div>
             <div class="skills-grid" id="skillsGrid"></div>
         </section>
@@ -105,12 +105,13 @@
         <!-- Projects Section -->
         <section class="section" id="section-projects">
             <div class="section-header">
-                <h2 class="section-title">Featured Projects</h2>
+                <h2 class="section-title" data-i18n="section.projects">Featured Projects</h2>
             </div>
             <div class="projects-grid" id="projectsGrid"></div>
         </section>
     </div>
 
+    <script src="/shared/i18n.js"></script>
     <script src="/shared/scripts.js"></script>
     <script>
         // Public site initialization - read-only, no private data
@@ -119,8 +120,9 @@
         let layoutTypesData = [];
         let socialPlatformsData = [];
         let datasetData = null; // Holds dataset data when previewing a saved dataset
-        
+
         document.addEventListener('DOMContentLoaded', async () => {
+            await I18n.init();
             // Check if we're previewing a saved dataset (admin mode only)
             if (window.DATASET_SLUG) {
                 await loadDatasetPreview();
@@ -365,7 +367,7 @@
                             <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                             <div class="item-subtitle" itemprop="memberOf"><span itemprop="name">${escapeHtml(exp.company_name)}</span></div>
                         </div>
-                        <span class="item-date">${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : 'Present'}</span>
+                        <span class="item-date">${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : t('present')}</span>
                     </div>
                     ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
                     ${exp.highlights && exp.highlights.length ? `<ul class="item-highlights">${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
@@ -425,7 +427,7 @@
                 <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
                     <div class="project-header">
                         <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
-                        ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="View Project">${icons.link}</a>` : ''}
+                        ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="${t('view_project')}">${icons.link}</a>` : ''}
                     </div>
                     <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
                     <div class="tech-tags">${(proj.technologies || []).map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`).join('')}</div>

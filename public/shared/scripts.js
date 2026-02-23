@@ -261,21 +261,21 @@ function formatTimelinePeriod(item) {
         if (isISODate(item.start_date)) {
             if (timelineYearOnly) {
                 const startYear = item.start_date.substring(0, 4);
-                const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
+                const endYear = item.end_date ? item.end_date.substring(0, 4) : t('present');
                 return `${startYear} - ${endYear}`;
             }
             const startFormatted = formatDate(item.start_date);
-            const endFormatted = item.end_date ? formatDate(item.end_date) : 'Present';
+            const endFormatted = item.end_date ? formatDate(item.end_date) : t('present');
             return `${startFormatted} - ${endFormatted}`;
         }
         // Non-ISO date (legacy format like "Jan 2020") — extract year or use as-is
         if (timelineYearOnly) {
             const startYear = extractYear(item.start_date);
-            const endYear = item.end_date ? extractYear(item.end_date) || 'Present' : 'Present';
+            const endYear = item.end_date ? extractYear(item.end_date) || t('present') : t('present');
             if (startYear) return `${startYear} - ${endYear}`;
         }
         // Use the raw date strings as-is for non-ISO when not year-only
-        const endStr = item.end_date || 'Present';
+        const endStr = item.end_date || t('present');
         return `${item.start_date} - ${endStr}`;
     }
     return item.period || '';
@@ -476,7 +476,7 @@ async function loadExperiencesReadOnly() {
                 </div>
                 <span class="item-date">
                     <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
-                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : 'Present'}</time>
+                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
@@ -556,7 +556,7 @@ async function loadProjectsReadOnly() {
         <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
             <div class="project-header">
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
-                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="View Project">${icons.link}</a>` : ''}
+                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_project')}">${icons.link}</a>` : ''}
             </div>
             <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
             <div class="tech-tags">
@@ -786,7 +786,7 @@ function renderGridPublic(items, cols) {
             ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
             ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
-            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
     }).join('')}</div>`;
@@ -804,7 +804,7 @@ function renderListPublic(items) {
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
             </div>
-            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
     }).join('')}</div>`;
@@ -820,7 +820,7 @@ function renderCardsPublic(items) {
             ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
             ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
-            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">${t('learn_more')}</a>` : ''}
         </div>
     `;
     }).join('')}</div>`;

@@ -19,21 +19,21 @@
         <div class="toolbar-actions" id="toolbarActions">
             <button class="btn btn-secondary" onclick="openSettingsModal()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                <span>Settings</span>
+                <span data-i18n="toolbar.settings">Settings</span>
             </button>
             <div class="color-picker-wrapper">
-                <button class="btn btn-secondary" onclick="toggleColorPicker()" title="Change Theme Color">
+                <button class="btn btn-secondary" onclick="toggleColorPicker()" data-i18n-title="toolbar.change_theme" title="Change Theme Color">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
-                    <span>Theme</span>
+                    <span data-i18n="toolbar.theme">Theme</span>
                 </button>
                 <div class="color-picker-dropdown" id="colorPickerDropdown">
-                    <div class="color-picker-header">Theme Color</div>
+                    <div class="color-picker-header" data-i18n="theme.title">Theme Color</div>
                     <div class="color-wheel-container">
                         <canvas id="colorWheel" width="180" height="180"></canvas>
                         <div class="color-wheel-cursor" id="colorWheelCursor"></div>
                     </div>
                     <div class="color-brightness">
-                        <label>Brightness</label>
+                        <label data-i18n="theme.brightness">Brightness</label>
                         <input type="range" id="colorBrightness" min="30" max="70" value="50">
                     </div>
                     <div class="color-preview-row">
@@ -41,49 +41,49 @@
                         <input type="text" class="color-hex-input" id="colorHexInput" value="#0066ff" maxlength="7">
                     </div>
                     <div class="color-presets">
-                        <div class="color-preset" style="background: #0066ff" data-color="#0066ff" title="Blue (Default)"></div>
-                        <div class="color-preset" style="background: #059669" data-color="#059669" title="Emerald"></div>
-                        <div class="color-preset" style="background: #7c3aed" data-color="#7c3aed" title="Purple"></div>
-                        <div class="color-preset" style="background: #dc2626" data-color="#dc2626" title="Red"></div>
-                        <div class="color-preset" style="background: #ea580c" data-color="#ea580c" title="Orange"></div>
-                        <div class="color-preset" style="background: #0891b2" data-color="#0891b2" title="Cyan"></div>
-                        <div class="color-preset" style="background: #4f46e5" data-color="#4f46e5" title="Indigo"></div>
-                        <div class="color-preset" style="background: #be185d" data-color="#be185d" title="Pink"></div>
+                        <div class="color-preset" style="background: #0066ff" data-color="#0066ff" data-i18n-title="theme.blue" title="Blue (Default)"></div>
+                        <div class="color-preset" style="background: #059669" data-color="#059669" data-i18n-title="theme.emerald" title="Emerald"></div>
+                        <div class="color-preset" style="background: #7c3aed" data-color="#7c3aed" data-i18n-title="theme.purple" title="Purple"></div>
+                        <div class="color-preset" style="background: #dc2626" data-color="#dc2626" data-i18n-title="theme.red" title="Red"></div>
+                        <div class="color-preset" style="background: #ea580c" data-color="#ea580c" data-i18n-title="theme.orange" title="Orange"></div>
+                        <div class="color-preset" style="background: #0891b2" data-color="#0891b2" data-i18n-title="theme.cyan" title="Cyan"></div>
+                        <div class="color-preset" style="background: #4f46e5" data-color="#4f46e5" data-i18n-title="theme.indigo" title="Indigo"></div>
+                        <div class="color-preset" style="background: #be185d" data-color="#be185d" data-i18n-title="theme.pink" title="Pink"></div>
                     </div>
                     <div class="color-picker-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="resetThemeColor()">Reset</button>
-                        <button class="btn btn-primary btn-sm" onclick="applyThemeColor()">Apply</button>
+                        <button class="btn btn-ghost btn-sm" onclick="resetThemeColor()" data-i18n="theme.reset">Reset</button>
+                        <button class="btn btn-primary btn-sm" onclick="applyThemeColor()" data-i18n="theme.apply">Apply</button>
                     </div>
                 </div>
             </div>
             <button class="btn btn-secondary" onclick="openDatasetsModal()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
-                <span>Open...</span>
+                <span data-i18n="toolbar.open">Open...</span>
             </button>
             <button class="btn btn-secondary" onclick="saveAsDataset()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                <span>Save As...</span>
+                <span data-i18n="toolbar.save_as">Save As...</span>
             </button>
             <button class="btn btn-secondary" onclick="showAllItems()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <span>Show All</span>
+                <span data-i18n="toolbar.show_all">Show All</span>
             </button>
             <button class="btn btn-secondary" onclick="exportData()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                <span>Export</span>
+                <span data-i18n="toolbar.export">Export</span>
             </button>
             <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                <span>Import</span>
+                <span data-i18n="toolbar.import">Import</span>
             </button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
             <a href="https://github.com/vincentmakes/cv-manager/blob/main/USER_GUIDE.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" title="User Guide & FAQ">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
-                <span>Help</span>
+                <span data-i18n="toolbar.help">Help</span>
             </a>
             <button class="btn btn-primary toolbar-print-inline" onclick="window.print()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                <span>Print / PDF</span>
+                <span data-i18n="toolbar.print">Print / PDF</span>
             </button>
         </div>
         <div class="toolbar-end">
@@ -101,8 +101,8 @@
         <div class="update-banner-content">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span id="updateBannerText"></span>
-            <a id="updateBannerLink" href="#" target="_blank" rel="noopener noreferrer" class="update-banner-link">What's new</a>
-            <button class="update-banner-dismiss" onclick="dismissUpdateBanner()" title="Dismiss">&times;</button>
+            <a id="updateBannerLink" href="#" target="_blank" rel="noopener noreferrer" class="update-banner-link" data-i18n="banner.whats_new">What's new</a>
+            <button class="update-banner-dismiss" onclick="dismissUpdateBanner()" data-i18n-title="banner.dismiss" title="Dismiss">&times;</button>
         </div>
     </div>
 
@@ -110,9 +110,9 @@
     <div id="activeDatasetBanner" class="active-dataset-banner no-print" style="display: none;">
         <div class="active-dataset-banner-content">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            <span class="active-dataset-label">Editing:</span>
+            <span class="active-dataset-label" data-i18n="banner.editing">Editing:</span>
             <span id="activeDatasetName" class="active-dataset-name"></span>
-            <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;">Default</span>
+            <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
             <div class="active-dataset-actions">
                 <span id="activeDatasetStatus" class="active-dataset-status"></span>
             </div>
@@ -127,7 +127,7 @@
         <!-- Header -->
         <header class="header" id="section-header" itemscope itemtype="https://schema.org/Person">
             <div class="section-actions no-print">
-                <button class="icon-btn" onclick="editProfile()" title="Edit Profile">
+                <button class="icon-btn" onclick="editProfile()" data-i18n-title="action.edit_profile" title="Edit Profile">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                 </button>
             </div>
@@ -148,12 +148,12 @@
         <!-- About Section -->
         <section class="section" id="section-about">
             <div class="section-header">
-                <h2 class="section-title">Professional Summary</h2>
+                <h2 class="section-title" data-i18n="section.about">Professional Summary</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="openModal('profile')" title="Edit About">
+                    <button class="icon-btn" onclick="openModal('profile')" data-i18n-title="action.edit_about" title="Edit About">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     </button>
-                    <button class="icon-btn" onclick="toggleSection('about')" title="Toggle Visibility" id="toggle-about">
+                    <button class="icon-btn" onclick="toggleSection('about')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-about">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -164,9 +164,9 @@
         <!-- Timeline Section -->
         <section class="section" id="section-timeline">
             <div class="section-header">
-                <h2 class="section-title">Career Timeline</h2>
+                <h2 class="section-title" data-i18n="section.timeline">Career Timeline</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('timeline')" title="Toggle Visibility" id="toggle-timeline">
+                    <button class="icon-btn" onclick="toggleSection('timeline')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-timeline">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -180,9 +180,9 @@
         <!-- Experience Section -->
         <section class="section" id="section-experience">
             <div class="section-header">
-                <h2 class="section-title">Work Experience</h2>
+                <h2 class="section-title" data-i18n="section.experience">Work Experience</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('experience')" title="Toggle Visibility" id="toggle-experience">
+                    <button class="icon-btn" onclick="toggleSection('experience')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-experience">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -190,16 +190,16 @@
             <div class="items-list" id="experienceList"></div>
             <button class="add-btn no-print" onclick="openModal('experience')">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Add Experience
+                <span data-i18n="action.add_experience">Add Experience</span>
             </button>
         </section>
 
         <!-- Certifications Section -->
         <section class="section" id="section-certifications">
             <div class="section-header">
-                <h2 class="section-title">Certifications</h2>
+                <h2 class="section-title" data-i18n="section.certifications">Certifications</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('certifications')" title="Toggle Visibility" id="toggle-certifications">
+                    <button class="icon-btn" onclick="toggleSection('certifications')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-certifications">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -207,16 +207,16 @@
             <div class="cert-grid" id="certGrid"></div>
             <button class="add-btn no-print" onclick="openModal('certification')">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Add Certification
+                <span data-i18n="action.add_certification">Add Certification</span>
             </button>
         </section>
 
         <!-- Education Section -->
         <section class="section" id="section-education">
             <div class="section-header">
-                <h2 class="section-title">Education</h2>
+                <h2 class="section-title" data-i18n="section.education">Education</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('education')" title="Toggle Visibility" id="toggle-education">
+                    <button class="icon-btn" onclick="toggleSection('education')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-education">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -224,16 +224,16 @@
             <div class="items-list" id="educationList"></div>
             <button class="add-btn no-print" onclick="openModal('education')">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Add Education
+                <span data-i18n="action.add_education">Add Education</span>
             </button>
         </section>
 
         <!-- Skills Section -->
         <section class="section" id="section-skills">
             <div class="section-header">
-                <h2 class="section-title">Skills & Expertise</h2>
+                <h2 class="section-title" data-i18n="section.skills">Skills & Expertise</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('skills')" title="Toggle Visibility" id="toggle-skills">
+                    <button class="icon-btn" onclick="toggleSection('skills')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-skills">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -241,16 +241,16 @@
             <div class="skills-grid" id="skillsGrid"></div>
             <button class="add-btn no-print" onclick="openModal('skill')">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Add Skill Category
+                <span data-i18n="action.add_skill">Add Skill Category</span>
             </button>
         </section>
 
         <!-- Projects Section -->
         <section class="section" id="section-projects">
             <div class="section-header">
-                <h2 class="section-title">Featured Projects</h2>
+                <h2 class="section-title" data-i18n="section.projects">Featured Projects</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn" onclick="toggleSection('projects')" title="Toggle Visibility" id="toggle-projects">
+                    <button class="icon-btn" onclick="toggleSection('projects')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-projects">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
                 </div>
@@ -258,7 +258,7 @@
             <div class="projects-grid" id="projectsGrid"></div>
             <button class="add-btn no-print" onclick="openModal('project')">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Add Project
+                <span data-i18n="action.add_project">Add Project</span>
             </button>
         </section>
     </div>
@@ -275,11 +275,11 @@
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-footer">
                 <div class="modal-footer-left">
-                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteItem()" style="display:none">Delete</button>
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteItem()" style="display:none" data-i18n="btn.delete">Delete</button>
                 </div>
                 <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveItem()">Save</button>
+                    <button class="btn btn-ghost" onclick="closeModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveItem()" data-i18n="btn.save">Save</button>
                 </div>
             </div>
         </div>
@@ -289,7 +289,7 @@
     <div class="modal-overlay" id="datasetsModalOverlay">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Saved Datasets</h3>
+                <h3 class="modal-title" data-i18n="datasets.title">Saved Datasets</h3>
                 <button class="modal-close" onclick="closeDatasetsModal()">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -314,7 +314,7 @@
             <div class="modal-footer">
                 <div class="modal-footer-left"></div>
                 <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeDatasetsModal()">Close</button>
+                    <button class="btn btn-ghost" onclick="closeDatasetsModal()" data-i18n="btn.close">Close</button>
                 </div>
             </div>
         </div>
@@ -324,22 +324,23 @@
     <div class="modal-overlay settings-modal" id="settingsModalOverlay">
         <div class="modal modal-lg">
             <div class="modal-header">
-                <h3 class="modal-title">Settings</h3>
+                <h3 class="modal-title" data-i18n="settings.title">Settings</h3>
                 <button class="modal-close" onclick="closeSettingsModal()">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="settings-tabs">
-                    <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections">Sections & Headlines</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom">Custom Sections</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public">Print & Export</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('advanced')" data-tab="advanced">Advanced</button>
+                    <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections" data-i18n="settings.tab.sections">Sections & Headlines</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom" data-i18n="settings.tab.custom">Custom Sections</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public" data-i18n="settings.tab.print">Print & Export</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('advanced')" data-tab="advanced" data-i18n="settings.tab.advanced">Advanced</button>
+                    <button class="settings-tab" onclick="switchSettingsTab('language')" data-tab="language" data-i18n="settings.tab.language">Language</button>
                 </div>
                 
                 <!-- Sections & Headlines Tab -->
                 <div class="settings-tab-content active" id="settingsTabSections">
-                    <div class="settings-info">
+                    <div class="settings-info" data-i18n="settings.sections.info">
                         Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Click section names to edit headlines.
                     </div>
                     <div id="settingsSectionsList"></div>
@@ -347,12 +348,12 @@
                 
                 <!-- Custom Sections Tab -->
                 <div class="settings-tab-content" id="settingsTabCustom">
-                    <div class="settings-info">
+                    <div class="settings-info" data-i18n="settings.custom.info">
                         Create custom sections with different layouts. Custom sections appear in the section order list above.
                     </div>
                     <button class="add-btn" onclick="openCustomSectionModal()" style="margin-top: 0; margin-bottom: 16px;">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Add Custom Section
+                        <span data-i18n="settings.custom.add">Add Custom Section</span>
                     </button>
                     <div id="customSectionsList"></div>
                 </div>
@@ -362,8 +363,8 @@
                     <!-- Print Button Setting -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Public Print Button</div>
-                            <div class="settings-option-desc">Show print button on public site</div>
+                            <div class="settings-option-title" data-i18n="settings.print.public_button">Public Print Button</div>
+                            <div class="settings-option-desc" data-i18n="settings.print.public_button_desc">Show print button on public site</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingShowPrintButton" onchange="togglePublicSetting('showPublicPrintButton', this.checked)">
@@ -374,8 +375,8 @@
                     <!-- Page Numbers Setting - Compact -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Page Numbers</div>
-                            <div class="settings-option-desc">Show page numbers when printing</div>
+                            <div class="settings-option-title" data-i18n="settings.print.page_numbers">Page Numbers</div>
+                            <div class="settings-option-desc" data-i18n="settings.print.page_numbers_desc">Show page numbers when printing</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingPaginationEnabled" onchange="togglePublicSetting('paginationEnabled', this.checked)">
@@ -386,18 +387,18 @@
                     <!-- Pagination Options Row (inline) -->
                     <div class="pagination-options-row" id="paginationOptionsRow" style="display: none;">
                         <div class="pagination-option-group">
-                            <label class="pagination-option-label">Position</label>
+                            <label class="pagination-option-label" data-i18n="settings.print.position">Position</label>
                             <select class="pagination-select" id="settingPaginationPosition" onchange="togglePublicSetting('paginationPosition', this.value)">
-                                <option value="bottom-center">Bottom Center</option>
-                                <option value="bottom-right">Bottom Right</option>
-                                <option value="bottom-left">Bottom Left</option>
-                                <option value="top-center">Top Center</option>
-                                <option value="top-right">Top Right</option>
-                                <option value="top-left">Top Left</option>
+                                <option value="bottom-center" data-i18n="settings.print.bottom_center">Bottom Center</option>
+                                <option value="bottom-right" data-i18n="settings.print.bottom_right">Bottom Right</option>
+                                <option value="bottom-left" data-i18n="settings.print.bottom_left">Bottom Left</option>
+                                <option value="top-center" data-i18n="settings.print.top_center">Top Center</option>
+                                <option value="top-right" data-i18n="settings.print.top_right">Top Right</option>
+                                <option value="top-left" data-i18n="settings.print.top_left">Top Left</option>
                             </select>
                         </div>
                         <div class="pagination-option-group">
-                            <label class="pagination-option-label">Format</label>
+                            <label class="pagination-option-label" data-i18n="settings.print.format">Format</label>
                             <select class="pagination-select" id="settingPaginationStyle" onchange="togglePublicSetting('paginationStyle', this.value)">
                                 <option value="simple">1</option>
                                 <option value="with-total">1 of 3</option>
@@ -410,8 +411,8 @@
                     <!-- Allow Section Splits Setting -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Allow Section Splits</div>
-                            <div class="settings-option-desc">Let sections break across pages (items stay intact)</div>
+                            <div class="settings-option-title" data-i18n="settings.print.section_splits">Allow Section Splits</div>
+                            <div class="settings-option-desc" data-i18n="settings.print.section_splits_desc">Let sections break across pages (items stay intact)</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingAllowSectionSplits" onchange="toggleSplitSetting('allowSectionSplits', this.checked)">
@@ -422,8 +423,8 @@
                     <!-- Allow Item Splits Setting (sub-option) -->
                     <div class="settings-option settings-sub-option" id="itemSplitsOption" style="display: none;">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Allow Item Splits</div>
-                            <div class="settings-option-desc">Also let items break across pages for maximum compactness</div>
+                            <div class="settings-option-title" data-i18n="settings.print.item_splits">Allow Item Splits</div>
+                            <div class="settings-option-desc" data-i18n="settings.print.item_splits_desc">Also let items break across pages for maximum compactness</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingAllowItemSplits" onchange="toggleSplitSetting('allowItemSplits', this.checked)">
@@ -434,15 +435,15 @@
                 
                 <!-- Advanced Tab -->
                 <div class="settings-tab-content" id="settingsTabAdvanced">
-                    <div class="settings-info">
+                    <div class="settings-info" data-i18n="settings.advanced.info">
                         Advanced settings for formatting, SEO, analytics and custom integrations.
                     </div>
                     
                     <!-- Date Format Setting -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Date Format</div>
-                            <div class="settings-option-desc">Choose how dates are displayed on your CV</div>
+                            <div class="settings-option-title" data-i18n="settings.advanced.date_format">Date Format</div>
+                            <div class="settings-option-desc" data-i18n="settings.advanced.date_format_desc">Choose how dates are displayed on your CV</div>
                         </div>
                         <select class="pagination-select" id="settingDateFormat" style="min-width: 140px;">
                             <option value="MMM YYYY">Jan 2020</option>
@@ -452,15 +453,15 @@
                             <option value="MM.YYYY">01.2020</option>
                             <option value="MM-YYYY">01-2020</option>
                             <option value="YYYY-MM">2020-01</option>
-                            <option value="YYYY">2020 (year only)</option>
+                            <option value="YYYY" data-i18n="settings.advanced.date_year_only">2020 (year only)</option>
                         </select>
                     </div>
                     
                     <!-- Timeline Year Only Setting -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Timeline: Years Only</div>
-                            <div class="settings-option-desc">Display only years (YYYY) in the timeline, regardless of date format</div>
+                            <div class="settings-option-title" data-i18n="settings.advanced.timeline_years">Timeline: Years Only</div>
+                            <div class="settings-option-desc" data-i18n="settings.advanced.timeline_years_desc">Display only years (YYYY) in the timeline, regardless of date format</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingTimelineYearOnly">
@@ -471,28 +472,28 @@
                     <!-- Search Engine Indexing (Robots Meta) Setting -->
                     <div class="settings-option" style="align-items: flex-start;">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Search Engine Indexing</div>
-                            <div class="settings-option-desc">Control how search engines handle your public CV page</div>
+                            <div class="settings-option-title" data-i18n="settings.advanced.seo_indexing">Search Engine Indexing</div>
+                            <div class="settings-option-desc" data-i18n="settings.advanced.seo_indexing_desc">Control how search engines handle your public CV page</div>
                         </div>
                         <select class="pagination-select" id="settingRobotsMeta" style="min-width: 160px;">
-                            <option value="index, follow">Index, Follow</option>
-                            <option value="noindex, follow">No Index, Follow</option>
-                            <option value="index, nofollow">Index, No Follow</option>
-                            <option value="noindex, nofollow">No Index, No Follow</option>
+                            <option value="index, follow" data-i18n="settings.advanced.index_follow">Index, Follow</option>
+                            <option value="noindex, follow" data-i18n="settings.advanced.noindex_follow">No Index, Follow</option>
+                            <option value="index, nofollow" data-i18n="settings.advanced.index_nofollow">Index, No Follow</option>
+                            <option value="noindex, nofollow" data-i18n="settings.advanced.noindex_nofollow">No Index, No Follow</option>
                         </select>
                     </div>
                     <div class="settings-robots-hints">
-                        <div class="settings-robots-hint"><strong>Index</strong> — Search engines can list your CV in results</div>
-                        <div class="settings-robots-hint"><strong>No Index</strong> — Search engines won't list your CV (stays private in search)</div>
-                        <div class="settings-robots-hint"><strong>Follow</strong> — Search engines will follow links on your CV (e.g. LinkedIn, GitHub)</div>
-                        <div class="settings-robots-hint"><strong>No Follow</strong> — Search engines won't follow outbound links</div>
+                        <div class="settings-robots-hint"><strong>Index</strong> — <span data-i18n="settings.advanced.seo_hint_index">Search engines can list your CV in results</span></div>
+                        <div class="settings-robots-hint"><strong>No Index</strong> — <span data-i18n="settings.advanced.seo_hint_noindex">Search engines won't list your CV (stays private in search)</span></div>
+                        <div class="settings-robots-hint"><strong>Follow</strong> — <span data-i18n="settings.advanced.seo_hint_follow">Search engines will follow links on your CV (e.g. LinkedIn, GitHub)</span></div>
+                        <div class="settings-robots-hint"><strong>No Follow</strong> — <span data-i18n="settings.advanced.seo_hint_nofollow">Search engines won't follow outbound links</span></div>
                     </div>
                     
                     <!-- Versioned URLs Indexing -->
                     <div class="settings-option">
                         <div class="settings-option-info">
-                            <div class="settings-option-title">Index Versioned URLs</div>
-                            <div class="settings-option-desc">Allow search engines to index public versioned CVs (/v/slug). When off, versioned pages get <code>noindex</code>.</div>
+                            <div class="settings-option-title" data-i18n="settings.advanced.index_versioned">Index Versioned URLs</div>
+                            <div class="settings-option-desc" data-i18n="settings.advanced.index_versioned_desc">Allow search engines to index public versioned CVs (/v/slug). When off, versioned pages get noindex.</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="settingSlugsIndex">
@@ -504,9 +505,9 @@
                     <div class="settings-field">
                         <label class="settings-field-label">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                            Tracking Code
+                            <span data-i18n="settings.advanced.tracking_code">Tracking Code</span>
                         </label>
-                        <div class="settings-field-desc">
+                        <div class="settings-field-desc" data-i18n="settings.advanced.tracking_code_desc">
                             Paste your analytics tracking code here (Google Analytics, Matomo, etc.). This code will be injected into the public CV pages.
                         </div>
                         <textarea 
@@ -521,12 +522,20 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Language Tab -->
+                <div class="settings-tab-content" id="settingsTabLanguage">
+                    <div class="settings-info" data-i18n="settings.language.info">
+                        Choose the display language for the CV Manager interface. This does not affect the content of your CV.
+                    </div>
+                    <div class="language-grid" id="languageGrid"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <div class="modal-footer-left"></div>
                 <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeSettingsModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveSettingsSectionOrder()">Save Changes</button>
+                    <button class="btn btn-ghost" onclick="closeSettingsModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSettingsSectionOrder()" data-i18n="btn.save_changes">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -536,7 +545,7 @@
     <div class="modal-overlay" id="customSectionModalOverlay">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title" id="customSectionModalTitle">Add Custom Section</h3>
+                <h3 class="modal-title" id="customSectionModalTitle" data-i18n="custom_section.add_title">Add Custom Section</h3>
                 <button class="modal-close" onclick="closeCustomSectionModal()">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -544,11 +553,11 @@
             <div class="modal-body" id="customSectionModalBody"></div>
             <div class="modal-footer">
                 <div class="modal-footer-left">
-                    <button class="btn btn-danger" id="deleteCustomSectionBtn" onclick="deleteCustomSection()" style="display:none">Delete Section</button>
+                    <button class="btn btn-danger" id="deleteCustomSectionBtn" onclick="deleteCustomSection()" style="display:none" data-i18n="btn.delete_section">Delete Section</button>
                 </div>
                 <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeCustomSectionModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveCustomSection()">Save</button>
+                    <button class="btn btn-ghost" onclick="closeCustomSectionModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveCustomSection()" data-i18n="btn.save">Save</button>
                 </div>
             </div>
         </div>
@@ -558,7 +567,7 @@
     <div class="modal-overlay" id="customItemModalOverlay">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title" id="customItemModalTitle">Add Item</h3>
+                <h3 class="modal-title" id="customItemModalTitle" data-i18n="custom_item.add_title">Add Item</h3>
                 <button class="modal-close" onclick="closeCustomItemModal()">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -566,11 +575,11 @@
             <div class="modal-body" id="customItemModalBody"></div>
             <div class="modal-footer">
                 <div class="modal-footer-left">
-                    <button class="btn btn-danger" id="deleteCustomItemBtn" onclick="deleteCustomItem()" style="display:none">Delete</button>
+                    <button class="btn btn-danger" id="deleteCustomItemBtn" onclick="deleteCustomItem()" style="display:none" data-i18n="btn.delete">Delete</button>
                 </div>
                 <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeCustomItemModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveCustomItem()">Save</button>
+                    <button class="btn btn-ghost" onclick="closeCustomItemModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveCustomItem()" data-i18n="btn.save">Save</button>
                 </div>
             </div>
         </div>
@@ -579,10 +588,14 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <script src="/shared/i18n.js"></script>
     <script src="/shared/scripts.js"></script>
     <script src="/shared/admin.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', initAdmin);
+        document.addEventListener('DOMContentLoaded', async () => {
+            await I18n.init();
+            await initAdmin();
+        });
     </script>
 </body>
 </html>
