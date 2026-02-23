@@ -498,7 +498,7 @@ async function loadCertificationsReadOnly() {
         <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="cert-header">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
+                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}${cert.issue_date ? ` - ${cert.expiry_date ? (formatDate(cert.expiry_date) || escapeHtml(cert.expiry_date)) : 'Present'}` : ''}</time>
             </div>
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
@@ -521,7 +521,7 @@ async function loadEducationReadOnly() {
                 </div>
                 <span class="item-date">
                     <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</time>
+                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : 'Present'}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
@@ -655,7 +655,7 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Degree: ${edu.degree_title}`);
                 ats.push(`Institution: ${edu.institution_name}`);
-                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${formatDateATS(edu.end_date)}`);
+                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${edu.end_date ? formatDateATS(edu.end_date) : 'Present'}`);
                 if (edu.description) ats.push(`Details: ${edu.description}`);
             });
         ats.push('');
@@ -669,7 +669,7 @@ async function generateATSContent() {
             .forEach(cert => {
                 let certLine = `${cert.name}`;
                 if (cert.provider) certLine += ` - ${cert.provider}`;
-                if (cert.issue_date) certLine += ` (${formatDateATS(cert.issue_date)})`;
+                if (cert.issue_date) certLine += ` (${formatDateATS(cert.issue_date)} - ${cert.expiry_date ? formatDateATS(cert.expiry_date) : 'Present'})`;
                 ats.push(certLine);
             });
         ats.push('');

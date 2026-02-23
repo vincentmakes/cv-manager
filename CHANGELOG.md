@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.6] - 2026-02-23
+
+### Added
+- **"Present" display for Education and Certifications**: Education end dates and certification expiry dates now display "Present" when left empty, matching the existing Experience behavior. Certification cards now show date ranges (e.g., "Jan 2024 - Present") instead of only the issue date. Form placeholders updated to indicate "Leave empty for Present". ATS text output also reflects the change for both sections
+
 ## [1.6.5] - 2026-02-18
 
 ### Fixed

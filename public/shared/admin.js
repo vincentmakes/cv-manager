@@ -697,7 +697,7 @@ async function loadCertifications() {
             </div>
             <div class="cert-header">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
+                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}${cert.issue_date ? ` - ${cert.expiry_date ? (formatDate(cert.expiry_date) || escapeHtml(cert.expiry_date)) : 'Present'}` : ''}</time>
             </div>
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
@@ -735,7 +735,7 @@ async function loadEducation() {
                 </div>
                 <span class="item-date">
                     <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${formatDate(edu.end_date) || escapeHtml(edu.end_date || '')}</time>
+                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : 'Present'}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
@@ -1033,7 +1033,7 @@ function certificationForm(d) {
             </div>
             <div class="form-group">
                 <label class="form-label">Expiry Date (optional)</label>
-                <input type="text" class="form-input" id="f-expiry_date" value="${escapeHtml(d.expiry_date || '')}">
+                <input type="text" class="form-input" id="f-expiry_date" value="${escapeHtml(d.expiry_date || '')}" placeholder="Leave empty for Present">
             </div>
         </div>
         <div class="form-group">
@@ -1060,7 +1060,7 @@ function educationForm(d) {
             </div>
             <div class="form-group">
                 <label class="form-label">End Year</label>
-                <input type="text" class="form-input" id="f-end_date" value="${escapeHtml(d.end_date || '')}" placeholder="2007">
+                <input type="text" class="form-input" id="f-end_date" value="${escapeHtml(d.end_date || '')}" placeholder="Leave empty for Present">
             </div>
         </div>
         <div class="form-group">
