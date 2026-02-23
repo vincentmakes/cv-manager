@@ -10,6 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 - **Section headings not translated on public site**: The public-facing template (`public-readonly/index.html`) had hardcoded English section headings without `data-i18n` attributes, so they never updated when a non-English language was selected. Added `data-i18n="section.*"` attributes to all seven built-in section headings, matching the admin template
 
 ### Added
+- **i8n localization**: the application is now fully localized for 8 languagues: en,fr,de,pt,it,es,zh,nl
 - **CLAUDE.md**: Added AI-assisted development guide with project architecture, i18n walkthrough (including step-by-step instructions for adding a new language), versioning policy, and key patterns reference
 
 ## [1.6.6] - 2026-02-23
