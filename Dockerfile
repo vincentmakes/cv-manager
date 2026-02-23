@@ -23,7 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /app /app
 
-RUN mkdir -p /app/data/uploads && chmod 755 /app/data
+RUN mkdir -p /app/data/uploads && chown -R 99:100 /app/data
 
 ENV NODE_ENV=production
 ENV PORT=3000
