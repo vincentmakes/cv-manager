@@ -236,12 +236,12 @@ function autoSaveActiveDataset() {
         const statusEl = document.getElementById('activeDatasetStatus');
         try {
             if (statusEl) {
-                statusEl.textContent = 'Saving…';
+                statusEl.textContent = t('banner.saving');
                 statusEl.className = 'active-dataset-status saving';
             }
             const result = await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
             if (result.success && statusEl) {
-                statusEl.textContent = '✓ Saved';
+                statusEl.textContent = t('banner.saved');
                 statusEl.className = 'active-dataset-status saved';
                 // Clear the "Saved" message after 3 seconds
                 if (savedStatusTimer) clearTimeout(savedStatusTimer);
@@ -253,7 +253,7 @@ function autoSaveActiveDataset() {
         } catch (err) {
             console.error('Auto-save failed:', err);
             if (statusEl) {
-                statusEl.textContent = 'Save failed';
+                statusEl.textContent = t('banner.save_failed');
                 statusEl.className = 'active-dataset-status';
             }
         }
@@ -663,7 +663,7 @@ async function loadExperiences() {
                 </div>
                 <span class="item-date">
                     <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
-                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : 'Present'}</time>
+                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
@@ -735,7 +735,7 @@ async function loadEducation() {
                 </div>
                 <span class="item-date">
                     <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : 'Present'}</time>
+                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
@@ -838,7 +838,7 @@ async function toggleVisibility(endpoint, id, visible) {
         body: { ...data, visible } 
     });
     await reloadSection(endpoint);
-    toast('Visibility updated');
+    toast(t('toast.visibility_updated'));
     autoSaveActiveDataset();
 }
 
@@ -858,29 +858,29 @@ async function openModal(type, id = null) {
 
     switch (type) {
         case 'profile':
-            title = 'Edit Profile';
+            title = t('action.edit_profile');
             data = await api('/api/profile');
             form = profileForm(data);
             document.getElementById('deleteBtn').style.display = 'none';
             break;
         case 'experience':
-            title = id ? 'Edit Experience' : 'Add Experience';
+            title = id ? t('modal.edit_experience') : t('modal.add_experience');
             form = experienceForm(data);
             break;
         case 'certification':
-            title = id ? 'Edit Certification' : 'Add Certification';
+            title = id ? t('modal.edit_certification') : t('modal.add_certification');
             form = certificationForm(data);
             break;
         case 'education':
-            title = id ? 'Edit Education' : 'Add Education';
+            title = id ? t('modal.edit_education') : t('modal.add_education');
             form = educationForm(data);
             break;
         case 'skill':
-            title = id ? 'Edit Skill Category' : 'Add Skill Category';
+            title = id ? t('modal.edit_skill') : t('modal.add_skill');
             form = skillForm(data);
             break;
         case 'project':
-            title = id ? 'Edit Project' : 'Add Project';
+            title = id ? t('modal.edit_project') : t('modal.add_project');
             form = projectForm(data);
             break;
     }
@@ -903,7 +903,7 @@ function editProfile() {
 function profileForm(d) {
     return `
         <div class="form-group">
-            <label class="form-label">Profile Picture</label>
+            <label class="form-label">${t('form.profile_picture')}</label>
             <div class="profile-upload-container">
                 <div class="profile-upload-preview" id="profileUploadPreview">
                     <img src="/uploads/picture.jpeg?${Date.now()}" alt="" id="profilePreviewImg" onerror="this.style.display='none';document.getElementById('profilePreviewInitials').style.display='flex';">
@@ -911,7 +911,7 @@ function profileForm(d) {
                 </div>
                 <div class="profile-upload-actions">
                     <div>
-                        Show Profile Picture
+                        ${t('form.show_profile_picture')}
                         <label class="toggle-switch">
                             <input type="checkbox" id="f-profilePictureEnabled" ${d.profile_picture_enabled == 1 ? 'checked' : ''}>
                             <span class="toggle-slider"></span>
@@ -920,59 +920,59 @@ function profileForm(d) {
                     <input type="file" id="f-picture" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfilePicture(this)">
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-picture').click()">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        Choose Image
+                        ${t('form.choose_image')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="removeProfilePicture()">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        Remove
+                        ${t('form.remove')}
                     </button>
                 </div>
             </div>
-            <div class="form-hint">Recommended: Square image, at least 200x200 pixels. JPEG, PNG or WebP.</div>
+            <div class="form-hint">${t('form.picture_hint')}</div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Name</label>
+                <label class="form-label">${t('form.name')}</label>
                 <input type="text" class="form-input" id="f-name" value="${escapeHtml(d.name || '')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Initials</label>
+                <label class="form-label">${t('form.initials')}</label>
                 <input type="text" class="form-input" id="f-initials" value="${escapeHtml(d.initials || '')}" maxlength="3">
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Title</label>
+            <label class="form-label">${t('form.title')}</label>
             <input type="text" class="form-input" id="f-title" value="${escapeHtml(d.title || '')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Subtitle</label>
+            <label class="form-label">${t('form.subtitle')}</label>
             <input type="text" class="form-input" id="f-subtitle" value="${escapeHtml(d.subtitle || '')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Bio</label>
+            <label class="form-label">${t('form.bio')}</label>
             <textarea class="form-textarea" id="f-bio">${escapeHtml(d.bio || '')}</textarea>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Location</label>
+                <label class="form-label">${t('form.location')}</label>
                 <input type="text" class="form-input" id="f-location" value="${escapeHtml(d.location || '')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Languages</label>
+                <label class="form-label">${t('form.languages')}</label>
                 <input type="text" class="form-input" id="f-languages" value="${escapeHtml(d.languages || '')}">
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">LinkedIn URL</label>
+            <label class="form-label">${t('form.linkedin_url')}</label>
             <input type="text" class="form-input" id="f-linkedin" value="${escapeHtml(d.linkedin || '')}">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Email</label>
+                <label class="form-label">${t('form.email')}</label>
                 <input type="email" class="form-input" id="f-email" value="${escapeHtml(d.email || '')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Phone</label>
+                <label class="form-label">${t('form.phone')}</label>
                 <input type="text" class="form-input" id="f-phone" value="${escapeHtml(d.phone || '')}">
             </div>
         </div>
@@ -982,35 +982,35 @@ function profileForm(d) {
 function experienceForm(d) {
     return `
         <div class="form-group">
-            <label class="form-label">Job Title</label>
+            <label class="form-label">${t('form.job_title')}</label>
             <input type="text" class="form-input" id="f-job_title" value="${escapeHtml(d.job_title || '')}">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Company</label>
+                <label class="form-label">${t('form.company')}</label>
                 <input type="text" class="form-input" id="f-company_name" value="${escapeHtml(d.company_name || '')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Country Code</label>
-                <input type="text" class="form-input" id="f-country_code" value="${escapeHtml(d.country_code || '')}" maxlength="2" placeholder="ch, fr, us... (optional)">
+                <label class="form-label">${t('form.country_code')}</label>
+                <input type="text" class="form-input" id="f-country_code" value="${escapeHtml(d.country_code || '')}" maxlength="2" placeholder="${t('form.country_code_placeholder')}">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Start Date</label>
-                <input type="text" class="form-input" id="f-start_date" value="${escapeHtml(d.start_date || '')}" placeholder="2020-01 or Jan 2020">
+                <label class="form-label">${t('form.start_date')}</label>
+                <input type="text" class="form-input" id="f-start_date" value="${escapeHtml(d.start_date || '')}" placeholder="${t('form.start_date_placeholder')}">
             </div>
             <div class="form-group">
-                <label class="form-label">End Date</label>
-                <input type="text" class="form-input" id="f-end_date" value="${escapeHtml(d.end_date || '')}" placeholder="Leave empty for Present">
+                <label class="form-label">${t('form.end_date')}</label>
+                <input type="text" class="form-input" id="f-end_date" value="${escapeHtml(d.end_date || '')}" placeholder="${t('form.end_date_placeholder')}">
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Location</label>
+            <label class="form-label">${t('form.location')}</label>
             <input type="text" class="form-input" id="f-location" value="${escapeHtml(d.location || '')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Key Highlights (one per line)</label>
+            <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
         </div>
     `;
@@ -1019,25 +1019,25 @@ function experienceForm(d) {
 function certificationForm(d) {
     return `
         <div class="form-group">
-            <label class="form-label">Certification Name</label>
+            <label class="form-label">${t('form.cert_name')}</label>
             <input type="text" class="form-input" id="f-name" value="${escapeHtml(d.name || '')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Provider / Issuer</label>
+            <label class="form-label">${t('form.provider')}</label>
             <input type="text" class="form-input" id="f-provider" value="${escapeHtml(d.provider || '')}">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Issue Date</label>
-                <input type="text" class="form-input" id="f-issue_date" value="${escapeHtml(d.issue_date || '')}" placeholder="Jan 2024">
+                <label class="form-label">${t('form.issue_date')}</label>
+                <input type="text" class="form-input" id="f-issue_date" value="${escapeHtml(d.issue_date || '')}" placeholder="${t('form.issue_date_placeholder')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Expiry Date (optional)</label>
+                <label class="form-label">${t('form.expiry_date')}</label>
                 <input type="text" class="form-input" id="f-expiry_date" value="${escapeHtml(d.expiry_date || '')}">
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Credential ID (optional)</label>
+            <label class="form-label">${t('form.credential_id')}</label>
             <input type="text" class="form-input" id="f-credential_id" value="${escapeHtml(d.credential_id || '')}">
         </div>
     `;
@@ -1046,25 +1046,25 @@ function certificationForm(d) {
 function educationForm(d) {
     return `
         <div class="form-group">
-            <label class="form-label">Degree / Qualification</label>
+            <label class="form-label">${t('form.degree')}</label>
             <input type="text" class="form-input" id="f-degree_title" value="${escapeHtml(d.degree_title || '')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Institution</label>
+            <label class="form-label">${t('form.institution')}</label>
             <input type="text" class="form-input" id="f-institution_name" value="${escapeHtml(d.institution_name || '')}">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Start Year</label>
-                <input type="text" class="form-input" id="f-start_date" value="${escapeHtml(d.start_date || '')}" placeholder="2002">
+                <label class="form-label">${t('form.start_year')}</label>
+                <input type="text" class="form-input" id="f-start_date" value="${escapeHtml(d.start_date || '')}" placeholder="${t('form.start_year_placeholder')}">
             </div>
             <div class="form-group">
-                <label class="form-label">End Year</label>
-                <input type="text" class="form-input" id="f-end_date" value="${escapeHtml(d.end_date || '')}" placeholder="Leave empty for Present">
+                <label class="form-label">${t('form.end_year')}</label>
+                <input type="text" class="form-input" id="f-end_date" value="${escapeHtml(d.end_date || '')}" placeholder="${t('form.end_year_placeholder')}">
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label">${t('form.description')}</label>
             <textarea class="form-textarea" id="f-description">${escapeHtml(d.description || '')}</textarea>
         </div>
     `;
@@ -1072,33 +1072,33 @@ function educationForm(d) {
 
 function skillForm(d) {
     const iconOptions = [
-        { value: 'code', label: 'Code / Programming' },
-        { value: 'server', label: 'Server / Infrastructure' },
-        { value: 'database', label: 'Database / Data' },
-        { value: 'cloud', label: 'Cloud' },
-        { value: 'settings', label: 'Tools / Settings' },
-        { value: 'users', label: 'Leadership / Team' },
-        { value: 'briefcase', label: 'Business' },
-        { value: 'cpu', label: 'AI / Machine Learning' },
-        { value: 'layers', label: 'Architecture / Design' },
-        { value: 'default', label: 'Default' }
+        { value: 'code', label: t('icon.code') },
+        { value: 'server', label: t('icon.server') },
+        { value: 'database', label: t('icon.database') },
+        { value: 'cloud', label: t('icon.cloud') },
+        { value: 'settings', label: t('icon.settings') },
+        { value: 'users', label: t('icon.users') },
+        { value: 'briefcase', label: t('icon.briefcase') },
+        { value: 'cpu', label: t('icon.cpu') },
+        { value: 'layers', label: t('icon.layers') },
+        { value: 'default', label: t('icon.default') }
     ];
-    
+
     return `
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Category Name</label>
+                <label class="form-label">${t('form.category_name')}</label>
                 <input type="text" class="form-input" id="f-name" value="${escapeHtml(d.name || '')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Icon</label>
+                <label class="form-label">${t('form.icon')}</label>
                 <select class="form-select" id="f-icon">
                     ${iconOptions.map(opt => `<option value="${opt.value}" ${d.icon === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                 </select>
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Skills (comma separated)</label>
+            <label class="form-label">${t('form.skills_comma')}</label>
             <textarea class="form-textarea" id="f-skills">${(d.skills || []).join(', ')}</textarea>
         </div>
     `;
@@ -1107,19 +1107,19 @@ function skillForm(d) {
 function projectForm(d) {
     return `
         <div class="form-group">
-            <label class="form-label">Project Title</label>
+            <label class="form-label">${t('form.project_title')}</label>
             <input type="text" class="form-input" id="f-title" value="${escapeHtml(d.title || '')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label">${t('form.description')}</label>
             <textarea class="form-textarea" id="f-description">${escapeHtml(d.description || '')}</textarea>
         </div>
         <div class="form-group">
-            <label class="form-label">Technologies (comma separated)</label>
+            <label class="form-label">${t('form.technologies')}</label>
             <input type="text" class="form-input" id="f-technologies" value="${(d.technologies || []).join(', ')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Link (optional)</label>
+            <label class="form-label">${t('form.link_optional')}</label>
             <input type="text" class="form-input" id="f-link" value="${escapeHtml(d.link || '')}">
         </div>
     `;
@@ -1257,7 +1257,7 @@ async function saveItem() {
     }
 
     closeModal();
-    toast('Saved successfully');
+    toast(t('toast.saved'));
     autoSaveActiveDataset();
 }
 
@@ -1265,24 +1265,24 @@ async function saveItem() {
 async function deleteItem() {
     const { type, id } = currentModal;
     if (!id) return;
-    
-    if (confirm('Are you sure you want to delete this item?')) {
+
+    if (confirm(t('confirm.delete_item'))) {
         const endpoint = getEndpoint(type);
         await api(`/api/${endpoint}/${id}`, { method: 'DELETE' });
         closeModal();
         await reloadSection(endpoint);
         if (endpoint === 'experiences') await loadTimeline();
-        toast('Deleted');
+        toast(t('toast.deleted'));
         autoSaveActiveDataset();
     }
 }
 
 async function confirmDelete(endpoint, id) {
-    if (confirm('Are you sure you want to delete this item?')) {
+    if (confirm(t('confirm.delete_item'))) {
         await api(`/api/${endpoint}/${id}`, { method: 'DELETE' });
         await reloadSection(endpoint);
         if (endpoint === 'experiences') await loadTimeline();
-        toast('Deleted');
+        toast(t('toast.deleted'));
         autoSaveActiveDataset();
     }
 }
@@ -1312,7 +1312,7 @@ async function showAllItems() {
     }
     
     await initAdmin();
-    toast('All items visible');
+    toast(t('toast.all_visible'));
     autoSaveActiveDataset();
 }
 
@@ -1326,7 +1326,7 @@ async function exportData() {
     a.download = 'cv-data.json';
     a.click();
     URL.revokeObjectURL(url);
-    toast('Exported');
+    toast(t('toast.exported'));
 }
 
 async function importData(event) {
@@ -1341,9 +1341,9 @@ async function importData(event) {
             // Clear active dataset — imported data doesn't belong to any dataset
             hideActiveDatasetBanner();
             await initAdmin();
-            toast('Imported successfully');
+            toast(t('toast.imported'));
         } catch (err) {
-            toast('Invalid file', 'error');
+            toast(t('toast.invalid_file'), 'error');
         }
     };
     reader.readAsText(file);
@@ -1389,7 +1389,7 @@ function previewProfilePicture(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
         if (file.size > 5 * 1024 * 1024) {
-            toast('Image too large. Maximum size is 5MB.', 'error');
+            toast(t('toast.image_too_large'), 'error');
             input.value = '';
             return;
         }
@@ -1428,7 +1428,7 @@ async function uploadProfilePicture() {
             const response = await fetch('/api/profile/picture', { method: 'POST', body: formData });
             if (!response.ok) throw new Error('Upload failed');
         } catch (err) {
-            toast('Failed to upload picture', 'error');
+            toast(t('toast.upload_failed'), 'error');
         }
         pendingProfilePicture = null;
     }
@@ -1610,10 +1610,10 @@ async function saveItemOrder(type, container) {
             method: 'PUT', 
             body: { items: orderData } 
         });
-        toast('Order saved');
+        toast(t('toast.order_saved'));
         autoSaveActiveDataset();
     } catch (err) {
-        toast('Failed to save order', 'error');
+        toast(t('toast.order_failed'), 'error');
     }
 }
 
@@ -1710,7 +1710,7 @@ async function togglePublicSetting(key, value) {
         updatePaginationSettings(key, value);
     }
     
-    toast('Setting saved');
+    toast(t('toast.setting_saved'));
 }
 
 // Handle split settings with sub-option visibility
@@ -1736,7 +1736,7 @@ async function toggleSplitSetting(key, value) {
         document.getElementById('settingAllowItemSplits').checked
     );
     
-    toast('Setting saved');
+    toast(t('toast.setting_saved'));
 }
 
 // Show/hide item splits sub-option
@@ -1766,8 +1766,12 @@ function closeSettingsModal() {
 
 function renderSettingsSections() {
     const container = document.getElementById('settingsSectionsList');
-    
-    container.innerHTML = settingsSectionOrder.map((section, index) => `
+
+    container.innerHTML = settingsSectionOrder.map((section, index) => {
+        const isCustomName = section.name !== section.default_name;
+        const translatedDefault = getTranslatedSectionName(section.key, section.default_name);
+        const displayName = isCustomName ? section.name : translatedDefault;
+        return `
         <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
             <div class="settings-section-drag">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1775,14 +1779,14 @@ function renderSettingsSections() {
                 </svg>
             </div>
             <div class="settings-section-name-wrap">
-                <input type="text" class="settings-section-name-input" 
-                    value="${escapeHtml(section.name)}" 
+                <input type="text" class="settings-section-name-input"
+                    value="${escapeHtml(displayName)}"
                     data-key="${section.key}"
-                    data-default="${escapeHtml(section.default_name || section.name)}"
+                    data-default="${escapeHtml(translatedDefault)}"
                     onchange="updateSettingsSectionName('${section.key}', this.value)"
-                    title="Click to edit section headline"
+                    title="${t('settings.sections.click_to_edit')}"
                 />
-                ${section.name !== section.default_name ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="Reset to default: ${escapeHtml(section.default_name || section.name)}">
+                ${isCustomName ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="${t('settings.sections.reset_default')}: ${escapeHtml(translatedDefault)}">
                     <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
                 </button>` : ''}
             </div>
@@ -1801,8 +1805,8 @@ function renderSettingsSections() {
                 </button>
             </div>
         </div>
-    `).join('');
-    
+    `}).join('');
+
     // Add drag-and-drop event listeners
     const items = container.querySelectorAll('.settings-section-item');
     items.forEach(item => {
@@ -1900,10 +1904,16 @@ function updateSettingsSectionName(key, newName) {
     const section = settingsSectionOrder.find(s => s.key === key);
     if (section) {
         const trimmed = newName.trim();
-        section.name = trimmed || section.default_name;
-        // Only re-render if we need to show/hide the reset button
-        if ((trimmed !== section.default_name) !== (section._hadCustomName)) {
-            section._hadCustomName = trimmed !== section.default_name;
+        const translatedDefault = getTranslatedSectionName(key, section.default_name);
+        const wasCustom = section.name !== section.default_name;
+        // Treat empty, English default, or translated default as "reset to default"
+        if (!trimmed || trimmed === section.default_name || trimmed === translatedDefault) {
+            section.name = section.default_name;
+        } else {
+            section.name = trimmed;
+        }
+        const isCustom = section.name !== section.default_name;
+        if (wasCustom !== isCustom) {
             renderSettingsSections();
         }
     }
@@ -1961,10 +1971,10 @@ async function saveSettingsSectionOrder() {
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
         closeSettingsModal();
-        toast('Settings saved');
+        toast(t('toast.settings_saved'));
         autoSaveActiveDataset();
     } catch (err) {
-        toast('Failed to save settings', 'error');
+        toast(t('toast.settings_failed'), 'error');
     }
 }
 
@@ -1973,7 +1983,7 @@ async function saveSettingsSectionOrder() {
 // ===========================
 
 async function saveAsDataset() {
-    const name = prompt('Enter a name for this dataset:');
+    const name = prompt(t('datasets.enter_name'));
     if (!name || !name.trim()) return;
     
     try {
@@ -1984,12 +1994,12 @@ async function saveAsDataset() {
             activeDatasetName = name.trim();
             activeDatasetIsDefault = !!result.is_default;
             showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
-            toast(result.updated ? 'Dataset updated' : 'Dataset saved');
+            toast(result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
         } else {
-            toast(result.error || 'Failed to save', 'error');
+            toast(result.error || t('toast.failed_save'), 'error');
         }
     } catch (err) {
-        toast('Failed to save dataset', 'error');
+        toast(t('toast.dataset_save_failed'), 'error');
     }
 }
 
@@ -2074,7 +2084,7 @@ function copyDatasetUrl(slug, isPublic) {
     // Try modern clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
-            toast(isPublic ? 'Public URL copied' : 'Preview URL copied');
+            toast(isPublic ? t('toast.url_copied_public') : t('toast.url_copied_preview'));
         }).catch((err) => {
             console.error('Clipboard API failed:', err);
             fallbackCopyToClipboard(url);
@@ -2092,14 +2102,14 @@ async function toggleDatasetPublic(id, isPublic) {
             body: { is_public: isPublic }
         });
         if (result.success) {
-            toast(isPublic ? 'Dataset is now public' : 'Dataset is now private');
+            toast(isPublic ? t('toast.dataset_public') : t('toast.dataset_private'));
             await loadDatasetsList();
         } else {
-            toast(result.error || 'Failed to update', 'error');
+            toast(result.error || t('toast.update_failed'), 'error');
             await loadDatasetsList(); // Revert toggle state
         }
     } catch (err) {
-        toast('Failed to update visibility', 'error');
+        toast(t('toast.visibility_update_failed'), 'error');
         await loadDatasetsList(); // Revert toggle state
     }
 }
@@ -2109,7 +2119,7 @@ async function setDatasetDefault(id, name) {
     try {
         const result = await api(`/api/datasets/${id}/default`, { method: 'PUT' });
         if (result.success) {
-            toast(`"${result.name}" is now the default`);
+            toast(t('toast.dataset_default', { name: result.name }));
             // If the active dataset was previously default, update its flag
             if (activeDatasetId === id) {
                 activeDatasetIsDefault = true;
@@ -2121,11 +2131,11 @@ async function setDatasetDefault(id, name) {
             }
             await loadDatasetsList();
         } else {
-            toast(result.error || 'Failed to set default', 'error');
+            toast(result.error || t('toast.default_failed'), 'error');
             await loadDatasetsList(); // Revert radio state
         }
     } catch (err) {
-        toast('Failed to set default', 'error');
+        toast(t('toast.default_failed'), 'error');
         await loadDatasetsList(); // Revert radio state
     }
 }
@@ -2143,13 +2153,13 @@ function fallbackCopyToClipboard(text) {
         const success = document.execCommand('copy');
         document.body.removeChild(input);
         if (success) {
-            toast('Preview URL copied');
+            toast(t('toast.url_copied_preview'));
         } else {
-            toast('Copy failed - URL: ' + text, 'error');
+            toast(t('toast.copy_failed', { url: text }), 'error');
         }
     } catch (err) {
         console.error('Fallback copy failed:', err);
-        toast('Copy failed - URL: ' + text, 'error');
+        toast(t('toast.copy_failed', { url: text }), 'error');
     }
 }
 
@@ -2163,17 +2173,17 @@ async function loadDataset(id, name) {
             activeDatasetIsDefault = !!result.is_default;
             closeDatasetsModal();
             await initAdmin();
-            toast(`Loaded: ${result.name}`);
+            toast(t('toast.dataset_loaded', { name: result.name }));
         } else {
-            toast(result.error || 'Failed to load', 'error');
+            toast(result.error || t('toast.dataset_load_failed'), 'error');
         }
     } catch (err) {
-        toast('Failed to load dataset', 'error');
+        toast(t('toast.dataset_load_failed'), 'error');
     }
 }
 
 async function deleteDataset(id, name) {
-    if (!confirm(`Delete dataset "${name}"? This cannot be undone.`)) return;
+    if (!confirm(t('confirm.delete_dataset', { name }))) return;
     
     try {
         const result = await api(`/api/datasets/${id}`, { method: 'DELETE' });
@@ -2186,9 +2196,9 @@ async function deleteDataset(id, name) {
             hideActiveDatasetBanner();
         }
         await loadDatasetsList();
-        toast('Dataset deleted');
+        toast(t('toast.dataset_deleted'));
     } catch (err) {
-        toast('Failed to delete dataset', 'error');
+        toast(t('toast.dataset_delete_failed'), 'error');
     }
 }
 
@@ -2350,7 +2360,7 @@ async function applyThemeColor() {
         localStorage.setItem('cvThemeColor', currentColor);
     }
     document.getElementById('colorPickerDropdown').classList.remove('active');
-    toast('Theme color applied');
+    toast(t('toast.theme_applied'));
 }
 
 async function resetThemeColor() {
@@ -2363,7 +2373,7 @@ async function resetThemeColor() {
     }
     updateColorPickerUI(currentColor);
     document.getElementById('colorPickerDropdown').classList.remove('active');
-    toast('Theme reset to default');
+    toast(t('toast.theme_reset'));
 }
 
 function applyColorToCSS(hex) {
@@ -2461,10 +2471,37 @@ function switchSettingsTab(tabName) {
     document.getElementById('settingsTabCustom').classList.toggle('active', tabName === 'custom');
     document.getElementById('settingsTabPublic').classList.toggle('active', tabName === 'public');
     document.getElementById('settingsTabAdvanced').classList.toggle('active', tabName === 'advanced');
-    
+    document.getElementById('settingsTabLanguage').classList.toggle('active', tabName === 'language');
+
     if (tabName === 'custom') {
         loadCustomSectionsList();
     }
+    if (tabName === 'language') {
+        renderLanguageGrid();
+    }
+}
+
+// Render language selector grid
+function renderLanguageGrid() {
+    const container = document.getElementById('languageGrid');
+    if (!container) return;
+
+    container.innerHTML = I18n.languages.map(lang => `
+        <div class="language-option ${I18n.locale === lang.code ? 'active' : ''}" onclick="selectLanguage('${lang.code}')">
+            <div>
+                <div class="language-option-native">${lang.native}</div>
+                <div class="language-option-name">${lang.name}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Handle language selection
+async function selectLanguage(code) {
+    await I18n.setLocale(code);
+    renderLanguageGrid();
+    // Re-render settings sections with translated names
+    renderSettingsSections();
 }
 
 // Render custom sections list
@@ -2475,11 +2512,11 @@ async function loadCustomSectionsList() {
     // Restore the Save button (it may have been changed by manageCustomSectionItems)
     const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
     if (saveBtn) {
-        saveBtn.textContent = 'Save';
+        saveBtn.textContent = t('btn.save');
         saveBtn.setAttribute('onclick', 'saveCustomSection()');
         saveBtn.style.display = '';
     }
-    
+
     if (customSections.length === 0) {
         container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No custom sections yet.<br>Click "Add Custom Section" to create one.</p>';
         return;
@@ -2518,14 +2555,14 @@ async function openCustomSectionModal(id = null) {
         await loadCustomSectionsData();
     } catch (err) {
         console.error('Failed to load custom sections data:', err);
-        toast('Failed to load section data', 'error');
+        toast(t('toast.section_data_failed'), 'error');
         return;
     }
-    
+
     // Ensure layoutTypes is an array
     if (!Array.isArray(layoutTypes) || layoutTypes.length === 0) {
         console.error('layoutTypes is empty or not an array:', layoutTypes);
-        toast('Failed to load layout options', 'error');
+        toast(t('toast.layout_options_failed'), 'error');
         return;
     }
     
@@ -2534,24 +2571,24 @@ async function openCustomSectionModal(id = null) {
         section = customSections.find(s => s.id === id) || section;
     }
     
-    document.getElementById('customSectionModalTitle').textContent = id ? 'Edit Custom Section' : 'Add Custom Section';
+    document.getElementById('customSectionModalTitle').textContent = id ? t('custom_section.edit_title') : t('custom_section.add_title');
     document.getElementById('deleteCustomSectionBtn').style.display = id ? 'block' : 'none';
     
     // Restore the Save button (it may have been changed by manageCustomSectionItems)
     const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
     if (saveBtn) {
-        saveBtn.textContent = 'Save';
+        saveBtn.textContent = t('btn.save');
         saveBtn.setAttribute('onclick', 'saveCustomSection()');
         saveBtn.style.display = '';
     }
-    
+
     document.getElementById('customSectionModalBody').innerHTML = `
         <div class="form-group">
-            <label class="form-label">Section Name</label>
-            <input type="text" class="form-input" id="cs-name" value="${escapeHtml(section.name || '')}" placeholder="e.g., Social Links, Awards, Publications">
+            <label class="form-label">${t('custom_section.section_name')}</label>
+            <input type="text" class="form-input" id="cs-name" value="${escapeHtml(section.name || '')}" placeholder="${t('custom_section.section_name_placeholder')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Layout Type</label>
+            <label class="form-label">${t('custom_section.layout_type')}</label>
             <div class="layout-type-grid">
                 ${layoutTypes.map(lt => `
                     <div class="layout-type-option ${section.layout_type === lt.id ? 'selected' : ''}" data-layout="${lt.id}" onclick="selectLayoutType('${lt.id}')">
@@ -2563,16 +2600,16 @@ async function openCustomSectionModal(id = null) {
             <input type="hidden" id="cs-layout" value="${section.layout_type || 'grid-3'}">
         </div>
         <div class="form-group">
-            <label class="form-label">Section Icon</label>
+            <label class="form-label">${t('custom_section.section_icon')}</label>
             <select class="form-select" id="cs-icon">
-                <option value="default" ${section.icon === 'default' ? 'selected' : ''}>Default</option>
-                <option value="star" ${section.icon === 'star' ? 'selected' : ''}>Star (Awards)</option>
-                <option value="book" ${section.icon === 'book' ? 'selected' : ''}>Book (Publications)</option>
-                <option value="link" ${section.icon === 'link' ? 'selected' : ''}>Link (Social)</option>
-                <option value="globe" ${section.icon === 'globe' ? 'selected' : ''}>Globe (Languages)</option>
-                <option value="heart" ${section.icon === 'heart' ? 'selected' : ''}>Heart (Interests)</option>
-                <option value="award" ${section.icon === 'award' ? 'selected' : ''}>Award</option>
-                <option value="briefcase" ${section.icon === 'briefcase' ? 'selected' : ''}>Briefcase</option>
+                <option value="default" ${section.icon === 'default' ? 'selected' : ''}>${t('custom_section.icon_default')}</option>
+                <option value="star" ${section.icon === 'star' ? 'selected' : ''}>${t('custom_section.icon_star')}</option>
+                <option value="book" ${section.icon === 'book' ? 'selected' : ''}>${t('custom_section.icon_book')}</option>
+                <option value="link" ${section.icon === 'link' ? 'selected' : ''}>${t('custom_section.icon_link')}</option>
+                <option value="globe" ${section.icon === 'globe' ? 'selected' : ''}>${t('custom_section.icon_globe')}</option>
+                <option value="heart" ${section.icon === 'heart' ? 'selected' : ''}>${t('custom_section.icon_heart')}</option>
+                <option value="award" ${section.icon === 'award' ? 'selected' : ''}>${t('custom_section.icon_award')}</option>
+                <option value="briefcase" ${section.icon === 'briefcase' ? 'selected' : ''}>${t('custom_section.icon_briefcase')}</option>
             </select>
         </div>
     `;
@@ -2598,12 +2635,12 @@ async function closeCustomSectionModal() {
     const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
     const cancelBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-ghost');
     if (saveBtn) {
-        saveBtn.textContent = 'Save';
+        saveBtn.textContent = t('btn.save');
         saveBtn.setAttribute('onclick', 'saveCustomSection()');
         saveBtn.style.display = '';
     }
     if (cancelBtn) {
-        cancelBtn.textContent = 'Cancel';
+        cancelBtn.textContent = t('btn.cancel');
         cancelBtn.setAttribute('onclick', 'closeCustomSectionModal()');
     }
     
@@ -2620,7 +2657,7 @@ async function saveCustomSection() {
     const iconEl = document.getElementById('cs-icon');
     
     if (!nameEl || !layoutEl || !iconEl) {
-        toast('Form not ready. Please try again.', 'error');
+        toast(t('toast.form_not_ready'), 'error');
         return;
     }
     
@@ -2629,7 +2666,7 @@ async function saveCustomSection() {
     const icon = iconEl.value;
     
     if (!name) {
-        toast('Please enter a section name', 'error');
+        toast(t('toast.enter_section_name'), 'error');
         return;
     }
     
@@ -2639,13 +2676,13 @@ async function saveCustomSection() {
                 method: 'PUT', 
                 body: { name, layout_type, icon } 
             });
-            toast('Section updated');
+            toast(t('toast.section_updated'));
         } else {
-            await api('/api/custom-sections', { 
-                method: 'POST', 
-                body: { name, layout_type, icon } 
+            await api('/api/custom-sections', {
+                method: 'POST',
+                body: { name, layout_type, icon }
             });
-            toast('Section created');
+            toast(t('toast.section_created'));
         }
         
         closeCustomSectionModal();
@@ -2659,18 +2696,18 @@ async function saveCustomSection() {
         await renderSectionsInOrder();
         autoSaveActiveDataset();
     } catch (err) {
-        toast('Failed to save section', 'error');
+        toast(t('toast.section_save_failed'), 'error');
     }
 }
 
 async function deleteCustomSection() {
     if (!currentCustomSection.id) return;
     
-    if (!confirm('Delete this custom section and all its items? This cannot be undone.')) return;
+    if (!confirm(t('confirm.delete_section'))) return;
     
     try {
         await api(`/api/custom-sections/${currentCustomSection.id}`, { method: 'DELETE' });
-        toast('Section deleted');
+        toast(t('toast.section_deleted'));
         closeCustomSectionModal();
         await loadCustomSectionsList();
         settingsSectionOrder = await api('/api/sections/order');
@@ -2681,7 +2718,7 @@ async function deleteCustomSection() {
         await renderSectionsInOrder();
         autoSaveActiveDataset();
     } catch (err) {
-        toast('Failed to delete section', 'error');
+        toast(t('toast.section_delete_failed'), 'error');
     }
 }
 
@@ -2696,18 +2733,18 @@ async function manageCustomSectionItems(sectionId) {
     const layoutType = layoutTypes.find(l => l.id === section.layout_type) || { name: section.layout_type };
     const items = section.items || [];
     
-    document.getElementById('customSectionModalTitle').textContent = `${section.name} - Items`;
+    document.getElementById('customSectionModalTitle').textContent = `${section.name} ${t('custom_section.items_suffix')}`;
     document.getElementById('deleteCustomSectionBtn').style.display = 'none';
     
     // Change footer buttons for items view
     const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
     const cancelBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-ghost');
     if (saveBtn) {
-        saveBtn.textContent = 'Done';
+        saveBtn.textContent = t('btn.done');
         saveBtn.setAttribute('onclick', 'closeCustomSectionModal()');
     }
     if (cancelBtn) {
-        cancelBtn.textContent = 'Close';
+        cancelBtn.textContent = t('btn.close');
         cancelBtn.setAttribute('onclick', 'closeCustomSectionModal()');
     }
     
@@ -2764,7 +2801,7 @@ function openCustomItemModal(sectionId, itemId = null) {
         item = section.items.find(i => i.id === itemId) || item;
     }
     
-    document.getElementById('customItemModalTitle').textContent = itemId ? 'Edit Item' : 'Add Item';
+    document.getElementById('customItemModalTitle').textContent = itemId ? t('custom_item.edit_title') : t('custom_item.add_title');
     document.getElementById('deleteCustomItemBtn').style.display = itemId ? 'block' : 'none';
     
     // Different forms based on layout type
@@ -2775,17 +2812,17 @@ function openCustomItemModal(sectionId, itemId = null) {
         const platform = item.metadata?.platform || 'custom';
         formHtml = `
             <div class="form-group">
-                <label class="form-label">Platform</label>
+                <label class="form-label">${t('custom_item.platform')}</label>
                 <select class="form-select" id="ci-platform" onchange="updateSocialPlatformFields()">
                     ${socialPlatforms.map(p => `<option value="${p.id}" ${platform === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Display Name</label>
-                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="e.g., @username or My Website">
+                <label class="form-label">${t('custom_item.display_name')}</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="${t('custom_item.display_name_placeholder')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Link URL</label>
+                <label class="form-label">${t('custom_item.link_url')}</label>
                 <input type="text" class="form-input" id="ci-link" value="${escapeHtml(item.link || '')}" placeholder="https://...">
             </div>
         `;
@@ -2794,18 +2831,18 @@ function openCustomItemModal(sectionId, itemId = null) {
         const hideTitle = item.metadata?.hideTitle || false;
         formHtml = `
             <div class="form-group">
-                <label class="form-label">Group Title (optional)</label>
-                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="e.g., Key Achievements, Technical Skills...">
+                <label class="form-label">${t('custom_item.group_title')}</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="${t('custom_item.group_title_placeholder')}">
             </div>
             <div class="form-group">
                 <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" id="ci-hide-title" ${hideTitle ? 'checked' : ''} style="width: 16px; height: 16px;">
-                    <span>Hide group title</span>
+                    <span>${t('custom_item.hide_group_title')}</span>
                 </label>
-                <div class="form-hint">Display bullet points without the group heading.</div>
+                <div class="form-hint">${t('custom_item.hide_group_title_hint')}</div>
             </div>
             <div class="form-group">
-                <label class="form-label">Bullet Points (one per line)</label>
+                <label class="form-label">${t('custom_item.bullet_points')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="8" placeholder="First bullet point\nSecond bullet point\nThird bullet point">${escapeHtml(item.description || '')}</textarea>
             </div>
         `;
@@ -2814,20 +2851,20 @@ function openCustomItemModal(sectionId, itemId = null) {
         const hideTitle = item.metadata?.hideTitle !== false; // default true for free-text
         formHtml = `
             <div class="form-group">
-                <label class="form-label">Title (optional)</label>
+                <label class="form-label">${t('custom_item.title_optional')}</label>
                 <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
             </div>
             <div class="form-group">
                 <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" id="ci-hide-title" ${hideTitle ? 'checked' : ''} style="width: 16px; height: 16px;">
-                    <span>Hide title</span>
+                    <span>${t('custom_item.hide_title')}</span>
                 </label>
-                <div class="form-hint">Display the item without its title heading.</div>
+                <div class="form-hint">${t('custom_item.hide_title_hint')}</div>
             </div>
             <div class="form-group">
-                <label class="form-label">Text Content</label>
-                <textarea class="form-textarea" id="ci-description" rows="10" placeholder="Enter your text here. Line breaks will be preserved.">${escapeHtml(item.description || '')}</textarea>
-                <div class="form-hint">Line breaks are preserved as displayed.</div>
+                <label class="form-label">${t('custom_item.text_content')}</label>
+                <textarea class="form-textarea" id="ci-description" rows="10" placeholder="${t('custom_item.text_content_placeholder')}">${escapeHtml(item.description || '')}</textarea>
+                <div class="form-hint">${t('custom_item.text_content_hint')}</div>
             </div>
         `;
     } else {
@@ -2835,26 +2872,26 @@ function openCustomItemModal(sectionId, itemId = null) {
         const hideTitle = item.metadata?.hideTitle || false;
         formHtml = `
             <div class="form-group">
-                <label class="form-label">Title</label>
+                <label class="form-label">${t('custom_item.item_title')}</label>
                 <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
             </div>
             <div class="form-group">
                 <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" id="ci-hide-title" ${hideTitle ? 'checked' : ''} style="width: 16px; height: 16px;">
-                    <span>Hide title</span>
+                    <span>${t('custom_item.hide_title')}</span>
                 </label>
-                <div class="form-hint">Display the item without its title heading.</div>
+                <div class="form-hint">${t('custom_item.hide_title_hint')}</div>
             </div>
             <div class="form-group">
-                <label class="form-label">Subtitle (optional)</label>
+                <label class="form-label">${t('custom_item.subtitle_optional')}</label>
                 <input type="text" class="form-input" id="ci-subtitle" value="${escapeHtml(item.subtitle || '')}">
             </div>
             <div class="form-group">
-                <label class="form-label">Description (optional)</label>
+                <label class="form-label">${t('custom_item.description_optional')}</label>
                 <textarea class="form-textarea" id="ci-description">${escapeHtml(item.description || '')}</textarea>
             </div>
             <div class="form-group">
-                <label class="form-label">Link URL (optional)</label>
+                <label class="form-label">${t('custom_item.link_url_optional')}</label>
                 <input type="text" class="form-input" id="ci-link" value="${escapeHtml(item.link || '')}" placeholder="https://...">
             </div>
         `;
@@ -2920,13 +2957,13 @@ async function saveCustomItem() {
     
     // Validation - title not required for bullet-list, free-text, or when hideTitle is checked
     if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && !metadata.hideTitle && !title) {
-        toast('Please enter a title', 'error');
+        toast(t('toast.enter_title'), 'error');
         return;
     }
     
     // Bullet list and free text require description
     if ((section.layout_type === 'bullet-list' || section.layout_type === 'free-text') && !description) {
-        toast(section.layout_type === 'free-text' ? 'Please enter some text' : 'Please enter at least one bullet point', 'error');
+        toast(section.layout_type === 'free-text' ? t('toast.enter_text') : t('toast.enter_bullet'), 'error');
         return;
     }
     
@@ -2936,13 +2973,13 @@ async function saveCustomItem() {
                 method: 'PUT', 
                 body: { title, subtitle, description, link, metadata } 
             });
-            toast('Item updated');
+            toast(t('toast.item_updated'));
         } else {
-            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items`, { 
-                method: 'POST', 
-                body: { title, subtitle, description, link, metadata } 
+            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items`, {
+                method: 'POST',
+                body: { title, subtitle, description, link, metadata }
             });
-            toast('Item added');
+            toast(t('toast.item_added'));
         }
         
         closeCustomItemModal();
@@ -2950,21 +2987,21 @@ async function saveCustomItem() {
         manageCustomSectionItems(currentCustomItem.sectionId);
         autoSaveActiveDataset();
     } catch (err) {
-        toast('Failed to save item', 'error');
+        toast(t('toast.item_save_failed'), 'error');
     }
 }
 
 async function confirmDeleteCustomItem(sectionId, itemId) {
-    if (!confirm('Delete this item?')) return;
+    if (!confirm(t('confirm.delete_custom_item'))) return;
     
     try {
         await api(`/api/custom-sections/${sectionId}/items/${itemId}`, { method: 'DELETE' });
-        toast('Item deleted');
+        toast(t('toast.item_deleted'));
         await loadCustomSectionsData();
         manageCustomSectionItems(sectionId);
         autoSaveActiveDataset();
     } catch (err) {
-        toast('Failed to delete item', 'error');
+        toast(t('toast.item_delete_failed'), 'error');
     }
 }
 

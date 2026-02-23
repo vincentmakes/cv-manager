@@ -213,15 +213,24 @@ function parseDateForSort(dateStr) {
     return 0;
 }
 
+// Get the translated default name for a built-in section, or fall back to the English default
+function getTranslatedSectionName(key, fallback) {
+    const i18nKey = `section.${key}`;
+    const translated = t(i18nKey);
+    return translated !== i18nKey ? translated : (fallback || key);
+}
+
 // Apply custom section titles from section order data to the DOM
 function applySectionTitles(sectionOrderData) {
     if (!sectionOrderData || !sectionOrderData.length) return;
     sectionOrderData.forEach(section => {
         const el = document.getElementById(`section-${section.key}`);
-        if (el && section.name) {
+        if (el) {
             const titleEl = el.querySelector('.section-title');
             if (titleEl) {
-                titleEl.textContent = section.name;
+                // Use custom name if user set one, otherwise use translated default
+                const isCustom = section.name && section.name !== section.default_name;
+                titleEl.textContent = isCustom ? section.name : getTranslatedSectionName(section.key, section.name);
             }
         }
     });
@@ -261,21 +270,21 @@ function formatTimelinePeriod(item) {
         if (isISODate(item.start_date)) {
             if (timelineYearOnly) {
                 const startYear = item.start_date.substring(0, 4);
-                const endYear = item.end_date ? item.end_date.substring(0, 4) : 'Present';
+                const endYear = item.end_date ? item.end_date.substring(0, 4) : t('present');
                 return `${startYear} - ${endYear}`;
             }
             const startFormatted = formatDate(item.start_date);
-            const endFormatted = item.end_date ? formatDate(item.end_date) : 'Present';
+            const endFormatted = item.end_date ? formatDate(item.end_date) : t('present');
             return `${startFormatted} - ${endFormatted}`;
         }
         // Non-ISO date (legacy format like "Jan 2020") — extract year or use as-is
         if (timelineYearOnly) {
             const startYear = extractYear(item.start_date);
-            const endYear = item.end_date ? extractYear(item.end_date) || 'Present' : 'Present';
+            const endYear = item.end_date ? extractYear(item.end_date) || t('present') : t('present');
             if (startYear) return `${startYear} - ${endYear}`;
         }
         // Use the raw date strings as-is for non-ISO when not year-only
-        const endStr = item.end_date || 'Present';
+        const endStr = item.end_date || t('present');
         return `${item.start_date} - ${endStr}`;
     }
     return item.period || '';
@@ -476,7 +485,7 @@ async function loadExperiencesReadOnly() {
                 </div>
                 <span class="item-date">
                     <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
-                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : 'Present'}</time>
+                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
@@ -521,7 +530,7 @@ async function loadEducationReadOnly() {
                 </div>
                 <span class="item-date">
                     <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
-                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : 'Present'}</time>
+                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
@@ -556,7 +565,7 @@ async function loadProjectsReadOnly() {
         <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
             <div class="project-header">
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
-                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="View Project">${icons.link}</a>` : ''}
+                ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_project')}">${icons.link}</a>` : ''}
             </div>
             <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
             <div class="tech-tags">
@@ -636,7 +645,7 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Position: ${exp.job_title}`);
                 ats.push(`Company: ${exp.company_name}`);
-                ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : 'Present'}`);
+                ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : t('present')}`);
                 if (exp.location) ats.push(`Location: ${exp.location}`);
                 if (exp.highlights && exp.highlights.length > 0) {
                     ats.push('Responsibilities and Achievements:');
@@ -655,7 +664,7 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Degree: ${edu.degree_title}`);
                 ats.push(`Institution: ${edu.institution_name}`);
-                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${edu.end_date ? formatDateATS(edu.end_date) : 'Present'}`);
+                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${edu.end_date ? formatDateATS(edu.end_date) : t('present')}`);
                 if (edu.description) ats.push(`Details: ${edu.description}`);
             });
         ats.push('');
@@ -786,7 +795,7 @@ function renderGridPublic(items, cols) {
             ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
             ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
-            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
     }).join('')}</div>`;
@@ -804,7 +813,7 @@ function renderListPublic(items) {
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
             </div>
-            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
     }).join('')}</div>`;
@@ -820,7 +829,7 @@ function renderCardsPublic(items) {
             ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
             ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
-            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
+            ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">${t('learn_more')}</a>` : ''}
         </div>
     `;
     }).join('')}</div>`;
