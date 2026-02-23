@@ -78,7 +78,7 @@ const I18n = {
         // Update all elements with data-i18n attribute
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            const translated = this.t(key);
+            const translated = t(key);
             if (translated !== key) {
                 el.textContent = translated;
             }
@@ -86,7 +86,7 @@ const I18n = {
         // Update title attributes
         document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const key = el.getAttribute('data-i18n-title');
-            const translated = this.t(key);
+            const translated = t(key);
             if (translated !== key) {
                 el.title = translated;
             }
@@ -94,7 +94,7 @@ const I18n = {
         // Update placeholder attributes
         document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
             const key = el.getAttribute('data-i18n-placeholder');
-            const translated = this.t(key);
+            const translated = t(key);
             if (translated !== key) {
                 el.placeholder = translated;
             }
