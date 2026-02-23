@@ -133,13 +133,20 @@
         
         // Load live data from current CV (normal mode)
         async function loadLiveData() {
-            await loadThemeColorPublic();
-            await loadDateFormatSetting();
-            await loadPublicPrintButton();
-            await loadPaginationSettings();
-            await loadPageSplitsSetting();
-            await loadTrackingCode();
-            await loadRobotsMeta();
+            // Fetch all settings in one bulk call to reduce API requests
+            let allSettings = {};
+            try {
+                allSettings = await api('/api/settings');
+            } catch (err) {
+                console.error('Failed to load bulk settings:', err);
+            }
+            await loadThemeColorPublic(allSettings);
+            await loadDateFormatSetting(allSettings);
+            await loadPublicPrintButton(allSettings);
+            await loadPaginationSettings(allSettings);
+            await loadPageSplitsSetting(allSettings);
+            await loadTrackingCode(allSettings);
+            await loadRobotsMeta(allSettings);
             sectionOrder = await loadSectionOrder();
             await loadSections();
             await loadProfile(false); // false = don't include email/phone
@@ -436,8 +443,14 @@
         }
         
         // Load print button setting
-        async function loadPublicPrintButton() {
+        async function loadPublicPrintButton(allSettings) {
             try {
+                if (allSettings && allSettings.showPublicPrintButton !== undefined) {
+                    if (allSettings.showPublicPrintButton === 'true') {
+                        document.getElementById('publicPrintBtn').style.display = 'flex';
+                    }
+                    return;
+                }
                 const result = await api('/api/settings/showPublicPrintButton');
                 if (result.value === 'true') {
                     document.getElementById('publicPrintBtn').style.display = 'flex';
@@ -448,18 +461,28 @@
         }
         
         // Load pagination settings for print
-        async function loadPaginationSettings() {
+        async function loadPaginationSettings(allSettings) {
             try {
-                const enabled = await api('/api/settings/paginationEnabled');
-                const position = await api('/api/settings/paginationPosition');
-                const style = await api('/api/settings/paginationStyle');
+                let enabledVal, positionVal, styleVal;
+                if (allSettings && allSettings.paginationEnabled !== undefined) {
+                    enabledVal = allSettings.paginationEnabled;
+                    positionVal = allSettings.paginationPosition;
+                    styleVal = allSettings.paginationStyle;
+                } else {
+                    const enabled = await api('/api/settings/paginationEnabled');
+                    const position = await api('/api/settings/paginationPosition');
+                    const style = await api('/api/settings/paginationStyle');
+                    enabledVal = enabled.value;
+                    positionVal = position.value;
+                    styleVal = style.value;
+                }
                 const profile = await api('/api/profile');
-                
-                document.body.setAttribute('data-pagination', enabled.value === 'true' ? 'true' : 'false');
-                document.body.setAttribute('data-pagination-position', position.value || 'bottom-center');
-                document.body.setAttribute('data-pagination-style', style.value || 'simple');
+
+                document.body.setAttribute('data-pagination', enabledVal === 'true' ? 'true' : 'false');
+                document.body.setAttribute('data-pagination-position', positionVal || 'bottom-center');
+                document.body.setAttribute('data-pagination-style', styleVal || 'simple');
                 document.body.setAttribute('data-cv-name', profile.name || 'CV');
-                
+
                 // Setup print event handlers
                 setupPrintPagination();
             } catch (err) {
@@ -468,14 +491,22 @@
         }
         
         // Load page splits settings for print
-        async function loadPageSplitsSetting() {
+        async function loadPageSplitsSetting(allSettings) {
             try {
-                const sectionSplits = await api('/api/settings/allowSectionSplits');
-                const itemSplits = await api('/api/settings/allowItemSplits');
-                
-                const sectionEnabled = sectionSplits.value === 'true';
-                const itemEnabled = itemSplits.value === 'true';
-                
+                let sectionVal, itemVal;
+                if (allSettings && allSettings.allowSectionSplits !== undefined) {
+                    sectionVal = allSettings.allowSectionSplits;
+                    itemVal = allSettings.allowItemSplits;
+                } else {
+                    const sectionSplits = await api('/api/settings/allowSectionSplits');
+                    const itemSplits = await api('/api/settings/allowItemSplits');
+                    sectionVal = sectionSplits.value;
+                    itemVal = itemSplits.value;
+                }
+
+                const sectionEnabled = sectionVal === 'true';
+                const itemEnabled = itemVal === 'true';
+
                 document.body.classList.toggle('allow-section-splits', sectionEnabled);
                 document.body.classList.toggle('allow-item-splits', sectionEnabled && itemEnabled);
             } catch (err) {
@@ -552,13 +583,13 @@
         }
         
         // Load and inject tracking code
-        async function loadTrackingCode() {
+        async function loadTrackingCode(allSettings) {
             try {
                 // Skip if tracking code was already injected server-side
                 if (document.querySelector('script[src*="googletagmanager.com"], script[src*="google-analytics.com"], script[src*="plausible.io"], script[src*="matomo"]')) {
                     return;
                 }
-                const result = await api('/api/settings/trackingCode');
+                const result = (allSettings && allSettings.trackingCode !== undefined) ? { value: allSettings.trackingCode } : await api('/api/settings/trackingCode');
                 if (result.value && result.value.trim()) {
                     // Create a container to parse the tracking code
                     const trackingContainer = document.createElement('div');
@@ -613,9 +644,9 @@
             }
         }
         
-        async function loadRobotsMeta() {
+        async function loadRobotsMeta(allSettings) {
             try {
-                const result = await api('/api/settings/robotsMeta');
+                const result = (allSettings && allSettings.robotsMeta !== undefined) ? { value: allSettings.robotsMeta } : await api('/api/settings/robotsMeta');
                 if (result.value) {
                     const metaEl = document.getElementById('metaRobots');
                     if (metaEl) metaEl.setAttribute('content', result.value);
@@ -703,11 +734,11 @@
             applySectionTitles(sectionOrder);
         }
         
-        async function loadThemeColorPublic() {
+        async function loadThemeColorPublic(allSettings) {
             try {
-                const result = await api('/api/settings/themeColor');
-                if (result.value) {
-                    applyColorToCSSPublic(result.value);
+                const value = (allSettings && allSettings.themeColor !== undefined) ? allSettings.themeColor : (await api('/api/settings/themeColor')).value;
+                if (value) {
+                    applyColorToCSSPublic(value);
                 }
             } catch (err) {
                 // Ignore errors, use default theme

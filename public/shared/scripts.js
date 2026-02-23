@@ -237,18 +237,26 @@ function applySectionTitles(sectionOrderData) {
 }
 
 // Load date format setting from API
-async function loadDateFormatSetting() {
+async function loadDateFormatSetting(allSettings) {
     try {
-        const result = await api('/api/settings/dateFormat');
-        if (result.value) {
-            dateFormatSetting = result.value;
+        if (allSettings && allSettings.dateFormat !== undefined) {
+            if (allSettings.dateFormat) dateFormatSetting = allSettings.dateFormat;
+        } else {
+            const result = await api('/api/settings/dateFormat');
+            if (result.value) {
+                dateFormatSetting = result.value;
+            }
         }
     } catch (err) {
         // Use default format
     }
     try {
-        const result = await api('/api/settings/timelineYearOnly');
-        timelineYearOnly = result.value !== 'false';
+        if (allSettings && allSettings.timelineYearOnly !== undefined) {
+            timelineYearOnly = allSettings.timelineYearOnly !== 'false';
+        } else {
+            const result = await api('/api/settings/timelineYearOnly');
+            timelineYearOnly = result.value !== 'false';
+        }
     } catch (err) {
         // Use default (false)
     }
