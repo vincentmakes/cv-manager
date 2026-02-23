@@ -749,7 +749,7 @@ if (PUBLIC_ONLY) {
         const now = Date.now();
         if (!rateLimit[ip]) rateLimit[ip] = { count: 1, start: now };
         else if (now - rateLimit[ip].start > 60000) rateLimit[ip] = { count: 1, start: now };
-        else { rateLimit[ip].count++; if (rateLimit[ip].count > 60) return res.status(429).json({ error: 'Too many requests' }); }
+        else { rateLimit[ip].count++; if (rateLimit[ip].count > 200) return res.status(429).json({ error: 'Too many requests' }); }
         next();
     });
 
@@ -758,16 +758,17 @@ if (PUBLIC_ONLY) {
     publicApp.use((req, res, next) => {
         const trackingDomains = getTrackingDomains();
         const trackingStr = trackingDomains.length > 0 ? ' ' + trackingDomains.join(' ') : '';
-        
+        const cfStr = ' https://static.cloudflareinsights.com';
+
         const csp = [
             `default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com`,
-            `script-src 'self' 'unsafe-inline'${trackingStr}`,
-            `script-src-elem 'self' 'unsafe-inline'${trackingStr}`,
+            `script-src 'self' 'unsafe-inline'${cfStr}${trackingStr}`,
+            `script-src-elem 'self' 'unsafe-inline'${cfStr}${trackingStr}`,
             `worker-src 'self' blob:${trackingStr}`,
-            `connect-src 'self'${trackingStr}`,
+            `connect-src 'self'${cfStr}${trackingStr}`,
             `img-src 'self' https://flagcdn.com data:${trackingStr}`
         ].join('; ');
-        
+
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('X-Frame-Options', 'DENY');
         res.setHeader('X-XSS-Protection', '1; mode=block');
@@ -825,6 +826,7 @@ if (PUBLIC_ONLY) {
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
         }))); 
     });
+    publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights FROM experiences WHERE visible = 1 ORDER BY start_date DESC, sort_order ASC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
@@ -850,7 +852,7 @@ if (PUBLIC_ONLY) {
         const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all();
         res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) });
     });
-    
+
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
@@ -1199,17 +1201,18 @@ if (PUBLIC_ONLY) {
     publicApp.use(cors({ methods: ['GET'], credentials: false }));
     publicApp.use((req, res, next) => { if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' }); next(); });
     const rateLimit = {};
-    publicApp.use((req, res, next) => { const ip = req.ip || req.connection.remoteAddress; const now = Date.now(); if (!rateLimit[ip]) rateLimit[ip] = { count: 1, start: now }; else if (now - rateLimit[ip].start > 60000) rateLimit[ip] = { count: 1, start: now }; else { rateLimit[ip].count++; if (rateLimit[ip].count > 60) return res.status(429).json({ error: 'Too many requests' }); } next(); });
+    publicApp.use((req, res, next) => { const ip = req.ip || req.connection.remoteAddress; const now = Date.now(); if (!rateLimit[ip]) rateLimit[ip] = { count: 1, start: now }; else if (now - rateLimit[ip].start > 60000) rateLimit[ip] = { count: 1, start: now }; else { rateLimit[ip].count++; if (rateLimit[ip].count > 200) return res.status(429).json({ error: 'Too many requests' }); } next(); });
 
     publicApp.use((req, res, next) => {
         const trackingDomains = getTrackingDomains();
         const trackingStr = trackingDomains.length > 0 ? ' ' + trackingDomains.join(' ') : '';
+        const cfStr = ' https://static.cloudflareinsights.com';
         const csp = [
             `default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://flagcdn.com`,
-            `script-src 'self' 'unsafe-inline'${trackingStr}`,
-            `script-src-elem 'self' 'unsafe-inline'${trackingStr}`,
+            `script-src 'self' 'unsafe-inline'${cfStr}${trackingStr}`,
+            `script-src-elem 'self' 'unsafe-inline'${cfStr}${trackingStr}`,
             `worker-src 'self' blob:${trackingStr}`,
-            `connect-src 'self'${trackingStr}`,
+            `connect-src 'self'${cfStr}${trackingStr}`,
             `img-src 'self' https://flagcdn.com data:${trackingStr}`
         ].join('; ');
         res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -1248,6 +1251,7 @@ if (PUBLIC_ONLY) {
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
         }))); 
     });
+    publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { res.json(db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights FROM experiences WHERE visible = 1 ORDER BY start_date DESC, sort_order ASC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });

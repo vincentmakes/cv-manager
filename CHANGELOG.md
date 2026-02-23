@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ## [1.6.8] - 2026-02-23
 
+### Fixed
+- **Cloudflare Insights beacon blocked by CSP**: Added `https://static.cloudflareinsights.com` to `script-src`, `script-src-elem`, and `connect-src` directives so Cloudflare's auto-injected `beacon.min.js` is no longer blocked by Content Security Policy
+- **Rate limit too low for normal page loads**: Increased public server rate limit from 60 to 200 requests per minute — a single page load generates ~30+ requests (assets + API calls), so the previous limit could block legitimate visitors
+
+### Changed
+- **Bulk settings API for public site**: Added `GET /api/settings` endpoint to the public server and updated the frontend to fetch all settings in a single request instead of ~10 individual `/api/settings/:key` calls, reducing initial page load API traffic
+
 ## [1.6.7] - 2026-02-23
 
 ### Fixed
