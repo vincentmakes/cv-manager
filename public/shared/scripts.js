@@ -498,7 +498,7 @@ async function loadCertificationsReadOnly() {
         <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="cert-header">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}${cert.issue_date ? ` - ${cert.expiry_date ? (formatDate(cert.expiry_date) || escapeHtml(cert.expiry_date)) : 'Present'}` : ''}</time>
+                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
             </div>
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
@@ -669,7 +669,7 @@ async function generateATSContent() {
             .forEach(cert => {
                 let certLine = `${cert.name}`;
                 if (cert.provider) certLine += ` - ${cert.provider}`;
-                if (cert.issue_date) certLine += ` (${formatDateATS(cert.issue_date)} - ${cert.expiry_date ? formatDateATS(cert.expiry_date) : 'Present'})`;
+                if (cert.issue_date) certLine += ` (${formatDateATS(cert.issue_date)})`;
                 ats.push(certLine);
             });
         ats.push('');

@@ -697,7 +697,7 @@ async function loadCertifications() {
             </div>
             <div class="cert-header">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
-                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}${cert.issue_date ? ` - ${cert.expiry_date ? (formatDate(cert.expiry_date) || escapeHtml(cert.expiry_date)) : 'Present'}` : ''}</time>
+                <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
             </div>
             <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
         </article>
@@ -1033,7 +1033,7 @@ function certificationForm(d) {
             </div>
             <div class="form-group">
                 <label class="form-label">Expiry Date (optional)</label>
-                <input type="text" class="form-input" id="f-expiry_date" value="${escapeHtml(d.expiry_date || '')}" placeholder="Leave empty for Present">
+                <input type="text" class="form-input" id="f-expiry_date" value="${escapeHtml(d.expiry_date || '')}">
             </div>
         </div>
         <div class="form-group">

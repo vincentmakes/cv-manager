@@ -7,7 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 ## [1.6.6] - 2026-02-23
 
 ### Added
-- **"Present" display for Education and Certifications**: Education end dates and certification expiry dates now display "Present" when left empty, matching the existing Experience behavior. Certification cards now show date ranges (e.g., "Jan 2024 - Present") instead of only the issue date. Form placeholders updated to indicate "Leave empty for Present". ATS text output also reflects the change for both sections
+- **"Present" display for Education**: Education end dates now display "Present" when left empty, matching the existing Experience behavior. Form placeholder updated to indicate "Leave empty for Present". ATS text output also reflects the change
 
 ## [1.6.5] - 2026-02-18
 
