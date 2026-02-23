@@ -1,11 +1,14 @@
 {
   "name": "cv-manager",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "description": "Professional CV Management System",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/*.test.js",
+    "test:frontend": "node --test tests/frontend.test.js",
+    "test:backend": "node --test tests/backend.test.js"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -106,7 +106,7 @@
     "form.start_year": "Ano de Início",
     "form.start_year_placeholder": "2002",
     "form.end_year": "Ano de Conclusão",
-    "form.end_year_placeholder": "2007",
+    "form.end_year_placeholder": "Deixar vazio para Presente",
     "form.description": "Descrição",
     "form.category_name": "Nome da Categoria",
     "form.icon": "Ícone",

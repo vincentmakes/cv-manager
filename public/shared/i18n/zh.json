@@ -106,7 +106,7 @@
     "form.start_year": "入学年份",
     "form.start_year_placeholder": "2002",
     "form.end_year": "毕业年份",
-    "form.end_year_placeholder": "2007",
+    "form.end_year_placeholder": "留空表示至今",
     "form.description": "描述",
     "form.category_name": "分类名称",
     "form.icon": "图标",

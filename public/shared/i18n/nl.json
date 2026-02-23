@@ -106,7 +106,7 @@
     "form.start_year": "Startjaar",
     "form.start_year_placeholder": "2002",
     "form.end_year": "Eindjaar",
-    "form.end_year_placeholder": "2007",
+    "form.end_year_placeholder": "Leeg laten voor Heden",
     "form.description": "Beschrijving",
     "form.category_name": "Categorienaam",
     "form.icon": "Icoon",

@@ -106,7 +106,7 @@
     "form.start_year": "Année de début",
     "form.start_year_placeholder": "2002",
     "form.end_year": "Année de fin",
-    "form.end_year_placeholder": "2007",
+    "form.end_year_placeholder": "Laisser vide pour En poste",
     "form.description": "Description",
     "form.category_name": "Nom de la catégorie",
     "form.icon": "Icône",
