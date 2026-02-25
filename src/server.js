@@ -633,11 +633,16 @@ function gatherCvData() {
     const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
     const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all();
     const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
+    const customNameMap = {};
+    try {
+        db.prepare('SELECT section_key, name FROM custom_sections').all().forEach(cs => { customNameMap[cs.section_key] = cs.name; });
+    } catch (err) { /* custom_sections table may not exist yet */ }
     const sectionVisibility = {};
     const sectionOrderData = [];
     sections.forEach(s => {
         sectionVisibility[s.section_name] = !!s.visible;
-        sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null });
+        const defaultName = SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
+        sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null, name: s.display_name || defaultName, default_name: defaultName });
     });
     // Custom sections with items
     let customSections = [];
