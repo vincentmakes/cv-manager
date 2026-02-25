@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.9] - 2026-02-25
+
+### Fixed
+- **Custom section labels showing raw keys on public site**: Custom sections displayed internal keys (e.g. `custom_1769874871263`) instead of user-defined labels. `gatherCvData()` was not including `name`/`default_name` in dataset snapshots, so the public site's dataset rendering path had no label to display. Also added a fallback name lookup from custom section data for old datasets saved before this fix.
+
 ## [1.6.8] - 2026-02-23
 
 ### Fixed

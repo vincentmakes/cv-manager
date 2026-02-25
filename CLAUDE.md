@@ -69,6 +69,19 @@ Both must always match. The admin UI checks `version.json` on GitHub to show upd
 
 **Changelog:** `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/) format. Every version bump must have a corresponding changelog entry with the date in `YYYY-MM-DD` format. Use categories: `Added`, `Changed`, `Fixed`, `Removed`.
 
+### MANDATORY: Version Bump Checklist
+
+**Every code change that is committed MUST include a version bump.** This is not optional — skipping it breaks the update notification system and makes releases untrackable.
+
+Before committing, always complete these steps:
+
+1. **Determine bump type** — Bug fix → PATCH, new feature → MINOR, breaking change → MAJOR
+2. **Update `package.json`** — Increment the `"version"` field
+3. **Update `version.json`** — Increment the `"version"` field (must match `package.json`)
+4. **Update `CHANGELOG.md`** — Add a new `## [x.y.z] - YYYY-MM-DD` entry at the top with a description of the change under the appropriate category (`Added`, `Changed`, `Fixed`, `Removed`)
+
+**Do not** batch multiple unrelated changes into a single version bump — each logical change set gets its own version.
+
 ## Internationalization (i18n)
 
 ### How It Works
