@@ -509,10 +509,10 @@ function layoutTimelineCards(timelineContainer) {
     const allItems = itemsContainer.querySelectorAll('.timeline-item');
     if (!allItems.length) return;
 
-    // Reset any previous offsets
+    // Reset to base centering transform
     allItems.forEach(item => {
         const content = item.querySelector('.timeline-content');
-        if (content) content.style.transform = '';
+        if (content) content.style.transform = 'translateX(-50%)';
     });
 
     const containerRect = itemsContainer.getBoundingClientRect();
@@ -520,7 +520,7 @@ function layoutTimelineCards(timelineContainer) {
     const containerH = itemsContainer.offsetHeight;
     if (!containerW || !containerH) return;
 
-    // Collect card info grouped by side (top / bottom)
+    // Collect card positions after centering
     const cards = [];
     allItems.forEach((item, idx) => {
         const content = item.querySelector('.timeline-content');
@@ -530,7 +530,6 @@ function layoutTimelineCards(timelineContainer) {
         const rect = content.getBoundingClientRect();
         cards.push({
             idx, item, content, isTop, isBranch,
-            // Card center X relative to container
             naturalX: rect.left - containerRect.left + rect.width / 2,
             width: rect.width,
             left: rect.left - containerRect.left,
@@ -539,10 +538,10 @@ function layoutTimelineCards(timelineContainer) {
         });
     });
 
-    // Resolve overlaps within each side
+    // Resolve overlaps within each side (top / bottom)
     ['top', 'bottom'].forEach(side => {
-        const sideCards = cards.filter(c => c.isTop === (side === 'top')).sort((a, b) => a.naturalX - b.naturalX);
-        const gap = 4; // minimum gap between cards
+        const sideCards = cards.filter(c => c.isTop === (side === 'top')).sort((a, b) => a.left - b.left);
+        const gap = 6;
         for (let i = 1; i < sideCards.length; i++) {
             const prev = sideCards[i - 1];
             const curr = sideCards[i];
@@ -566,7 +565,6 @@ function layoutTimelineCards(timelineContainer) {
 
     cards.forEach(card => {
         if (Math.abs(card.offsetX) > 1) {
-            // Combine with the base centering transform
             card.content.style.transform = `translateX(calc(-50% + ${card.offsetX}px))`;
 
             // Draw angled connector from dot to card center
