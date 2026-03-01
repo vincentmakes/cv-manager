@@ -332,15 +332,15 @@ body {
 
 /* Timeline Branching — items on the branch track */
 .timeline-item.timeline-branch-track .timeline-dot {
-    top: calc(50% - 28px);
+    top: calc(50% - var(--branch-offset-pct, 28px));
 }
 
 .timeline-item.timeline-branch-track .timeline-flag {
-    top: calc(50% - 28px);
+    top: calc(50% - var(--branch-offset-pct, 28px));
 }
 
 .timeline-item.timeline-branch-track.top .timeline-content {
-    bottom: calc(50% + 44px);
+    bottom: calc(50% + var(--branch-offset-pct, 28px) + 16px);
 }
 
 .timeline-item.timeline-branch-track.bottom .timeline-content {

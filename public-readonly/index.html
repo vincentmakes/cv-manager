@@ -310,117 +310,24 @@
             if (!experiences) return;
             const visible = experiences.filter(e => e.visible !== false);
 
-            // Sort by start_date ascending (oldest first for timeline - left to right)
-            visible.sort((a, b) => {
-                const dateA = parseDateForSortLocal(a.start_date);
-                const dateB = parseDateForSortLocal(b.start_date);
-                return dateA - dateB; // ASC: lower dates first
-            });
+            // Sort and normalize dataset fields to shared format
+            visible.sort((a, b) => parseDateForSortLocal(a.start_date) - parseDateForSortLocal(b.start_date));
 
-            const container = document.getElementById('timelineItems');
-            const timelineContainer = container.closest('.timeline-container');
+            const normalized = visible.map(exp => ({
+                id: exp.id,
+                company: exp.company_name,
+                role: exp.job_title,
+                countryCode: exp.country_code || '',
+                logo: exp.logo_filename || null,
+                start_date: exp.start_date,
+                end_date: exp.end_date,
+                visible: exp.visible
+            }));
 
-            // Compute branching (computeTimelineBranches is in scripts.js)
-            const { branches, segments } = computeTimelineBranches(visible);
-            const hasBranches = branches.length > 0;
-
-            if (timelineContainer) {
-                timelineContainer.classList.toggle('has-branches', hasBranches);
-            }
-
-            // Determine if flags should be shown: only when multiple countries exist
-            const uniqueCountries = new Set(visible.map(e => (e.country_code || '').toLowerCase()).filter(Boolean));
-            const showFlags = uniqueCountries.size > 1;
-
-            // Compute time-scale positions
-            const positions = computeTimePositions(segments);
-
-            let mainTrackIdx = 0;
-            let lastCountry = null;
-            container.innerHTML = segments.map((seg, idx) => {
-                const exp = seg.item;
-                let pos;
-                if (seg.track === 1) {
-                    pos = 'top';
-                } else if (seg.branchGroup !== null) {
-                    // Main-track item overlapping with a branch — place below to avoid overlap
-                    pos = 'bottom';
-                    mainTrackIdx++;
-                } else {
-                    pos = mainTrackIdx % 2 === 0 ? 'top' : 'bottom';
-                    mainTrackIdx++;
-                }
-                const countryCode = (exp.country_code || '').toLowerCase();
-                const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
-                lastCountry = countryCode || lastCountry;
-
-                const marker = showFlags && isFirstOrChanged && countryCode
-                    ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
-                    : '<div class="timeline-dot"></div>';
-                const period = formatTimelinePeriod({ start_date: exp.start_date, end_date: exp.end_date });
-                const branchClass = seg.track === 1 ? 'timeline-branch-track' : '';
-                const { leftPct, widthPct } = positions[idx];
-                const itemLeft = leftPct - widthPct / 2;
-                const companyLine = exp.logo_filename
-                    ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="timeline-card-logo" alt="${escapeHtml(exp.company_name)}" onerror="this.outerHTML='<div class=\\'timeline-company\\'>${escapeHtml(exp.company_name)}</div>'">`
-                    : `<div class="timeline-company">${escapeHtml(exp.company_name)}</div>`;
-                return `<div class="timeline-item ${pos} ${branchClass}" style="left:${itemLeft}%;width:${widthPct}%;"><div class="timeline-content">${companyLine}<div class="timeline-role">${escapeHtml(exp.job_title)}</div><div class="timeline-period">${escapeHtml(period)}</div></div>${marker}</div>`;
-            }).join('');
-
-            resizeTimelineContainer();
-
-            // Trim the main track line — extend to full time range
-            const track = timelineContainer.querySelector('.timeline-track');
-            if (track && positions.length) {
-                const overshoot = 3;
-                const firstStart = positions[0].startPct;
-                const lastEnd = positions[positions.length - 1].endPct;
-                track.style.left = Math.max(0, firstStart - overshoot) + '%';
-                track.style.right = Math.max(0, 100 - lastEnd - overshoot) + '%';
-            }
-
-            // Add white chevrons at the start date of each experience
-            timelineContainer.querySelectorAll('.timeline-chevron').forEach(el => el.remove());
-            if (track) {
-                positions.forEach(pos => {
-                    const chevron = document.createElement('div');
-                    chevron.className = 'timeline-chevron';
-                    chevron.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M1 1 L8 7 L1 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    </svg>`;
-                    chevron.style.left = pos.startPct + '%';
-                    timelineContainer.appendChild(chevron);
-                });
-            }
-
-            layoutTimelineCards(timelineContainer);
-            renderBranchCurves(timelineContainer, segments, branches, positions);
+            renderTimelineItems(normalized);
         }
         
         // Dynamically resize timeline container based on content height
-        function resizeTimelineContainer() {
-            const container = document.querySelector('.timeline-container');
-            if (!container) return;
-            
-            let maxTopHeight = 0;
-            let maxBottomHeight = 0;
-            
-            container.querySelectorAll('.timeline-item').forEach(item => {
-                const content = item.querySelector('.timeline-content');
-                if (!content) return;
-                const contentHeight = content.offsetHeight;
-                if (item.classList.contains('top')) {
-                    maxTopHeight = Math.max(maxTopHeight, contentHeight);
-                } else {
-                    maxBottomHeight = Math.max(maxBottomHeight, contentHeight);
-                }
-            });
-            
-            const neededHeight = maxTopHeight + maxBottomHeight + 50;
-            const minHeight = 220;
-            container.style.height = Math.max(minHeight, neededHeight) + 'px';
-        }
-        
         function renderExperiencesFromData(experiences) {
             if (!experiences) return;
             const visible = experiences.filter(e => e.visible !== false);

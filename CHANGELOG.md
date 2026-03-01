@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.2] - 2026-03-01
+
+### Changed
+- **Shared timeline renderer**: Extracted `renderTimelineItems()` in scripts.js so admin and public views share the same rendering code instead of duplicating logic.
+- **Branch dot print fix**: Branch-track dots now use a proportional CSS custom property (`--branch-offset-pct`) instead of a hardcoded pixel offset, so dots stay aligned with SVG branch curves at any container size (e.g. print).
+
+### Removed
+- Duplicate `resizeTimelineContainer()` and `renderTimelineFromData()` from public-readonly; both now use the shared implementations from scripts.js.
+
 ## [1.7.1] - 2026-03-01
 
 ### Changed

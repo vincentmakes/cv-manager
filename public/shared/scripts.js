@@ -414,11 +414,9 @@ function computeTimePositions(segments) {
 // Sorted by start_date ASC (oldest first - left to right)
 async function loadTimeline() {
     const timeline = await api('/api/timeline');
-    
+
     // Sort by start_date ascending (oldest first for timeline)
-    // Timeline API returns 'period' field like "Jan 2020 - Present", extract start date from it
     timeline.sort((a, b) => {
-        // Extract start date from period string (format: "Jan 2020 - Present" or "2020 - 2022")
         const getStartFromPeriod = (item) => {
             if (item.start_date) return parseDateForSort(item.start_date);
             if (item.period) {
@@ -427,32 +425,32 @@ async function loadTimeline() {
             }
             return 0;
         };
-        
-        const dateA = getStartFromPeriod(a);
-        const dateB = getStartFromPeriod(b);
-        return dateA - dateB; // ASC: lower dates first (oldest on left)
+        return getStartFromPeriod(a) - getStartFromPeriod(b);
     });
-    
+
+    renderTimelineItems(timeline, { interactive: true });
+}
+
+// Shared timeline rendering used by both admin and public views.
+// Items must have: { company, role, countryCode, logo, visible, id, start_date, end_date }
+// Options: interactive (adds click handlers / hidden-print class for admin)
+function renderTimelineItems(items, options) {
+    const interactive = options && options.interactive;
     const container = document.getElementById('timelineItems');
     const timelineContainer = container.closest('.timeline-container');
 
-    // Compute branching
-    const { branches, segments } = computeTimelineBranches(timeline);
+    const { branches, segments } = computeTimelineBranches(items);
     const hasBranches = branches.length > 0;
 
-    // Toggle branch class
     if (timelineContainer) {
         timelineContainer.classList.toggle('has-branches', hasBranches);
     }
 
-    // Determine if flags should be shown: only when multiple countries exist
-    const uniqueCountries = new Set(timeline.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
+    const uniqueCountries = new Set(items.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
     const showFlags = uniqueCountries.size > 1;
 
-    // Compute time-scale positions
     const positions = computeTimePositions(segments);
 
-    // Assign top/bottom: branch-track items go top, main-track items in a branch go bottom
     let mainTrackIdx = 0;
     let lastCountry = null;
     container.innerHTML = segments.map((seg, idx) => {
@@ -461,7 +459,6 @@ async function loadTimeline() {
         if (seg.track === 1) {
             pos = 'top';
         } else if (seg.branchGroup !== null) {
-            // Main-track item overlapping with a branch — place below to avoid overlap
             pos = 'bottom';
             mainTrackIdx++;
         } else {
@@ -472,31 +469,26 @@ async function loadTimeline() {
         const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
         lastCountry = countryCode || lastCountry;
 
-        // Show flag at first entry and at country transitions, only if multiple countries exist
         const marker = showFlags && isFirstOrChanged && countryCode
             ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
             : '<div class="timeline-dot"></div>';
 
-        const hiddenClass = item.visible === false ? 'hidden-print' : '';
-        const expId = item.id || '';
+        const hiddenClass = interactive && item.visible === false ? 'hidden-print' : '';
         const branchClass = seg.track === 1 ? 'timeline-branch-track' : '';
 
-        // Time-scale positioning — center the item on the duration midpoint
         const { leftPct, widthPct } = positions[idx];
         const itemLeft = leftPct - widthPct / 2;
 
-        // Logo replaces company name on the card when present
         const companyLine = item.logo
             ? `<img src="/uploads/${encodeURIComponent(item.logo)}" class="timeline-card-logo" alt="${escapeHtml(item.company)}" onerror="this.outerHTML='<div class=\\'timeline-company\\'>${escapeHtml(item.company)}</div>'">`
             : `<div class="timeline-company">${escapeHtml(item.company)}</div>`;
 
+        const interactiveAttrs = interactive
+            ? `onclick="scrollToExperience(this)" data-exp-id="${item.id || ''}" data-company="${escapeHtml(item.company)}" data-role="${escapeHtml(item.role)}" style="cursor: pointer; left: ${itemLeft}%; width: ${widthPct}%;"`
+            : `style="left: ${itemLeft}%; width: ${widthPct}%;"`;
+
         return `
-            <div class="timeline-item ${pos} ${branchClass} ${hiddenClass}"
-                 onclick="scrollToExperience(this)"
-                 data-exp-id="${expId}"
-                 data-company="${escapeHtml(item.company)}"
-                 data-role="${escapeHtml(item.role)}"
-                 style="cursor: pointer; left: ${itemLeft}%; width: ${widthPct}%;">
+            <div class="timeline-item ${pos} ${branchClass} ${hiddenClass}" ${interactiveAttrs}>
                 <div class="timeline-content">
                     ${companyLine}
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
@@ -509,10 +501,10 @@ async function loadTimeline() {
 
     resizeTimelineContainer();
 
-    // Trim the main track line — extend to full time range, not just dot midpoints
+    // Trim the main track line — extend to full time range
     const track = timelineContainer.querySelector('.timeline-track');
     if (track && positions.length) {
-        const overshoot = 3; // percentage past each end
+        const overshoot = 3;
         const firstStart = positions[0].startPct;
         const lastEnd = positions[positions.length - 1].endPct;
         track.style.left = Math.max(0, firstStart - overshoot) + '%';
@@ -522,8 +514,6 @@ async function loadTimeline() {
     // Add white chevrons at the start date of each experience
     timelineContainer.querySelectorAll('.timeline-chevron').forEach(el => el.remove());
     if (track) {
-        const trackRect = track.getBoundingClientRect();
-        const containerRect = timelineContainer.getBoundingClientRect();
         positions.forEach(pos => {
             const chevron = document.createElement('div');
             chevron.className = 'timeline-chevron';
@@ -661,6 +651,10 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
     const mainY = containerH * 0.5;
     const branchOffset = 28;
     const branchY = mainY - branchOffset;
+
+    // Set proportional branch offset so CSS dots match SVG curves at any size (e.g. print)
+    const branchPct = (branchOffset / containerH) * 100;
+    timelineContainer.style.setProperty('--branch-offset-pct', branchPct + '%');
     // Fixed horizontal extent for the S-curve
     const curveW = 24;
 
