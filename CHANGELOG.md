@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-03-01
+
+### Added
+- **Logo reuse picker**: When adding or editing an experience, a "Use Existing" button shows a grid of previously uploaded logos so the same logo can be assigned to multiple positions at the same company without re-uploading.
+- **Shared logo file safety**: Logo files are only deleted from disk when no other experience references them, preventing broken images when logos are shared across experiences.
+
+### Changed
+- **Export/import preserves logos**: The export JSON includes `logo_filename` for each experience; importing restores the reference so logos work immediately if the files are present in the uploads folder.
+
 ## [1.7.2] - 2026-03-01
 
 ### Changed

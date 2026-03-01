@@ -994,8 +994,10 @@ function experienceForm(d) {
                 <div class="logo-upload-actions">
                     <input type="file" id="f-logo" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewLogo(this)">
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ${t('form.choose_image')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="showLogoPicker()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> ${t('form.use_existing')}</button>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${t('form.remove')}</button>
                 </div>
+                <div class="logo-picker-grid" id="logoPickerGrid" style="display:none;"></div>
             </div>
             <div class="form-hint">${t('form.logo_hint')}</div>
         </div>
@@ -1483,9 +1485,48 @@ function removeLogo() {
     if (fileInput) fileInput.value = '';
 }
 
+async function showLogoPicker() {
+    const grid = document.getElementById('logoPickerGrid');
+    if (!grid) return;
+    // Toggle visibility
+    if (grid.style.display !== 'none') { grid.style.display = 'none'; return; }
+    try {
+        const logos = await api('/api/logos');
+        if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
+        grid.innerHTML = logos.map(f =>
+            `<div class="logo-picker-item" onclick="selectExistingLogo('${escapeHtml(f)}')">
+                <img src="/uploads/${encodeURIComponent(f)}?${Date.now()}" alt="">
+            </div>`
+        ).join('');
+        grid.style.display = 'flex';
+    } catch (err) {
+        toast(t('toast.logo_upload_failed'), 'error');
+    }
+}
+
+function selectExistingLogo(filename) {
+    pendingLogo = { reuse: filename };
+    const preview = document.getElementById('logoUploadPreview');
+    preview.innerHTML = `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="logoPreviewImg">`;
+    const grid = document.getElementById('logoPickerGrid');
+    if (grid) grid.style.display = 'none';
+    const fileInput = document.getElementById('f-logo');
+    if (fileInput) fileInput.value = '';
+}
+
 async function uploadLogo(experienceId) {
     if (pendingLogo === 'remove') {
         try { await fetch(`/api/experiences/${experienceId}/logo`, { method: 'DELETE' }); } catch (err) {}
+        pendingLogo = null;
+        return;
+    }
+    if (pendingLogo && pendingLogo.reuse) {
+        try {
+            const response = await api(`/api/experiences/${experienceId}/logo`, { method: 'PUT', body: { filename: pendingLogo.reuse } });
+            if (response.error) throw new Error(response.error);
+        } catch (err) {
+            toast(t('toast.logo_upload_failed'), 'error');
+        }
         pendingLogo = null;
         return;
     }

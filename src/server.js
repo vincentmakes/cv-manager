@@ -891,16 +891,42 @@ if (PUBLIC_ONLY) {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
         const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id);
         if (!exp) return res.status(404).json({ error: 'Experience not found' });
-        if (exp.logo_filename) { const oldPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath); } catch (e) {} }
+        // Only delete old file if no other experience references it
+        if (exp.logo_filename) {
+            const refCount = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(exp.logo_filename).cnt;
+            if (refCount <= 1) { const oldPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath); } catch (e) {} }
+        }
         db.prepare('UPDATE experiences SET logo_filename = ? WHERE id = ?').run(req.file.filename, req.params.id);
         res.json({ success: true, filename: req.file.filename });
     });
     app.delete('/api/experiences/:id/logo', (req, res) => {
         const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id);
         if (!exp) return res.status(404).json({ error: 'Experience not found' });
-        if (exp.logo_filename) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} }
+        // Only delete the file if no other experience references it
+        if (exp.logo_filename) {
+            const refCount = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(exp.logo_filename).cnt;
+            if (refCount <= 1) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} }
+        }
         db.prepare('UPDATE experiences SET logo_filename = NULL WHERE id = ?').run(req.params.id);
         res.json({ success: true });
+    });
+
+    // Reuse an existing logo file for a different experience
+    app.put('/api/experiences/:id/logo', express.json(), (req, res) => {
+        const { filename } = req.body;
+        if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id);
+        if (!exp) return res.status(404).json({ error: 'Experience not found' });
+        // Verify the file actually exists in uploads
+        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
+        db.prepare('UPDATE experiences SET logo_filename = ? WHERE id = ?').run(filename, req.params.id);
+        res.json({ success: true, filename });
+    });
+
+    // List distinct logos already uploaded
+    app.get('/api/logos', (req, res) => {
+        const logos = db.prepare('SELECT DISTINCT logo_filename FROM experiences WHERE logo_filename IS NOT NULL ORDER BY logo_filename').all();
+        res.json(logos.map(r => r.logo_filename).filter(f => fs.existsSync(path.join(uploadsPath, f))));
     });
 
     app.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
@@ -938,7 +964,7 @@ if (PUBLIC_ONLY) {
     app.get('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT * FROM experiences WHERE id = ?').get(req.params.id); if (!exp) return res.status(404).json({ error: 'Not found' }); res.json({ ...exp, highlights: exp.highlights ? JSON.parse(exp.highlights) : [], visible: !!exp.visible }); });
     app.post('/api/experiences', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM experiences').get(); const result = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
     app.put('/api/experiences/:id', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM experiences WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE experiences SET job_title = ?, company_name = ?, start_date = ?, end_date = ?, location = ?, country_code = ?, highlights = ?, visible = ?, sort_order = ? WHERE id = ?`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
-    app.delete('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id); if (exp && exp.logo_filename) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } db.prepare('DELETE FROM experiences WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+    app.delete('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id); if (exp && exp.logo_filename) { const refCount = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(exp.logo_filename).cnt; if (refCount <= 1) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM experiences WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     app.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: !!c.visible }))); });
     app.get('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT * FROM certifications WHERE id = ?').get(req.params.id); if (!cert) return res.status(404).json({ error: 'Not found' }); res.json({ ...cert, visible: !!cert.visible }); });
