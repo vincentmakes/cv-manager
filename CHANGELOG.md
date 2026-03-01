@@ -4,6 +4,18 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-03-01
+
+### Added
+- **Time-scale timeline positioning**: Timeline items are now positioned proportionally based on their actual dates rather than equally spaced, giving an accurate visual representation of career progression.
+- **Parallel branch track**: Overlapping roles display on a parallel track line (like git branches) with proper fork/merge S-curves connecting to the main track.
+- **Card overlap detection**: When time-scaled cards would overlap, they are automatically nudged apart with angled connector lines drawn from the dot to the displaced card.
+
+### Changed
+- Branch-track cards positioned higher (24px offset) to clear the branch line.
+- Branch-track items always appear on the top side for visual clarity.
+- Timeline container height dynamically accounts for branch track spacing.
+
 ## [1.7.1] - 2026-03-01
 
 ### Fixed

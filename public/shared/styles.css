@@ -202,19 +202,18 @@ body {
 }
 
 .timeline-items {
-    display: flex;
-    justify-content: space-between;
     position: relative;
     height: 100%;
 }
 
 .timeline-item {
-    flex: 1;
-    min-width: 0;
-    position: relative;
+    position: absolute;
+    top: 0;
+    bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: visible;
 }
 
 .timeline-content {
@@ -223,8 +222,11 @@ body {
     padding: 8px 10px;
     text-align: center;
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    min-width: 60px;
+    max-width: 120px;
     transition: all 0.2s ease;
     border: 2px solid transparent;
 }
@@ -318,7 +320,7 @@ body {
     margin-right: auto;
 }
 
-/* Timeline Branching */
+/* Timeline Branching — items on the branch track */
 .timeline-item.timeline-branch-track .timeline-dot {
     top: calc(50% - 16px);
 }
@@ -328,11 +330,11 @@ body {
 }
 
 .timeline-item.timeline-branch-track.top .timeline-content {
-    bottom: calc(50% + 18px);
+    bottom: calc(50% + 24px);
 }
 
 .timeline-item.timeline-branch-track.bottom .timeline-content {
-    top: calc(50% + 18px);
+    top: calc(50% + 24px);
 }
 
 /* Items */

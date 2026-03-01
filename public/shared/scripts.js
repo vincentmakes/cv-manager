@@ -381,6 +381,24 @@ function computeTimelineBranches(items) {
     return { branches, segments };
 }
 
+// Compute time-scale positions for timeline items
+// Returns an array of { leftPct, widthPct } for each segment
+function computeTimePositions(segments) {
+    if (!segments.length) return [];
+    const allStarts = segments.map(s => s.startNum);
+    const allEnds = segments.map(s => s.endNum);
+    const minTime = Math.min(...allStarts);
+    const maxTime = Math.max(...allEnds);
+    const span = maxTime - minTime || 1;
+
+    // Each item is positioned at its start date, with a minimum width
+    const minWidthPct = 100 / segments.length * 0.6;
+    return segments.map(seg => {
+        const leftPct = ((seg.startNum - minTime) / span) * 100;
+        return { leftPct, widthPct: Math.max(minWidthPct, 100 / segments.length) };
+    });
+}
+
 // Load Timeline
 // Sorted by start_date ASC (oldest first - left to right)
 async function loadTimeline() {
@@ -420,10 +438,21 @@ async function loadTimeline() {
     const uniqueCountries = new Set(timeline.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
     const showFlags = uniqueCountries.size > 1;
 
+    // Compute time-scale positions
+    const positions = computeTimePositions(segments);
+
+    // Assign top/bottom: main-track items alternate, branch-track items always go top
+    let mainTrackIdx = 0;
     let lastCountry = null;
     container.innerHTML = segments.map((seg, idx) => {
         const item = seg.item;
-        const pos = idx % 2 === 0 ? 'top' : 'bottom';
+        let pos;
+        if (seg.track === 1) {
+            pos = 'top';
+        } else {
+            pos = mainTrackIdx % 2 === 0 ? 'top' : 'bottom';
+            mainTrackIdx++;
+        }
         const countryCode = (item.countryCode || '').toLowerCase();
         const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
         lastCountry = countryCode || lastCountry;
@@ -437,6 +466,9 @@ async function loadTimeline() {
         const expId = item.id || '';
         const branchClass = seg.track === 1 ? 'timeline-branch-track' : '';
 
+        // Time-scale positioning
+        const { leftPct, widthPct } = positions[idx];
+
         // Logo replaces company name on the card when present
         const companyLine = item.logo
             ? `<img src="/uploads/${encodeURIComponent(item.logo)}" class="timeline-card-logo" alt="${escapeHtml(item.company)}" onerror="this.outerHTML='<div class=\\'timeline-company\\'>${escapeHtml(item.company)}</div>'">`
@@ -448,7 +480,7 @@ async function loadTimeline() {
                  data-exp-id="${expId}"
                  data-company="${escapeHtml(item.company)}"
                  data-role="${escapeHtml(item.role)}"
-                 style="cursor: pointer;">
+                 style="cursor: pointer; left: ${leftPct}%; width: ${widthPct}%;">
                 <div class="timeline-content">
                     ${companyLine}
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
@@ -460,11 +492,105 @@ async function loadTimeline() {
     }).join('');
 
     resizeTimelineContainer();
+    layoutTimelineCards(timelineContainer);
     renderBranchCurves(timelineContainer, segments, branches);
 }
 
-// Render SVG bezier curves at branch fork/merge points
-// Each curve has 3 parts: tangent on source track, S-curve, tangent on target track
+// Detect overlapping timeline cards and offset them, drawing angled connector lines
+function layoutTimelineCards(timelineContainer) {
+    if (!timelineContainer) return;
+    const itemsContainer = timelineContainer.querySelector('.timeline-items');
+    if (!itemsContainer) return;
+
+    // Remove existing connector SVG
+    const existingConnectors = itemsContainer.querySelector('.timeline-connectors');
+    if (existingConnectors) existingConnectors.remove();
+
+    const allItems = itemsContainer.querySelectorAll('.timeline-item');
+    if (!allItems.length) return;
+
+    // Reset any previous offsets
+    allItems.forEach(item => {
+        const content = item.querySelector('.timeline-content');
+        if (content) content.style.transform = '';
+    });
+
+    const containerRect = itemsContainer.getBoundingClientRect();
+    const containerW = itemsContainer.offsetWidth;
+    const containerH = itemsContainer.offsetHeight;
+    if (!containerW || !containerH) return;
+
+    // Collect card info grouped by side (top / bottom)
+    const cards = [];
+    allItems.forEach((item, idx) => {
+        const content = item.querySelector('.timeline-content');
+        if (!content) return;
+        const isTop = item.classList.contains('top');
+        const isBranch = item.classList.contains('timeline-branch-track');
+        const rect = content.getBoundingClientRect();
+        cards.push({
+            idx, item, content, isTop, isBranch,
+            // Card center X relative to container
+            naturalX: rect.left - containerRect.left + rect.width / 2,
+            width: rect.width,
+            left: rect.left - containerRect.left,
+            right: rect.left - containerRect.left + rect.width,
+            offsetX: 0
+        });
+    });
+
+    // Resolve overlaps within each side
+    ['top', 'bottom'].forEach(side => {
+        const sideCards = cards.filter(c => c.isTop === (side === 'top')).sort((a, b) => a.naturalX - b.naturalX);
+        const gap = 4; // minimum gap between cards
+        for (let i = 1; i < sideCards.length; i++) {
+            const prev = sideCards[i - 1];
+            const curr = sideCards[i];
+            const prevRight = prev.left + prev.offsetX + prev.width;
+            const currLeft = curr.left + curr.offsetX;
+            const overlap = prevRight + gap - currLeft;
+            if (overlap > 0) {
+                curr.offsetX += overlap;
+            }
+        }
+    });
+
+    // Apply offsets and build connector SVG
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'timeline-connectors');
+    svg.setAttribute('viewBox', `0 0 ${containerW} ${containerH}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
+
+    const mainY = containerH * 0.5;
+
+    cards.forEach(card => {
+        if (Math.abs(card.offsetX) > 1) {
+            // Combine with the base centering transform
+            card.content.style.transform = `translateX(calc(-50% + ${card.offsetX}px))`;
+
+            // Draw angled connector from dot to card center
+            const dotX = card.item.offsetLeft + card.item.offsetWidth / 2;
+            const dotY = card.isBranch ? mainY - 16 : mainY;
+            const cardCenterX = dotX + card.offsetX;
+            const cardY = card.isTop ? dotY - 16 : dotY + 16;
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', dotX);
+            line.setAttribute('y1', dotY);
+            line.setAttribute('x2', cardCenterX);
+            line.setAttribute('y2', cardY);
+            line.setAttribute('stroke', 'var(--gray-300)');
+            line.setAttribute('stroke-width', '1');
+            line.setAttribute('vector-effect', 'non-scaling-stroke');
+            svg.appendChild(line);
+        }
+    });
+
+    itemsContainer.appendChild(svg);
+}
+
+// Render SVG branch visualization: parallel branch track + fork/merge curves
 function renderBranchCurves(timelineContainer, segments, branches) {
     if (!timelineContainer) return;
     const existing = timelineContainer.querySelector('.timeline-branch-curves');
@@ -487,70 +613,83 @@ function renderBranchCurves(timelineContainer, segments, branches) {
     svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
 
     const mainY = containerH * 0.5;
-    const branchY = mainY - 16;
-    // Fixed width for the S-curve portion
-    const curveW = 20;
+    const branchOffset = 16;
+    const branchY = mainY - branchOffset;
+    // Fixed horizontal extent for the S-curve
+    const curveW = 24;
 
     const makePath = (d) => {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', d);
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', 'var(--accent)');
-        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-width', '3');
         path.setAttribute('vector-effect', 'non-scaling-stroke');
         return path;
     };
 
     branches.forEach(branch => {
         const forkItem = items[branch.forkBeforeIdx];
-        const mergeItem = items[branch.mergeAfterIdx];
-        if (!forkItem || !mergeItem) return;
+        if (!forkItem) return;
 
-        // Find the first branch-track item after the fork
-        let firstBranchIdx = branch.forkBeforeIdx + 1;
-        while (firstBranchIdx <= branch.mergeAfterIdx && segments[firstBranchIdx].track === 0) firstBranchIdx++;
+        // Find the first and last branch-track items in this branch
+        let firstBranchIdx = -1, lastBranchIdx = -1;
+        for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+            if (segments[i].track === 1) {
+                if (firstBranchIdx === -1) firstBranchIdx = i;
+                lastBranchIdx = i;
+            }
+        }
+        if (firstBranchIdx === -1) return;
+
         const firstBranchItem = items[firstBranchIdx];
-        if (!firstBranchItem) return;
+        const lastBranchItem = items[lastBranchIdx];
+        if (!firstBranchItem || !lastBranchItem) return;
 
         const forkX = forkItem.offsetLeft + forkItem.offsetWidth / 2;
         const firstBranchX = firstBranchItem.offsetLeft + firstBranchItem.offsetWidth / 2;
+        const lastBranchX = lastBranchItem.offsetLeft + lastBranchItem.offsetWidth / 2;
 
-        // Fork curve: tangent on main → S-curve → tangent on branch
-        // S-curve is centered between forkX and firstBranchX
-        const forkCenterX = (forkX + firstBranchX) / 2;
-        const forkCurveStart = forkCenterX - curveW / 2;
-        const forkCurveEnd = forkCenterX + curveW / 2;
-        // Tangent on main track
-        svg.appendChild(makePath(`M ${forkX},${mainY} L ${forkCurveStart},${mainY}`));
-        // S-curve up
-        svg.appendChild(makePath(`M ${forkCurveStart},${mainY} C ${forkCenterX},${mainY} ${forkCenterX},${branchY} ${forkCurveEnd},${branchY}`));
-        // Tangent on branch track
-        svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${firstBranchX},${branchY}`));
+        // Fork S-curve: starts at fork item on main track, curves up to branch track
+        const forkCurveStart = forkX;
+        const forkCurveEnd = forkCurveStart + curveW;
+        svg.appendChild(makePath(
+            `M ${forkCurveStart},${mainY} C ${forkCurveStart + curveW / 2},${mainY} ${forkCurveStart + curveW / 2},${branchY} ${forkCurveEnd},${branchY}`
+        ));
 
-        // Check if the last branch-track item is still ongoing (no end_date)
-        // Find the actual last branch-track item in this branch
-        let lastBranchIdx = branch.mergeAfterIdx;
-        while (lastBranchIdx > branch.forkBeforeIdx && segments[lastBranchIdx].track === 0) lastBranchIdx--;
-        const lastBranchOngoing = lastBranchIdx > branch.forkBeforeIdx && !segments[lastBranchIdx].item.end_date;
+        // Parallel branch track line: from end of fork curve to start of merge curve (or to last branch item)
+        const lastBranchOngoing = !segments[lastBranchIdx].item.end_date;
 
-        // Only draw merge curve if the branch has ended
-        if (!lastBranchOngoing) {
-            const mergeLastX = mergeItem.offsetLeft + mergeItem.offsetWidth / 2;
+        if (lastBranchOngoing) {
+            // Branch runs to the end — extend to right edge of last branch item
+            const branchLineEnd = lastBranchX;
+            if (forkCurveEnd < branchLineEnd) {
+                svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${branchLineEnd},${branchY}`));
+            }
+        } else {
+            // Find the next main-track item after branch for merge target
             let afterMergeIdx = branch.mergeAfterIdx + 1;
             const afterMergeItem = items[afterMergeIdx];
 
             if (afterMergeItem) {
                 const afterMergeX = afterMergeItem.offsetLeft + afterMergeItem.offsetWidth / 2;
-                // Merge curve: tangent on branch → S-curve → tangent on main
-                const mergeCenterX = (mergeLastX + afterMergeX) / 2;
-                const mergeCurveStart = mergeCenterX - curveW / 2;
-                const mergeCurveEnd = mergeCenterX + curveW / 2;
-                // Tangent on branch track
-                svg.appendChild(makePath(`M ${mergeLastX},${branchY} L ${mergeCurveStart},${branchY}`));
-                // S-curve down
-                svg.appendChild(makePath(`M ${mergeCurveStart},${branchY} C ${mergeCenterX},${branchY} ${mergeCenterX},${mainY} ${mergeCurveEnd},${mainY}`));
-                // Tangent on main track
-                svg.appendChild(makePath(`M ${mergeCurveEnd},${mainY} L ${afterMergeX},${mainY}`));
+                const mergeCurveStart = afterMergeX - curveW;
+                const mergeCurveEnd = afterMergeX;
+
+                // Branch track line between fork curve end and merge curve start
+                if (forkCurveEnd < mergeCurveStart) {
+                    svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${mergeCurveStart},${branchY}`));
+                }
+
+                // Merge S-curve: from branch track down to main track
+                svg.appendChild(makePath(
+                    `M ${mergeCurveStart},${branchY} C ${mergeCurveStart + curveW / 2},${branchY} ${mergeCurveStart + curveW / 2},${mainY} ${mergeCurveEnd},${mainY}`
+                ));
+            } else {
+                // No item after merge — just extend branch line to last branch item
+                if (forkCurveEnd < lastBranchX) {
+                    svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${lastBranchX},${branchY}`));
+                }
             }
         }
     });
@@ -562,23 +701,27 @@ function renderBranchCurves(timelineContainer, segments, branches) {
 function resizeTimelineContainer() {
     const container = document.querySelector('.timeline-container');
     if (!container) return;
-    
+
     let maxTopHeight = 0;
     let maxBottomHeight = 0;
-    
+    const hasBranches = container.classList.contains('has-branches');
+
     container.querySelectorAll('.timeline-item').forEach(item => {
         const content = item.querySelector('.timeline-content');
         if (!content) return;
         const contentHeight = content.offsetHeight;
+        const isBranch = item.classList.contains('timeline-branch-track');
+        // Branch-track top cards need extra room (24px offset vs 16px for main)
+        const extra = isBranch ? 8 : 0;
         if (item.classList.contains('top')) {
-            maxTopHeight = Math.max(maxTopHeight, contentHeight);
+            maxTopHeight = Math.max(maxTopHeight, contentHeight + extra);
         } else {
-            maxBottomHeight = Math.max(maxBottomHeight, contentHeight);
+            maxBottomHeight = Math.max(maxBottomHeight, contentHeight + extra);
         }
     });
-    
-    // 16px gap between content and track on each side, plus some breathing room
-    const neededHeight = maxTopHeight + maxBottomHeight + 50;
+
+    // Gap between content and track on each side, plus breathing room
+    const neededHeight = maxTopHeight + maxBottomHeight + (hasBranches ? 70 : 50);
     const minHeight = 220;
     container.style.height = Math.max(minHeight, neededHeight) + 'px';
 }
