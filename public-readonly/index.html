@@ -364,6 +364,16 @@
             }).join('');
 
             resizeTimelineContainer();
+
+            // Trim the main track line to span from first dot to last dot
+            const track = timelineContainer.querySelector('.timeline-track');
+            if (track && positions.length) {
+                const firstMid = positions[0].leftPct;
+                const lastMid = positions[positions.length - 1].leftPct;
+                track.style.left = firstMid + '%';
+                track.style.right = (100 - lastMid) + '%';
+            }
+
             layoutTimelineCards(timelineContainer);
             renderBranchCurves(timelineContainer, segments, branches, positions);
         }

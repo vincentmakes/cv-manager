@@ -392,14 +392,18 @@ function computeTimePositions(segments) {
     const maxTime = Math.max(...allEnds);
     const span = maxTime - minTime || 1;
 
-    const minWidthPct = 100 / segments.length * 0.6;
+    const itemWidthPct = Math.max(100 / segments.length * 0.6, 100 / segments.length);
+    // Reserve half an item width on each side so edge items stay within bounds
+    const pad = itemWidthPct / 2;
+    const usable = 100 - pad * 2;
+
     return segments.map(seg => {
-        const startPct = ((seg.startNum - minTime) / span) * 100;
-        const endPct = ((seg.endNum - minTime) / span) * 100;
+        const startPct = pad + ((seg.startNum - minTime) / span) * usable;
+        const endPct = pad + ((seg.endNum - minTime) / span) * usable;
         const midPct = (startPct + endPct) / 2;
         return {
             leftPct: midPct,
-            widthPct: Math.max(minWidthPct, 100 / segments.length),
+            widthPct: itemWidthPct,
             startPct,
             endPct
         };
@@ -488,7 +492,7 @@ async function loadTimeline() {
                  data-exp-id="${expId}"
                  data-company="${escapeHtml(item.company)}"
                  data-role="${escapeHtml(item.role)}"
-                 style="cursor: pointer; left: ${itemLeft}%; width: ${widthPct}%;">`
+                 style="cursor: pointer; left: ${itemLeft}%; width: ${widthPct}%;">
                 <div class="timeline-content">
                     ${companyLine}
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
@@ -500,6 +504,16 @@ async function loadTimeline() {
     }).join('');
 
     resizeTimelineContainer();
+
+    // Trim the main track line to span from first dot to last dot
+    const track = timelineContainer.querySelector('.timeline-track');
+    if (track && positions.length) {
+        const firstMid = positions[0].leftPct;
+        const lastMid = positions[positions.length - 1].leftPct;
+        track.style.left = firstMid + '%';
+        track.style.right = (100 - lastMid) + '%';
+    }
+
     layoutTimelineCards(timelineContainer);
     renderBranchCurves(timelineContainer, segments, branches, positions);
 }
