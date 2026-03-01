@@ -497,7 +497,6 @@ function renderBranchCurves(timelineContainer, segments, branches) {
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', 'var(--accent)');
         path.setAttribute('stroke-width', '2');
-        path.setAttribute('opacity', '0.5');
         path.setAttribute('vector-effect', 'non-scaling-stroke');
         return path;
     };

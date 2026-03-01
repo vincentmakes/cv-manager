@@ -328,11 +328,11 @@ body {
 }
 
 .timeline-item.timeline-branch-track.top .timeline-content {
-    bottom: calc(50% + 2px);
+    bottom: calc(50% + 18px);
 }
 
 .timeline-item.timeline-branch-track.bottom .timeline-content {
-    top: calc(50% + 2px);
+    top: calc(50% + 18px);
 }
 
 /* Items */
@@ -1052,7 +1052,6 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     #section-timeline:not(.hidden-print) .timeline-card-logo { height: 24px; max-width: 80px; }
-    #section-timeline:not(.hidden-print) .timeline-branch-curves { opacity: 0.5; }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
