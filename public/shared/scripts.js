@@ -464,10 +464,9 @@ async function loadTimeline() {
 }
 
 // Render SVG bezier curves at branch fork/merge points
-// Uses percentage-based X coordinates so curves scale correctly in print
+// Each curve has 3 parts: tangent on source track, S-curve, tangent on target track
 function renderBranchCurves(timelineContainer, segments, branches) {
     if (!timelineContainer) return;
-    // Remove any existing branch curves
     const existing = timelineContainer.querySelector('.timeline-branch-curves');
     if (existing) existing.remove();
     if (!branches.length) return;
@@ -481,7 +480,6 @@ function renderBranchCurves(timelineContainer, segments, branches) {
     const containerH = itemsContainer.offsetHeight;
     if (!containerW || !containerH) return;
 
-    // Use viewBox with measured dimensions + width/height 100% so SVG scales with container
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'timeline-branch-curves');
     svg.setAttribute('viewBox', `0 0 ${containerW} ${containerH}`);
@@ -490,6 +488,19 @@ function renderBranchCurves(timelineContainer, segments, branches) {
 
     const mainY = containerH * 0.5;
     const branchY = mainY - 16;
+    // Fixed width for the S-curve portion
+    const curveW = 20;
+
+    const makePath = (d) => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'var(--accent)');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('opacity', '0.5');
+        path.setAttribute('vector-effect', 'non-scaling-stroke');
+        return path;
+    };
 
     branches.forEach(branch => {
         const forkItem = items[branch.forkBeforeIdx];
@@ -500,45 +511,49 @@ function renderBranchCurves(timelineContainer, segments, branches) {
         let firstBranchIdx = branch.forkBeforeIdx + 1;
         while (firstBranchIdx <= branch.mergeAfterIdx && segments[firstBranchIdx].track === 0) firstBranchIdx++;
         const firstBranchItem = items[firstBranchIdx];
-
-        // Find the item after the merge (next main-track item) or use mergeItem itself
-        let afterMergeIdx = branch.mergeAfterIdx + 1;
-        const afterMergeItem = items[afterMergeIdx] || mergeItem;
-
         if (!firstBranchItem) return;
 
-        // Get horizontal centers relative to container
         const forkX = forkItem.offsetLeft + forkItem.offsetWidth / 2;
         const firstBranchX = firstBranchItem.offsetLeft + firstBranchItem.offsetWidth / 2;
-        const mergeLastX = mergeItem.offsetLeft + mergeItem.offsetWidth / 2;
-        const afterMergeX = afterMergeItem.offsetLeft + afterMergeItem.offsetWidth / 2;
 
-        // Fork curve: main track → branch track
-        const forkMidX = (forkX + firstBranchX) / 2;
-        const forkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        forkPath.setAttribute('d', `M ${forkX},${mainY} C ${forkMidX},${mainY} ${forkMidX},${branchY} ${firstBranchX},${branchY}`);
-        forkPath.setAttribute('fill', 'none');
-        forkPath.setAttribute('stroke', 'var(--accent)');
-        forkPath.setAttribute('stroke-width', '2');
-        forkPath.setAttribute('opacity', '0.5');
-        forkPath.setAttribute('vector-effect', 'non-scaling-stroke');
-        svg.appendChild(forkPath);
+        // Fork curve: tangent on main → S-curve → tangent on branch
+        // S-curve is centered between forkX and firstBranchX
+        const forkCenterX = (forkX + firstBranchX) / 2;
+        const forkCurveStart = forkCenterX - curveW / 2;
+        const forkCurveEnd = forkCenterX + curveW / 2;
+        // Tangent on main track
+        svg.appendChild(makePath(`M ${forkX},${mainY} L ${forkCurveStart},${mainY}`));
+        // S-curve up
+        svg.appendChild(makePath(`M ${forkCurveStart},${mainY} C ${forkCenterX},${mainY} ${forkCenterX},${branchY} ${forkCurveEnd},${branchY}`));
+        // Tangent on branch track
+        svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${firstBranchX},${branchY}`));
 
-        // Merge curve: branch track → main track
-        const mergeMidX = (mergeLastX + afterMergeX) / 2;
-        const mergePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        if (afterMergeIdx < segments.length) {
-            mergePath.setAttribute('d', `M ${mergeLastX},${branchY} C ${mergeMidX},${branchY} ${mergeMidX},${mainY} ${afterMergeX},${mainY}`);
-        } else {
-            // Last item is on branch — merge back at its position
-            mergePath.setAttribute('d', `M ${mergeLastX},${branchY} C ${mergeLastX + 20},${branchY} ${mergeLastX + 20},${mainY} ${mergeLastX},${mainY}`);
+        // Check if the last branch-track item is still ongoing (no end_date)
+        // Find the actual last branch-track item in this branch
+        let lastBranchIdx = branch.mergeAfterIdx;
+        while (lastBranchIdx > branch.forkBeforeIdx && segments[lastBranchIdx].track === 0) lastBranchIdx--;
+        const lastBranchOngoing = lastBranchIdx > branch.forkBeforeIdx && !segments[lastBranchIdx].item.end_date;
+
+        // Only draw merge curve if the branch has ended
+        if (!lastBranchOngoing) {
+            const mergeLastX = mergeItem.offsetLeft + mergeItem.offsetWidth / 2;
+            let afterMergeIdx = branch.mergeAfterIdx + 1;
+            const afterMergeItem = items[afterMergeIdx];
+
+            if (afterMergeItem) {
+                const afterMergeX = afterMergeItem.offsetLeft + afterMergeItem.offsetWidth / 2;
+                // Merge curve: tangent on branch → S-curve → tangent on main
+                const mergeCenterX = (mergeLastX + afterMergeX) / 2;
+                const mergeCurveStart = mergeCenterX - curveW / 2;
+                const mergeCurveEnd = mergeCenterX + curveW / 2;
+                // Tangent on branch track
+                svg.appendChild(makePath(`M ${mergeLastX},${branchY} L ${mergeCurveStart},${branchY}`));
+                // S-curve down
+                svg.appendChild(makePath(`M ${mergeCurveStart},${branchY} C ${mergeCenterX},${branchY} ${mergeCenterX},${mainY} ${mergeCurveEnd},${mainY}`));
+                // Tangent on main track
+                svg.appendChild(makePath(`M ${mergeCurveEnd},${mainY} L ${afterMergeX},${mainY}`));
+            }
         }
-        mergePath.setAttribute('fill', 'none');
-        mergePath.setAttribute('stroke', 'var(--accent)');
-        mergePath.setAttribute('stroke-width', '2');
-        mergePath.setAttribute('opacity', '0.5');
-        mergePath.setAttribute('vector-effect', 'non-scaling-stroke');
-        svg.appendChild(mergePath);
     });
 
     itemsContainer.appendChild(svg);

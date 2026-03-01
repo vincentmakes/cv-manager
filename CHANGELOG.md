@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-03-01
+
+### Fixed
+- **Timeline branch curves not visible in print**: Curves now use SVG viewBox with percentage sizing so they scale correctly in print layout. Each curve uses a consistent tangent-curve-tangent shape.
+- **No merge curve for ongoing branches**: Branch curves no longer merge back to the main track when the branched role has no end date (still "Present").
+- **Timeline logos too small**: Increased logo size on screen (25px → 32px) and in print (14px → 24px) for better visibility.
+
 ## [1.7.0] - 2026-03-01
 
 ### Added
