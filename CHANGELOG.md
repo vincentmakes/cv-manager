@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.10] - 2026-03-01
+
+### Fixed
+- **JSON export missing custom sections**: The JSON export (`/api/cv`) did not include custom sections or their items, so exported files lost all custom section data. Export now includes full custom section metadata (name, layout type, icon, visibility) and all items with their fields
+- **JSON import not restoring custom sections**: Importing a JSON file did not restore custom sections. Import now re-creates custom sections with their items and section visibility entries, preserving layout type, icons, sort order, and item metadata
+- **Dataset load not restoring custom sections**: Loading a saved dataset snapshot did not restore the custom sections that were captured when the dataset was saved. Dataset load now properly restores custom sections alongside all other CV data
+
 ## [1.6.9] - 2026-02-25
 
 ### Fixed
