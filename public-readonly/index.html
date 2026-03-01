@@ -365,13 +365,14 @@
 
             resizeTimelineContainer();
 
-            // Trim the main track line to span from first dot to last dot
+            // Trim the main track line — extend a bit past the first/last dot for continuity
             const track = timelineContainer.querySelector('.timeline-track');
             if (track && positions.length) {
+                const overshoot = 2;
                 const firstMid = positions[0].leftPct;
                 const lastMid = positions[positions.length - 1].leftPct;
-                track.style.left = firstMid + '%';
-                track.style.right = (100 - lastMid) + '%';
+                track.style.left = Math.max(0, firstMid - overshoot) + '%';
+                track.style.right = Math.max(0, 100 - lastMid - overshoot) + '%';
             }
 
             layoutTimelineCards(timelineContainer);
