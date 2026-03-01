@@ -310,8 +310,10 @@ body {
 
 /* Timeline Card Logo (replaces company name text when logo uploaded) */
 .timeline-card-logo {
-    width: 90px;
-    height: 22px;
+    width: auto;
+    height: auto;
+    max-width: 100px;
+    max-height: 28px;
     object-fit: contain;
     object-position: center;
     margin-bottom: 2px;
@@ -330,11 +332,11 @@ body {
 }
 
 .timeline-item.timeline-branch-track.top .timeline-content {
-    bottom: calc(50% + 36px);
+    bottom: calc(50% + 40px);
 }
 
 .timeline-item.timeline-branch-track.bottom .timeline-content {
-    top: calc(50% + 36px);
+    top: calc(50% + 40px);
 }
 
 /* Items */

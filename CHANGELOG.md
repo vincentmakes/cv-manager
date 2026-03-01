@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.3] - 2026-03-01
+
+### Fixed
+- **Timeline branch-to-main alignment**: Fixed coordinate space mismatch where the main track line used container-relative percentages while branch curves used items-relative percentages, causing the branch endpoints to not visually align with the main timeline.
+- **Wide logo sizing on timeline cards**: Changed from fixed 90×22px to adaptive sizing (auto width/height with max constraints), so wide/landscape logos render larger instead of being shrunk to fit a narrow fixed box.
+- **Branch card spacing**: Increased gap between branch-track cards and their dots from 2px to 6px, preventing cards from appearing too close to the timeline dot.
+
 ## [1.8.2] - 2026-03-01
 
 ### Fixed

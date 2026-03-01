@@ -510,6 +510,7 @@ async function loadTimeline() {
     resizeTimelineContainer();
 
     // Trim the main track line — extend to full time range, not just dot midpoints
+    // Use pixel positioning to align track with items coordinate space (avoids padding offset)
     const track = timelineContainer.querySelector('.timeline-track');
     let trackEndPct = 100;
     if (track && positions.length) {
@@ -518,8 +519,12 @@ async function loadTimeline() {
         const lastEnd = positions[positions.length - 1].endPct;
         const trackStartPct = Math.max(0, firstStart - overshoot);
         trackEndPct = Math.min(100, lastEnd + overshoot);
-        track.style.left = trackStartPct + '%';
-        track.style.right = (100 - trackEndPct) + '%';
+        const itemsW = container.offsetWidth;
+        const itemsLeft = container.offsetLeft;
+        const trackStartPx = itemsLeft + (trackStartPct / 100) * itemsW;
+        const trackEndPx = itemsLeft + (trackEndPct / 100) * itemsW;
+        track.style.left = trackStartPx + 'px';
+        track.style.right = (timelineContainer.clientWidth - trackEndPx) + 'px';
     }
 
     layoutTimelineCards(timelineContainer);
@@ -742,8 +747,8 @@ function resizeTimelineContainer() {
         if (!content) return;
         const contentHeight = content.offsetHeight;
         const isBranch = item.classList.contains('timeline-branch-track');
-        // Branch-track top cards need extra room (24px offset vs 16px for main)
-        const extra = isBranch ? 8 : 0;
+        // Branch-track top cards need extra room (40px - 28px = 12px extra vs 16px for main)
+        const extra = isBranch ? 12 : 0;
         if (item.classList.contains('top')) {
             maxTopHeight = Math.max(maxTopHeight, contentHeight + extra);
         } else {
