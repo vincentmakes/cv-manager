@@ -196,9 +196,19 @@ body {
     left: 10px;
     right: 10px;
     top: 50%;
-    height: 3px;
+    height: 5px;
     background: linear-gradient(90deg, var(--primary), var(--accent));
     transform: translateY(-50%);
+    border-radius: 2.5px;
+}
+
+.timeline-chevron {
+    position: absolute;
+    left: -1px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    line-height: 0;
 }
 
 .timeline-items {
@@ -1054,6 +1064,7 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     #section-timeline:not(.hidden-print) .timeline-card-logo { width: 70px; height: 22px; }
+    #section-timeline:not(.hidden-print) .timeline-chevron svg { width: 10px; height: 14px; }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 

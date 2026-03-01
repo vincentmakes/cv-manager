@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-03-01
+
+### Changed
+- **Thicker timeline tracks**: Main timeline line and branch lines increased from 3px to 5px with rounded caps for better visual weight.
+- **Start chevron**: White chevron arrow added at the left edge of the timeline to indicate the chronological starting point.
+
 ## [1.7.0] - 2026-03-01
 
 ### Added

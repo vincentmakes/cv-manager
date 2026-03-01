@@ -519,6 +519,17 @@ async function loadTimeline() {
         track.style.right = Math.max(0, 100 - lastEnd - overshoot) + '%';
     }
 
+    // Add a white chevron at the start (left edge) of the track
+    timelineContainer.querySelectorAll('.timeline-chevron').forEach(el => el.remove());
+    if (track) {
+        const chevron = document.createElement('div');
+        chevron.className = 'timeline-chevron';
+        chevron.innerHTML = `<svg width="14" height="18" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 1 L11 9 L1 17" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>`;
+        track.appendChild(chevron);
+    }
+
     layoutTimelineCards(timelineContainer);
     renderBranchCurves(timelineContainer, segments, branches, positions);
 }
@@ -653,7 +664,8 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
         path.setAttribute('d', d);
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', 'var(--accent)');
-        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-width', '5');
+        path.setAttribute('stroke-linecap', 'round');
         path.setAttribute('vector-effect', 'non-scaling-stroke');
         return path;
     };
