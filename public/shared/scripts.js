@@ -335,6 +335,52 @@ async function loadProfile(includePrivate = false) {
     document.getElementById('contactBadges').innerHTML = badges.join('');
 }
 
+// Detect overlapping timeline items and assign branch tracks
+function computeTimelineBranches(items) {
+    if (items.length <= 1) return { branches: [], segments: items.map(item => ({ item, track: 0, branchGroup: null })) };
+
+    const now = new Date();
+    const currentNumeric = now.getFullYear() * 100 + (now.getMonth() + 1);
+
+    const getEnd = (item) => {
+        if (item.end_date) return parseDateForSort(item.end_date);
+        return currentNumeric; // "Present" = current date
+    };
+    const getStart = (item) => parseDateForSort(item.start_date);
+
+    const segments = items.map(item => ({
+        item,
+        track: 0,
+        branchGroup: null,
+        startNum: getStart(item),
+        endNum: getEnd(item)
+    }));
+
+    const branches = [];
+
+    for (let i = 1; i < segments.length; i++) {
+        for (let j = i - 1; j >= 0; j--) {
+            const overlap = Math.min(segments[j].endNum, segments[i].endNum) - segments[i].startNum;
+            // Ignore overlaps of less than 2 months (noise from job transitions)
+            if (overlap >= 2) {
+                segments[i].track = segments[j].track === 0 ? 1 : 0;
+                const existingBranch = branches.find(b => b.mergeAfterIdx >= i - 1 && segments[j].branchGroup === branches.indexOf(b));
+                if (existingBranch) {
+                    existingBranch.mergeAfterIdx = i;
+                    segments[i].branchGroup = branches.indexOf(existingBranch);
+                } else {
+                    segments[i].branchGroup = branches.length;
+                    segments[j].branchGroup = branches.length;
+                    branches.push({ forkBeforeIdx: j, mergeAfterIdx: i });
+                }
+                break;
+            }
+        }
+    }
+
+    return { branches, segments };
+}
+
 // Load Timeline
 // Sorted by start_date ASC (oldest first - left to right)
 async function loadTimeline() {
@@ -359,35 +405,60 @@ async function loadTimeline() {
     });
     
     const container = document.getElementById('timelineItems');
-    
+    const timelineContainer = container.closest('.timeline-container');
+
+    // Compute branching
+    const { branches, segments } = computeTimelineBranches(timeline);
+    const hasBranches = branches.length > 0;
+
+    // Toggle branch class and insert/remove branch line
+    if (timelineContainer) {
+        timelineContainer.classList.toggle('has-branches', hasBranches);
+        const existingBranchLine = timelineContainer.querySelector('.timeline-branch-line');
+        if (hasBranches && !existingBranchLine) {
+            const branchLine = document.createElement('div');
+            branchLine.className = 'timeline-branch-line';
+            timelineContainer.insertBefore(branchLine, container);
+        } else if (!hasBranches && existingBranchLine) {
+            existingBranchLine.remove();
+        }
+    }
+
     // Determine if flags should be shown: only when multiple countries exist
     const uniqueCountries = new Set(timeline.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
     const showFlags = uniqueCountries.size > 1;
-    
+
     let lastCountry = null;
-    container.innerHTML = timeline.map((item, idx) => {
+    container.innerHTML = segments.map((seg, idx) => {
+        const item = seg.item;
         const pos = idx % 2 === 0 ? 'top' : 'bottom';
         const countryCode = (item.countryCode || '').toLowerCase();
         const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
         lastCountry = countryCode || lastCountry;
-        
+
         // Show flag at first entry and at country transitions, only if multiple countries exist
         const marker = showFlags && isFirstOrChanged && countryCode
             ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
             : '<div class="timeline-dot"></div>';
-        
+
         const hiddenClass = item.visible === false ? 'hidden-print' : '';
         const expId = item.id || '';
-        
+        const branchClass = seg.track === 1 ? 'timeline-branch-track' : '';
+
+        // Logo replaces company name on the card when present
+        const companyLine = item.logo
+            ? `<img src="/uploads/${encodeURIComponent(item.logo)}" class="timeline-card-logo" alt="${escapeHtml(item.company)}" onerror="this.outerHTML='<div class=\\'timeline-company\\'>${escapeHtml(item.company)}</div>'">`
+            : `<div class="timeline-company">${escapeHtml(item.company)}</div>`;
+
         return `
-            <div class="timeline-item ${pos} ${hiddenClass}" 
-                 onclick="scrollToExperience(this)" 
+            <div class="timeline-item ${pos} ${branchClass} ${hiddenClass}"
+                 onclick="scrollToExperience(this)"
                  data-exp-id="${expId}"
                  data-company="${escapeHtml(item.company)}"
                  data-role="${escapeHtml(item.role)}"
                  style="cursor: pointer;">
                 <div class="timeline-content">
-                    <div class="timeline-company">${escapeHtml(item.company)}</div>
+                    ${companyLine}
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
                     <div class="timeline-period">${escapeHtml(formatTimelinePeriod(item))}</div>
                 </div>
@@ -395,7 +466,7 @@ async function loadTimeline() {
             </div>
         `;
     }).join('');
-    
+
     resizeTimelineContainer();
 }
 
@@ -485,6 +556,7 @@ async function loadExperiencesReadOnly() {
     container.innerHTML = experiences.map(exp => `
         <article class="item-card" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
             <div class="item-header">
+                ${exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="exp-logo" alt="" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                     <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
@@ -492,7 +564,7 @@ async function loadExperiencesReadOnly() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
+                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
                     <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>

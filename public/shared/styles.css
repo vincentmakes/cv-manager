@@ -306,6 +306,58 @@ body {
     background: var(--white);
 }
 
+/* Timeline Card Logo (replaces company name text when logo uploaded) */
+.timeline-card-logo {
+    max-width: 80px;
+    height: 20px;
+    object-fit: contain;
+    object-position: center;
+    margin-bottom: 2px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Timeline Branching */
+.timeline-branch-line {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: calc(50% - 16px);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.4;
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+.timeline-item.timeline-branch-track .timeline-dot {
+    top: calc(50% - 16px);
+}
+
+.timeline-item.timeline-branch-track .timeline-flag {
+    top: calc(50% - 16px);
+}
+
+.timeline-item.timeline-branch-track.top .timeline-content {
+    bottom: calc(50% + 2px);
+}
+
+.timeline-item.timeline-branch-track.bottom .timeline-content {
+    top: calc(50% + 2px);
+}
+
+/* Experience Card Logo */
+.exp-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+    flex-shrink: 0;
+    border: 1px solid var(--gray-300);
+    background: var(--white);
+}
+
 /* Items */
 .items-list {
     display: flex;
@@ -1023,7 +1075,10 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-content { padding: 6px 8px; }
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
-    
+    #section-timeline:not(.hidden-print) .timeline-card-logo { height: 14px; }
+    #section-timeline:not(.hidden-print) .timeline-branch-line { opacity: 0.3; }
+    .exp-logo { width: 28px; height: 28px; }
+
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
         break-inside: avoid;

@@ -367,6 +367,24 @@
 .profile-preview-initials { font-size: 24px; font-weight: 700; color: var(--white); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .profile-upload-actions { display: flex; flex-direction: column; gap: 8px; }
 
+/* Company Logo Upload */
+.logo-upload-container { display: flex; align-items: center; gap: 16px; }
+.logo-upload-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-100);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px dashed var(--gray-300);
+}
+.logo-upload-preview img { width: 100%; height: 100%; object-fit: contain; }
+.logo-preview-placeholder { color: var(--gray-500); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.logo-upload-actions { display: flex; flex-direction: column; gap: 8px; }
+
 /* Toast */
 .toast {
     position: fixed;

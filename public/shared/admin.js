@@ -655,6 +655,7 @@ async function loadExperiences() {
                 </button>
             </div>
             <div class="item-header">
+                ${exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="exp-logo" alt="" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                     <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
@@ -662,7 +663,7 @@ async function loadExperiences() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
+                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
                     <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>
@@ -865,6 +866,7 @@ async function openModal(type, id = null) {
             break;
         case 'experience':
             title = id ? t('modal.edit_experience') : t('modal.add_experience');
+            pendingLogo = null;
             form = experienceForm(data);
             break;
         case 'certification':
@@ -981,6 +983,23 @@ function profileForm(d) {
 
 function experienceForm(d) {
     return `
+        <div class="form-group">
+            <label class="form-label">${t('form.company_logo')}</label>
+            <div class="logo-upload-container">
+                <div class="logo-upload-preview" id="logoUploadPreview">
+                    ${d.logo_filename
+                        ? `<img src="/uploads/${encodeURIComponent(d.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
+                        : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
+                    }
+                </div>
+                <div class="logo-upload-actions">
+                    <input type="file" id="f-logo" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewLogo(this)">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ${t('form.choose_image')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${t('form.remove')}</button>
+                </div>
+            </div>
+            <div class="form-hint">${t('form.logo_hint')}</div>
+        </div>
         <div class="form-group">
             <label class="form-label">${t('form.job_title')}</label>
             <input type="text" class="form-input" id="f-job_title" value="${escapeHtml(d.job_title || '')}">
@@ -1171,8 +1190,10 @@ async function saveItem() {
             };
             if (id) {
                 await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
+                await uploadLogo(id);
             } else {
-                await api(`/api/${endpoint}`, { method: 'POST', body: data });
+                const result = await api(`/api/${endpoint}`, { method: 'POST', body: data });
+                if (result.id) await uploadLogo(result.id);
             }
             await loadExperiences();
             await loadTimeline();
@@ -1431,6 +1452,54 @@ async function uploadProfilePicture() {
             toast(t('toast.upload_failed'), 'error');
         }
         pendingProfilePicture = null;
+    }
+}
+
+// Company logo upload
+let pendingLogo = null;
+
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            toast(t('toast.image_too_large'), 'error');
+            input.value = '';
+            return;
+        }
+        pendingLogo = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('logoUploadPreview');
+            preview.innerHTML = `<img src="${e.target.result}" alt="" id="logoPreviewImg">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeLogo() {
+    pendingLogo = 'remove';
+    const preview = document.getElementById('logoUploadPreview');
+    preview.innerHTML = '<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+    const fileInput = document.getElementById('f-logo');
+    if (fileInput) fileInput.value = '';
+}
+
+async function uploadLogo(experienceId) {
+    if (pendingLogo === 'remove') {
+        try { await fetch(`/api/experiences/${experienceId}/logo`, { method: 'DELETE' }); } catch (err) {}
+        pendingLogo = null;
+        return;
+    }
+    if (pendingLogo && pendingLogo instanceof File) {
+        const formData = new FormData();
+        formData.append('logo', pendingLogo);
+        try {
+            const response = await fetch(`/api/experiences/${experienceId}/logo`, { method: 'POST', body: formData });
+            if (!response.ok) throw new Error('Upload failed');
+        } catch (err) {
+            toast(t('toast.logo_upload_failed'), 'error');
+        }
+        pendingLogo = null;
     }
 }
 

@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-03-01
+
+### Added
+- **Timeline branching**: Overlapping experiences now visually fork into parallel tracks and merge back, showing concurrent roles side by side instead of sequentially. Overlaps shorter than 2 months are ignored as transition noise.
+- **Company logo upload**: Upload a logo per experience via the admin form. Logos replace the company name text on timeline cards and appear alongside experience cards. Supports JPEG, PNG, and WebP up to 5MB.
+- **Logo API endpoints**: `POST /api/experiences/:id/logo` and `DELETE /api/experiences/:id/logo` for upload and removal. Logo files are cleaned up on re-upload and experience deletion.
+
 ## [1.6.9] - 2026-02-25
 
 ### Fixed
