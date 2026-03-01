@@ -1040,10 +1040,9 @@ body.has-preview-banner .container {
     .section-title { font-size: 15px; }
     
     /* Timeline - SHOW it in print (only if not hidden by user choice) */
-    #section-timeline:not(.hidden-print) .timeline-container { 
+    #section-timeline:not(.hidden-print) .timeline-container {
         display: block !important;
         min-height: 180px;
-        height: auto;
         padding: 50px 10px;
     }
     #section-timeline:not(.hidden-print) .timeline-company { font-size: 9px; }
