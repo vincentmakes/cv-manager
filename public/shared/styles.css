@@ -347,17 +347,6 @@ body {
     top: calc(50% + 2px);
 }
 
-/* Experience Card Logo */
-.exp-logo {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    object-fit: contain;
-    flex-shrink: 0;
-    border: 1px solid var(--gray-300);
-    background: var(--white);
-}
-
 /* Items */
 .items-list {
     display: flex;
@@ -1077,7 +1066,6 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     #section-timeline:not(.hidden-print) .timeline-card-logo { height: 14px; }
     #section-timeline:not(.hidden-print) .timeline-branch-line { opacity: 0.3; }
-    .exp-logo { width: 28px; height: 28px; }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 

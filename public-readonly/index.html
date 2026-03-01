@@ -400,7 +400,6 @@
             document.getElementById('experienceList').innerHTML = visible.map(exp => `
                 <article class="item-card" data-id="${exp.id || ''}" itemscope itemtype="https://schema.org/OrganizationRole">
                     <div class="item-header">
-                        ${exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="exp-logo" alt="" onerror="this.style.display='none'">` : ''}
                         <div>
                             <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                             <div class="item-subtitle" itemprop="memberOf"><span itemprop="name">${escapeHtml(exp.company_name)}</span></div>

@@ -655,7 +655,6 @@ async function loadExperiences() {
                 </button>
             </div>
             <div class="item-header">
-                ${exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="exp-logo" alt="" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                     <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">

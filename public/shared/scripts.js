@@ -361,8 +361,8 @@ function computeTimelineBranches(items) {
     for (let i = 1; i < segments.length; i++) {
         for (let j = i - 1; j >= 0; j--) {
             const overlap = Math.min(segments[j].endNum, segments[i].endNum) - segments[i].startNum;
-            // Ignore overlaps of less than 2 months (noise from job transitions)
-            if (overlap >= 2) {
+            // Ignore overlaps of less than 1 month (noise from job transitions)
+            if (overlap >= 1) {
                 segments[i].track = segments[j].track === 0 ? 1 : 0;
                 const existingBranch = branches.find(b => b.mergeAfterIdx >= i - 1 && segments[j].branchGroup === branches.indexOf(b));
                 if (existingBranch) {
@@ -556,7 +556,6 @@ async function loadExperiencesReadOnly() {
     container.innerHTML = experiences.map(exp => `
         <article class="item-card" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
             <div class="item-header">
-                ${exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="exp-logo" alt="" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                     <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
