@@ -309,14 +309,14 @@
         function renderTimelineFromData(experiences) {
             if (!experiences) return;
             const visible = experiences.filter(e => e.visible !== false);
-            
+
             // Sort by start_date ascending (oldest first for timeline - left to right)
             visible.sort((a, b) => {
                 const dateA = parseDateForSortLocal(a.start_date);
                 const dateB = parseDateForSortLocal(b.start_date);
                 return dateA - dateB; // ASC: lower dates first
             });
-            
+
             const container = document.getElementById('timelineItems');
             const timelineContainer = container.closest('.timeline-container');
 
@@ -342,6 +342,10 @@
                 let pos;
                 if (seg.track === 1) {
                     pos = 'top';
+                } else if (seg.branchGroup !== null) {
+                    // Main-track item overlapping with a branch — place below to avoid overlap
+                    pos = 'bottom';
+                    mainTrackIdx++;
                 } else {
                     pos = mainTrackIdx % 2 === 0 ? 'top' : 'bottom';
                     mainTrackIdx++;
@@ -365,14 +369,28 @@
 
             resizeTimelineContainer();
 
-            // Trim the main track line — extend a bit past the first/last dot for continuity
+            // Trim the main track line — extend to full time range
             const track = timelineContainer.querySelector('.timeline-track');
             if (track && positions.length) {
-                const overshoot = 2;
-                const firstMid = positions[0].leftPct;
-                const lastMid = positions[positions.length - 1].leftPct;
-                track.style.left = Math.max(0, firstMid - overshoot) + '%';
-                track.style.right = Math.max(0, 100 - lastMid - overshoot) + '%';
+                const overshoot = 3;
+                const firstStart = positions[0].startPct;
+                const lastEnd = positions[positions.length - 1].endPct;
+                track.style.left = Math.max(0, firstStart - overshoot) + '%';
+                track.style.right = Math.max(0, 100 - lastEnd - overshoot) + '%';
+            }
+
+            // Add white chevrons at the start date of each experience
+            timelineContainer.querySelectorAll('.timeline-chevron').forEach(el => el.remove());
+            if (track) {
+                positions.forEach(pos => {
+                    const chevron = document.createElement('div');
+                    chevron.className = 'timeline-chevron';
+                    chevron.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 1 L8 7 L1 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>`;
+                    chevron.style.left = pos.startPct + '%';
+                    timelineContainer.appendChild(chevron);
+                });
             }
 
             layoutTimelineCards(timelineContainer);
