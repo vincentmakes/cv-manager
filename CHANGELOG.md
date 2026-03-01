@@ -8,7 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Changed
 - **Thicker timeline tracks**: Main timeline line and branch lines increased from 3px to 5px with rounded caps for better visual weight.
-- **Start chevron**: White chevron arrow added at the left edge of the timeline to indicate the chronological starting point.
+- **Start-date chevrons**: White chevron arrow rendered at each experience's start date on the timeline for visual clarity.
 
 ## [1.7.0] - 2026-03-01
 

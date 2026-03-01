@@ -204,11 +204,11 @@ body {
 
 .timeline-chevron {
     position: absolute;
-    left: -1px;
     top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
+    transform: translate(-50%, -50%);
+    z-index: 3;
     line-height: 0;
+    pointer-events: none;
 }
 
 .timeline-items {

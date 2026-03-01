@@ -519,15 +519,20 @@ async function loadTimeline() {
         track.style.right = Math.max(0, 100 - lastEnd - overshoot) + '%';
     }
 
-    // Add a white chevron at the start (left edge) of the track
+    // Add white chevrons at the start date of each experience
     timelineContainer.querySelectorAll('.timeline-chevron').forEach(el => el.remove());
     if (track) {
-        const chevron = document.createElement('div');
-        chevron.className = 'timeline-chevron';
-        chevron.innerHTML = `<svg width="14" height="18" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1 L11 9 L1 17" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>`;
-        track.appendChild(chevron);
+        const trackRect = track.getBoundingClientRect();
+        const containerRect = timelineContainer.getBoundingClientRect();
+        positions.forEach(pos => {
+            const chevron = document.createElement('div');
+            chevron.className = 'timeline-chevron';
+            chevron.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1 L8 7 L1 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>`;
+            chevron.style.left = pos.startPct + '%';
+            timelineContainer.appendChild(chevron);
+        });
     }
 
     layoutTimelineCards(timelineContainer);
