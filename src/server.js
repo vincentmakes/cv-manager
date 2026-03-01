@@ -112,7 +112,7 @@ try {
 } catch (err) { console.error(`Failed to open database: ${err.message}`); process.exit(1); }
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Favicon and icons (admin uses icon.png with pencil badge)
@@ -815,21 +815,29 @@ if (PUBLIC_ONLY) {
 
     publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
-    publicApp.get('/api/sections/order', (req, res) => { 
-        const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); 
-        const customSections = db.prepare('SELECT section_key, name FROM custom_sections').all();
+    publicApp.get('/api/sections/order', (req, res) => {
+        const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
+        const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
         const customNameMap = {};
         customSections.forEach(cs => { customNameMap[cs.section_key] = cs.name; });
+        const sectionKeys = new Set(sections.map(s => s.section_name));
+        customSections.forEach(cs => {
+            if (!sectionKeys.has(cs.section_key)) {
+                db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, ?, ?)').run(cs.section_key, cs.visible ? 1 : 0, cs.sort_order || 0);
+                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
+            }
+        });
+        sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         const defaultName = (s) => SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
-        res.json(sections.map(s => ({ 
-            key: s.section_name, 
+        res.json(sections.map(s => ({
+            key: s.section_name,
             name: s.display_name || defaultName(s),
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,
-            sort_order: s.sort_order || 0, 
-            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
-        }))); 
+            sort_order: s.sort_order || 0,
+            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
+        })));
     });
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
@@ -887,21 +895,30 @@ if (PUBLIC_ONLY) {
     });
 
     app.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
-    app.get('/api/sections/order', (req, res) => { 
-        const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); 
-        const customSections = db.prepare('SELECT section_key, name FROM custom_sections').all();
+    app.get('/api/sections/order', (req, res) => {
+        const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
+        const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
         const customNameMap = {};
         customSections.forEach(cs => { customNameMap[cs.section_key] = cs.name; });
+        // Auto-repair: ensure all custom sections have section_visibility entries
+        const sectionKeys = new Set(sections.map(s => s.section_name));
+        customSections.forEach(cs => {
+            if (!sectionKeys.has(cs.section_key)) {
+                db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, ?, ?)').run(cs.section_key, cs.visible ? 1 : 0, cs.sort_order || 0);
+                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
+            }
+        });
+        sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         const defaultName = (s) => SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
-        res.json(sections.map(s => ({ 
-            key: s.section_name, 
+        res.json(sections.map(s => ({
+            key: s.section_name,
             name: s.display_name || defaultName(s),
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,
-            sort_order: s.sort_order || 0, 
-            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
-        }))); 
+            sort_order: s.sort_order || 0,
+            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
+        })));
     });
     app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { const displayName = section.display_name || null; db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible !== false ? 1 : 0, section.sort_order, displayName, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.put('/api/sections/:name', (req, res) => { const sectionName = req.params.name; const visible = req.body.visible ? 1 : 0; db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName); if (sectionName.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName); } res.json({ success: true }); });
@@ -1240,21 +1257,29 @@ if (PUBLIC_ONLY) {
     publicApp.use('/uploads', express.static(uploadsPath));
     publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
-    publicApp.get('/api/sections/order', (req, res) => { 
-        const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); 
-        const customSections = db.prepare('SELECT section_key, name FROM custom_sections').all();
+    publicApp.get('/api/sections/order', (req, res) => {
+        const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
+        const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
         const customNameMap = {};
         customSections.forEach(cs => { customNameMap[cs.section_key] = cs.name; });
+        const sectionKeys = new Set(sections.map(s => s.section_name));
+        customSections.forEach(cs => {
+            if (!sectionKeys.has(cs.section_key)) {
+                db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, ?, ?)').run(cs.section_key, cs.visible ? 1 : 0, cs.sort_order || 0);
+                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
+            }
+        });
+        sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         const defaultName = (s) => SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
-        res.json(sections.map(s => ({ 
-            key: s.section_name, 
+        res.json(sections.map(s => ({
+            key: s.section_name,
             name: s.display_name || defaultName(s),
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,
-            sort_order: s.sort_order || 0, 
-            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name) 
-        }))); 
+            sort_order: s.sort_order || 0,
+            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
+        })));
     });
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });

@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.11] - 2026-03-01
+
+### Fixed
+- **Imported custom sections not appearing in admin settings**: Custom sections imported via JSON were displayed in the CV but missing from Settings > Sections, making them impossible to reorder or toggle. All `/api/sections/order` endpoints now auto-repair missing `section_visibility` entries for custom sections
+- **Large JSON imports silently failing**: Express default 100KB body limit could silently reject large CV imports. Increased limit to 10MB
+- **Import errors not shown to user**: The frontend import flow never checked the API response for errors — it always showed a success toast even when the import failed server-side
+
 ## [1.6.10] - 2026-03-01
 
 ### Fixed
