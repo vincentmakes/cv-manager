@@ -511,19 +511,16 @@ async function loadTimeline() {
 
     // Trim the main track line — extend to full time range, not just dot midpoints
     const track = timelineContainer.querySelector('.timeline-track');
-    let trackEndPct = 100;
     if (track && positions.length) {
         const overshoot = 3; // percentage past each end
         const firstStart = positions[0].startPct;
         const lastEnd = positions[positions.length - 1].endPct;
-        const trackStartPct = Math.max(0, firstStart - overshoot);
-        trackEndPct = Math.min(100, lastEnd + overshoot);
-        track.style.left = trackStartPct + '%';
-        track.style.right = (100 - trackEndPct) + '%';
+        track.style.left = Math.max(0, firstStart - overshoot) + '%';
+        track.style.right = Math.max(0, 100 - lastEnd - overshoot) + '%';
     }
 
     layoutTimelineCards(timelineContainer);
-    renderBranchCurves(timelineContainer, segments, branches, positions, trackEndPct);
+    renderBranchCurves(timelineContainer, segments, branches, positions);
 }
 
 // Detect overlapping timeline cards and offset them, drawing angled connector lines
@@ -620,7 +617,7 @@ function layoutTimelineCards(timelineContainer) {
 
 // Render SVG branch visualization: parallel branch track + fork/merge curves
 // positions[] contains { startPct, endPct } for time-accurate fork/merge placement
-function renderBranchCurves(timelineContainer, segments, branches, positions, trackEndPct) {
+function renderBranchCurves(timelineContainer, segments, branches, positions) {
     if (!timelineContainer) return;
     const existing = timelineContainer.querySelector('.timeline-branch-curves');
     if (existing) existing.remove();
@@ -632,6 +629,12 @@ function renderBranchCurves(timelineContainer, segments, branches, positions, tr
     const containerW = itemsContainer.offsetWidth;
     const containerH = itemsContainer.offsetHeight;
     if (!containerW || !containerH) return;
+
+    // Read the track element's actual right edge in .timeline-items coordinates
+    // (the track is positioned in .timeline-container's padding box, which is wider)
+    const track = timelineContainer.querySelector('.timeline-track');
+    const itemsRect = itemsContainer.getBoundingClientRect();
+    const trackRightX = track ? (track.getBoundingClientRect().right - itemsRect.left) : containerW;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'timeline-branch-curves');
@@ -692,8 +695,8 @@ function renderBranchCurves(timelineContainer, segments, branches, positions, tr
         const lastBranchOngoing = !segments[lastBranchIdx].item.end_date;
 
         if (lastBranchOngoing) {
-            // Align branch endpoint with the main track line end
-            const branchEndX = trackEndPct ? pctToX(trackEndPct) : pctToX(positions[lastBranchIdx].endPct);
+            // Align branch endpoint with the main track line's actual right edge
+            const branchEndX = trackRightX;
             if (branchStartX < branchEndX) {
                 svg.appendChild(makePath(`M ${branchStartX},${branchY} L ${branchEndX},${branchY}`));
             }

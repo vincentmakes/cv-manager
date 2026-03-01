@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.3] - 2026-03-01
+
+### Fixed
+- **Branch line aligned with main track**: Branch endpoint now reads the track element's actual right edge via `getBoundingClientRect`, fixing the coordinate mismatch between the track (positioned in the container's padding box) and the branch SVG (inside the narrower items container).
+- **Wide logo sizing**: Increased logo bounding box height from 22px to 28px so wide/landscape logos render at a more visible size while keeping tall logos constrained.
+- **Branch-track card spacing**: Increased top offset for branch-track cards from 36px to 44px for more clearance between the card and the branch dot.
+
 ## [1.8.2] - 2026-03-01
 
 ### Fixed
