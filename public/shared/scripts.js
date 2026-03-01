@@ -393,8 +393,8 @@ function computeTimePositions(segments) {
     const span = maxTime - minTime || 1;
 
     const itemWidthPct = Math.max(100 / segments.length * 0.6, 100 / segments.length);
-    // Reserve half an item width on each side so edge items stay within bounds
-    const pad = itemWidthPct / 2;
+    // Reserve a quarter-item width on each side — less padding means more usable space
+    const pad = itemWidthPct / 4;
     const usable = 100 - pad * 2;
 
     return segments.map(seg => {
@@ -452,7 +452,7 @@ async function loadTimeline() {
     // Compute time-scale positions
     const positions = computeTimePositions(segments);
 
-    // Assign top/bottom: main-track items alternate, branch-track items always go top
+    // Assign top/bottom: branch-track items go top, main-track items in a branch go bottom
     let mainTrackIdx = 0;
     let lastCountry = null;
     container.innerHTML = segments.map((seg, idx) => {
@@ -460,6 +460,10 @@ async function loadTimeline() {
         let pos;
         if (seg.track === 1) {
             pos = 'top';
+        } else if (seg.branchGroup !== null) {
+            // Main-track item overlapping with a branch — place below to avoid overlap
+            pos = 'bottom';
+            mainTrackIdx++;
         } else {
             pos = mainTrackIdx % 2 === 0 ? 'top' : 'bottom';
             mainTrackIdx++;
@@ -505,18 +509,21 @@ async function loadTimeline() {
 
     resizeTimelineContainer();
 
-    // Trim the main track line — extend a bit past the first/last dot for continuity
+    // Trim the main track line — extend past the first/last dot for continuity
     const track = timelineContainer.querySelector('.timeline-track');
+    let trackEndPct = 100;
     if (track && positions.length) {
-        const overshoot = 2; // percentage past each end
+        const overshoot = 5; // percentage past each end
         const firstMid = positions[0].leftPct;
         const lastMid = positions[positions.length - 1].leftPct;
-        track.style.left = Math.max(0, firstMid - overshoot) + '%';
-        track.style.right = Math.max(0, 100 - lastMid - overshoot) + '%';
+        const trackStartPct = Math.max(0, firstMid - overshoot);
+        trackEndPct = Math.min(100, lastMid + overshoot);
+        track.style.left = trackStartPct + '%';
+        track.style.right = (100 - trackEndPct) + '%';
     }
 
     layoutTimelineCards(timelineContainer);
-    renderBranchCurves(timelineContainer, segments, branches, positions);
+    renderBranchCurves(timelineContainer, segments, branches, positions, trackEndPct);
 }
 
 // Detect overlapping timeline cards and offset them, drawing angled connector lines
@@ -613,7 +620,7 @@ function layoutTimelineCards(timelineContainer) {
 
 // Render SVG branch visualization: parallel branch track + fork/merge curves
 // positions[] contains { startPct, endPct } for time-accurate fork/merge placement
-function renderBranchCurves(timelineContainer, segments, branches, positions) {
+function renderBranchCurves(timelineContainer, segments, branches, positions, trackEndPct) {
     if (!timelineContainer) return;
     const existing = timelineContainer.querySelector('.timeline-branch-curves');
     if (existing) existing.remove();
@@ -685,7 +692,8 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
         const lastBranchOngoing = !segments[lastBranchIdx].item.end_date;
 
         if (lastBranchOngoing) {
-            const branchEndX = pctToX(positions[lastBranchIdx].endPct);
+            // Align branch endpoint with the main track line end
+            const branchEndX = trackEndPct ? pctToX(trackEndPct) : pctToX(positions[lastBranchIdx].endPct);
             if (branchStartX < branchEndX) {
                 svg.appendChild(makePath(`M ${branchStartX},${branchY} L ${branchEndX},${branchY}`));
             }

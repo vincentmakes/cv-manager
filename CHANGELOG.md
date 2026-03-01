@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-03-01
+
+### Fixed
+- **Timeline card overlap with branches**: Main-track items that overlap with a branch are now systematically placed below the timeline, preventing visual collisions with branch-track cards above.
+- **Timeline horizontal space usage**: Reduced side padding and increased track overshoot so the timeline spreads further left and right, leveraging more available space.
+- **Branch/main alignment at "Present"**: When both the main timeline and a branch end at "Present", the branch line now extends to the same visual endpoint as the main track line.
+
 ## [1.8.0] - 2026-03-01
 
 ### Added
