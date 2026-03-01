@@ -1052,8 +1052,8 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-content { padding: 6px 8px; }
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
-    #section-timeline:not(.hidden-print) .timeline-card-logo { height: 14px; }
-    #section-timeline:not(.hidden-print) .timeline-branch-curves { opacity: 0.3; }
+    #section-timeline:not(.hidden-print) .timeline-card-logo { height: 20px; }
+    #section-timeline:not(.hidden-print) .timeline-branch-curves { opacity: 0.5; }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 

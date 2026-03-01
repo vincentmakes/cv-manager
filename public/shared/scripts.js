@@ -464,6 +464,7 @@ async function loadTimeline() {
 }
 
 // Render SVG bezier curves at branch fork/merge points
+// Uses percentage-based X coordinates so curves scale correctly in print
 function renderBranchCurves(timelineContainer, segments, branches) {
     if (!timelineContainer) return;
     // Remove any existing branch curves
@@ -476,14 +477,16 @@ function renderBranchCurves(timelineContainer, segments, branches) {
     const items = itemsContainer.querySelectorAll('.timeline-item');
     if (!items.length) return;
 
-    const containerRect = itemsContainer.getBoundingClientRect();
-    const containerW = containerRect.width;
-    const containerH = containerRect.height;
+    const containerW = itemsContainer.offsetWidth;
+    const containerH = itemsContainer.offsetHeight;
     if (!containerW || !containerH) return;
 
+    // Use viewBox with measured dimensions + width/height 100% so SVG scales with container
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'timeline-branch-curves');
-    svg.style.cssText = `position:absolute;left:0;top:0;width:${containerW}px;height:${containerH}px;pointer-events:none;z-index:1;overflow:visible;`;
+    svg.setAttribute('viewBox', `0 0 ${containerW} ${containerH}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
 
     const mainY = containerH * 0.5;
     const branchY = mainY - 16;
@@ -518,6 +521,7 @@ function renderBranchCurves(timelineContainer, segments, branches) {
         forkPath.setAttribute('stroke', 'var(--accent)');
         forkPath.setAttribute('stroke-width', '2');
         forkPath.setAttribute('opacity', '0.5');
+        forkPath.setAttribute('vector-effect', 'non-scaling-stroke');
         svg.appendChild(forkPath);
 
         // Merge curve: branch track → main track
@@ -533,6 +537,7 @@ function renderBranchCurves(timelineContainer, segments, branches) {
         mergePath.setAttribute('stroke', 'var(--accent)');
         mergePath.setAttribute('stroke-width', '2');
         mergePath.setAttribute('opacity', '0.5');
+        mergePath.setAttribute('vector-effect', 'non-scaling-stroke');
         svg.appendChild(mergePath);
     });
 
