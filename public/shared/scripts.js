@@ -571,7 +571,7 @@ function layoutTimelineCards(timelineContainer) {
 
             // Draw angled connector from dot to card center
             const dotX = card.item.offsetLeft + card.item.offsetWidth / 2;
-            const dotY = card.isBranch ? mainY - 16 : mainY;
+            const dotY = card.isBranch ? mainY - 28 : mainY;
             const cardCenterX = dotX + card.offsetX;
             const cardY = card.isTop ? dotY - 16 : dotY + 16;
 
@@ -613,7 +613,7 @@ function renderBranchCurves(timelineContainer, segments, branches) {
     svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
 
     const mainY = containerH * 0.5;
-    const branchOffset = 16;
+    const branchOffset = 28;
     const branchY = mainY - branchOffset;
     // Fixed horizontal extent for the S-curve
     const curveW = 24;
@@ -629,9 +629,6 @@ function renderBranchCurves(timelineContainer, segments, branches) {
     };
 
     branches.forEach(branch => {
-        const forkItem = items[branch.forkBeforeIdx];
-        if (!forkItem) return;
-
         // Find the first and last branch-track items in this branch
         let firstBranchIdx = -1, lastBranchIdx = -1;
         for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
@@ -646,51 +643,38 @@ function renderBranchCurves(timelineContainer, segments, branches) {
         const lastBranchItem = items[lastBranchIdx];
         if (!firstBranchItem || !lastBranchItem) return;
 
-        const forkX = forkItem.offsetLeft + forkItem.offsetWidth / 2;
         const firstBranchX = firstBranchItem.offsetLeft + firstBranchItem.offsetWidth / 2;
         const lastBranchX = lastBranchItem.offsetLeft + lastBranchItem.offsetWidth / 2;
 
-        // Fork S-curve: starts at fork item on main track, curves up to branch track
-        const forkCurveStart = forkX;
-        const forkCurveEnd = forkCurveStart + curveW;
+        // Fork S-curve: starts on main track at the first branch item's X, curves up
+        const forkCurveStart = firstBranchX - curveW;
+        const forkCurveEnd = firstBranchX;
         svg.appendChild(makePath(
             `M ${forkCurveStart},${mainY} C ${forkCurveStart + curveW / 2},${mainY} ${forkCurveStart + curveW / 2},${branchY} ${forkCurveEnd},${branchY}`
         ));
 
-        // Parallel branch track line: from end of fork curve to start of merge curve (or to last branch item)
+        // Parallel branch track line + merge curve
         const lastBranchOngoing = !segments[lastBranchIdx].item.end_date;
 
         if (lastBranchOngoing) {
-            // Branch runs to the end — extend to right edge of last branch item
-            const branchLineEnd = lastBranchX;
-            if (forkCurveEnd < branchLineEnd) {
-                svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${branchLineEnd},${branchY}`));
+            // Branch runs to the end — line from first to last branch item
+            if (firstBranchX < lastBranchX) {
+                svg.appendChild(makePath(`M ${firstBranchX},${branchY} L ${lastBranchX},${branchY}`));
             }
         } else {
-            // Find the next main-track item after branch for merge target
-            let afterMergeIdx = branch.mergeAfterIdx + 1;
-            const afterMergeItem = items[afterMergeIdx];
+            // Merge S-curve ends at the last branch item's X on main track
+            const mergeCurveStart = lastBranchX;
+            const mergeCurveEnd = lastBranchX + curveW;
 
-            if (afterMergeItem) {
-                const afterMergeX = afterMergeItem.offsetLeft + afterMergeItem.offsetWidth / 2;
-                const mergeCurveStart = afterMergeX - curveW;
-                const mergeCurveEnd = afterMergeX;
-
-                // Branch track line between fork curve end and merge curve start
-                if (forkCurveEnd < mergeCurveStart) {
-                    svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${mergeCurveStart},${branchY}`));
-                }
-
-                // Merge S-curve: from branch track down to main track
-                svg.appendChild(makePath(
-                    `M ${mergeCurveStart},${branchY} C ${mergeCurveStart + curveW / 2},${branchY} ${mergeCurveStart + curveW / 2},${mainY} ${mergeCurveEnd},${mainY}`
-                ));
-            } else {
-                // No item after merge — just extend branch line to last branch item
-                if (forkCurveEnd < lastBranchX) {
-                    svg.appendChild(makePath(`M ${forkCurveEnd},${branchY} L ${lastBranchX},${branchY}`));
-                }
+            // Branch track line between first and last branch items
+            if (firstBranchX < lastBranchX) {
+                svg.appendChild(makePath(`M ${firstBranchX},${branchY} L ${lastBranchX},${branchY}`));
             }
+
+            // Merge S-curve: from branch track down to main track
+            svg.appendChild(makePath(
+                `M ${mergeCurveStart},${branchY} C ${mergeCurveStart + curveW / 2},${branchY} ${mergeCurveStart + curveW / 2},${mainY} ${mergeCurveEnd},${mainY}`
+            ));
         }
     });
 
