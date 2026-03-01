@@ -453,6 +453,20 @@ function renderTimelineItems(items, options) {
 
     let mainTrackIdx = 0;
     let lastCountry = null;
+    // Pre-compute merge indices: after a branch merges, the next card should go on top
+    // because the S-curve creates visual space above the timeline
+    const mergeIndices = new Set();
+    branches.forEach(branch => {
+        let lastBranchIdx = -1;
+        for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+            if (segments[i].track === 1) lastBranchIdx = i;
+        }
+        // Only applies when the branch actually merges (not ongoing)
+        if (lastBranchIdx !== -1 && segments[lastBranchIdx].item.end_date) {
+            mergeIndices.add(branch.mergeAfterIdx);
+        }
+    });
+    let forceTopAfterMerge = false;
     container.innerHTML = segments.map((seg, idx) => {
         const item = seg.item;
         let pos;
@@ -462,8 +476,17 @@ function renderTimelineItems(items, options) {
             pos = 'bottom';
             mainTrackIdx++;
         } else {
+            if (forceTopAfterMerge) {
+                // Ensure mainTrackIdx is even so this card goes on top
+                if (mainTrackIdx % 2 !== 0) mainTrackIdx++;
+                forceTopAfterMerge = false;
+            }
             pos = mainTrackIdx % 2 === 0 ? 'top' : 'bottom';
             mainTrackIdx++;
+        }
+        // After processing the last segment in a completed branch, force next regular card to top
+        if (mergeIndices.has(idx)) {
+            forceTopAfterMerge = true;
         }
         const countryCode = (item.countryCode || '').toLowerCase();
         const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);

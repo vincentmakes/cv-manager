@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-03-01
+
+### Changed
+- **Timeline card placement after branch merge**: The first card after a branch merges back into the main timeline is now always placed above the track, then alternation resumes normally. The S-curve of the merge creates visual space on top, making this positioning more natural.
+
 ## [1.8.0] - 2026-03-01
 
 ### Added
