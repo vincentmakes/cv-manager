@@ -411,17 +411,9 @@ async function loadTimeline() {
     const { branches, segments } = computeTimelineBranches(timeline);
     const hasBranches = branches.length > 0;
 
-    // Toggle branch class and insert/remove branch line
+    // Toggle branch class
     if (timelineContainer) {
         timelineContainer.classList.toggle('has-branches', hasBranches);
-        const existingBranchLine = timelineContainer.querySelector('.timeline-branch-line');
-        if (hasBranches && !existingBranchLine) {
-            const branchLine = document.createElement('div');
-            branchLine.className = 'timeline-branch-line';
-            timelineContainer.insertBefore(branchLine, container);
-        } else if (!hasBranches && existingBranchLine) {
-            existingBranchLine.remove();
-        }
     }
 
     // Determine if flags should be shown: only when multiple countries exist
@@ -468,6 +460,83 @@ async function loadTimeline() {
     }).join('');
 
     resizeTimelineContainer();
+    renderBranchCurves(timelineContainer, segments, branches);
+}
+
+// Render SVG bezier curves at branch fork/merge points
+function renderBranchCurves(timelineContainer, segments, branches) {
+    if (!timelineContainer) return;
+    // Remove any existing branch curves
+    const existing = timelineContainer.querySelector('.timeline-branch-curves');
+    if (existing) existing.remove();
+    if (!branches.length) return;
+
+    const itemsContainer = timelineContainer.querySelector('.timeline-items');
+    if (!itemsContainer) return;
+    const items = itemsContainer.querySelectorAll('.timeline-item');
+    if (!items.length) return;
+
+    const containerRect = itemsContainer.getBoundingClientRect();
+    const containerW = containerRect.width;
+    const containerH = containerRect.height;
+    if (!containerW || !containerH) return;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'timeline-branch-curves');
+    svg.style.cssText = `position:absolute;left:0;top:0;width:${containerW}px;height:${containerH}px;pointer-events:none;z-index:1;overflow:visible;`;
+
+    const mainY = containerH * 0.5;
+    const branchY = mainY - 16;
+
+    branches.forEach(branch => {
+        const forkItem = items[branch.forkBeforeIdx];
+        const mergeItem = items[branch.mergeAfterIdx];
+        if (!forkItem || !mergeItem) return;
+
+        // Find the first branch-track item after the fork
+        let firstBranchIdx = branch.forkBeforeIdx + 1;
+        while (firstBranchIdx <= branch.mergeAfterIdx && segments[firstBranchIdx].track === 0) firstBranchIdx++;
+        const firstBranchItem = items[firstBranchIdx];
+
+        // Find the item after the merge (next main-track item) or use mergeItem itself
+        let afterMergeIdx = branch.mergeAfterIdx + 1;
+        const afterMergeItem = items[afterMergeIdx] || mergeItem;
+
+        if (!firstBranchItem) return;
+
+        // Get horizontal centers relative to container
+        const forkX = forkItem.offsetLeft + forkItem.offsetWidth / 2;
+        const firstBranchX = firstBranchItem.offsetLeft + firstBranchItem.offsetWidth / 2;
+        const mergeLastX = mergeItem.offsetLeft + mergeItem.offsetWidth / 2;
+        const afterMergeX = afterMergeItem.offsetLeft + afterMergeItem.offsetWidth / 2;
+
+        // Fork curve: main track → branch track
+        const forkMidX = (forkX + firstBranchX) / 2;
+        const forkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        forkPath.setAttribute('d', `M ${forkX},${mainY} C ${forkMidX},${mainY} ${forkMidX},${branchY} ${firstBranchX},${branchY}`);
+        forkPath.setAttribute('fill', 'none');
+        forkPath.setAttribute('stroke', 'var(--accent)');
+        forkPath.setAttribute('stroke-width', '2');
+        forkPath.setAttribute('opacity', '0.5');
+        svg.appendChild(forkPath);
+
+        // Merge curve: branch track → main track
+        const mergeMidX = (mergeLastX + afterMergeX) / 2;
+        const mergePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        if (afterMergeIdx < segments.length) {
+            mergePath.setAttribute('d', `M ${mergeLastX},${branchY} C ${mergeMidX},${branchY} ${mergeMidX},${mainY} ${afterMergeX},${mainY}`);
+        } else {
+            // Last item is on branch — merge back at its position
+            mergePath.setAttribute('d', `M ${mergeLastX},${branchY} C ${mergeLastX + 20},${branchY} ${mergeLastX + 20},${mainY} ${mergeLastX},${mainY}`);
+        }
+        mergePath.setAttribute('fill', 'none');
+        mergePath.setAttribute('stroke', 'var(--accent)');
+        mergePath.setAttribute('stroke-width', '2');
+        mergePath.setAttribute('opacity', '0.5');
+        svg.appendChild(mergePath);
+    });
+
+    itemsContainer.appendChild(svg);
 }
 
 // Dynamically resize timeline container based on content height

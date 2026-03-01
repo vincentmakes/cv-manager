@@ -326,14 +326,6 @@
 
             if (timelineContainer) {
                 timelineContainer.classList.toggle('has-branches', hasBranches);
-                const existingBranchLine = timelineContainer.querySelector('.timeline-branch-line');
-                if (hasBranches && !existingBranchLine) {
-                    const branchLine = document.createElement('div');
-                    branchLine.className = 'timeline-branch-line';
-                    timelineContainer.insertBefore(branchLine, container);
-                } else if (!hasBranches && existingBranchLine) {
-                    existingBranchLine.remove();
-                }
             }
 
             // Determine if flags should be shown: only when multiple countries exist
@@ -360,6 +352,7 @@
             }).join('');
 
             resizeTimelineContainer();
+            renderBranchCurves(timelineContainer, segments, branches);
         }
         
         // Dynamically resize timeline container based on content height

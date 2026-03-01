@@ -309,7 +309,7 @@ body {
 /* Timeline Card Logo (replaces company name text when logo uploaded) */
 .timeline-card-logo {
     max-width: 80px;
-    height: 20px;
+    height: 25px;
     object-fit: contain;
     object-position: center;
     margin-bottom: 2px;
@@ -319,18 +319,6 @@ body {
 }
 
 /* Timeline Branching */
-.timeline-branch-line {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    top: calc(50% - 16px);
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.4;
-    z-index: 1;
-    transform: translateY(-50%);
-}
-
 .timeline-item.timeline-branch-track .timeline-dot {
     top: calc(50% - 16px);
 }
@@ -1065,7 +1053,7 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     #section-timeline:not(.hidden-print) .timeline-card-logo { height: 14px; }
-    #section-timeline:not(.hidden-print) .timeline-branch-line { opacity: 0.3; }
+    #section-timeline:not(.hidden-print) .timeline-branch-curves { opacity: 0.3; }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
