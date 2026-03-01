@@ -4,52 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.8.3] - 2026-03-01
-
-### Fixed
-- **Timeline branch-to-main alignment**: Fixed coordinate space mismatch where the main track line used container-relative percentages while branch curves used items-relative percentages, causing the branch endpoints to not visually align with the main timeline.
-- **Wide logo sizing on timeline cards**: Changed from fixed 90×22px to adaptive sizing (auto width/height with max constraints), so wide/landscape logos render larger instead of being shrunk to fit a narrow fixed box.
-- **Branch card spacing**: Increased gap between branch-track cards and their dots from 2px to 6px, preventing cards from appearing too close to the timeline dot.
-
-## [1.8.2] - 2026-03-01
-
-### Fixed
-- **Timeline blank space on right**: Track line now extends to the full time range (start/end dates) rather than just dot midpoints, eliminating blank space when items end at "Present".
-- **Timeline padding reduced**: Side padding capped at 2% so items spread across nearly the full container width.
-- **Logo size consistency on timeline cards**: Changed logo bounding box from 100x32px to 90x22px, reducing the visual size disparity between tall/square logos and wide logos.
-
-## [1.8.1] - 2026-03-01
-
-### Fixed
-- **Timeline card overlap with branches**: Main-track items that overlap with a branch are now systematically placed below the timeline, preventing visual collisions with branch-track cards above.
-- **Timeline horizontal space usage**: Reduced side padding and increased track overshoot so the timeline spreads further left and right, leveraging more available space.
-- **Branch/main alignment at "Present"**: When both the main timeline and a branch end at "Present", the branch line now extends to the same visual endpoint as the main track line.
-
-## [1.8.0] - 2026-03-01
-
-### Added
-- **Time-scale timeline positioning**: Timeline items are now positioned proportionally based on their actual dates rather than equally spaced, giving an accurate visual representation of career progression.
-- **Parallel branch track**: Overlapping roles display on a parallel track line (like git branches) with proper fork/merge S-curves connecting to the main track.
-- **Card overlap detection**: When time-scaled cards would overlap, they are automatically nudged apart with angled connector lines drawn from the dot to the displaced card.
-
-### Changed
-- Branch-track cards positioned higher (24px offset) to clear the branch line.
-- Branch-track items always appear on the top side for visual clarity.
-- Timeline container height dynamically accounts for branch track spacing.
-
-## [1.7.1] - 2026-03-01
-
-### Fixed
-- **Timeline branch curves not visible in print**: Curves now use SVG viewBox with percentage sizing so they scale correctly in print layout. Each curve uses a consistent tangent-curve-tangent shape.
-- **No merge curve for ongoing branches**: Branch curves no longer merge back to the main track when the branched role has no end date (still "Present").
-- **Timeline logos too small**: Increased logo size on screen (25px → 32px) and in print (14px → 24px) for better visibility.
-
 ## [1.7.0] - 2026-03-01
 
 ### Added
-- **Timeline branching**: Overlapping experiences now visually fork into parallel tracks and merge back, showing concurrent roles side by side instead of sequentially. Overlaps shorter than 2 months are ignored as transition noise.
-- **Company logo upload**: Upload a logo per experience via the admin form. Logos replace the company name text on timeline cards and appear alongside experience cards. Supports JPEG, PNG, and WebP up to 5MB.
-- **Logo API endpoints**: `POST /api/experiences/:id/logo` and `DELETE /api/experiences/:id/logo` for upload and removal. Logo files are cleaned up on re-upload and experience deletion.
+- **Timeline branching**: Overlapping experiences visually fork into parallel tracks with S-curve connections and merge back, showing concurrent roles side by side. Overlaps shorter than 2 months are ignored as transition noise.
+- **Time-scale timeline positioning**: Timeline items are positioned proportionally based on actual dates rather than equally spaced, with automatic card overlap detection and nudging.
+- **Company logo upload**: Upload a logo per experience via the admin form. Logos replace the company name text on timeline cards. Supports JPEG, PNG, and WebP up to 5MB.
+- **Logo API endpoints**: `POST /api/experiences/:id/logo` and `DELETE /api/experiences/:id/logo` for upload and removal.
 
 ## [1.6.9] - 2026-02-25
 
