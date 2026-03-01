@@ -310,8 +310,8 @@ body {
 
 /* Timeline Card Logo (replaces company name text when logo uploaded) */
 .timeline-card-logo {
-    max-width: 100px;
-    height: 32px;
+    width: 90px;
+    height: 22px;
     object-fit: contain;
     object-position: center;
     margin-bottom: 2px;
@@ -1053,7 +1053,7 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-content { padding: 6px 8px; }
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
-    #section-timeline:not(.hidden-print) .timeline-card-logo { height: 24px; max-width: 80px; }
+    #section-timeline:not(.hidden-print) .timeline-card-logo { width: 70px; height: 18px; }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 

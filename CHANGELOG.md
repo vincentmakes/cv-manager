@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.2] - 2026-03-01
+
+### Fixed
+- **Timeline blank space on right**: Track line now extends to the full time range (start/end dates) rather than just dot midpoints, eliminating blank space when items end at "Present".
+- **Timeline padding reduced**: Side padding capped at 2% so items spread across nearly the full container width.
+- **Logo size consistency on timeline cards**: Changed logo bounding box from 100x32px to 90x22px, reducing the visual size disparity between tall/square logos and wide logos.
+
 ## [1.8.1] - 2026-03-01
 
 ### Fixed

@@ -393,8 +393,8 @@ function computeTimePositions(segments) {
     const span = maxTime - minTime || 1;
 
     const itemWidthPct = Math.max(100 / segments.length * 0.6, 100 / segments.length);
-    // Reserve a quarter-item width on each side — less padding means more usable space
-    const pad = itemWidthPct / 4;
+    // Minimal padding so items spread across nearly the full width
+    const pad = Math.min(itemWidthPct / 4, 2);
     const usable = 100 - pad * 2;
 
     return segments.map(seg => {
@@ -509,15 +509,15 @@ async function loadTimeline() {
 
     resizeTimelineContainer();
 
-    // Trim the main track line — extend past the first/last dot for continuity
+    // Trim the main track line — extend to full time range, not just dot midpoints
     const track = timelineContainer.querySelector('.timeline-track');
     let trackEndPct = 100;
     if (track && positions.length) {
-        const overshoot = 5; // percentage past each end
-        const firstMid = positions[0].leftPct;
-        const lastMid = positions[positions.length - 1].leftPct;
-        const trackStartPct = Math.max(0, firstMid - overshoot);
-        trackEndPct = Math.min(100, lastMid + overshoot);
+        const overshoot = 3; // percentage past each end
+        const firstStart = positions[0].startPct;
+        const lastEnd = positions[positions.length - 1].endPct;
+        const trackStartPct = Math.max(0, firstStart - overshoot);
+        trackEndPct = Math.min(100, lastEnd + overshoot);
         track.style.left = trackStartPct + '%';
         track.style.right = (100 - trackEndPct) + '%';
     }
