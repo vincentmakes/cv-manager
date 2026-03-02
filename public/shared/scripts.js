@@ -1238,8 +1238,10 @@ function renderBulletListPublic(items) {
 }
 
 // Adjust timeline container height for print so branch track stays proportional.
-// Print CSS reduces vertical padding from 70+70=140px to 50+50=100px. Without
-// shrinking the container, the content area grows and the branch line drifts away.
+// Print CSS reduces vertical padding from 70+70=140px to 50+50=100px (40px less).
+// Timeline elements also shrink ~80% in print (fonts 11→9px, dots 12→10px), so
+// we reduce height by 54px (40px padding + 14px extra) to scale the branch offset
+// proportionally with the smaller elements.
 (function() {
     let savedHeight = null;
     window.addEventListener('beforeprint', function() {
@@ -1248,7 +1250,7 @@ function renderBulletListPublic(items) {
         const h = parseInt(container.style.height);
         if (!h) return;
         savedHeight = container.style.height;
-        container.style.height = (h - 40) + 'px';
+        container.style.height = (h - 54) + 'px';
     });
     window.addEventListener('afterprint', function() {
         if (savedHeight === null) return;
