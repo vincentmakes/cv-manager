@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-03-02
+
+### Fixed
+- Timeline branch track appearing further from the main line in print view due to the container's content area expanding when print CSS reduced padding without adjusting the container height.
+
 ## [1.7.0] - 2026-03-02
 
 ### Added

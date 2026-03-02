@@ -1237,6 +1237,28 @@ function renderBulletListPublic(items) {
     }).join('')}</div>`;
 }
 
+// Adjust timeline container height for print so branch track stays proportional.
+// Print CSS reduces vertical padding from 70+70=140px to 50+50=100px. Without
+// shrinking the container, the content area grows and the branch line drifts away.
+(function() {
+    let savedHeight = null;
+    window.addEventListener('beforeprint', function() {
+        const container = document.querySelector('.timeline-container');
+        if (!container || !container.classList.contains('has-branches')) return;
+        const h = parseInt(container.style.height);
+        if (!h) return;
+        savedHeight = container.style.height;
+        container.style.height = (h - 40) + 'px';
+    });
+    window.addEventListener('afterprint', function() {
+        if (savedHeight === null) return;
+        const container = document.querySelector('.timeline-container');
+        if (!container) return;
+        container.style.height = savedHeight;
+        savedHeight = null;
+    });
+})();
+
 // Free text layout for public view
 function renderFreeTextPublic(items) {
     if (items.length === 0) return '';
