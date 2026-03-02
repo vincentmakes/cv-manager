@@ -405,9 +405,33 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 }
 .logo-picker-item:hover { border-color: var(--primary); }
-.logo-picker-item img { width: 48px; height: 48px; object-fit: contain; padding: 4px; }
+.logo-picker-img { width: 48px; height: 48px; }
+.logo-picker-item img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+.logo-picker-delete {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: var(--gray-400);
+    color: var(--white);
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.logo-picker-item:hover .logo-picker-delete { opacity: 1; }
+.logo-picker-delete:hover { background: var(--danger, #e53e3e); }
 .logo-picker-label {
     font-size: 9px;
     line-height: 1.1;

@@ -939,28 +939,54 @@ if (PUBLIC_ONLY) {
         if (!files.length) return res.json([]);
         // Build filename → company map from current experiences
         const companyMap = {};
+        const inUseSet = new Set();
         db.prepare('SELECT logo_filename, company_name FROM experiences WHERE logo_filename IS NOT NULL').all()
-            .forEach(r => { if (r.logo_filename && r.company_name) companyMap[r.logo_filename] = r.company_name; });
-        // Also check saved datasets for company names of logos not in current experiences
-        const unmapped = files.filter(f => !companyMap[f]);
-        if (unmapped.length) {
-            try {
-                const datasets = db.prepare('SELECT data FROM saved_datasets').all();
-                for (const ds of datasets) {
-                    try {
-                        const data = JSON.parse(ds.data);
-                        if (data.experiences) {
-                            for (const exp of data.experiences) {
-                                if (exp.logo_filename && exp.company_name && !companyMap[exp.logo_filename]) {
+            .forEach(r => { if (r.logo_filename) { inUseSet.add(r.logo_filename); if (r.company_name) companyMap[r.logo_filename] = r.company_name; } });
+        // Also check saved datasets for company names and usage
+        try {
+            const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.experiences) {
+                        for (const exp of data.experiences) {
+                            if (exp.logo_filename) {
+                                inUseSet.add(exp.logo_filename);
+                                if (exp.company_name && !companyMap[exp.logo_filename]) {
                                     companyMap[exp.logo_filename] = exp.company_name;
                                 }
                             }
                         }
-                    } catch (e) {}
-                }
-            } catch (e) {}
-        }
-        res.json(files.map(f => ({ filename: f, company: companyMap[f] || null })));
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json(files.map(f => ({ filename: f, company: companyMap[f] || null, in_use: inUseSet.has(f) })));
+    });
+
+    // Delete an unused logo file
+    app.delete('/api/logos/:filename', (req, res) => {
+        const filename = req.params.filename;
+        if (!filename || !filename.startsWith('logo_')) return res.status(400).json({ error: 'Invalid filename' });
+        const filePath = path.join(uploadsPath, filename);
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+        // Check if in use by current experiences
+        const expRef = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(filename).cnt;
+        if (expRef > 0) return res.status(409).json({ error: 'Logo is in use by current experiences' });
+        // Check if in use by saved datasets
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.experiences && data.experiences.some(e => e.logo_filename === filename)) {
+                        return res.status(409).json({ error: 'Logo is in use by a saved dataset' });
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        try { fs.unlinkSync(filePath); } catch (e) { return res.status(500).json({ error: 'Failed to delete file' }); }
+        res.json({ success: true });
     });
 
     app.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });

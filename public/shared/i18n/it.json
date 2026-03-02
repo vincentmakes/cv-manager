@@ -79,6 +79,7 @@
     "form.company_logo": "Logo aziendale",
     "form.logo_hint": "Un'immagine quadrata piccola funziona meglio. JPEG, PNG o WebP, max 5MB.",
     "form.use_existing": "Usa esistente",
+    "form.delete_logo": "Elimina logo",
     "form.name": "Nome",
     "form.initials": "Iniziali",
     "form.title": "Titolo",
@@ -251,6 +252,7 @@
     "toast.upload_failed": "Caricamento immagine fallito",
     "toast.logo_upload_failed": "Caricamento del logo fallito",
     "toast.no_existing_logos": "Nessun logo esistente trovato. Caricane uno prima.",
+    "toast.logo_deleted": "Logo eliminato",
     "toast.order_saved": "Ordine salvato",
     "toast.order_failed": "Salvataggio ordine fallito",
     "toast.setting_saved": "Impostazione salvata",
@@ -297,6 +299,7 @@
     "confirm.delete_dataset": "Eliminare il dataset \"{{name}}\"? Questa azione non può essere annullata.",
     "confirm.delete_section": "Eliminare questa sezione personalizzata e tutti i suoi elementi? Questa azione non può essere annullata.",
     "confirm.delete_custom_item": "Eliminare questo elemento?",
+    "confirm.delete_logo": "Eliminare questo logo inutilizzato? Questa azione non può essere annullata.",
 
     "present": "Presente",
     "loading": "Caricamento...",

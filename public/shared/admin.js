@@ -1498,12 +1498,30 @@ async function showLogoPicker() {
         const logos = await api('/api/logos');
         if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
         grid.innerHTML = logos.map(l =>
-            `<div class="logo-picker-item" onclick="selectExistingLogo('${escapeHtml(l.filename)}')" title="${escapeHtml(l.company || '')}">
-                <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
+            `<div class="logo-picker-item" title="${escapeHtml(l.company || '')}">
+                <div class="logo-picker-img" onclick="selectExistingLogo('${escapeHtml(l.filename)}')">
+                    <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
+                </div>
                 ${l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>` : ''}
+                ${!l.in_use ? `<button type="button" class="logo-picker-delete" onclick="event.stopPropagation();deleteUnusedLogo('${escapeHtml(l.filename)}')" title="${t('form.delete_logo')}">×</button>` : ''}
             </div>`
         ).join('');
         grid.style.display = 'flex';
+    } catch (err) {
+        toast(t('toast.logo_upload_failed'), 'error');
+    }
+}
+
+async function deleteUnusedLogo(filename) {
+    if (!confirm(t('confirm.delete_logo'))) return;
+    try {
+        const res = await api(`/api/logos/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        if (res.error) { toast(res.error, 'error'); return; }
+        toast(t('toast.logo_deleted'), 'success');
+        // Refresh the picker
+        const grid = document.getElementById('logoPickerGrid');
+        if (grid) grid.style.display = 'none';
+        showLogoPicker();
     } catch (err) {
         toast(t('toast.logo_upload_failed'), 'error');
     }

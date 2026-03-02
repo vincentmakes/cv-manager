@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-03-02
+
+### Added
+- Delete unused logos from the logo picker — a delete button (×) appears on hover for logos not referenced by any current experience or saved dataset. Protects in-use logos from deletion.
+
 ## [1.8.0] - 2026-03-02
 
 ### Added

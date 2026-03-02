@@ -79,6 +79,7 @@
     "form.company_logo": "Firmenlogo",
     "form.logo_hint": "Ein kleines quadratisches Bild ist ideal. JPEG, PNG oder WebP, max. 5MB.",
     "form.use_existing": "Vorhandenes verwenden",
+    "form.delete_logo": "Logo löschen",
     "form.name": "Name",
     "form.initials": "Initialen",
     "form.title": "Titel",
@@ -251,6 +252,7 @@
     "toast.upload_failed": "Bild-Upload fehlgeschlagen",
     "toast.logo_upload_failed": "Logo-Upload fehlgeschlagen",
     "toast.no_existing_logos": "Keine vorhandenen Logos gefunden. Laden Sie zuerst eines hoch.",
+    "toast.logo_deleted": "Logo gelöscht",
     "toast.order_saved": "Reihenfolge gespeichert",
     "toast.order_failed": "Reihenfolge konnte nicht gespeichert werden",
     "toast.setting_saved": "Einstellung gespeichert",
@@ -297,6 +299,7 @@
     "confirm.delete_dataset": "Datensatz \"{{name}}\" löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm.delete_section": "Diesen benutzerdefinierten Abschnitt und alle seine Einträge löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm.delete_custom_item": "Diesen Eintrag löschen?",
+    "confirm.delete_logo": "Dieses unbenutzte Logo löschen? Dies kann nicht rückgängig gemacht werden.",
 
     "present": "Aktuell",
     "loading": "Laden...",
