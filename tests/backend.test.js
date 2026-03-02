@@ -153,6 +153,68 @@ describe('Backend API', () => {
             assert.ok(data.id);
         });
 
+        it('GET /api/timeline includes logo field', async () => {
+            const res = await fetch(`${BASE_URL}/api/timeline`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(Array.isArray(data));
+            if (data.length > 0) {
+                assert.ok('logo' in data[0], 'Timeline item should have logo field');
+            }
+        });
+
+        it('GET /api/experiences includes logo_filename field', async () => {
+            const res = await fetch(`${BASE_URL}/api/experiences`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(Array.isArray(data));
+            if (data.length > 0) {
+                assert.ok('logo_filename' in data[0], 'Experience should have logo_filename field');
+            }
+        });
+
+        it('POST /api/experiences/:id/logo returns 404 for non-existent experience', async () => {
+            const formData = new FormData();
+            formData.append('logo', new Blob(['fake image data'], { type: 'image/jpeg' }), 'test.jpg');
+            const res = await fetch(`${BASE_URL}/api/experiences/99999/logo`, {
+                method: 'POST',
+                body: formData,
+            });
+            // Either 404 (not found) or 400 (no file due to filter) are acceptable
+            assert.ok(res.status === 404 || res.status === 400);
+        });
+
+        it('DELETE /api/experiences/:id/logo returns 404 for non-existent experience', async () => {
+            const res = await fetch(`${BASE_URL}/api/experiences/99999/logo`, {
+                method: 'DELETE',
+            });
+            assert.strictEqual(res.status, 404);
+        });
+
+        it('DELETE /api/experiences/:id/logo succeeds for existing experience without logo', async () => {
+            // First create an experience
+            const createRes = await fetch(`${BASE_URL}/api/experiences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    job_title: 'Logo Test',
+                    company_name: 'LogoCo',
+                    start_date: '2024-01',
+                    end_date: '',
+                    location: 'Remote',
+                    highlights: [],
+                }),
+            });
+            const { id } = await createRes.json();
+
+            const res = await fetch(`${BASE_URL}/api/experiences/${id}/logo`, {
+                method: 'DELETE',
+            });
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.strictEqual(data.success, true);
+        });
+
         it('serves admin HTML at root', async () => {
             const res = await fetch(BASE_URL);
             assert.strictEqual(res.status, 200);

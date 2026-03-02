@@ -196,25 +196,34 @@ body {
     left: 10px;
     right: 10px;
     top: 50%;
-    height: 3px;
+    height: 5px;
     background: linear-gradient(90deg, var(--primary), var(--accent));
     transform: translateY(-50%);
+    border-radius: 2.5px;
+}
+
+.timeline-chevron {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    line-height: 0;
+    pointer-events: none;
 }
 
 .timeline-items {
-    display: flex;
-    justify-content: space-between;
     position: relative;
     height: 100%;
 }
 
 .timeline-item {
-    flex: 1;
-    min-width: 0;
-    position: relative;
+    position: absolute;
+    top: 0;
+    bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: visible;
 }
 
 .timeline-content {
@@ -223,8 +232,11 @@ body {
     padding: 8px 10px;
     text-align: center;
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    min-width: 60px;
+    max-width: 120px;
     transition: all 0.2s ease;
     border: 2px solid transparent;
 }
@@ -304,6 +316,40 @@ body {
     z-index: 2;
     object-fit: cover;
     background: var(--white);
+}
+
+/* Timeline Card Logo (replaces company name text when logo uploaded) */
+.timeline-card-logo {
+    width: 90px;
+    height: 28px;
+    object-fit: contain;
+    object-position: center;
+    margin-bottom: 2px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Timeline Branching — items on the branch track */
+.timeline-item.timeline-branch-track .timeline-dot {
+    top: calc(50% - var(--branch-offset-pct, 28px));
+}
+
+.timeline-item.timeline-branch-track .timeline-flag {
+    top: calc(50% - var(--branch-offset-pct, 28px));
+}
+
+.timeline-item.timeline-branch-track.top .timeline-content {
+    bottom: calc(50% + var(--branch-offset-pct, 28px) + 16px);
+}
+
+.timeline-item.timeline-branch-track.bottom .timeline-content {
+    top: calc(50% + 36px);
+}
+
+/* CSS fallback for branch line in print (SVG doesn't render on Safari iOS) */
+.timeline-branch-line {
+    display: none;
 }
 
 /* Items */
@@ -1011,19 +1057,58 @@ body.has-preview-banner .container {
     .section-title { font-size: 15px; }
     
     /* Timeline - SHOW it in print (only if not hidden by user choice) */
-    #section-timeline:not(.hidden-print) .timeline-container { 
+    #section-timeline:not(.hidden-print) .section-header { margin-bottom: 8px; }
+    #section-timeline:not(.hidden-print) .timeline-container {
         display: block !important;
-        min-height: 180px;
-        height: auto;
-        padding: 50px 10px;
+        min-height: 200px;
+        /* MUST be symmetric: .timeline-track uses top:50% of the padding box,
+           while dots/cards use top:50% of the content box (.timeline-items).
+           Asymmetric padding shifts the track away from the dots. */
+        padding: 70px 10px;
     }
     #section-timeline:not(.hidden-print) .timeline-company { font-size: 9px; }
     #section-timeline:not(.hidden-print) .timeline-role { font-size: 8px; }
     #section-timeline:not(.hidden-print) .timeline-period { font-size: 8px; }
-    #section-timeline:not(.hidden-print) .timeline-content { padding: 6px 8px; }
+    #section-timeline:not(.hidden-print) .timeline-content {
+        padding: 6px 8px;
+        transform: translateX(-50%) !important;
+        max-width: min(90px, calc(100% + 20px));
+        min-width: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: none !important;
+    }
+    #section-timeline:not(.hidden-print) .timeline-connectors { display: none !important; }
+    /* Only resize dots/flags in print — do NOT override top/left/transform
+       because that kills the branch-track offset (calc(50% - var(--branch-offset-pct)))
+       due to the #id selector having higher specificity than class-only selectors */
     #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
-    
+    #section-timeline:not(.hidden-print) .timeline-card-logo { width: 70px; height: 22px; }
+    #section-timeline:not(.hidden-print) .timeline-chevron svg { width: 10px; height: 14px; }
+    /* Branch curves: improve SVG rendering in print */
+    #section-timeline:not(.hidden-print) .timeline-branch-curves {
+        overflow: visible !important;
+    }
+    #section-timeline:not(.hidden-print) .timeline-branch-curves path {
+        stroke: var(--accent) !important;
+        stroke-width: 3px !important;
+    }
+    /* CSS fallback branch line — Safari iOS doesn't render SVG in print */
+    #section-timeline:not(.hidden-print) .timeline-branch-line {
+        display: block;
+        position: absolute;
+        top: calc(50% - var(--branch-offset-pct, 8%));
+        height: 3px;
+        background: var(--accent);
+        border-radius: 2px;
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+    #section-timeline:not(.hidden-print) .timeline-track {
+        height: 3px;
+    }
+
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
         break-inside: avoid;

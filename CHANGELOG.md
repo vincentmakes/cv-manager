@@ -4,6 +4,81 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.6] - 2026-03-02
+
+### Fixed
+- Global logo endpoints not syncing `logo_propagate` flag to saved dataset JSON. `POST /api/logos/apply-global` updated `logo_filename` in datasets but never set `logo_propagate = 1`. `POST /api/logos/set-propagate` only updated the live DB, ignoring datasets entirely. Both now sync the flag to all saved datasets, so the toggle persists across dataset loads and server restarts.
+
+## [1.10.5] - 2026-03-02
+
+### Fixed
+- Global logo propagation toggle (`logo_propagate`) not persisting across dataset loads and imports. The INSERT statements for experiences in both `POST /api/datasets/:id/load` and `POST /api/import` were missing the `logo_propagate` column, causing it to reset to 0 (default) every time a dataset was loaded — including the automatic default dataset load on page startup.
+
+## [1.10.4] - 2026-03-02
+
+### Fixed
+- Branch dot forced onto main line in print: the `#section-timeline .timeline-dot { top: 50% }` print override (specificity 1,2,0) was overriding `.timeline-item.timeline-branch-track .timeline-dot { top: calc(50% - var(--branch-offset-pct)) }` (specificity 0,3,0). Removed `top`/`left`/`transform`/`position` from print dot/flag rules — only size needs overriding.
+- Branch card overlapping header: with the dot incorrectly on the main line but the card correctly elevated, the visual disconnect made the card appear to float into the header. Fixed by the dot specificity correction above.
+- CSS branch line fallback positioned in wrong reference frame: was appended to `.timeline-container` (padding box) but `top: 50%` needs to reference `.timeline-items` (content box). Moved to `itemsContainer`.
+- Increased print padding from 65px to 70px (matching screen) for branch card clearance.
+
+## [1.10.3] - 2026-03-02
+
+### Fixed
+- Timeline print layout on Safari iOS: dots misaligned from track, cards overlapping the line, branch curves invisible.
+- Root cause for dot/card misalignment: asymmetric padding (`80px top / 50px bottom`) — the track uses `top: 50%` of the padding box while dots/cards reference 50% of the content box, causing a 15px vertical offset. Restored symmetric padding.
+- Root cause for invisible branches: Safari iOS doesn't render inline SVGs with `preserveAspectRatio="none"` in print. Added CSS-based branch line elements (`div.timeline-branch-line`) as a print fallback — hidden on screen, shown via `@media print`, positioned using the same percentage coordinates as the SVG.
+- Added explicit CSS `stroke` property on SVG branch paths (more reliable than SVG attribute for CSS variable resolution in print).
+- Disabled card hover transitions in print.
+
+## [1.10.1] - 2026-03-02
+
+### Fixed
+- Server-side `formatDateShort()` fallback used `new Date(dateStr)` which is locale-dependent and could misparse non-ISO date strings. Replaced with a regex year extraction.
+
+## [1.10.0] - 2026-03-02
+
+### Changed
+- Logo propagation is now a persistent toggle instead of a one-time checkbox. When enabled, the toggle state is saved on all matching company experiences and automatically pre-enabled on new/existing experiences for the same company.
+- Removing a logo with the toggle on removes it from all matching experiences (logo file stays available in the picker).
+- Disabling the toggle stops future propagation without affecting logos already applied.
+- Toggle uses the same switch UI as other settings for visual consistency.
+- Print timeline container uses asymmetric padding so branch-track cards above the line have proper clearance from the section header.
+
+## [1.9.0] - 2026-03-02
+
+### Added
+- **Global logo apply**: Toggle in the experience modal to apply a logo to all experiences with the same company name across all CV variants (current + saved datasets).
+- **Auto-fill logo**: Typing a company name that already has a logo in any experience or dataset automatically pre-fills the logo preview.
+- New API endpoints `POST /api/logos/apply-global` and `GET /api/logos/by-company?name=...`.
+
+## [1.8.0] - 2026-03-02
+
+### Added
+- **Logo reuse across CV datasets**: The logo picker now shows all previously uploaded logos (not just those in the current dataset), with company names displayed beneath each thumbnail for easy identification.
+- **Delete unused logos**: A delete button appears on logos not referenced by any current experience or saved dataset.
+
+### Changed
+- Logo files are no longer deleted when removing or replacing a logo on an experience — files persist on disk for reuse via the logo picker. Only the explicit delete button in the picker removes files.
+- Logo in-use check considers all saved datasets, not just current experiences.
+
+## [1.7.0] - 2026-03-02
+
+### Added
+- **Timeline branching**: Overlapping experiences now visually fork into parallel tracks with S-curves and merge back, showing concurrent roles side by side. Overlaps shorter than 1 month are ignored as transition noise.
+- **Time-scale timeline positioning**: Timeline items are positioned proportionally based on actual dates rather than equally spaced, with automatic card overlap detection and nudging via angled connector lines.
+- **Company logo upload**: Upload a logo per experience via the admin form (JPEG, PNG, WebP up to 5MB). Logos replace the company name on timeline cards and appear alongside experience cards.
+- **Logo reuse picker**: "Use Existing" button in the experience form shows a grid of previously uploaded logos, so the same logo can be assigned to multiple positions without re-uploading. Shared logo files are only deleted when no other experience references them.
+- **Start-date chevrons**: White chevron arrows mark each experience's start date on the timeline track.
+
+### Changed
+- After a branch merges, the next card is always placed above the timeline before resuming regular alternation, taking advantage of the visual space created by the S-curve.
+- Timeline track lines and branch lines use 5px width with rounded caps for better visual weight.
+- Branch-track dots use a proportional CSS variable (`--branch-offset-pct`) instead of hardcoded pixels, staying aligned at any container size including print.
+- Admin and public views share a single `renderTimelineItems()` implementation instead of duplicating logic.
+- Export/import preserves `logo_filename` per experience; logos work after import as long as files exist in the uploads folder.
+- Print layout scales timeline card widths and branch offset down to match reduced print elements.
+
 ## [1.6.11] - 2026-03-01
 
 ### Fixed

@@ -367,6 +367,98 @@
 .profile-preview-initials { font-size: 24px; font-weight: 700; color: var(--white); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .profile-upload-actions { display: flex; flex-direction: column; gap: 8px; }
 
+/* Company Logo Upload */
+.logo-upload-container { display: flex; align-items: center; gap: 16px; }
+.logo-upload-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-100);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px dashed var(--gray-300);
+}
+.logo-upload-preview img { width: 100%; height: 100%; object-fit: contain; }
+.logo-preview-placeholder { color: var(--gray-500); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.logo-upload-actions { display: flex; flex-direction: column; gap: 8px; }
+.logo-picker-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--very-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+}
+.logo-picker-item {
+    width: 72px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--gray-200);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+.logo-picker-item:hover { border-color: var(--primary); }
+.logo-picker-img { width: 48px; height: 48px; }
+.logo-picker-item img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+.logo-picker-delete {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: var(--danger, #e53e3e);
+    color: var(--white);
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.7;
+}
+.logo-picker-delete:hover { opacity: 1; }
+.logo-picker-in-use {
+    font-size: 8px;
+    line-height: 1.1;
+    color: var(--gray-400);
+    font-style: italic;
+    padding: 0 4px 4px;
+}
+.logo-picker-label {
+    font-size: 9px;
+    line-height: 1.1;
+    color: var(--gray-600);
+    text-align: center;
+    padding: 0 4px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+.logo-apply-global-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gray-600);
+    cursor: pointer;
+}
+.logo-apply-global-label input[type="checkbox"] { margin: 0; }
+
 /* Toast */
 .toast {
     position: fixed;
@@ -1347,6 +1439,19 @@
 .pagination-select:focus {
     outline: none;
     border-color: var(--primary);
+}
+
+/* Logo propagate toggle */
+.logo-propagate-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-propagate-text {
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.3;
 }
 
 /* Toggle Switch */

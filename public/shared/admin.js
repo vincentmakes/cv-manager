@@ -662,7 +662,7 @@ async function loadExperiences() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
+                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
                     <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>
@@ -865,6 +865,9 @@ async function openModal(type, id = null) {
             break;
         case 'experience':
             title = id ? t('modal.edit_experience') : t('modal.add_experience');
+            pendingLogo = null;
+            currentModal.existingLogo = data.logo_filename || null;
+            currentModal.existingPropagate = !!data.logo_propagate;
             form = experienceForm(data);
             break;
         case 'certification':
@@ -888,6 +891,10 @@ async function openModal(type, id = null) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').innerHTML = form;
     document.getElementById('modalOverlay').classList.add('active');
+    if (type === 'experience') {
+        updateLogoApplyGlobal();
+        initLogoPropagate();
+    }
 }
 
 function closeModal() {
@@ -982,13 +989,39 @@ function profileForm(d) {
 function experienceForm(d) {
     return `
         <div class="form-group">
+            <label class="form-label">${t('form.company_logo')}</label>
+            <div class="logo-upload-container">
+                <div class="logo-upload-preview" id="logoUploadPreview">
+                    ${d.logo_filename
+                        ? `<img src="/uploads/${encodeURIComponent(d.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
+                        : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
+                    }
+                </div>
+                <div class="logo-upload-actions">
+                    <input type="file" id="f-logo" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewLogo(this)">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ${t('form.choose_image')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="showLogoPicker()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> ${t('form.use_existing')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${t('form.remove')}</button>
+                </div>
+                <div class="logo-picker-grid" id="logoPickerGrid" style="display:none;"></div>
+            </div>
+            <div class="form-hint">${t('form.logo_hint')}</div>
+            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none; margin-top: 6px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-logo-apply-global" onchange="onLogoPropagateToggle(this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="logo-propagate-text" id="logoApplyGlobalText"></span>
+            </div>
+        </div>
+        <div class="form-group">
             <label class="form-label">${t('form.job_title')}</label>
             <input type="text" class="form-input" id="f-job_title" value="${escapeHtml(d.job_title || '')}">
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">${t('form.company')}</label>
-                <input type="text" class="form-input" id="f-company_name" value="${escapeHtml(d.company_name || '')}">
+                <input type="text" class="form-input" id="f-company_name" value="${escapeHtml(d.company_name || '')}" oninput="onCompanyNameInput()">
             </div>
             <div class="form-group">
                 <label class="form-label">${t('form.country_code')}</label>
@@ -1169,10 +1202,33 @@ async function saveItem() {
                 highlights: val('f-highlights').split('\n').filter(h => h.trim()),
                 visible: true
             };
-            if (id) {
-                await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
-            } else {
-                await api(`/api/${endpoint}`, { method: 'POST', body: data });
+            {
+                const propagateOn = checked('f-logo-apply-global');
+                const wasPropagate = currentModal.existingPropagate;
+                let logoFilename = null;
+                let logoRemoved = (pendingLogo === 'remove');
+                if (id) {
+                    await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
+                    logoFilename = await uploadLogo(id);
+                } else {
+                    const result = await api(`/api/${endpoint}`, { method: 'POST', body: data });
+                    if (result.id) logoFilename = await uploadLogo(result.id);
+                }
+                // Fall back to the existing logo if user didn't change it
+                if (!logoFilename && !logoRemoved) logoFilename = currentModal.existingLogo;
+                if (propagateOn && data.company_name) {
+                    if (logoRemoved) {
+                        // Remove logo from all matching experiences (but keep file in uploads for picker)
+                        await api('/api/logos/remove-global', { method: 'POST', body: { company_name: data.company_name } });
+                    } else if (logoFilename) {
+                        // Apply logo to all matching experiences + set propagate flag
+                        await api('/api/logos/apply-global', { method: 'POST', body: { company_name: data.company_name, logo_filename: logoFilename } });
+                    }
+                } else if (!propagateOn && wasPropagate && data.company_name) {
+                    // Propagate was turned off — update flag on all matching experiences
+                    // but don't remove logos already applied
+                    await api('/api/logos/set-propagate', { method: 'POST', body: { company_name: data.company_name, propagate: false } });
+                }
             }
             await loadExperiences();
             await loadTimeline();
@@ -1436,6 +1492,182 @@ async function uploadProfilePicture() {
         }
         pendingProfilePicture = null;
     }
+}
+
+// Company logo upload
+let pendingLogo = null;
+
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            toast(t('toast.image_too_large'), 'error');
+            input.value = '';
+            return;
+        }
+        pendingLogo = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('logoUploadPreview');
+            preview.innerHTML = `<img src="${e.target.result}" alt="" id="logoPreviewImg">`;
+            updateLogoApplyGlobal();
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeLogo() {
+    pendingLogo = 'remove';
+    const preview = document.getElementById('logoUploadPreview');
+    preview.innerHTML = '<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+    const fileInput = document.getElementById('f-logo');
+    if (fileInput) fileInput.value = '';
+    updateLogoApplyGlobal();
+}
+
+function updateLogoApplyGlobal() {
+    const label = document.getElementById('logoApplyGlobalLabel');
+    if (!label) return;
+    const company = (document.getElementById('f-company_name')?.value || '').trim();
+    const hasLogo = pendingLogo === 'remove' ? false : (pendingLogo || document.getElementById('logoPreviewImg'));
+    const cb = document.getElementById('f-logo-apply-global');
+    if (company && (hasLogo || (cb && cb.checked))) {
+        label.style.display = 'flex';
+        document.getElementById('logoApplyGlobalText').textContent = t('form.apply_logo_global', { company });
+    } else {
+        label.style.display = 'none';
+        if (cb) cb.checked = false;
+    }
+}
+
+function initLogoPropagate() {
+    // Called after form is rendered to restore persisted toggle state
+    if (currentModal.existingPropagate) {
+        const cb = document.getElementById('f-logo-apply-global');
+        if (cb) cb.checked = true;
+        updateLogoApplyGlobal();
+    }
+}
+
+function onLogoPropagateToggle(checked) {
+    // When toggling off, just hide if no logo — don't touch other experiences
+    updateLogoApplyGlobal();
+}
+
+let _logoLookupTimer = null;
+function onCompanyNameInput() {
+    updateLogoApplyGlobal();
+    clearTimeout(_logoLookupTimer);
+    // Only auto-fill if no logo is set and user hasn't explicitly touched the logo
+    if (pendingLogo || currentModal.existingLogo || document.getElementById('logoPreviewImg')) return;
+    const company = (document.getElementById('f-company_name')?.value || '').trim();
+    if (!company) return;
+    _logoLookupTimer = setTimeout(async () => {
+        // Re-check after debounce — user may have set a logo in the meantime
+        if (pendingLogo || document.getElementById('logoPreviewImg')) return;
+        try {
+            const result = await api(`/api/logos/by-company?name=${encodeURIComponent(company)}`);
+            if (result.logo_filename) {
+                pendingLogo = { reuse: result.logo_filename };
+                const preview = document.getElementById('logoUploadPreview');
+                if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(result.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`;
+                // If the source experience has propagate enabled, auto-enable the toggle
+                if (result.logo_propagate) {
+                    const cb = document.getElementById('f-logo-apply-global');
+                    if (cb) cb.checked = true;
+                }
+                updateLogoApplyGlobal();
+            }
+        } catch (e) {}
+    }, 400);
+}
+
+async function showLogoPicker() {
+    const grid = document.getElementById('logoPickerGrid');
+    if (!grid) return;
+    // Toggle visibility
+    if (grid.style.display !== 'none') { grid.style.display = 'none'; return; }
+    try {
+        const logos = await api('/api/logos');
+        if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
+        grid.innerHTML = logos.map(l => {
+            const label = l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>`
+                : l.in_use ? `<span class="logo-picker-in-use">${t('form.in_use')}</span>` : '';
+            const del = !l.in_use ? `<button type="button" class="logo-picker-delete" onclick="event.stopPropagation();deleteUnusedLogo('${escapeHtml(l.filename)}')" title="${t('form.delete_logo')}">×</button>` : '';
+            return `<div class="logo-picker-item" title="${escapeHtml(l.company || '')}">
+                <div class="logo-picker-img" onclick="selectExistingLogo('${escapeHtml(l.filename)}')">
+                    <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
+                </div>
+                ${label}${del}
+            </div>`;
+        }).join('');
+        grid.style.display = 'flex';
+    } catch (err) {
+        toast(t('toast.logo_upload_failed'), 'error');
+    }
+}
+
+async function deleteUnusedLogo(filename) {
+    if (!confirm(t('confirm.delete_logo'))) return;
+    try {
+        const res = await api(`/api/logos/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        if (res.error) { toast(res.error, 'error'); return; }
+        toast(t('toast.logo_deleted'), 'success');
+        // Refresh the picker
+        const grid = document.getElementById('logoPickerGrid');
+        if (grid) grid.style.display = 'none';
+        showLogoPicker();
+    } catch (err) {
+        toast(t('toast.logo_upload_failed'), 'error');
+    }
+}
+
+function selectExistingLogo(filename) {
+    pendingLogo = { reuse: filename };
+    const preview = document.getElementById('logoUploadPreview');
+    preview.innerHTML = `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="logoPreviewImg">`;
+    const grid = document.getElementById('logoPickerGrid');
+    if (grid) grid.style.display = 'none';
+    const fileInput = document.getElementById('f-logo');
+    if (fileInput) fileInput.value = '';
+    updateLogoApplyGlobal();
+}
+
+async function uploadLogo(experienceId) {
+    if (pendingLogo === 'remove') {
+        try { await fetch(`/api/experiences/${experienceId}/logo`, { method: 'DELETE' }); } catch (err) {}
+        pendingLogo = null;
+        return null;
+    }
+    if (pendingLogo && pendingLogo.reuse) {
+        const fname = pendingLogo.reuse;
+        try {
+            const response = await api(`/api/experiences/${experienceId}/logo`, { method: 'PUT', body: { filename: fname } });
+            if (response.error) throw new Error(response.error);
+        } catch (err) {
+            toast(t('toast.logo_upload_failed'), 'error');
+            pendingLogo = null;
+            return null;
+        }
+        pendingLogo = null;
+        return fname;
+    }
+    if (pendingLogo && pendingLogo instanceof File) {
+        const formData = new FormData();
+        formData.append('logo', pendingLogo);
+        try {
+            const response = await fetch(`/api/experiences/${experienceId}/logo`, { method: 'POST', body: formData });
+            if (!response.ok) throw new Error('Upload failed');
+            const result = await response.json();
+            pendingLogo = null;
+            return result.filename || null;
+        } catch (err) {
+            toast(t('toast.logo_upload_failed'), 'error');
+        }
+        pendingLogo = null;
+        return null;
+    }
+    return null;
 }
 
 function toast(msg, type = 'success') {
