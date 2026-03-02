@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-03-02
+
+### Added
+- Logo reuse across CV datasets — the logo picker now shows all previously uploaded logos (not just those in the current dataset), with company names displayed beneath each thumbnail for easy identification.
+
 ## [1.7.3] - 2026-03-02
 
 ### Fixed

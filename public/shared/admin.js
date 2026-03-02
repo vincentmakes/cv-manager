@@ -1497,9 +1497,10 @@ async function showLogoPicker() {
     try {
         const logos = await api('/api/logos');
         if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
-        grid.innerHTML = logos.map(f =>
-            `<div class="logo-picker-item" onclick="selectExistingLogo('${escapeHtml(f)}')">
-                <img src="/uploads/${encodeURIComponent(f)}?${Date.now()}" alt="">
+        grid.innerHTML = logos.map(l =>
+            `<div class="logo-picker-item" onclick="selectExistingLogo('${escapeHtml(l.filename)}')" title="${escapeHtml(l.company || '')}">
+                <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
+                ${l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>` : ''}
             </div>`
         ).join('');
         grid.style.display = 'flex';

@@ -931,10 +931,36 @@ if (PUBLIC_ONLY) {
         res.json({ success: true, filename });
     });
 
-    // List distinct logos already uploaded
+    // List all logos available for reuse (scans filesystem + resolves company names)
     app.get('/api/logos', (req, res) => {
-        const logos = db.prepare('SELECT DISTINCT logo_filename FROM experiences WHERE logo_filename IS NOT NULL ORDER BY logo_filename').all();
-        res.json(logos.map(r => r.logo_filename).filter(f => fs.existsSync(path.join(uploadsPath, f))));
+        // Scan uploads dir for all logo files
+        let files = [];
+        try { files = fs.readdirSync(uploadsPath).filter(f => f.startsWith('logo_')); } catch (e) {}
+        if (!files.length) return res.json([]);
+        // Build filename → company map from current experiences
+        const companyMap = {};
+        db.prepare('SELECT logo_filename, company_name FROM experiences WHERE logo_filename IS NOT NULL').all()
+            .forEach(r => { if (r.logo_filename && r.company_name) companyMap[r.logo_filename] = r.company_name; });
+        // Also check saved datasets for company names of logos not in current experiences
+        const unmapped = files.filter(f => !companyMap[f]);
+        if (unmapped.length) {
+            try {
+                const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+                for (const ds of datasets) {
+                    try {
+                        const data = JSON.parse(ds.data);
+                        if (data.experiences) {
+                            for (const exp of data.experiences) {
+                                if (exp.logo_filename && exp.company_name && !companyMap[exp.logo_filename]) {
+                                    companyMap[exp.logo_filename] = exp.company_name;
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
+            } catch (e) {}
+        }
+        res.json(files.map(f => ({ filename: f, company: companyMap[f] || null })));
     });
 
     app.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
