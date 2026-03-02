@@ -1052,11 +1052,11 @@ body.has-preview-banner .container {
     .section-title { font-size: 15px; }
     
     /* Timeline - SHOW it in print (only if not hidden by user choice) */
-    #section-timeline:not(.hidden-print) .section-header { margin-bottom: 16px; }
+    #section-timeline:not(.hidden-print) .section-header { margin-bottom: 8px; }
     #section-timeline:not(.hidden-print) .timeline-container {
         display: block !important;
-        min-height: 180px;
-        padding: 50px 10px;
+        min-height: 200px;
+        padding: 65px 10px;
     }
     #section-timeline:not(.hidden-print) .timeline-company { font-size: 9px; }
     #section-timeline:not(.hidden-print) .timeline-role { font-size: 8px; }

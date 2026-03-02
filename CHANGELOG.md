@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.1] - 2026-03-02
+
+### Fixed
+- Increased spacing between the timeline section header and the closest timeline card in print layout to prevent them from appearing too close together.
+
 ## [1.10.0] - 2026-03-02
 
 ### Changed
