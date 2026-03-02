@@ -1337,7 +1337,11 @@ async function importData(event) {
     reader.onload = async (e) => {
         try {
             const data = JSON.parse(e.target.result);
-            await api('/api/import', { method: 'POST', body: data });
+            const result = await api('/api/import', { method: 'POST', body: data });
+            if (result.error) {
+                toast(result.error, 'error');
+                return;
+            }
             // Clear active dataset — imported data doesn't belong to any dataset
             hideActiveDatasetBanner();
             await initAdmin();
