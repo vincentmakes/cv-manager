@@ -3,7 +3,7 @@
     "toolbar.theme": "Thema",
     "toolbar.open": "Openen...",
     "toolbar.save_as": "Opslaan als...",
-    "toolbar.show_all": "Alles tonen",
+    "toolbar.language": "Taal",
     "toolbar.export": "Exporteren",
     "toolbar.import": "Importeren",
     "toolbar.help": "Help",
@@ -137,7 +137,7 @@
     "settings.tab.custom": "Aangepaste secties",
     "settings.tab.print": "Afdrukken & Exporteren",
     "settings.tab.advanced": "Geavanceerd",
-    "settings.tab.language": "Taal",
+    "settings.version.update_available": "Update beschikbaar: v{{version}}",
 
     "settings.sections.info": "Sleep secties om ze te herschikken, of gebruik de pijlknoppen. Schakel zichtbaarheid in of uit met het oogicoon. Klik op sectienamen om koppen te bewerken.",
     "settings.sections.click_to_edit": "Klik om sectiekop te bewerken",

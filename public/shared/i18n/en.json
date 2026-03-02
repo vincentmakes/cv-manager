@@ -3,7 +3,7 @@
     "toolbar.theme": "Theme",
     "toolbar.open": "Open...",
     "toolbar.save_as": "Save As...",
-    "toolbar.show_all": "Show All",
+    "toolbar.language": "Language",
     "toolbar.export": "Export",
     "toolbar.import": "Import",
     "toolbar.help": "Help",
@@ -137,7 +137,7 @@
     "settings.tab.custom": "Custom Sections",
     "settings.tab.print": "Print & Export",
     "settings.tab.advanced": "Advanced",
-    "settings.tab.language": "Language",
+    "settings.version.update_available": "Update available: v{{version}}",
 
     "settings.sections.info": "Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Click section names to edit headlines.",
     "settings.sections.click_to_edit": "Click to edit section headline",

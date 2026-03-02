@@ -50,8 +50,8 @@ document.addEventListener('click', (e) => {
     if (!actions) return;
     const btn = e.target.closest('.btn, a.btn');
     if (!btn || !actions.contains(btn)) return;
-    // Don't close for color picker interactions
-    if (btn.closest('.color-picker-wrapper')) return;
+    // Don't close for color picker or language picker interactions
+    if (btn.closest('.color-picker-wrapper') || btn.closest('.language-picker-wrapper')) return;
     setTimeout(closeMobileMenu, 50);
 });
 
@@ -124,16 +124,19 @@ async function renderAdminUI() {
 }
 
 // Check for updates (non-blocking)
+let versionData = null;
+
 function checkForUpdates() {
     fetch('/api/version')
         .then(res => res.json())
         .then(data => {
+            versionData = data;
             if (data.updateAvailable && data.latest) {
                 const banner = document.getElementById('updateBanner');
                 const text = document.getElementById('updateBannerText');
                 const link = document.getElementById('updateBannerLink');
                 if (banner && text) {
-                    text.textContent = `Update available: v${data.latest} (you're on v${data.current})`;
+                    text.textContent = t('banner.update', { latest: data.latest, current: data.current });
                     if (data.changelog && link) {
                         link.href = data.changelog;
                         link.style.display = '';
@@ -144,8 +147,20 @@ function checkForUpdates() {
                     updateBannerMargins();
                 }
             }
+            populateVersionDisplay();
         })
         .catch(() => { /* silently ignore */ });
+}
+
+function populateVersionDisplay() {
+    const el = document.getElementById('settingsVersionInfo');
+    if (!el || !versionData) return;
+    if (versionData.updateAvailable && versionData.latest) {
+        const linkHref = versionData.changelog || 'https://github.com/vincentmakes/cv-manager/releases';
+        el.innerHTML = `v${escapeHtml(versionData.current)} &middot; <a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer">${t('settings.version.update_available', { version: versionData.latest })}</a>`;
+    } else {
+        el.textContent = versionData.current ? `v${versionData.current}` : '';
+    }
 }
 
 function dismissUpdateBanner() {
@@ -1876,6 +1891,7 @@ async function openSettingsModal() {
     settingsSectionOrder = await api('/api/sections/order');
     renderSettingsSections();
     await loadPublicSettings();
+    populateVersionDisplay();
     document.getElementById('settingsModalOverlay').classList.add('active');
 }
 
@@ -2493,6 +2509,11 @@ function initColorPicker() {
         if (dropdown.classList.contains('active') && !wrapper.contains(e.target)) {
             dropdown.classList.remove('active');
         }
+        const langDropdown = document.getElementById('languagePickerDropdown');
+        const langWrapper = document.querySelector('.language-picker-wrapper');
+        if (langDropdown && langWrapper && langDropdown.classList.contains('active') && !langWrapper.contains(e.target)) {
+            langDropdown.classList.remove('active');
+        }
     });
 }
 
@@ -2582,6 +2603,8 @@ function updateColorPickerUI(hex) {
 
 function toggleColorPicker() {
     const dropdown = document.getElementById('colorPickerDropdown');
+    // Close language picker if open
+    document.getElementById('languagePickerDropdown').classList.remove('active');
     dropdown.classList.toggle('active');
     if (dropdown.classList.contains('active')) {
         updateColorPickerUI(currentColor);
@@ -2677,6 +2700,8 @@ document.addEventListener('keydown', (e) => {
         closeSettingsModal();
         closeCustomSectionModal();
         closeCustomItemModal();
+        const langDropdown = document.getElementById('languagePickerDropdown');
+        if (langDropdown) langDropdown.classList.remove('active');
     }
 });
 
@@ -2707,19 +2732,25 @@ function switchSettingsTab(tabName) {
     document.getElementById('settingsTabCustom').classList.toggle('active', tabName === 'custom');
     document.getElementById('settingsTabPublic').classList.toggle('active', tabName === 'public');
     document.getElementById('settingsTabAdvanced').classList.toggle('active', tabName === 'advanced');
-    document.getElementById('settingsTabLanguage').classList.toggle('active', tabName === 'language');
 
     if (tabName === 'custom') {
         loadCustomSectionsList();
     }
-    if (tabName === 'language') {
-        renderLanguageGrid();
-    }
+}
+
+// Language picker toggle (toolbar dropdown)
+function toggleLanguagePicker() {
+    const dropdown = document.getElementById('languagePickerDropdown');
+    const wasActive = dropdown.classList.contains('active');
+    // Close color picker if open
+    document.getElementById('colorPickerDropdown').classList.remove('active');
+    dropdown.classList.toggle('active');
+    if (!wasActive) renderLanguageGrid();
 }
 
 // Render language selector grid
 function renderLanguageGrid() {
-    const container = document.getElementById('languageGrid');
+    const container = document.getElementById('toolbarLanguageGrid');
     if (!container) return;
 
     container.innerHTML = I18n.languages.map(lang => `
@@ -2736,8 +2767,7 @@ function renderLanguageGrid() {
 async function selectLanguage(code) {
     await I18n.setLocale(code);
     renderLanguageGrid();
-    // Re-render settings sections with translated names
-    renderSettingsSections();
+    document.getElementById('languagePickerDropdown').classList.remove('active');
 }
 
 // Render custom sections list

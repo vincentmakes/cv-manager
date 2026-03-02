@@ -3,7 +3,7 @@
     "toolbar.theme": "Tema",
     "toolbar.open": "Abrir...",
     "toolbar.save_as": "Guardar como...",
-    "toolbar.show_all": "Mostrar todo",
+    "toolbar.language": "Idioma",
     "toolbar.export": "Exportar",
     "toolbar.import": "Importar",
     "toolbar.help": "Ayuda",
@@ -137,7 +137,7 @@
     "settings.tab.custom": "Secciones personalizadas",
     "settings.tab.print": "Impresión y exportación",
     "settings.tab.advanced": "Avanzado",
-    "settings.tab.language": "Idioma",
+    "settings.version.update_available": "Actualización disponible: v{{version}}",
 
     "settings.sections.info": "Arrastra las secciones para reordenarlas o usa los botones de flecha. Alterna la visibilidad con el icono de ojo. Haz clic en los nombres de sección para editar los encabezados.",
     "settings.sections.click_to_edit": "Haz clic para editar el encabezado de la sección",

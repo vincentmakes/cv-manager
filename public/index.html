@@ -64,10 +64,16 @@
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                 <span data-i18n="toolbar.save_as">Save As...</span>
             </button>
-            <button class="btn btn-secondary" onclick="showAllItems()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <span data-i18n="toolbar.show_all">Show All</span>
-            </button>
+            <div class="language-picker-wrapper">
+                <button class="btn btn-secondary" onclick="toggleLanguagePicker()" data-i18n-title="toolbar.language" title="Language">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h20"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2c2.5 2.5 4 5.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-5.5-4-10s1.5-7.5 4-10z"/></svg>
+                    <span data-i18n="toolbar.language">Language</span>
+                </button>
+                <div class="language-picker-dropdown" id="languagePickerDropdown">
+                    <div class="language-picker-header" data-i18n="settings.language.info">Choose the display language for the CV Manager interface.</div>
+                    <div class="language-grid" id="toolbarLanguageGrid"></div>
+                </div>
+            </div>
             <button class="btn btn-secondary" onclick="exportData()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 <span data-i18n="toolbar.export">Export</span>
@@ -335,7 +341,6 @@
                     <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom" data-i18n="settings.tab.custom">Custom Sections</button>
                     <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public" data-i18n="settings.tab.print">Print & Export</button>
                     <button class="settings-tab" onclick="switchSettingsTab('advanced')" data-tab="advanced" data-i18n="settings.tab.advanced">Advanced</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('language')" data-tab="language" data-i18n="settings.tab.language">Language</button>
                 </div>
                 
                 <!-- Sections & Headlines Tab -->
@@ -523,16 +528,9 @@
                     </div>
                 </div>
 
-                <!-- Language Tab -->
-                <div class="settings-tab-content" id="settingsTabLanguage">
-                    <div class="settings-info" data-i18n="settings.language.info">
-                        Choose the display language for the CV Manager interface. This does not affect the content of your CV.
-                    </div>
-                    <div class="language-grid" id="languageGrid"></div>
-                </div>
             </div>
             <div class="modal-footer">
-                <div class="modal-footer-left"></div>
+                <div class="modal-footer-left"><span id="settingsVersionInfo" class="settings-version"></span></div>
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeSettingsModal()" data-i18n="btn.cancel">Cancel</button>
                     <button class="btn btn-primary" onclick="saveSettingsSectionOrder()" data-i18n="btn.save_changes">Save Changes</button>

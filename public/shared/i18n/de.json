@@ -3,7 +3,7 @@
     "toolbar.theme": "Design",
     "toolbar.open": "Öffnen...",
     "toolbar.save_as": "Speichern unter...",
-    "toolbar.show_all": "Alle anzeigen",
+    "toolbar.language": "Sprache",
     "toolbar.export": "Exportieren",
     "toolbar.import": "Importieren",
     "toolbar.help": "Hilfe",
@@ -137,7 +137,7 @@
     "settings.tab.custom": "Benutzerdefinierte Abschnitte",
     "settings.tab.print": "Drucken & Export",
     "settings.tab.advanced": "Erweitert",
-    "settings.tab.language": "Sprache",
+    "settings.version.update_available": "Update verfügbar: v{{version}}",
 
     "settings.sections.info": "Abschnitte per Drag & Drop neu anordnen oder die Pfeiltasten verwenden. Sichtbarkeit mit dem Augensymbol umschalten. Auf Abschnittsnamen klicken, um Überschriften zu bearbeiten.",
     "settings.sections.click_to_edit": "Klicken, um Abschnittsüberschrift zu bearbeiten",

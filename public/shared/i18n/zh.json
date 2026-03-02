@@ -3,7 +3,7 @@
     "toolbar.theme": "主题",
     "toolbar.open": "打开...",
     "toolbar.save_as": "另存为...",
-    "toolbar.show_all": "显示全部",
+    "toolbar.language": "语言",
     "toolbar.export": "导出",
     "toolbar.import": "导入",
     "toolbar.help": "帮助",
@@ -137,7 +137,7 @@
     "settings.tab.custom": "自定义板块",
     "settings.tab.print": "打印与导出",
     "settings.tab.advanced": "高级选项",
-    "settings.tab.language": "语言",
+    "settings.version.update_available": "有可用更新：v{{version}}",
 
     "settings.sections.info": "拖拽板块以调整顺序，或使用箭头按钮。点击眼睛图标切换可见性。点击板块名称编辑标题。",
     "settings.sections.click_to_edit": "点击编辑板块标题",
