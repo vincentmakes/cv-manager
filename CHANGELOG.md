@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.5] - 2026-03-02
+
+### Fixed
+- Global logo propagation toggle (`logo_propagate`) not persisting across dataset loads and imports. The INSERT statements for experiences in both `POST /api/datasets/:id/load` and `POST /api/import` were missing the `logo_propagate` column, causing it to reset to 0 (default) every time a dataset was loaded — including the automatic default dataset load on page startup.
+
 ## [1.10.4] - 2026-03-02
 
 ### Fixed
