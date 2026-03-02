@@ -335,15 +335,88 @@ async function loadProfile(includePrivate = false) {
     document.getElementById('contactBadges').innerHTML = badges.join('');
 }
 
+// Detect overlapping timeline items and assign branch tracks
+function computeTimelineBranches(items) {
+    if (items.length <= 1) return { branches: [], segments: items.map(item => ({ item, track: 0, branchGroup: null })) };
+
+    const now = new Date();
+    const currentNumeric = now.getFullYear() * 100 + (now.getMonth() + 1);
+
+    const getEnd = (item) => {
+        if (item.end_date) return parseDateForSort(item.end_date);
+        return currentNumeric; // "Present" = current date
+    };
+    const getStart = (item) => parseDateForSort(item.start_date);
+
+    const segments = items.map(item => ({
+        item,
+        track: 0,
+        branchGroup: null,
+        startNum: getStart(item),
+        endNum: getEnd(item)
+    }));
+
+    const branches = [];
+
+    for (let i = 1; i < segments.length; i++) {
+        for (let j = i - 1; j >= 0; j--) {
+            const overlap = Math.min(segments[j].endNum, segments[i].endNum) - segments[i].startNum;
+            // Ignore overlaps of less than 1 month (noise from job transitions)
+            if (overlap >= 1) {
+                segments[i].track = segments[j].track === 0 ? 1 : 0;
+                const existingBranch = branches.find(b => b.mergeAfterIdx >= i - 1 && segments[j].branchGroup === branches.indexOf(b));
+                if (existingBranch) {
+                    existingBranch.mergeAfterIdx = i;
+                    segments[i].branchGroup = branches.indexOf(existingBranch);
+                } else {
+                    segments[i].branchGroup = branches.length;
+                    segments[j].branchGroup = branches.length;
+                    branches.push({ forkBeforeIdx: j, mergeAfterIdx: i });
+                }
+                break;
+            }
+        }
+    }
+
+    return { branches, segments };
+}
+
+// Compute time-scale positions for timeline items
+// Each item's dot is placed at the midpoint of its duration
+// Returns an array of { leftPct, widthPct, startPct, endPct } for each segment
+function computeTimePositions(segments) {
+    if (!segments.length) return [];
+    const allStarts = segments.map(s => s.startNum);
+    const allEnds = segments.map(s => s.endNum);
+    const minTime = Math.min(...allStarts);
+    const maxTime = Math.max(...allEnds);
+    const span = maxTime - minTime || 1;
+
+    const itemWidthPct = Math.max(100 / segments.length * 0.6, 100 / segments.length);
+    // Minimal padding so items spread across nearly the full width
+    const pad = Math.min(itemWidthPct / 4, 2);
+    const usable = 100 - pad * 2;
+
+    return segments.map(seg => {
+        const startPct = pad + ((seg.startNum - minTime) / span) * usable;
+        const endPct = pad + ((seg.endNum - minTime) / span) * usable;
+        const midPct = (startPct + endPct) / 2;
+        return {
+            leftPct: midPct,
+            widthPct: itemWidthPct,
+            startPct,
+            endPct
+        };
+    });
+}
+
 // Load Timeline
 // Sorted by start_date ASC (oldest first - left to right)
 async function loadTimeline() {
     const timeline = await api('/api/timeline');
-    
+
     // Sort by start_date ascending (oldest first for timeline)
-    // Timeline API returns 'period' field like "Jan 2020 - Present", extract start date from it
     timeline.sort((a, b) => {
-        // Extract start date from period string (format: "Jan 2020 - Present" or "2020 - 2022")
         const getStartFromPeriod = (item) => {
             if (item.start_date) return parseDateForSort(item.start_date);
             if (item.period) {
@@ -352,42 +425,95 @@ async function loadTimeline() {
             }
             return 0;
         };
-        
-        const dateA = getStartFromPeriod(a);
-        const dateB = getStartFromPeriod(b);
-        return dateA - dateB; // ASC: lower dates first (oldest on left)
+        return getStartFromPeriod(a) - getStartFromPeriod(b);
     });
-    
+
+    renderTimelineItems(timeline, { interactive: true });
+}
+
+// Shared timeline rendering used by both admin and public views.
+// Items must have: { company, role, countryCode, logo, visible, id, start_date, end_date }
+// Options: interactive (adds click handlers / hidden-print class for admin)
+function renderTimelineItems(items, options) {
+    const interactive = options && options.interactive;
     const container = document.getElementById('timelineItems');
-    
-    // Determine if flags should be shown: only when multiple countries exist
-    const uniqueCountries = new Set(timeline.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
+    const timelineContainer = container.closest('.timeline-container');
+
+    const { branches, segments } = computeTimelineBranches(items);
+    const hasBranches = branches.length > 0;
+
+    if (timelineContainer) {
+        timelineContainer.classList.toggle('has-branches', hasBranches);
+    }
+
+    const uniqueCountries = new Set(items.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
     const showFlags = uniqueCountries.size > 1;
-    
+
+    const positions = computeTimePositions(segments);
+
+    let mainTrackIdx = 0;
     let lastCountry = null;
-    container.innerHTML = timeline.map((item, idx) => {
-        const pos = idx % 2 === 0 ? 'top' : 'bottom';
+    // Pre-compute merge indices: after a branch merges, the next card should go on top
+    // because the S-curve creates visual space above the timeline
+    const mergeIndices = new Set();
+    branches.forEach(branch => {
+        let lastBranchIdx = -1;
+        for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+            if (segments[i].track === 1) lastBranchIdx = i;
+        }
+        // Only applies when the branch actually merges (not ongoing)
+        if (lastBranchIdx !== -1 && segments[lastBranchIdx].item.end_date) {
+            mergeIndices.add(branch.mergeAfterIdx);
+        }
+    });
+    let forceTopAfterMerge = false;
+    container.innerHTML = segments.map((seg, idx) => {
+        const item = seg.item;
+        let pos;
+        if (seg.track === 1) {
+            pos = 'top';
+        } else if (seg.branchGroup !== null) {
+            pos = 'bottom';
+            mainTrackIdx++;
+        } else {
+            if (forceTopAfterMerge) {
+                // Ensure mainTrackIdx is even so this card goes on top
+                if (mainTrackIdx % 2 !== 0) mainTrackIdx++;
+                forceTopAfterMerge = false;
+            }
+            pos = mainTrackIdx % 2 === 0 ? 'top' : 'bottom';
+            mainTrackIdx++;
+        }
+        // After processing the last segment in a completed branch, force next regular card to top
+        if (mergeIndices.has(idx)) {
+            forceTopAfterMerge = true;
+        }
         const countryCode = (item.countryCode || '').toLowerCase();
         const isFirstOrChanged = countryCode && (lastCountry === null || countryCode !== lastCountry);
         lastCountry = countryCode || lastCountry;
-        
-        // Show flag at first entry and at country transitions, only if multiple countries exist
+
         const marker = showFlags && isFirstOrChanged && countryCode
             ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
             : '<div class="timeline-dot"></div>';
-        
-        const hiddenClass = item.visible === false ? 'hidden-print' : '';
-        const expId = item.id || '';
-        
+
+        const hiddenClass = interactive && item.visible === false ? 'hidden-print' : '';
+        const branchClass = seg.track === 1 ? 'timeline-branch-track' : '';
+
+        const { leftPct, widthPct } = positions[idx];
+        const itemLeft = leftPct - widthPct / 2;
+
+        const companyLine = item.logo
+            ? `<img src="/uploads/${encodeURIComponent(item.logo)}" class="timeline-card-logo" alt="${escapeHtml(item.company)}" onerror="this.outerHTML='<div class=\\'timeline-company\\'>${escapeHtml(item.company)}</div>'">`
+            : `<div class="timeline-company">${escapeHtml(item.company)}</div>`;
+
+        const interactiveAttrs = interactive
+            ? `onclick="scrollToExperience(this)" data-exp-id="${item.id || ''}" data-company="${escapeHtml(item.company)}" data-role="${escapeHtml(item.role)}" style="cursor: pointer; left: ${itemLeft}%; width: ${widthPct}%;"`
+            : `style="left: ${itemLeft}%; width: ${widthPct}%;"`;
+
         return `
-            <div class="timeline-item ${pos} ${hiddenClass}" 
-                 onclick="scrollToExperience(this)" 
-                 data-exp-id="${expId}"
-                 data-company="${escapeHtml(item.company)}"
-                 data-role="${escapeHtml(item.role)}"
-                 style="cursor: pointer;">
+            <div class="timeline-item ${pos} ${branchClass} ${hiddenClass}" ${interactiveAttrs}>
                 <div class="timeline-content">
-                    <div class="timeline-company">${escapeHtml(item.company)}</div>
+                    ${companyLine}
                     <div class="timeline-role">${escapeHtml(item.role)}</div>
                     <div class="timeline-period">${escapeHtml(formatTimelinePeriod(item))}</div>
                 </div>
@@ -395,31 +521,275 @@ async function loadTimeline() {
             </div>
         `;
     }).join('');
-    
+
     resizeTimelineContainer();
+
+    // Trim the main track line — extend to full time range
+    const track = timelineContainer.querySelector('.timeline-track');
+    if (track && positions.length) {
+        const overshoot = 3;
+        const firstStart = positions[0].startPct;
+        const lastEnd = positions[positions.length - 1].endPct;
+        track.style.left = Math.max(0, firstStart - overshoot) + '%';
+        track.style.right = Math.max(0, 100 - lastEnd - overshoot) + '%';
+    }
+
+    // Add white chevrons at the start date of each experience
+    timelineContainer.querySelectorAll('.timeline-chevron').forEach(el => el.remove());
+    if (track) {
+        positions.forEach(pos => {
+            const chevron = document.createElement('div');
+            chevron.className = 'timeline-chevron';
+            chevron.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1 L8 7 L1 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>`;
+            chevron.style.left = pos.startPct + '%';
+            timelineContainer.appendChild(chevron);
+        });
+    }
+
+    layoutTimelineCards(timelineContainer);
+    renderBranchCurves(timelineContainer, segments, branches, positions);
+}
+
+// Detect overlapping timeline cards and offset them, drawing angled connector lines
+function layoutTimelineCards(timelineContainer) {
+    if (!timelineContainer) return;
+    const itemsContainer = timelineContainer.querySelector('.timeline-items');
+    if (!itemsContainer) return;
+
+    // Remove existing connector SVG
+    const existingConnectors = itemsContainer.querySelector('.timeline-connectors');
+    if (existingConnectors) existingConnectors.remove();
+
+    const allItems = itemsContainer.querySelectorAll('.timeline-item');
+    if (!allItems.length) return;
+
+    // Reset to base centering transform
+    allItems.forEach(item => {
+        const content = item.querySelector('.timeline-content');
+        if (content) content.style.transform = 'translateX(-50%)';
+    });
+
+    const containerRect = itemsContainer.getBoundingClientRect();
+    const containerW = itemsContainer.offsetWidth;
+    const containerH = itemsContainer.offsetHeight;
+    if (!containerW || !containerH) return;
+
+    // Collect card positions after centering
+    const cards = [];
+    allItems.forEach((item, idx) => {
+        const content = item.querySelector('.timeline-content');
+        if (!content) return;
+        const isTop = item.classList.contains('top');
+        const isBranch = item.classList.contains('timeline-branch-track');
+        const rect = content.getBoundingClientRect();
+        cards.push({
+            idx, item, content, isTop, isBranch,
+            naturalX: rect.left - containerRect.left + rect.width / 2,
+            width: rect.width,
+            left: rect.left - containerRect.left,
+            right: rect.left - containerRect.left + rect.width,
+            offsetX: 0
+        });
+    });
+
+    // Resolve overlaps within each side (top / bottom)
+    ['top', 'bottom'].forEach(side => {
+        const sideCards = cards.filter(c => c.isTop === (side === 'top')).sort((a, b) => a.left - b.left);
+        const gap = 6;
+        for (let i = 1; i < sideCards.length; i++) {
+            const prev = sideCards[i - 1];
+            const curr = sideCards[i];
+            const prevRight = prev.left + prev.offsetX + prev.width;
+            const currLeft = curr.left + curr.offsetX;
+            const overlap = prevRight + gap - currLeft;
+            if (overlap > 0) {
+                curr.offsetX += overlap;
+            }
+        }
+    });
+
+    // Apply offsets and build connector SVG
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'timeline-connectors');
+    svg.setAttribute('viewBox', `0 0 ${containerW} ${containerH}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
+
+    const mainY = containerH * 0.5;
+
+    cards.forEach(card => {
+        if (Math.abs(card.offsetX) > 1) {
+            card.content.style.transform = `translateX(calc(-50% + ${card.offsetX}px))`;
+
+            // Draw angled connector from dot to card center
+            const dotX = card.item.offsetLeft + card.item.offsetWidth / 2;
+            const dotY = card.isBranch ? mainY - 28 : mainY;
+            const cardCenterX = dotX + card.offsetX;
+            const cardY = card.isTop ? dotY - 16 : dotY + 16;
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', dotX);
+            line.setAttribute('y1', dotY);
+            line.setAttribute('x2', cardCenterX);
+            line.setAttribute('y2', cardY);
+            line.setAttribute('stroke', 'var(--gray-300)');
+            line.setAttribute('stroke-width', '1');
+            line.setAttribute('vector-effect', 'non-scaling-stroke');
+            svg.appendChild(line);
+        }
+    });
+
+    itemsContainer.appendChild(svg);
+}
+
+// Render SVG branch visualization: parallel branch track + fork/merge curves
+// positions[] contains { startPct, endPct } for time-accurate fork/merge placement
+function renderBranchCurves(timelineContainer, segments, branches, positions) {
+    if (!timelineContainer) return;
+    const existing = timelineContainer.querySelector('.timeline-branch-curves');
+    if (existing) existing.remove();
+    if (!branches.length) return;
+
+    const itemsContainer = timelineContainer.querySelector('.timeline-items');
+    if (!itemsContainer) return;
+
+    const containerW = itemsContainer.offsetWidth;
+    const containerH = itemsContainer.offsetHeight;
+    if (!containerW || !containerH) return;
+
+    // Read the track element's actual right edge in .timeline-items coordinates
+    // (the track is positioned in .timeline-container's padding box, which is wider)
+    const track = timelineContainer.querySelector('.timeline-track');
+    const itemsRect = itemsContainer.getBoundingClientRect();
+    const trackRightX = track ? (track.getBoundingClientRect().right - itemsRect.left) : containerW;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'timeline-branch-curves');
+    svg.setAttribute('viewBox', `0 0 ${containerW} ${containerH}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
+
+    const mainY = containerH * 0.5;
+    const branchOffset = 28;
+    const branchY = mainY - branchOffset;
+
+    // Set proportional branch offset so CSS dots match SVG curves at any size (e.g. print)
+    const branchPct = (branchOffset / containerH) * 100;
+    timelineContainer.style.setProperty('--branch-offset-pct', branchPct + '%');
+    // Fixed horizontal extent for the S-curve
+    const curveW = 24;
+
+    const makePath = (d) => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'var(--accent)');
+        path.setAttribute('stroke-width', '5');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('vector-effect', 'non-scaling-stroke');
+        return path;
+    };
+
+    // Convert a time percentage to pixel X
+    const pctToX = (pct) => (pct / 100) * containerW;
+
+    // Small gap so S-curves don't start/end right on a main-track dot
+    const dotClearance = 10;
+
+    branches.forEach(branch => {
+        // Find the first and last branch-track items in this branch
+        let firstBranchIdx = -1, lastBranchIdx = -1;
+        for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+            if (segments[i].track === 1) {
+                if (firstBranchIdx === -1) firstBranchIdx = i;
+                lastBranchIdx = i;
+            }
+        }
+        if (firstBranchIdx === -1) return;
+        if (!positions[firstBranchIdx] || !positions[lastBranchIdx]) return;
+
+        // Fork position: branch item's start date on time axis
+        let forkX = pctToX(positions[firstBranchIdx].startPct);
+
+        // If a main-track dot is near the fork point, nudge the fork past it
+        const forkMainDotX = pctToX(positions[branch.forkBeforeIdx].leftPct);
+        if (Math.abs(forkX - forkMainDotX) < dotClearance) {
+            forkX = forkMainDotX + dotClearance;
+        }
+
+        const branchStartX = forkX + curveW;
+
+        // Fork S-curve: from main track, curves up to branch track
+        svg.appendChild(makePath(
+            `M ${forkX},${mainY} C ${forkX + curveW / 2},${mainY} ${forkX + curveW / 2},${branchY} ${branchStartX},${branchY}`
+        ));
+
+        const lastBranchOngoing = !segments[lastBranchIdx].item.end_date;
+
+        if (lastBranchOngoing) {
+            // Align branch endpoint with the main track line's actual right edge
+            const branchEndX = trackRightX;
+            if (branchStartX < branchEndX) {
+                svg.appendChild(makePath(`M ${branchStartX},${branchY} L ${branchEndX},${branchY}`));
+            }
+        } else {
+            // Merge position: last branch item's end date on time axis
+            let mergeX = pctToX(positions[lastBranchIdx].endPct);
+
+            // If a main-track dot is near the merge point, nudge the merge before it
+            for (let i = branch.mergeAfterIdx + 1; i < segments.length && i <= branch.mergeAfterIdx + 2; i++) {
+                if (positions[i] && segments[i].track === 0) {
+                    const mergeDotX = pctToX(positions[i].leftPct);
+                    if (Math.abs(mergeX - mergeDotX) < dotClearance) {
+                        mergeX = mergeDotX - dotClearance;
+                    }
+                }
+            }
+
+            const branchLineEnd = mergeX - curveW;
+
+            // Branch track line
+            if (branchStartX < branchLineEnd) {
+                svg.appendChild(makePath(`M ${branchStartX},${branchY} L ${branchLineEnd},${branchY}`));
+            }
+
+            // Merge S-curve: from branch track down to main track
+            svg.appendChild(makePath(
+                `M ${branchLineEnd},${branchY} C ${branchLineEnd + curveW / 2},${branchY} ${branchLineEnd + curveW / 2},${mainY} ${mergeX},${mainY}`
+            ));
+        }
+    });
+
+    itemsContainer.appendChild(svg);
 }
 
 // Dynamically resize timeline container based on content height
 function resizeTimelineContainer() {
     const container = document.querySelector('.timeline-container');
     if (!container) return;
-    
+
     let maxTopHeight = 0;
     let maxBottomHeight = 0;
-    
+    const hasBranches = container.classList.contains('has-branches');
+
     container.querySelectorAll('.timeline-item').forEach(item => {
         const content = item.querySelector('.timeline-content');
         if (!content) return;
         const contentHeight = content.offsetHeight;
+        const isBranch = item.classList.contains('timeline-branch-track');
+        // Branch-track top cards need extra room (24px offset vs 16px for main)
+        const extra = isBranch ? 8 : 0;
         if (item.classList.contains('top')) {
-            maxTopHeight = Math.max(maxTopHeight, contentHeight);
+            maxTopHeight = Math.max(maxTopHeight, contentHeight + extra);
         } else {
-            maxBottomHeight = Math.max(maxBottomHeight, contentHeight);
+            maxBottomHeight = Math.max(maxBottomHeight, contentHeight + extra);
         }
     });
-    
-    // 16px gap between content and track on each side, plus some breathing room
-    const neededHeight = maxTopHeight + maxBottomHeight + 50;
+
+    // Gap between content and track on each side, plus breathing room
+    const neededHeight = maxTopHeight + maxBottomHeight + (hasBranches ? 70 : 50);
     const minHeight = 220;
     container.style.height = Math.max(minHeight, neededHeight) + 'px';
 }
@@ -492,7 +862,7 @@ async function loadExperiencesReadOnly() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> - 
+                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
                     <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
                 </span>
             </div>

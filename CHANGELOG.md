@@ -4,6 +4,51 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-03-01
+
+### Changed
+- **Timeline card placement after branch merge**: The first card after a branch merges back into the main timeline is now always placed above the track, then alternation resumes normally. The S-curve of the merge creates visual space on top, making this positioning more natural.
+
+## [1.8.0] - 2026-03-01
+
+### Added
+- **Logo reuse picker**: When adding or editing an experience, a "Use Existing" button shows a grid of previously uploaded logos so the same logo can be assigned to multiple positions at the same company without re-uploading.
+- **Shared logo file safety**: Logo files are only deleted from disk when no other experience references them, preventing broken images when logos are shared across experiences.
+
+### Changed
+- **Export/import preserves logos**: The export JSON includes `logo_filename` for each experience; importing restores the reference so logos work immediately if the files are present in the uploads folder.
+
+## [1.7.2] - 2026-03-01
+
+### Changed
+- **Shared timeline renderer**: Extracted `renderTimelineItems()` in scripts.js so admin and public views share the same rendering code instead of duplicating logic.
+- **Branch dot print fix**: Branch-track dots now use a proportional CSS custom property (`--branch-offset-pct`) instead of a hardcoded pixel offset, so dots stay aligned with SVG branch curves at any container size (e.g. print).
+
+### Removed
+- Duplicate `resizeTimelineContainer()` and `renderTimelineFromData()` from public-readonly; both now use the shared implementations from scripts.js.
+
+## [1.7.1] - 2026-03-01
+
+### Changed
+- **Thicker timeline tracks**: Main timeline line and branch lines increased from 3px to 5px with rounded caps for better visual weight.
+- **Start-date chevrons**: White chevron arrow rendered at each experience's start date on the timeline for visual clarity.
+
+## [1.7.0] - 2026-03-01
+
+### Added
+- **Timeline branching**: Overlapping experiences now visually fork into parallel tracks and merge back, showing concurrent roles side by side instead of sequentially. Overlaps shorter than 2 months are ignored as transition noise.
+- **Time-scale timeline positioning**: Timeline items are positioned proportionally based on their actual dates rather than equally spaced, giving an accurate visual representation of career progression.
+- **Card overlap detection**: When time-scaled cards would overlap, they are automatically nudged apart with angled connector lines drawn from the dot to the displaced card.
+- **Company logo upload**: Upload a logo per experience via the admin form. Logos replace the company name text on timeline cards and appear alongside experience cards. Supports JPEG, PNG, and WebP up to 5MB.
+- **Logo API endpoints**: `POST /api/experiences/:id/logo` and `DELETE /api/experiences/:id/logo` for upload and removal. Logo files are cleaned up on re-upload and experience deletion.
+
+### Changed
+- Branch-track items appear on top, main-track items in a branch group go below, preventing card overlap with branches.
+- Branch line aligns with main track endpoint when both end at "Present", using the track element's actual position for pixel-accurate alignment.
+- Timeline spreads across nearly the full container width with minimal side padding, extending the track line to the full time range.
+- Logo bounding box (90×28px) balances visual consistency across different aspect ratios.
+- Timeline container height dynamically accounts for branch track spacing.
+
 ## [1.6.11] - 2026-03-01
 
 ### Fixed
