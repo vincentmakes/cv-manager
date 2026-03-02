@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.1] - 2026-03-02
+
+### Fixed
+- Server-side `formatDateShort()` fallback used `new Date(dateStr)` which is locale-dependent and could misparse non-ISO date strings. Replaced with a regex year extraction.
+
 ## [1.10.0] - 2026-03-02
 
 ### Changed

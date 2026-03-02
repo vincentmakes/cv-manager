@@ -638,7 +638,8 @@ function formatDateShort(dateStr) {
             default: return `${monthsShort[monthIdx]} ${y}`;
         }
     }
-    try { return new Date(dateStr).getFullYear().toString(); } catch { return dateStr; }
+    const yearMatch = dateStr.match(/(\d{4})/);
+    return yearMatch ? yearMatch[1] : dateStr;
 }
 
 // Gather current CV data from live DB into a JSON-serializable snapshot
