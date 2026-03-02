@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.6] - 2026-03-02
+
+### Fixed
+- Global logo endpoints not syncing `logo_propagate` flag to saved dataset JSON. `POST /api/logos/apply-global` updated `logo_filename` in datasets but never set `logo_propagate = 1`. `POST /api/logos/set-propagate` only updated the live DB, ignoring datasets entirely. Both now sync the flag to all saved datasets, so the toggle persists across dataset loads and server restarts.
+
 ## [1.10.5] - 2026-03-02
 
 ### Fixed

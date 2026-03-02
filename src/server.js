@@ -1001,7 +1001,7 @@ if (PUBLIC_ONLY) {
         // Update current experiences — set both logo and propagate flag
         const result = db.prepare('UPDATE experiences SET logo_filename = ?, logo_propagate = 1 WHERE company_name = ?').run(logo_filename, company_name);
         updatedCurrent = result.changes;
-        // Update saved datasets
+        // Update saved datasets — sync both logo_filename and logo_propagate
         try {
             const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
             for (const ds of datasets) {
@@ -1010,10 +1010,16 @@ if (PUBLIC_ONLY) {
                     if (data.experiences) {
                         let changed = false;
                         for (const exp of data.experiences) {
-                            if (exp.company_name === company_name && exp.logo_filename !== logo_filename) {
-                                exp.logo_filename = logo_filename;
-                                changed = true;
-                                updatedDatasets++;
+                            if (exp.company_name === company_name) {
+                                if (exp.logo_filename !== logo_filename) {
+                                    exp.logo_filename = logo_filename;
+                                    changed = true;
+                                    updatedDatasets++;
+                                }
+                                if (!exp.logo_propagate) {
+                                    exp.logo_propagate = 1;
+                                    changed = true;
+                                }
                             }
                         }
                         if (changed) {
@@ -1061,12 +1067,33 @@ if (PUBLIC_ONLY) {
         res.json({ success: true, updated_current: updatedCurrent, updated_datasets: updatedDatasets });
     });
 
-    // Update logo_propagate flag for all experiences with the same company name
+    // Update logo_propagate flag for all experiences with the same company name (current + datasets)
     app.post('/api/logos/set-propagate', express.json(), (req, res) => {
         const { company_name, propagate } = req.body;
         if (!company_name) return res.status(400).json({ error: 'company_name is required' });
         const flag = propagate ? 1 : 0;
         const result = db.prepare('UPDATE experiences SET logo_propagate = ? WHERE company_name = ?').run(flag, company_name);
+        // Sync to saved datasets
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.experiences) {
+                        let changed = false;
+                        for (const exp of data.experiences) {
+                            if (exp.company_name === company_name && (exp.logo_propagate ? 1 : 0) !== flag) {
+                                exp.logo_propagate = flag;
+                                changed = true;
+                            }
+                        }
+                        if (changed) {
+                            db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                        }
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
         res.json({ success: true, updated: result.changes });
     });
 
