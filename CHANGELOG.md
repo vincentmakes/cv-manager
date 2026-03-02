@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.3] - 2026-03-02
+
+### Fixed
+- Timeline branch track still too far in print — increased height reduction from 54px to 66px for better proportional scaling with smaller print elements.
+
 ## [1.7.2] - 2026-03-02
 
 ### Fixed
