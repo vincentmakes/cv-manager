@@ -1015,6 +1015,33 @@ if (PUBLIC_ONLY) {
         res.json({ success: true, updated_current: updatedCurrent, updated_datasets: updatedDatasets });
     });
 
+    // Look up which logo is used for a given company name (current experiences + datasets)
+    app.get('/api/logos/by-company', (req, res) => {
+        const name = (req.query.name || '').trim();
+        if (!name) return res.json({ logo_filename: null });
+        // Check current experiences first
+        const exp = db.prepare('SELECT logo_filename FROM experiences WHERE company_name = ? AND logo_filename IS NOT NULL LIMIT 1').get(name);
+        if (exp && exp.logo_filename && fs.existsSync(path.join(uploadsPath, exp.logo_filename))) {
+            return res.json({ logo_filename: exp.logo_filename });
+        }
+        // Fall back to saved datasets
+        try {
+            const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.experiences) {
+                        const match = data.experiences.find(e => e.company_name === name && e.logo_filename);
+                        if (match && fs.existsSync(path.join(uploadsPath, match.logo_filename))) {
+                            return res.json({ logo_filename: match.logo_filename });
+                        }
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ logo_filename: null });
+    });
+
     app.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     app.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     app.put('/api/settings/:key', (req, res) => { db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(req.params.key, req.body.value); res.json({ success: true }); });

@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.9.1] - 2026-03-02
+
+### Added
+- Auto-fill logo when creating a new experience: typing a company name that already has a logo in any experience or dataset automatically pre-fills the logo preview (debounced 400ms).
+- New API endpoint `GET /api/logos/by-company?name=...` to look up a company's logo.
+
 ## [1.9.0] - 2026-03-02
 
 ### Added

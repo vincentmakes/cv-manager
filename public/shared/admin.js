@@ -1014,7 +1014,7 @@ function experienceForm(d) {
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">${t('form.company')}</label>
-                <input type="text" class="form-input" id="f-company_name" value="${escapeHtml(d.company_name || '')}" oninput="updateLogoApplyGlobal()">
+                <input type="text" class="form-input" id="f-company_name" value="${escapeHtml(d.company_name || '')}" oninput="onCompanyNameInput()">
             </div>
             <div class="form-group">
                 <label class="form-label">${t('form.country_code')}</label>
@@ -1519,6 +1519,29 @@ function updateLogoApplyGlobal() {
         const cb = document.getElementById('f-logo-apply-global');
         if (cb) cb.checked = false;
     }
+}
+
+let _logoLookupTimer = null;
+function onCompanyNameInput() {
+    updateLogoApplyGlobal();
+    clearTimeout(_logoLookupTimer);
+    // Only auto-fill if no logo is set and user hasn't explicitly touched the logo
+    if (pendingLogo || currentModal.existingLogo || document.getElementById('logoPreviewImg')) return;
+    const company = (document.getElementById('f-company_name')?.value || '').trim();
+    if (!company) return;
+    _logoLookupTimer = setTimeout(async () => {
+        // Re-check after debounce — user may have set a logo in the meantime
+        if (pendingLogo || document.getElementById('logoPreviewImg')) return;
+        try {
+            const result = await api(`/api/logos/by-company?name=${encodeURIComponent(company)}`);
+            if (result.logo_filename) {
+                pendingLogo = { reuse: result.logo_filename };
+                const preview = document.getElementById('logoUploadPreview');
+                if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(result.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`;
+                updateLogoApplyGlobal();
+            }
+        } catch (e) {}
+    }, 400);
 }
 
 async function showLogoPicker() {
