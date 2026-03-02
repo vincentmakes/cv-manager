@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.2] - 2026-03-02
+
+### Fixed
+- Timeline print layout: dots, cards and branch curves misaligned from the track on Safari iOS. Root cause was asymmetric padding (`80px top / 50px bottom`) — the track uses `top: 50%` of the padding box while dots/cards reference 50% of the content box, causing a 15px vertical offset. Restored symmetric padding (`65px`).
+- Reinforced dot/flag positioning with explicit `position`/`transform` in print to prevent Safari rendering quirks.
+- Branch curves now use a reduced stroke width in print and explicit `overflow: visible` for Safari iOS compatibility.
+- Disabled card hover transitions in print to prevent animation artifacts.
+
 ## [1.10.1] - 2026-03-02
 
 ### Fixed

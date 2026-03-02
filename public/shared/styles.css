@@ -1056,7 +1056,10 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-container {
         display: block !important;
         min-height: 200px;
-        padding: 80px 10px 50px;
+        /* MUST be symmetric: .timeline-track uses top:50% of the padding box,
+           while dots/cards use top:50% of the content box (.timeline-items).
+           Asymmetric padding shifts the track away from the dots. */
+        padding: 65px 10px;
     }
     #section-timeline:not(.hidden-print) .timeline-company { font-size: 9px; }
     #section-timeline:not(.hidden-print) .timeline-role { font-size: 8px; }
@@ -1068,12 +1071,37 @@ body.has-preview-banner .container {
         min-width: 40px;
         overflow: hidden;
         text-overflow: ellipsis;
+        transition: none !important;
     }
     #section-timeline:not(.hidden-print) .timeline-connectors { display: none !important; }
-    #section-timeline:not(.hidden-print) .timeline-dot { width: 10px; height: 10px; }
-    #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
+    #section-timeline:not(.hidden-print) .timeline-dot {
+        width: 10px;
+        height: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #section-timeline:not(.hidden-print) .timeline-flag {
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
     #section-timeline:not(.hidden-print) .timeline-card-logo { width: 70px; height: 22px; }
     #section-timeline:not(.hidden-print) .timeline-chevron svg { width: 10px; height: 14px; }
+    /* Branch curves: ensure SVG renders in Safari iOS print */
+    #section-timeline:not(.hidden-print) .timeline-branch-curves {
+        overflow: visible !important;
+    }
+    #section-timeline:not(.hidden-print) .timeline-branch-curves path {
+        stroke-width: 3px !important;
+    }
+    #section-timeline:not(.hidden-print) .timeline-track {
+        height: 3px;
+    }
 
     /* Items - allow page breaks between items but not inside */
     .item-card, .cert-card, .skill-category, .project-card { 
