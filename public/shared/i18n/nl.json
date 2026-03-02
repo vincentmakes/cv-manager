@@ -80,6 +80,7 @@
     "form.logo_hint": "Een klein vierkant afbeelding werkt het beste. JPEG, PNG of WebP, max 5MB.",
     "form.use_existing": "Bestaande gebruiken",
     "form.delete_logo": "Logo verwijderen",
+    "form.in_use": "In gebruik",
     "form.name": "Naam",
     "form.initials": "Initialen",
     "form.title": "Titel",

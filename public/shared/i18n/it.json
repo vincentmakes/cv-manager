@@ -80,6 +80,7 @@
     "form.logo_hint": "Un'immagine quadrata piccola funziona meglio. JPEG, PNG o WebP, max 5MB.",
     "form.use_existing": "Usa esistente",
     "form.delete_logo": "Elimina logo",
+    "form.in_use": "In uso",
     "form.name": "Nome",
     "form.initials": "Iniziali",
     "form.title": "Titolo",

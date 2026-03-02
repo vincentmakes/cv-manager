@@ -411,25 +411,33 @@
 .logo-picker-item img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
 .logo-picker-delete {
     position: absolute;
-    top: -4px;
-    right: -4px;
-    width: 16px;
-    height: 16px;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
     border: none;
     border-radius: 50%;
-    background: var(--gray-400);
+    background: var(--danger, #e53e3e);
     color: var(--white);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1;
     padding: 0;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: opacity 0.15s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1;
+    opacity: 0.7;
 }
-.logo-picker-delete:hover { background: var(--danger, #e53e3e); }
+.logo-picker-delete:hover { opacity: 1; }
+.logo-picker-in-use {
+    font-size: 8px;
+    line-height: 1.1;
+    color: var(--gray-400);
+    font-style: italic;
+    padding: 0 4px 4px;
+}
 .logo-picker-label {
     font-size: 9px;
     line-height: 1.1;

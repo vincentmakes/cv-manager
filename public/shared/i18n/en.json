@@ -80,6 +80,7 @@
     "form.logo_hint": "Small square image works best. JPEG, PNG or WebP, max 5MB.",
     "form.use_existing": "Use Existing",
     "form.delete_logo": "Delete logo",
+    "form.in_use": "In use",
     "form.name": "Name",
     "form.initials": "Initials",
     "form.title": "Title",

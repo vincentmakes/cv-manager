@@ -80,6 +80,7 @@
     "form.logo_hint": "Une image carrée fonctionne mieux. JPEG, PNG ou WebP, max 5 Mo.",
     "form.use_existing": "Utiliser existant",
     "form.delete_logo": "Supprimer le logo",
+    "form.in_use": "Utilisé",
     "form.name": "Nom",
     "form.initials": "Initiales",
     "form.title": "Titre",

@@ -80,6 +80,7 @@
     "form.logo_hint": "小方形图片效果最佳。支持 JPEG、PNG 或 WebP 格式，最大 5MB。",
     "form.use_existing": "使用已有",
     "form.delete_logo": "删除标志",
+    "form.in_use": "使用中",
     "form.name": "姓名",
     "form.initials": "姓名缩写",
     "form.title": "职位",

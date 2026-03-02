@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.4] - 2026-03-02
+
+### Fixed
+- Logo picker delete button now positioned inside item bounds (was clipped by modal overflow), styled as a visible red × badge.
+- Logos in use without a resolved company name now show an "In use" label instead of appearing blank and un-deletable.
+
 ## [1.8.3] - 2026-03-02
 
 ### Changed

@@ -80,6 +80,7 @@
     "form.logo_hint": "Ein kleines quadratisches Bild ist ideal. JPEG, PNG oder WebP, max. 5MB.",
     "form.use_existing": "Vorhandenes verwenden",
     "form.delete_logo": "Logo löschen",
+    "form.in_use": "In Verwendung",
     "form.name": "Name",
     "form.initials": "Initialen",
     "form.title": "Titel",

@@ -1497,15 +1497,17 @@ async function showLogoPicker() {
     try {
         const logos = await api('/api/logos');
         if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
-        grid.innerHTML = logos.map(l =>
-            `<div class="logo-picker-item" title="${escapeHtml(l.company || '')}">
+        grid.innerHTML = logos.map(l => {
+            const label = l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>`
+                : l.in_use ? `<span class="logo-picker-in-use">${t('form.in_use')}</span>` : '';
+            const del = !l.in_use ? `<button type="button" class="logo-picker-delete" onclick="event.stopPropagation();deleteUnusedLogo('${escapeHtml(l.filename)}')" title="${t('form.delete_logo')}">×</button>` : '';
+            return `<div class="logo-picker-item" title="${escapeHtml(l.company || '')}">
                 <div class="logo-picker-img" onclick="selectExistingLogo('${escapeHtml(l.filename)}')">
                     <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
                 </div>
-                ${l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>` : ''}
-                ${!l.in_use ? `<button type="button" class="logo-picker-delete" onclick="event.stopPropagation();deleteUnusedLogo('${escapeHtml(l.filename)}')" title="${t('form.delete_logo')}">×</button>` : ''}
-            </div>`
-        ).join('');
+                ${label}${del}
+            </div>`;
+        }).join('');
         grid.style.display = 'flex';
     } catch (err) {
         toast(t('toast.logo_upload_failed'), 'error');
