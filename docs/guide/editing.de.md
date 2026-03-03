@@ -6,11 +6,11 @@ Klicken Sie auf das **Bearbeiten-Symbol** im Kopfbereich. Sie können folgendes 
 
 - **Name** und **Initialen** (werden im Avatar-Kreis angezeigt, wenn kein Foto hochgeladen wurde)
 - **Titel** (Ihre Hauptrolle/Position)
-- **Untertitel** (zusätzlicher Kontext, z.B. Abteilung oder Spezialisierung)
+- **Untertitel** (zusätzlicher Kontext, z. B. Abteilung oder Spezialisierung)
 - **Bio** (berufliche Zusammenfassung — Zeilenumbrüche werden beibehalten)
 - **Standort**
 - **E-Mail**, **Telefon**, **LinkedIn** (werden als Kontakt-Badges angezeigt)
-- **Sprachen** (gesprochene Sprachen, z.B. "Englisch, Französisch, Deutsch" — werden als Badge mit einem Globus-Symbol angezeigt)
+- **Sprachen** (gesprochene Sprachen, z. B. „Englisch, Französisch, Deutsch" — werden als Badge mit einem Globus-Symbol angezeigt)
 
 ## Profilbild
 
@@ -21,7 +21,7 @@ Im Profil-Bearbeitungsdialog können Sie ein Profilbild hochladen (JPEG, PNG ode
 Jeder Erfahrungseintrag umfasst:
 
 - **Jobtitel** und **Unternehmensname**
-- **Startdatum** und **Enddatum** (lassen Sie das Enddatum für aktuelle Positionen leer — es wird "Aktuell" angezeigt)
+- **Startdatum** und **Enddatum** (lassen Sie das Enddatum für aktuelle Positionen leer — es wird „Aktuell" angezeigt)
 - **Standort** und **Ländercode** (2-Buchstaben-Code wie `us`, `ch`, `fr` — wird für Flaggen-Symbole im Zeitstrahl verwendet)
 - **Highlights** — Aufzählungspunkte, die Ihre Leistungen beschreiben (einer pro Zeile)
 
@@ -45,7 +45,7 @@ Wenn Sie einen Unternehmensnamen eingeben, der bereits ein Logo hat (aus einer a
 
 ### Globale Weitergabe
 
-Wenn ein Logo gesetzt wird, erscheint ein Schalter: **"Logo über alle [Unternehmen]-Erfahrungen synchronisieren"**. Wenn aktiviert:
+Wenn ein Logo gesetzt wird, erscheint ein Schalter: **„Logo über alle [Unternehmen]-Erfahrungen synchronisieren"**. Wenn aktiviert:
 
 - Das Logo wird auf **alle** Erfahrungen mit demselben Unternehmensnamen angewendet — einschließlich derer in gespeicherten Datensätzen
 - Zukünftige Erfahrungen für dasselbe Unternehmen erben automatisch das Logo
@@ -65,7 +65,7 @@ Jeder Eintrag hat einen **Abschluss/Titel**, eine **Institution**, **Start-/Endd
 
 ## Fähigkeiten
 
-Fähigkeiten sind in **Kategorien** organisiert (z.B. "Programmiersprachen", "Tools & Plattformen"). Jede Kategorie enthält einzelne Fähigkeits-Tags. Kategorien können ein **Symbol** aus einer vordefinierten Liste haben: Code, Server, Datenbank, Cloud, Einstellungen, Benutzer, Aktentasche, CPU, Ebenen oder Standard. Wenn kein Symbol gewählt wird, erkennt das System automatisch eines basierend auf dem Kategorienamen (z.B. erhält eine Kategorie namens "Programmierung" automatisch das Code-Symbol).
+Fähigkeiten sind in **Kategorien** organisiert (z. B. „Programmiersprachen", „Tools & Plattformen"). Jede Kategorie enthält einzelne Fähigkeits-Tags. Kategorien können ein **Symbol** aus einer vordefinierten Liste haben: Code, Server, Datenbank, Cloud, Einstellungen, Benutzer, Aktentasche, CPU, Ebenen oder Standard. Wenn kein Symbol gewählt wird, erkennt das System automatisch eines basierend auf dem Kategorienamen (z. B. erhält eine Kategorie namens „Programmierung" automatisch das Code-Symbol).
 
 ## Projekte
 

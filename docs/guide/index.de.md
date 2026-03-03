@@ -16,13 +16,13 @@ Dieses Handbuch behandelt alles, was Sie mit der Admin-Oberfläche von CV Manage
 
 ## Aktualisierungen & Version
 
-Öffnen Sie die **Einstellungen** — die aktuelle Version (z.B. `v1.11.0`) wird in der unteren linken Ecke des Modal-Fußbereichs angezeigt.
+Öffnen Sie die **Einstellungen** — die aktuelle Version (z. B. `v1.11.0`) wird in der unteren linken Ecke des Modal-Fußbereichs angezeigt.
 
 CV Manager prüft automatisch auf GitHub, ob neuere Versionen verfügbar sind. Wenn ein Update verfügbar ist, erscheint ein blaues Banner unterhalb der Werkzeugleiste:
 
 > **Update verfügbar: v1.12.0** (Sie verwenden v1.11.0) — *Was ist neu*
 
-Der Link "Was ist neu" öffnet das Änderungsprotokoll. Sie können das Banner mit der X-Schaltfläche schließen.
+Der Link „Was ist neu" öffnet das Änderungsprotokoll. Sie können das Banner mit der X-Schaltfläche schließen.
 
 !!! note "Hinweis"
     Die Versionsprüfung wird für 24 Stunden zwischengespeichert. Starten Sie Ihren Server (oder Docker-Container) neu, um den Cache zu leeren und eine erneute Prüfung zu erzwingen.

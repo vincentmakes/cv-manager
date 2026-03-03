@@ -25,7 +25,7 @@ Mit benutzerdefinierten Abschnitten können Sie beliebige Inhalte hinzufügen, d
 
 ## Titel-ausblenden-Option
 
-Für Raster-, Listen-, Karten- und Aufzählungs-Layouts hat jedes Element ein Kontrollkästchen **"Titel ausblenden"**. Wenn aktiviert, wird das Element ohne seine Titelüberschrift angezeigt — nützlich, wenn der Inhalt für sich selbst spricht.
+Für Raster-, Listen-, Karten- und Aufzählungs-Layouts hat jedes Element ein Kontrollkästchen **„Titel ausblenden"**. Wenn aktiviert, wird das Element ohne seine Titelüberschrift angezeigt — nützlich, wenn der Inhalt für sich selbst spricht.
 
 ## Elemente benutzerdefinierter Abschnitte verwalten
 

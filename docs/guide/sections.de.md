@@ -23,7 +23,7 @@ CV Manager enthält 7 integrierte Abschnitte:
 
 ## Abschnittsüberschriften umbenennen
 
-Im selben Tab **Abschnitte & Überschriften** können Sie den Anzeigenamen jedes Abschnitts ändern. Benennen Sie zum Beispiel "Berufserfahrung" in "Karriere" oder "Fähigkeiten" in "Technische Expertise" um. Löschen Sie den benutzerdefinierten Namen, um zum Standard zurückzukehren.
+Im selben Tab **Abschnitte & Überschriften** können Sie den Anzeigenamen jedes Abschnitts ändern. Benennen Sie zum Beispiel „Berufserfahrung" in „Karriere" oder „Fähigkeiten" in „Technische Expertise" um. Löschen Sie den benutzerdefinierten Namen, um zum Standard zurückzukehren.
 
 ## Abschnitte ausblenden
 

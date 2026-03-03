@@ -24,4 +24,4 @@ Es ist keine Konfiguration erforderlich — die Verzweigung erfolgt vollautomati
 
 ## Zeitstrahl-Datumsformat
 
-Standardmäßig zeigt der Zeitstrahl nur Jahre an (z.B. "2020 - 2023"). Sie können dies unter **Einstellungen → Erweitert → Zeitstrahl: Nur Jahre** ändern. Wenn deaktiviert, verwendet der Zeitstrahl dasselbe Datumsformat wie der Rest Ihres Lebenslaufs.
+Standardmäßig zeigt der Zeitstrahl nur Jahre an (z. B. „2020 - 2023"). Sie können dies unter **Einstellungen → Erweitert → Zeitstrahl: Nur Jahre** ändern. Wenn deaktiviert, verwendet der Zeitstrahl dasselbe Datumsformat wie der Rest Ihres Lebenslaufs.
