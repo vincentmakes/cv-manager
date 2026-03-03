@@ -304,6 +304,17 @@ nav:
 # Extra
 # ---------------------------------------------------------------------------
 extra:
+  # Google Analytics
+  analytics:
+    provider: google
+    property: G-SZM87KYZQJ
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences,
+      as well as to measure the effectiveness of our documentation.
+      With your consent, you're helping us to make our documentation better.
+
   # Language selector in the header (only English active for now)
   alternate:
     - name: English
