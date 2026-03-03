@@ -838,6 +838,14 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
             forkX = forkMainDotX + dotClearance;
         }
 
+        // Ensure the branch line (after the S-curve) reaches the first branch dot.
+        // For short items on a long timeline, the curveW + dotClearance nudge can
+        // push branchStartX past the first dot, leaving it floating.
+        const firstBranchDotX = pctToX(positions[firstBranchIdx].leftPct);
+        if (forkX + curveW > firstBranchDotX) {
+            forkX = firstBranchDotX - curveW;
+        }
+
         const branchStartX = forkX + curveW;
 
         // Fork S-curve: from main track, curves up to branch track
@@ -866,6 +874,12 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
                         mergeX = mergeDotX - dotClearance;
                     }
                 }
+            }
+
+            // Ensure the branch line reaches the last branch dot (mirror of fork clamp)
+            const lastBranchDotX = pctToX(positions[lastBranchIdx].leftPct);
+            if (mergeX - curveW < lastBranchDotX) {
+                mergeX = lastBranchDotX + curveW;
             }
 
             const branchLineEnd = mergeX - curveW;
