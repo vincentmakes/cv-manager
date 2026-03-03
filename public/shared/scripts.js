@@ -365,14 +365,16 @@ function computeTimelineBranches(items) {
 
     for (let i = 1; i < segments.length; i++) {
         // Find ALL preceding items that genuinely overlap.
-        // Threshold: >= 2 months for most items, but short-duration items (1 month)
-        // that fall entirely within another item's range count as parallel too.
+        // Two conditions (either one triggers branching):
+        // 1. >= 3 months overlap — filters brief 1-2 month transitions
+        // 2. Overlap covers the item's entire duration — short items that fall
+        //    entirely within another item's range (e.g. a 2-month acting role
+        //    during a long parallel employment) should always branch.
         const durationI = segments[i].endMonths - segments[i].startMonths;
-        const minOverlap = Math.min(2, Math.max(1, durationI));
         const overlapping = [];
         for (let j = 0; j < i; j++) {
             const overlapMonths = Math.min(segments[j].endMonths, segments[i].endMonths) - segments[i].startMonths;
-            if (overlapMonths >= minOverlap) {
+            if (overlapMonths >= 3 || (durationI > 0 && overlapMonths >= durationI)) {
                 overlapping.push(j);
             }
         }
@@ -403,7 +405,17 @@ function computeTimelineBranches(items) {
         }
         if (branchPartner === -1) branchPartner = overlapping[overlapping.length - 1];
 
-        const existingBranch = branches.find(b => b.mergeAfterIdx >= i - 1 && segments[branchPartner].branchGroup === branches.indexOf(b));
+        const existingBranch = branches.find(b => {
+            const bIdx = branches.indexOf(b);
+            // Extend if immediately adjacent and same group
+            if (b.mergeAfterIdx >= i - 1 && segments[branchPartner].branchGroup === bIdx) return true;
+            // Also extend if branching from the same main-track anchor item.
+            // This keeps one continuous branch for parallel employment (e.g. a
+            // long-running side job alongside multiple sequential main positions)
+            // even when short intermediate items don't meet the overlap threshold.
+            if (b.forkBeforeIdx === branchPartner) return true;
+            return false;
+        });
         if (existingBranch) {
             existingBranch.mergeAfterIdx = i;
             segments[i].branchGroup = branches.indexOf(existingBranch);
@@ -838,6 +850,14 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
             forkX = forkMainDotX + dotClearance;
         }
 
+        // Ensure the branch line (after the S-curve) reaches the first branch dot.
+        // For short items on a long timeline, the curveW + dotClearance nudge can
+        // push branchStartX past the first dot, leaving it floating.
+        const firstBranchDotX = pctToX(positions[firstBranchIdx].leftPct);
+        if (forkX + curveW > firstBranchDotX) {
+            forkX = firstBranchDotX - curveW;
+        }
+
         const branchStartX = forkX + curveW;
 
         // Fork S-curve: from main track, curves up to branch track
@@ -866,6 +886,12 @@ function renderBranchCurves(timelineContainer, segments, branches, positions) {
                         mergeX = mergeDotX - dotClearance;
                     }
                 }
+            }
+
+            // Ensure the branch line reaches the last branch dot (mirror of fork clamp)
+            const lastBranchDotX = pctToX(positions[lastBranchIdx].leftPct);
+            if (mergeX - curveW < lastBranchDotX) {
+                mergeX = lastBranchDotX + curveW;
             }
 
             const branchLineEnd = mergeX - curveW;

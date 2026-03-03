@@ -1067,6 +1067,10 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-container {
         display: block !important;
         min-height: 200px;
+        /* Override overflow:hidden so branch tracks (above the main line) and
+           SVG S-curves are not clipped.  iOS Safari print clips children even
+           when they set overflow:visible if the parent is overflow:hidden. */
+        overflow: visible !important;
         /* MUST be symmetric: .timeline-track uses top:50% of the padding box,
            while dots/cards use top:50% of the content box (.timeline-items).
            Asymmetric padding shifts the track away from the dots. */
@@ -1077,12 +1081,20 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-period { font-size: 8px; }
     #section-timeline:not(.hidden-print) .timeline-content {
         padding: 6px 8px;
+        /* Reset to pure CSS centering for print — JS-set inline left + translateX
+           positioning doesn't reliably apply on iOS Safari's print renderer,
+           causing cards to drift into the section header. */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
         max-width: min(90px, calc(100% + 20px));
         min-width: 40px;
         overflow: hidden;
         text-overflow: ellipsis;
         transition: none !important;
     }
+    /* Hide connector lines in print — they rely on JS pixel offsets that don't
+       scale correctly, and the cards are reset to centered above anyway. */
+    #section-timeline:not(.hidden-print) .timeline-connectors { display: none !important; }
     /* Only resize dots/flags in print — do NOT override top/left/transform
        because that kills the branch-track offset (calc(50% - var(--branch-offset-pct)))
        due to the #id selector having higher specificity than class-only selectors */
@@ -1102,10 +1114,20 @@ body.has-preview-banner .container {
         stroke: var(--accent) !important;
         stroke-width: 3px !important;
     }
-    /* CSS fallback branch line — hidden by default since SVG branch curves render.
-       Was causing a "double line" when both the SVG and CSS fallback were visible. */
+    /* CSS fallback branch line for print.  iOS Safari doesn't render SVGs in
+       print, so this plain CSS line is the only way the branch appears on iPhone.
+       On desktop browsers the SVG curves render on top (higher z-index), so this
+       line sits invisibly underneath — no "double line" as long as the offset
+       matches (both use --branch-offset-pct set by JS). */
     #section-timeline:not(.hidden-print) .timeline-branch-line {
-        display: none;
+        display: block;
+        position: absolute;
+        top: calc(50% - var(--branch-offset-pct, 8%));
+        height: 3px;
+        background: var(--accent);
+        border-radius: 2px;
+        transform: translateY(-50%);
+        z-index: 1;
     }
     #section-timeline:not(.hidden-print) .timeline-track {
         height: 3px;

@@ -4,6 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.12.3] - 2026-03-03
+
+### Fixed
+- Timeline branches not displaying when printing from iPhone — iOS Safari doesn't render SVGs in print, so restored the CSS fallback branch line that was removed in the revert
+- Timeline cards overlapping with the section header on iPhone print — restored CSS-based centering (`left: 50%; transform: translateX(-50%)`) for print since JS-computed inline positioning doesn't apply reliably on iOS Safari's print renderer
+
+## [1.12.1] - 2026-03-03
+
+### Fixed
+- Timeline no longer creates visual branches for brief transitional overlaps (e.g. starting a new role a few months before leaving the old one); only genuinely concurrent positions trigger branching
+
 ## [1.12.0] - 2026-03-03
 
 ### Changed
