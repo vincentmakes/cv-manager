@@ -4,3 +4,4 @@ claude.md
 docker-compose.unraid.yml
 docker-compose.yml
 /node_modules
+/site

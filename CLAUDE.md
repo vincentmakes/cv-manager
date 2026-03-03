@@ -73,6 +73,8 @@ Both must always match. The admin UI checks `version.json` on GitHub to show upd
 
 **Every code change that is committed MUST include a version bump.** This is not optional — skipping it breaks the update notification system and makes releases untrackable.
 
+**Exception — documentation-only changes do NOT get a version bump.** Changes to `docs/`, `mkdocs.yml`, `requirements-docs.txt`, `USER_GUIDE.md`, `TRANSLATING.md`, `README.md`, or `CHANGELOG.md` (without an accompanying app change) must **not** bump `package.json` or `version.json`. The version number is used by the admin UI to detect app updates — bumping it for docs-only changes would create false update notifications for users.
+
 Before committing, always complete these steps:
 
 1. **Determine bump type** — Bug fix → PATCH, new feature → MINOR, breaking change → MAJOR

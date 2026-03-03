@@ -1,0 +1,345 @@
+# =============================================================================
+# CV Manager — Docs (MkDocs Material + i18n)
+# =============================================================================
+# Docs:  https://squidfunk.github.io/mkdocs-material/
+# i18n:  https://github.com/ultrabug/mkdocs-static-i18n
+# =============================================================================
+#
+# Cloudflare Pages build settings:
+#   Build command: pip install -r requirements-docs.txt && mkdocs build
+#   Build output directory: site
+#   Root directory: /  (project root)
+# =============================================================================
+
+site_name: CV Manager — Docs
+site_description: Documentation for CV Manager – a self-hosted CV/resume management system
+site_url: https://docs.example.com  # TODO: Replace with your Cloudflare Pages URL
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs              # Top-level sections as tabs
+    - navigation.sections          # Collapsible sidebar sections
+    - navigation.top               # Back-to-top button
+    - navigation.indexes           # Section index pages (index.md)
+    - navigation.expand            # Auto-expand sidebar sections
+    - search.suggest               # Search autocomplete
+    - search.highlight             # Highlight search terms on page
+    - content.code.copy            # Copy button on code blocks
+    - toc.integrate                # TOC in left sidebar
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    logo: material/file-account
+
+# ---------------------------------------------------------------------------
+# Plugins
+# ---------------------------------------------------------------------------
+plugins:
+  # i18n — suffix-based: page.md (EN), page.de.md (DE), page.fr.md (FR)…
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          name: English
+          build: true
+          default: true
+        # ---------------------------------------------------------------
+        # To add a language: uncomment the block, create <page>.<locale>.md
+        # files in docs/, and translate the nav_translations values.
+        # ---------------------------------------------------------------
+        # - locale: de
+        #   name: Deutsch
+        #   build: true
+        #   nav_translations:
+        #     Home: Startseite
+        #     Getting Started: Erste Schritte
+        #     Installation: Installation
+        #     First Steps: Erste Schritte
+        #     User Guide: Benutzerhandbuch
+        #     Sections: Abschnitte
+        #     Editing Content: Inhalte bearbeiten
+        #     Custom Sections: Benutzerdefinierte Abschnitte
+        #     Timeline: Zeitleiste
+        #     Theme & Appearance: Design & Darstellung
+        #     Language: Sprache
+        #     Datasets: Datensätze
+        #     Print & PDF: Drucken & PDF
+        #     Import & Export: Import & Export
+        #     Advanced: Erweitert
+        #     Settings: Einstellungen
+        #     Security & Privacy: Sicherheit & Datenschutz
+        #     ATS Compatibility: ATS-Kompatibilität
+        #     Reference: Referenz
+        #     FAQ: FAQ
+        #     Keyboard Shortcuts: Tastenkürzel
+        #     Support: Support
+        # - locale: fr
+        #   name: Français
+        #   build: true
+        #   nav_translations:
+        #     Home: Accueil
+        #     Getting Started: Premiers pas
+        #     Installation: Installation
+        #     First Steps: Premiers pas
+        #     User Guide: Guide utilisateur
+        #     Sections: Sections
+        #     Editing Content: Modifier le contenu
+        #     Custom Sections: Sections personnalisées
+        #     Timeline: Chronologie
+        #     Theme & Appearance: Thème & Apparence
+        #     Language: Langue
+        #     Datasets: Jeux de données
+        #     Print & PDF: Impression & PDF
+        #     Import & Export: Import & Export
+        #     Advanced: Avancé
+        #     Settings: Paramètres
+        #     Security & Privacy: Sécurité & Confidentialité
+        #     ATS Compatibility: Compatibilité ATS
+        #     Reference: Référence
+        #     FAQ: FAQ
+        #     Keyboard Shortcuts: Raccourcis clavier
+        #     Support: Support
+        # - locale: nl
+        #   name: Nederlands
+        #   build: true
+        #   nav_translations:
+        #     Home: Home
+        #     Getting Started: Aan de slag
+        #     Installation: Installatie
+        #     First Steps: Eerste stappen
+        #     User Guide: Gebruikershandleiding
+        #     Sections: Secties
+        #     Editing Content: Inhoud bewerken
+        #     Custom Sections: Aangepaste secties
+        #     Timeline: Tijdlijn
+        #     Theme & Appearance: Thema & Uiterlijk
+        #     Language: Taal
+        #     Datasets: Datasets
+        #     Print & PDF: Afdrukken & PDF
+        #     Import & Export: Import & Export
+        #     Advanced: Geavanceerd
+        #     Settings: Instellingen
+        #     Security & Privacy: Beveiliging & Privacy
+        #     ATS Compatibility: ATS-compatibiliteit
+        #     Reference: Referentie
+        #     FAQ: FAQ
+        #     Keyboard Shortcuts: Sneltoetsen
+        #     Support: Ondersteuning
+        # - locale: es
+        #   name: Español
+        #   build: true
+        #   nav_translations:
+        #     Home: Inicio
+        #     Getting Started: Primeros pasos
+        #     Installation: Instalación
+        #     First Steps: Primeros pasos
+        #     User Guide: Guía del usuario
+        #     Sections: Secciones
+        #     Editing Content: Editar contenido
+        #     Custom Sections: Secciones personalizadas
+        #     Timeline: Línea de tiempo
+        #     Theme & Appearance: Tema y Apariencia
+        #     Language: Idioma
+        #     Datasets: Conjuntos de datos
+        #     Print & PDF: Imprimir y PDF
+        #     Import & Export: Importar y Exportar
+        #     Advanced: Avanzado
+        #     Settings: Configuración
+        #     Security & Privacy: Seguridad y Privacidad
+        #     ATS Compatibility: Compatibilidad ATS
+        #     Reference: Referencia
+        #     FAQ: FAQ
+        #     Keyboard Shortcuts: Atajos de teclado
+        #     Support: Soporte
+        # - locale: it
+        #   name: Italiano
+        #   build: true
+        #   nav_translations:
+        #     Home: Home
+        #     Getting Started: Per iniziare
+        #     Installation: Installazione
+        #     First Steps: Primi passi
+        #     User Guide: Guida utente
+        #     Sections: Sezioni
+        #     Editing Content: Modifica contenuto
+        #     Custom Sections: Sezioni personalizzate
+        #     Timeline: Cronologia
+        #     Theme & Appearance: Tema e Aspetto
+        #     Language: Lingua
+        #     Datasets: Set di dati
+        #     Print & PDF: Stampa e PDF
+        #     Import & Export: Importa e Esporta
+        #     Advanced: Avanzato
+        #     Settings: Impostazioni
+        #     Security & Privacy: Sicurezza e Privacy
+        #     ATS Compatibility: Compatibilità ATS
+        #     Reference: Riferimenti
+        #     FAQ: FAQ
+        #     Keyboard Shortcuts: Scorciatoie da tastiera
+        #     Support: Supporto
+        # - locale: pt
+        #   name: Português
+        #   build: true
+        #   nav_translations:
+        #     Home: Início
+        #     Getting Started: Primeiros passos
+        #     Installation: Instalação
+        #     First Steps: Primeiros passos
+        #     User Guide: Guia do usuário
+        #     Sections: Seções
+        #     Editing Content: Editar conteúdo
+        #     Custom Sections: Seções personalizadas
+        #     Timeline: Linha do tempo
+        #     Theme & Appearance: Tema e Aparência
+        #     Language: Idioma
+        #     Datasets: Conjuntos de dados
+        #     Print & PDF: Imprimir e PDF
+        #     Import & Export: Importar e Exportar
+        #     Advanced: Avançado
+        #     Settings: Configurações
+        #     Security & Privacy: Segurança e Privacidade
+        #     ATS Compatibility: Compatibilidade ATS
+        #     Reference: Referência
+        #     FAQ: FAQ
+        #     Keyboard Shortcuts: Atalhos de teclado
+        #     Support: Suporte
+        # - locale: zh
+        #   name: 中文
+        #   build: true
+        #   nav_translations:
+        #     Home: 首页
+        #     Getting Started: 快速开始
+        #     Installation: 安装
+        #     First Steps: 第一步
+        #     User Guide: 用户指南
+        #     Sections: 章节
+        #     Editing Content: 编辑内容
+        #     Custom Sections: 自定义章节
+        #     Timeline: 时间线
+        #     Theme & Appearance: 主题与外观
+        #     Language: 语言
+        #     Datasets: 数据集
+        #     Print & PDF: 打印与 PDF
+        #     Import & Export: 导入与导出
+        #     Advanced: 高级
+        #     Settings: 设置
+        #     Security & Privacy: 安全与隐私
+        #     ATS Compatibility: ATS 兼容性
+        #     Reference: 参考
+        #     FAQ: 常见问题
+        #     Keyboard Shortcuts: 键盘快捷键
+        #     Support: 支持
+
+  - search:
+      lang:
+        - en
+
+# ---------------------------------------------------------------------------
+# Markdown extensions
+# ---------------------------------------------------------------------------
+markdown_extensions:
+  - admonition                     # Note / Warning / Tip callout boxes
+  - pymdownx.details               # Collapsible admonitions (??? note)
+  - pymdownx.superfences            # Fenced code blocks, diagrams
+  - pymdownx.tabbed:                # Content tabs
+      alternate_style: true
+  - attr_list                       # HTML attributes on elements
+  - md_in_html                      # Markdown inside HTML blocks
+  - tables                          # Pipe tables
+  - toc:
+      permalink: true               # Anchor links on headings
+
+# ---------------------------------------------------------------------------
+# Navigation
+# ---------------------------------------------------------------------------
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - First Steps: getting-started/first-steps.md
+  - User Guide:
+      - guide/index.md
+      - Sections: guide/sections.md
+      - Editing Content: guide/editing.md
+      - Custom Sections: guide/custom-sections.md
+      - Timeline: guide/timeline.md
+      - Theme & Appearance: guide/theme.md
+      - Language: guide/language.md
+      - Datasets: guide/datasets.md
+      - Print & PDF: guide/print-pdf.md
+      - Import & Export: guide/import-export.md
+  - Advanced:
+      - advanced/index.md
+      - Settings: advanced/settings.md
+      - Security & Privacy: advanced/security.md
+      - ATS Compatibility: advanced/ats.md
+  - Reference:
+      - reference/index.md
+      - FAQ: reference/faq.md
+      - Keyboard Shortcuts: reference/keyboard-shortcuts.md
+      - Support: reference/support.md
+
+# ---------------------------------------------------------------------------
+# Extra
+# ---------------------------------------------------------------------------
+extra:
+  # Google Analytics
+  analytics:
+    provider: google
+    property: G-SZM87KYZQJ
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences,
+      as well as to measure the effectiveness of our documentation.
+      With your consent, you're helping us to make our documentation better.
+
+  # Language selector in the header (only English active for now)
+  alternate:
+    - name: English
+      link: /
+      lang: en
+    # - name: Deutsch
+    #   link: /de/
+    #   lang: de
+    # - name: Français
+    #   link: /fr/
+    #   lang: fr
+    # - name: Nederlands
+    #   link: /nl/
+    #   lang: nl
+    # - name: Español
+    #   link: /es/
+    #   lang: es
+    # - name: Italiano
+    #   link: /it/
+    #   lang: it
+    # - name: Português
+    #   link: /pt/
+    #   lang: pt
+    # - name: 中文
+    #   link: /zh/
+    #   lang: zh
+
+copyright: CV Manager — Self-hosted CV/Resume Management
