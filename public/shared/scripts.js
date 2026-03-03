@@ -372,7 +372,12 @@ function computeTimelineBranches(items) {
         const overlapping = [];
         for (let j = 0; j < i; j++) {
             const overlapMonths = Math.min(segments[j].endMonths, segments[i].endMonths) - segments[i].startMonths;
-            if (overlapMonths >= minOverlap) {
+            // Require both absolute minimum overlap AND that the overlap covers
+            // at least half the current item's duration. This prevents brief
+            // transitional overlaps (starting a new role months before leaving
+            // the old one) from creating visual branches — only genuinely
+            // concurrent positions should branch.
+            if (overlapMonths >= minOverlap && overlapMonths >= durationI * 0.5) {
                 overlapping.push(j);
             }
         }
