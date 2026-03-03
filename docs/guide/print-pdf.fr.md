@@ -2,35 +2,35 @@
 
 ## Imprimer votre CV
 
-Cliquez sur **Imprimer / PDF** dans la barre d'outils (ou appuyez sur `Ctrl+P` / `Cmd+P`). Utilisez l'option « Enregistrer au format PDF » de votre navigateur pour creer un fichier PDF. La sortie d'impression exclut tous les controles d'administration, les elements masques et les sections masquees.
+Cliquez sur **Print / PDF** dans la barre d'outils (ou appuyez sur `Ctrl+P` / `Cmd+P`). Utilisez l'option « Enregistrer au format PDF » de votre navigateur pour créer un fichier PDF. La sortie d'impression exclut tous les contrôles d'administration, les éléments masqués et les sections masquées.
 
-## Numeros de page
+## Numéros de page
 
-Activez les numeros de page dans **Parametres → Impression et export → Numeros de page**. Vous pouvez configurer :
+Activez les numéros de page dans **Settings → Print & Export → Page Numbers**. Vous pouvez configurer :
 
-- **Position** : en haut ou en bas de la page
-- **Format** : « Page 1 of 3 », « 1 / 3 », « 1 », ou « - 1 - »
+- La **position** : en haut ou en bas de la page
+- Le **format** : « Page 1 of 3 », « 1 / 3 », « 1 » ou « - 1 - »
 
-## Decoupage des pages
+## Coupure de page
 
-Deux options controlent la facon dont le contenu se repartit entre les pages :
+Deux options contrôlent la façon dont le contenu se répartit entre les pages :
 
-- **Autoriser le decoupage des sections** — permet a une section de commencer sur une page et de continuer sur la suivante (au lieu de pousser la section entiere vers une nouvelle page)
-- **Autoriser le decoupage des elements** — permet aux elements individuels (comme une carte d'experience) de se repartir entre les pages
+- **Allow Section Splits** — permet à une section de commencer sur une page et de continuer sur la suivante (au lieu de repousser la section entière sur une nouvelle page)
+- **Allow Item Splits** — permet aux éléments individuels (comme une fiche d'expérience) de se répartir entre les pages
 
-Les deux se trouvent dans **Parametres → Impression et export**. Si votre CV a de longues sections, activer ces options evite un espace blanc excessif.
+Les deux se trouvent dans **Settings → Print & Export**. Si votre CV comporte de longues sections, activer ces options évite un excès d'espace blanc.
 
 ## Bouton d'impression public
 
-Activez **Parametres → Impression et export → Bouton d'impression public** pour afficher ou masquer un bouton d'impression sur le CV public. Lorsqu'il est active, les visiteurs peuvent imprimer votre CV directement.
+Activez ou désactivez **Settings → Print & Export → Public Print Button** pour afficher ou masquer un bouton d'impression sur le CV public. Lorsque cette option est activée, les visiteurs peuvent imprimer votre CV directement.
 
 ## Bonnes pratiques pour la sortie PDF
 
-!!! tip "Mise a l'echelle"
-    La plupart des navigateurs ont une option **Echelle** dans la boite de dialogue d'impression (parfois sous « Plus de parametres » ou « Avance »). La regler a **80-90 %** produit souvent un bien meilleur resultat — cela resserre l'espacement et peut aider a faire tenir votre CV sur moins de pages sans perdre en lisibilite.
+!!! tip "Mise à l'échelle"
+    La plupart des navigateurs disposent d'une option **Échelle** dans la boîte de dialogue d'impression (parfois sous « Plus de paramètres » ou « Avancé »). La régler à **80–90 %** produit souvent un bien meilleur résultat — cela resserre l'espacement et peut aider à faire tenir votre CV en moins de pages sans perdre en lisibilité.
 
 !!! tip "Marges"
-    Ajustez les marges d'impression a **Minimum** ou **Aucune** dans la boite de dialogue d'impression de votre navigateur pour maximiser la zone de contenu. Le CV a son propre espacement interne, donc supprimer les marges du navigateur n'entrainera pas de texte touchant les bords.
+    Réglez les marges d'impression sur **Minimum** ou **Aucune** dans la boîte de dialogue d'impression de votre navigateur pour maximiser la zone de contenu. Le CV possède son propre espacement interne, donc supprimer les marges du navigateur n'entraînera pas le texte à toucher les bords.
 
 !!! tip "Meilleure combinaison"
-    Combinez une mise a l'echelle a 85 % avec des marges minimales pour le resultat le plus professionnel. Previsualisez le resultat avant d'enregistrer — de petits ajustements peuvent faire une grande difference.
+    Combinez une mise à l'échelle à 85 % avec des marges minimales pour obtenir le rendu le plus professionnel. Prévisualisez le résultat avant d'enregistrer — de petits ajustements peuvent faire une grande différence.

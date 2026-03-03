@@ -2,11 +2,11 @@
 
 ## Exporter votre CV
 
-Cliquez sur **Exporter** dans la barre d'outils pour telecharger l'integralite de votre CV sous forme de fichier JSON. Cela inclut toutes les sections, elements, parametres et sections personnalisees. Utilisez cela pour les sauvegardes ou pour transferer votre CV vers une autre instance.
+Cliquez sur **Export** dans la barre d'outils pour télécharger l'intégralité de votre CV sous forme de fichier JSON. Celui-ci inclut toutes les sections, les éléments, les paramètres et les sections personnalisées. Utilisez cette fonctionnalité pour les sauvegardes ou pour transférer votre CV vers une autre instance.
 
-## Importer des donnees
+## Importer des données
 
-Cliquez sur **Importer** et selectionnez un fichier JSON precedemment exporte. Cela remplace vos donnees de CV actuelles par les donnees importees. Les sections personnalisees et tous les parametres sont inclus.
+Cliquez sur **Import** et sélectionnez un fichier JSON précédemment exporté. Cela remplace vos données de CV actuelles par les données importées. Les sections personnalisées et tous les paramètres sont inclus.
 
-!!! tip "Conseil"
-    Exportez votre CV avant d'importer, afin d'avoir une sauvegarde de l'etat actuel.
+!!! tip
+    Exportez votre CV avant d'importer, afin de disposer d'une sauvegarde de l'état actuel.
