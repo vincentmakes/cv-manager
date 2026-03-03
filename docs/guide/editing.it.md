@@ -73,7 +73,7 @@ Ogni progetto ha un **titolo**, una **descrizione**, le **tecnologie** (mostrate
 
 ## Visibilita degli elementi
 
-Ogni singolo elemento (esperienza, certificazione, voce di formazione, ecc.) ha un **interruttore di visibilita**. Gli elementi nascosti vengono esclusi dalla stampa/PDF e dalla vista pubblica, ma restano nell'admin per un utilizzo futuro.
+Ogni singolo elemento (esperienza, certificazione, voce di formazione, ecc.) ha un **interruttore di visibilità**. Gli elementi nascosti vengono esclusi dalla stampa/PDF e dalla vista pubblica, ma restano nell'admin per un utilizzo futuro.
 
 ## Riordinamento tramite trascinamento
 

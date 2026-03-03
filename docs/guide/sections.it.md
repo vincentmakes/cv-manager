@@ -27,4 +27,4 @@ Nella stessa scheda **Sezioni e intestazioni**, potete rinominare il titolo visu
 
 ## Nascondere le sezioni
 
-Ogni sezione ha un **interruttore di visibilita** (icona occhio) nell'angolo in alto a destra. Disattivandolo, la sezione viene nascosta dall'output di stampa/PDF pur restando visibile nell'admin per la modifica.
+Ogni sezione ha un **interruttore di visibilità** (icona occhio) nell'angolo in alto a destra. Disattivandolo, la sezione viene nascosta dall'output di stampa/PDF pur restando visibile nell'admin per la modifica.
