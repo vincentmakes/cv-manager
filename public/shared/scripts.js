@@ -364,11 +364,15 @@ function computeTimelineBranches(items) {
     const branches = [];
 
     for (let i = 1; i < segments.length; i++) {
-        // Find ALL preceding items that genuinely overlap (>= 2 months filters transition noise)
+        // Find ALL preceding items that genuinely overlap.
+        // Threshold: >= 2 months for most items, but short-duration items (1 month)
+        // that fall entirely within another item's range count as parallel too.
+        const durationI = segments[i].endMonths - segments[i].startMonths;
+        const minOverlap = Math.min(2, Math.max(1, durationI));
         const overlapping = [];
         for (let j = 0; j < i; j++) {
             const overlapMonths = Math.min(segments[j].endMonths, segments[i].endMonths) - segments[i].startMonths;
-            if (overlapMonths >= 2) {
+            if (overlapMonths >= minOverlap) {
                 overlapping.push(j);
             }
         }

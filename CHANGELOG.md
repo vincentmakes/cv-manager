@@ -8,7 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Fixed
 - Timeline parallel experience detection now checks all overlapping items instead of only the nearest, preventing incorrect track assignments when 3+ jobs overlap
-- Timeline overlap threshold uses actual months (>= 2) instead of raw YYYYMM subtraction, filtering out 1-month job transition noise
+- Timeline overlap threshold uses actual months instead of raw YYYYMM subtraction, with adaptive minimum so short-duration items (e.g. 1-month acting roles) are correctly detected as parallel
 - Timeline cards no longer overflow the container — bidirectional clamping keeps cards within bounds
 - Timeline container height calculation accounts for full branch offset (28px) instead of partial (8px)
 
