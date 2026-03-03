@@ -2,10 +2,10 @@
 
 ## Colore del tema
 
-Fare clic sul pulsante **Tema** nella barra degli strumenti per aprire il selettore colore. E possibile:
+Fate clic sul pulsante **Tema** nella barra degli strumenti per aprire il selettore colore. Potete:
 
 - Scegliere un colore dalla **ruota dei colori**
-- Regolare la **luminosita** con il cursore
+- Regolare la **luminosità** con il cursore
 - Inserire uno specifico **codice esadecimale**
 - Scegliere tra **8 colori predefiniti** (Blu, Smeraldo, Viola, Rosso, Arancione, Ciano, Indaco, Rosa)
 
@@ -13,7 +13,7 @@ Il colore del tema influisce su intestazioni, bordi, link, etichette ed elementi
 
 ## Formato data
 
-Andare in **Impostazioni → Avanzate → Formato data** per scegliere come vengono visualizzate le date nel CV:
+Andate in **Impostazioni → Avanzate → Formato data** per scegliere come vengono visualizzate le date nel CV:
 
 | Formato | Esempio |
 |---------|---------|

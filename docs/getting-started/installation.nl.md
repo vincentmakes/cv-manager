@@ -1,6 +1,6 @@
 # Installatie
 
-## Docker Compose (Aanbevolen)
+## Docker Compose (aanbevolen)
 
 ```bash
 docker-compose up -d --build
@@ -38,4 +38,4 @@ Beide containers delen dezelfde gegevensdirectory (doorgaans `/mnt/user/appdata/
 
 ## Draaien zonder Docker
 
-Installeer Node.js 18+, voer `npm install` uit in de projectdirectory en vervolgens `node src/server.js`. De admin draait op poort 3000 en de publieke site op poort 3001.
+Installeer Node.js 18+, voer `npm install` uit in de projectdirectory en voer vervolgens `node src/server.js` uit. De admin draait op poort 3000 en de publieke site op poort 3001.

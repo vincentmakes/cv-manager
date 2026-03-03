@@ -2,7 +2,7 @@
 
 ## Come Funzionano i Dataset
 
-I dataset sono istantanee salvate del vostro CV. Un dataset è sempre quello **predefinito** — questa è la versione che i visitatori vedono al vostro URL principale (`/`). Potete creare dataset aggiuntivi per destinatari diversi (ad esempio, un CV tecnico, un CV manageriale) e condividerli ai propri URL dedicati.
+I dataset sono istantanee salvate del vostro CV. Un dataset è sempre quello **predefinito** — questa è la versione che i visitatori vedono al vostro URL principale (`/`). Potete creare dataset aggiuntivi per destinatari diversi (ad esempio, un CV tecnico, un CV manageriale) e condividerli tramite URL dedicati.
 
 Quando installate CV Manager per la prima volta, un dataset "Default" viene creato automaticamente a partire dai dati del vostro CV. Tutte le modifiche che apportate nell'interfaccia di amministrazione vengono **salvate automaticamente** nel dataset attivo — non esiste un passaggio separato di "salvataggio".
 

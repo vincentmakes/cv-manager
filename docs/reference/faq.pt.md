@@ -102,13 +102,13 @@
     Abra o modal **Abrir...**, ative o toggle do conjunto de dados para público e clique no ícone de cópia ao lado da URL do slug. Compartilhe esse link — ele funciona no site público sem expor sua interface de admin.
 
 ??? question "Posso ter várias versões públicas ao mesmo tempo?"
-    Sim. Você pode tornar quantos datasets quiser públicos. Cada um recebe sua própria URL (ex.: `/v/technical-cv-1`, `/v/marketing-cv-2`). A página principal `/` mostra o dataset padrão.
+    Sim. Você pode tornar quantos conjuntos de dados quiser públicos. Cada um recebe sua própria URL (ex.: `/v/technical-cv-1`, `/v/marketing-cv-2`). A página principal `/` mostra o conjunto de dados padrão.
 
-??? question "Posso excluir o dataset padrão?"
-    Não. O dataset atualmente selecionado como padrão (via botão de rádio) não pode ser excluído. Defina um dataset diferente como padrão primeiro e depois exclua o antigo.
+??? question "Posso excluir o conjunto de dados padrão?"
+    Não. O conjunto de dados atualmente selecionado como padrão (via botão de rádio) não pode ser excluído. Defina um conjunto de dados diferente como padrão primeiro e depois exclua o antigo.
 
 ??? question "Os mecanismos de busca vão indexar minhas URLs versionadas?"
-    Por padrão, não — páginas versionadas recebem `noindex, nofollow`. Para permitir a indexação, ative **Index Versioned URLs** em Settings → Advanced.
+    Por padrão, não — páginas versionadas recebem `noindex, nofollow`. Para permitir a indexação, ative **Indexar URLs Versionadas** em Configurações → Avançado.
 
 ## Site Público e SEO
 
@@ -116,10 +116,10 @@
     Compartilhe a URL do seu servidor público (porta 3001). Se você configurou um domínio com Cloudflare Tunnel ou proxy reverso, compartilhe esse domínio. A URL raiz sempre mostra seu dataset padrão. Você também pode compartilhar versões específicas usando URLs públicas versionadas (veja [Datasets](../guide/datasets.pt.md)).
 
 ??? question "Os mecanismos de busca vão indexar meu CV?"
-    Por padrão, sim — a página pública principal inclui meta tags adequadas, um sitemap e robots.txt. Para impedir a indexação, altere a configuração **Search Engine Indexing** para "No Index" em Settings → Advanced. URLs públicas versionadas (`/v/slug`) **não são indexadas** por padrão; ative **Index Versioned URLs** se quiser que elas sejam rastreadas.
+    Por padrão, sim — a página pública principal inclui meta tags adequadas, um sitemap e robots.txt. Para impedir a indexação, altere a configuração **Indexação por Mecanismos de Busca** para "No Index" em Configurações → Avançado. URLs públicas versionadas (`/v/slug`) **não são indexadas** por padrão; ative **Indexar URLs Versionadas** se quiser que elas sejam rastreadas.
 
 ??? question "Posso adicionar o Google Analytics ao meu CV?"
-    Sim. Cole seu código de rastreamento em **Settings → Advanced → Tracking Code**. Ele é injetado apenas nas páginas públicas.
+    Sim. Cole seu código de rastreamento em **Configurações → Avançado → Código de Rastreamento**. Ele é injetado apenas nas páginas públicas.
 
 ## Docker e Infraestrutura
 

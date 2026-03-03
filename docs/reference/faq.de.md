@@ -53,22 +53,22 @@
 ??? question "Seitenzahlen werden nicht angezeigt?"
     Stellen Sie sicher, dass **Seitenzahlen** unter Einstellungen → Drucken & Export aktiviert ist. Einige Browser-PDF-Viewer zeigen CSS-generierte Seitenzahlen möglicherweise nicht an — versuchen Sie, das PDF herunterzuladen und in einem dedizierten Reader zu öffnen.
 
-## Zeitleiste
+## Zeitstrahl
 
-??? question "Die Zeitleiste zeigt falsche Daten / nur Jahre / vollständige Daten?"
-    Die Zeitleiste hat eine eigene Datumseinstellung. Gehen Sie zu **Settings → Advanced → Timeline: Years Only**, um zwischen der reinen Jahresanzeige und dem vollständigen Datumsformat umzuschalten.
+??? question "Der Zeitstrahl zeigt falsche Daten / nur Jahre / vollständige Daten?"
+    Der Zeitstrahl hat eine eigene Datumseinstellung. Gehen Sie zu **Einstellungen → Erweitert → Zeitleiste: Nur Jahre**, um zwischen der reinen Jahresanzeige und dem vollständigen Datumsformat umzuschalten.
 
-??? question "Kann ich Einträge direkt zur Zeitleiste hinzufügen?"
-    Nein. Die Zeitleiste wird automatisch aus Ihren Berufserfahrungen generiert. Fügen Sie Berufserfahrungen hinzu oder bearbeiten Sie sie, und die Zeitleiste wird entsprechend aktualisiert.
+??? question "Kann ich Einträge direkt zum Zeitstrahl hinzufügen?"
+    Nein. Der Zeitstrahl wird automatisch aus Ihren Berufserfahrungen generiert. Fügen Sie Berufserfahrungen hinzu oder bearbeiten Sie sie, und der Zeitstrahl wird entsprechend aktualisiert.
 
-??? question "Die Länderflagge wird in der Zeitleiste nicht angezeigt?"
-    Stellen Sie sicher, dass das Feld **Country Code** bei der Berufserfahrung auf einen gültigen 2-stelligen ISO-Ländercode gesetzt ist (z. B. `us`, `gb`, `ch`, `de`, `fr`). Flaggen werden von einem externen CDN geladen.
+??? question "Die Länderflagge wird im Zeitstrahl nicht angezeigt?"
+    Stellen Sie sicher, dass das Feld **Ländercode** bei der Berufserfahrung auf einen gültigen 2-stelligen ISO-Ländercode gesetzt ist (z. B. `us`, `gb`, `ch`, `de`, `fr`). Flaggen werden von einem externen CDN geladen.
 
 ??? question "Was passiert, wenn ich zwei Jobs gleichzeitig habe?"
-    Die Zeitleiste erkennt überlappende Positionen automatisch und stellt sie als **parallele Spuren** dar. Die gleichzeitige Stelle erscheint auf einem erhöhten Nebenstrang mit S-Kurven-Verbindungen, die die Abzweigungs- und Zusammenführungspunkte zeigen. Es ist keine Konfiguration erforderlich — es basiert vollständig auf Ihren Start-/Enddaten. Überlappungen von weniger als einem Monat werden ignoriert (häufig bei Jobwechseln).
+    Der Zeitstrahl erkennt überlappende Positionen automatisch und stellt sie als **parallele Spuren** dar. Die gleichzeitige Stelle erscheint auf einem erhöhten Nebenstrang mit S-Kurven-Verbindungen, die die Abzweigungs- und Zusammenführungspunkte zeigen. Es ist keine Konfiguration erforderlich — es basiert vollständig auf Ihren Start-/Enddaten. Überlappungen von weniger als einem Monat werden ignoriert (häufig bei Jobwechseln).
 
-??? question "Warum zeigt die Zeitleiste ein Logo anstelle des Firmennamens?"
-    Wenn Sie ein Firmenlogo für diese Berufserfahrung hochgeladen haben, zeigt die Zeitleiste das Logo-Bild anstelle von Text an. Wenn die Logo-Datei fehlt, wird auf den Firmennamen zurückgegriffen. Um ein Logo aus der Zeitleiste zu entfernen, bearbeiten Sie die Berufserfahrung und klicken Sie im Abschnitt Company Logo auf **Remove**.
+??? question "Warum zeigt der Zeitstrahl ein Logo anstelle des Firmennamens?"
+    Wenn Sie ein Firmenlogo für diese Berufserfahrung hochgeladen haben, zeigt der Zeitstrahl das Logo-Bild anstelle von Text an. Wenn die Logo-Datei fehlt, wird auf den Firmennamen zurückgegriffen. Um ein Logo aus dem Zeitstrahl zu entfernen, bearbeiten Sie die Berufserfahrung und klicken Sie im Abschnitt Firmenlogo auf **Entfernen**.
 
 ## Sprache & Updates
 
@@ -76,18 +76,18 @@
     Klicken Sie auf das **Globus-Symbol** in der Werkzeugleiste und wählen Sie eine Sprache aus dem Dropdown-Raster. Die Änderung wird sofort übernommen und sitzungsübergreifend gespeichert.
 
 ??? question "Wie prüfe ich, welche Version ich verwende?"
-    Öffnen Sie **Settings** — die Versionsnummer wird in der unteren linken Ecke des Modals angezeigt (z. B. `v1.11.0`).
+    Öffnen Sie **Einstellungen** — die Versionsnummer wird in der unteren linken Ecke des Modals angezeigt (z. B. `v1.11.0`).
 
 ??? question "Ich sehe das Update-Banner nicht, obwohl eine neue Version verfügbar ist?"
     Die Versionsprüfung wird für 24 Stunden zwischengespeichert. Starten Sie Ihren Server (oder Docker-Container) neu, um den Cache zu leeren und eine neue Prüfung zu erzwingen. Ihr Server benötigt außerdem ausgehenden Internetzugang zu `raw.githubusercontent.com`.
 
 ## Datensätze / Mehrere Lebensläufe
 
-??? question "Was ist der 'Default'-Datensatz?"
-    Der Default-Datensatz ist die Version Ihres Lebenslaufs, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Bei der Erstinstallation erstellt CV Manager automatisch einen "Default"-Datensatz aus Ihren Lebenslaufdaten. Sie können jederzeit über das Optionsfeld im Open-Modal ändern, welcher Datensatz der Standard ist.
+??? question "Was ist der Standard-Datensatz?"
+    Der Standard-Datensatz ist die Version Ihres Lebenslaufs, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Bei der Erstinstallation erstellt CV Manager automatisch einen Standard-Datensatz aus Ihren Lebenslaufdaten. Sie können jederzeit über das Optionsfeld im Öffnen-Modal ändern, welcher Datensatz der Standard ist.
 
 ??? question "Werden meine Änderungen automatisch gespeichert?"
-    Ja. Jede Änderung, die Sie im Admin-Bereich vornehmen (Hinzufügen, Bearbeiten, Löschen, Umsortieren, Sichtbarkeit umschalten), wird nach einer kurzen Verzögerung automatisch im aktiven Datensatz gespeichert. Das Banner zeigt "Saving…" und dann "✓ Saved" zur Bestätigung.
+    Ja. Jede Änderung, die Sie im Admin-Bereich vornehmen (Hinzufügen, Bearbeiten, Löschen, Umsortieren, Sichtbarkeit umschalten), wird nach einer kurzen Verzögerung automatisch im aktiven Datensatz gespeichert. Das Banner zeigt „Speichern…" und dann „✓ Gespeichert" zur Bestätigung.
 
 ??? question "Was passiert, wenn ich einen Datensatz 'lade'?"
     Das Laden eines Datensatzes wechselt Ihre Arbeitskopie zu diesem Datensatz. Ihre vorherigen Änderungen wurden bereits automatisch gespeichert, sodass nichts verloren geht.
@@ -96,10 +96,10 @@
     Nein. Die öffentliche Seite zeigt den eingefrorenen Standard-Datensatz, nicht Ihre aktuellen Bearbeitungen. Besucher sehen Änderungen erst, nachdem die automatische Speicherung sie in den Standard-Datensatz geschrieben hat. Wenn Sie einen Nicht-Standard-Datensatz bearbeiten, sehen Besucher diese Änderungen überhaupt nicht, bis Sie ihn als Standard festlegen.
 
 ??? question "Können Besucher meine gespeicherten Datensätze sehen?"
-    Nur wenn Sie sie öffentlich machen. Jeder Datensatz hat einen Schalter im Open-Modal. Wenn er auf öffentlich gesetzt ist, wird diese Version unter `/v/slug` auf der öffentlichen Seite (Port 3001) zugänglich. Private Datensätze können nur über die Admin-Oberfläche als Vorschau angezeigt werden.
+    Nur wenn Sie sie öffentlich machen. Jeder Datensatz hat einen Schalter im Öffnen-Modal. Wenn er auf öffentlich gesetzt ist, wird diese Version unter `/v/slug` auf der öffentlichen Seite (Port 3001) zugänglich. Private Datensätze können nur über die Admin-Oberfläche als Vorschau angezeigt werden.
 
 ??? question "Wie teile ich eine bestimmte Lebenslauf-Version mit jemandem?"
-    Öffnen Sie das **Open...**-Modal, schalten Sie den Datensatz auf öffentlich und klicken Sie dann auf das Kopier-Symbol neben der Slug-URL. Teilen Sie diesen Link — er funktioniert auf der öffentlichen Seite, ohne Ihre Admin-Oberfläche preiszugeben.
+    Öffnen Sie das **Öffnen...**-Modal, schalten Sie den Datensatz auf öffentlich und klicken Sie dann auf das Kopier-Symbol neben der Slug-URL. Teilen Sie diesen Link — er funktioniert auf der öffentlichen Seite, ohne Ihre Admin-Oberfläche preiszugeben.
 
 ??? question "Kann ich mehrere öffentliche Versionen gleichzeitig haben?"
     Ja. Sie können beliebig viele Datensätze öffentlich machen. Jeder erhält seine eigene URL (z. B. `/v/technical-cv-1`, `/v/marketing-cv-2`). Die Hauptseite `/` zeigt den Standard-Datensatz.
