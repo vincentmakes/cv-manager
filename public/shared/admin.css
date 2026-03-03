@@ -21,6 +21,8 @@
 .toolbar-title { font-size: 18px; font-weight: 600; color: var(--white); }
 .toolbar-actions { display: flex; gap: 8px; }
 .toolbar-end { display: none; gap: 8px; align-items: center; }
+.btn-icon-only span { display: none; }
+.btn-icon-only { padding: 8px 10px; }
 
 .btn {
     display: inline-flex;
@@ -1547,6 +1549,7 @@
         border-radius: var(--radius-sm);
     }
     .toolbar-actions .btn span { display: inline; }
+    .toolbar-actions .btn-icon-only span { display: none; }
     .toolbar-actions .color-picker-wrapper { width: 100%; }
     .toolbar-actions .color-picker-wrapper > .btn { width: 100%; justify-content: flex-start; }
     .toolbar-actions .color-picker-dropdown {

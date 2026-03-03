@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.12.0] - 2026-03-03
+
+### Changed
+- Reorganized toolbar button order: Open, Save As, Theme, Settings, Export, Import, Language, Help, Print/PDF
+- Language and Help buttons are now icon-only (no text label) to save toolbar space
+- Help button now links to the documentation site (docs-cv-manager.verdet.me)
+
 ## [1.11.5] - 2026-03-03
 
 ### Fixed

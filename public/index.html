@@ -17,9 +17,13 @@
     <div class="toolbar no-print">
         <div class="toolbar-title">CV Manager</div>
         <div class="toolbar-actions" id="toolbarActions">
-            <button class="btn btn-secondary" onclick="openSettingsModal()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                <span data-i18n="toolbar.settings">Settings</span>
+            <button class="btn btn-secondary" onclick="openDatasetsModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+                <span data-i18n="toolbar.open">Open...</span>
+            </button>
+            <button class="btn btn-secondary" onclick="saveAsDataset()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                <span data-i18n="toolbar.save_as">Save As...</span>
             </button>
             <div class="color-picker-wrapper">
                 <button class="btn btn-secondary" onclick="toggleColorPicker()" data-i18n-title="toolbar.change_theme" title="Change Theme Color">
@@ -56,24 +60,10 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-secondary" onclick="openDatasetsModal()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
-                <span data-i18n="toolbar.open">Open...</span>
+            <button class="btn btn-secondary" onclick="openSettingsModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span data-i18n="toolbar.settings">Settings</span>
             </button>
-            <button class="btn btn-secondary" onclick="saveAsDataset()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                <span data-i18n="toolbar.save_as">Save As...</span>
-            </button>
-            <div class="language-picker-wrapper">
-                <button class="btn btn-secondary" onclick="toggleLanguagePicker()" data-i18n-title="toolbar.language" title="Language">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h20"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2c2.5 2.5 4 5.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-5.5-4-10s1.5-7.5 4-10z"/></svg>
-                    <span data-i18n="toolbar.language">Language</span>
-                </button>
-                <div class="language-picker-dropdown" id="languagePickerDropdown">
-                    <div class="language-picker-header" data-i18n="settings.language.info">Choose the display language for the CV Manager interface.</div>
-                    <div class="language-grid" id="toolbarLanguageGrid"></div>
-                </div>
-            </div>
             <button class="btn btn-secondary" onclick="exportData()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 <span data-i18n="toolbar.export">Export</span>
@@ -83,9 +73,17 @@
                 <span data-i18n="toolbar.import">Import</span>
             </button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-            <a href="https://github.com/vincentmakes/cv-manager/blob/main/USER_GUIDE.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" title="User Guide & FAQ">
+            <div class="language-picker-wrapper">
+                <button class="btn btn-secondary btn-icon-only" onclick="toggleLanguagePicker()" data-i18n-title="toolbar.language" title="Language">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h20"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2c2.5 2.5 4 5.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-5.5-4-10s1.5-7.5 4-10z"/></svg>
+                </button>
+                <div class="language-picker-dropdown" id="languagePickerDropdown">
+                    <div class="language-picker-header" data-i18n="settings.language.info">Choose the display language for the CV Manager interface.</div>
+                    <div class="language-grid" id="toolbarLanguageGrid"></div>
+                </div>
+            </div>
+            <a href="https://docs-cv-manager.verdet.me/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" data-i18n-title="toolbar.help" title="Help">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
-                <span data-i18n="toolbar.help">Help</span>
             </a>
             <button class="btn btn-primary toolbar-print-inline" onclick="window.print()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
