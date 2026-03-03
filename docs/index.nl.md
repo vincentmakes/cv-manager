@@ -30,10 +30,10 @@ Uw gegevens worden lokaal opgeslagen in een SQLite-database. Er wordt niets naar
 
 <div class="grid cards" markdown>
 
-- :material-rocket-launch: **[Aan de slag](getting-started/index.md)** — Installeer en stel CV Manager in
-- :material-book-open-variant: **[Gebruikershandleiding](guide/index.md)** — Leer hoe u elke functie gebruikt
-- :material-cog: **[Geavanceerd](advanced/index.md)** — SEO, beveiliging en ATS-instellingen
-- :material-frequently-asked-questions: **[Veelgestelde vragen](reference/faq.md)** — Antwoorden op veelgestelde vragen
+- :material-rocket-launch: **[Aan de slag](getting-started/index.nl.md)** — Installeer en stel CV Manager in
+- :material-book-open-variant: **[Gebruikershandleiding](guide/index.nl.md)** — Leer hoe u elke functie gebruikt
+- :material-cog: **[Geavanceerd](advanced/index.nl.md)** — SEO, beveiliging en ATS-instellingen
+- :material-frequently-asked-questions: **[Veelgestelde vragen](reference/faq.nl.md)** — Antwoorden op veelgestelde vragen
 
 </div>
 
