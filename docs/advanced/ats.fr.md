@@ -1,10 +1,10 @@
-# Compatibilite ATS
+# Compatibilité ATS
 
-CV Manager genere une sortie compatible avec les ATS (systemes de suivi des candidatures) :
+CV Manager génère une sortie compatible avec les ATS (Applicant Tracking System, système de suivi des candidatures) :
 
-- **Balisage Schema.org** — donnees structurees que les systemes ATS peuvent analyser (Person, OrganizationRole, EducationalOccupationalCredential, etc.)
-- **HTML semantique** — hierarchie correcte des titres, elements article et listes
-- **Bloc ATS masque** — une version en texte brut de votre CV est integree dans la page pour les analyseurs qui ne traitent pas le HTML stylise
-- **Sortie d'impression propre** — pas d'encombrement visuel, hierarchie de contenu appropriee
+- **Balisage Schema.org** — des données structurées que les systèmes ATS peuvent analyser (Person, OrganizationRole, EducationalOccupationalCredential, etc.)
+- **HTML sémantique** — hiérarchie de titres appropriée, éléments article et listes
+- **Bloc ATS masqué** — une version en texte brut de votre CV est intégrée dans la page pour les analyseurs qui ne traitent pas le HTML mis en forme
+- **Sortie d'impression propre** — aucun encombrement visuel, hiérarchie de contenu appropriée
 
-Aucune configuration speciale n'est necessaire — l'optimisation ATS est toujours active.
+Aucune configuration spéciale n'est nécessaire — l'optimisation ATS est toujours active.

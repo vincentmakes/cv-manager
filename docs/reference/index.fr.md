@@ -1,5 +1,5 @@
-# Reference
+# Référence
 
-- **[FAQ](faq.md)** — Reponses aux questions frequemment posees
-- **[Raccourcis clavier](keyboard-shortcuts.md)** — Raccourcis clavier disponibles
-- **[Support](support.md)** — Obtenir de l'aide et soutenir le projet
+- **[FAQ](faq.fr.md)** — Réponses aux questions fréquemment posées
+- **[Raccourcis clavier](keyboard-shortcuts.fr.md)** — Raccourcis clavier disponibles
+- **[Support](support.fr.md)** — Obtenir de l'aide et soutenir le projet
