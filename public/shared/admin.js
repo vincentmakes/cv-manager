@@ -1941,7 +1941,12 @@ async function loadPublicSettings() {
     const timelineYearOnlySetting = await api('/api/settings/timelineYearOnly');
     const timelineYearOnlyEl = document.getElementById('settingTimelineYearOnly');
     if (timelineYearOnlyEl) timelineYearOnlyEl.checked = timelineYearOnlySetting.value === 'true';
-    
+
+    // Load timeline branching setting (default: enabled)
+    const timelineBranchingSetting = await api('/api/settings/timelineBranching');
+    const timelineBranchingEl = document.getElementById('settingTimelineBranching');
+    if (timelineBranchingEl) timelineBranchingEl.checked = timelineBranchingSetting.value !== 'false';
+
     // Load robots meta setting
     const robotsMeta = await api('/api/settings/robotsMeta');
     const robotsEl = document.getElementById('settingRobotsMeta');
@@ -2210,7 +2215,14 @@ async function saveSettingsSectionOrder() {
             await api('/api/settings/timelineYearOnly', { method: 'PUT', body: { value: timelineYearOnlyEl.checked.toString() } });
             timelineYearOnly = timelineYearOnlyEl.checked;
         }
-        
+
+        // Also save timeline branching
+        const timelineBranchingEl = document.getElementById('settingTimelineBranching');
+        if (timelineBranchingEl) {
+            await api('/api/settings/timelineBranching', { method: 'PUT', body: { value: timelineBranchingEl.checked.toString() } });
+            timelineBranching = timelineBranchingEl.checked;
+        }
+
         // Also save robots meta
         const robotsMetaEl = document.getElementById('settingRobotsMeta');
         if (robotsMetaEl) {

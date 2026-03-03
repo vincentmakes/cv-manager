@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.13.0] - 2026-03-03
+
+### Added
+- Timeline branching toggle in Settings > Advanced — allows disabling the branch visualization for overlapping experiences, rendering a flat timeline instead (enabled by default)
+
 ## [1.12.3] - 2026-03-03
 
 ### Fixed

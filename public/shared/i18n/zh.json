@@ -169,6 +169,8 @@
     "settings.advanced.date_year_only": "2020（仅年份）",
     "settings.advanced.timeline_years": "时间线：仅显示年份",
     "settings.advanced.timeline_years_desc": "在时间线中仅显示年份（YYYY），不受日期格式影响",
+    "settings.advanced.timeline_branching": "时间线：分支",
+    "settings.advanced.timeline_branching_desc": "将重叠的经历显示为分支；禁用后显示为平铺时间线",
     "settings.advanced.seo_indexing": "搜索引擎索引",
     "settings.advanced.seo_indexing_desc": "控制搜索引擎如何处理您的公开简历页面",
     "settings.advanced.index_follow": "索引，跟踪链接",

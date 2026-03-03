@@ -169,6 +169,8 @@
     "settings.advanced.date_year_only": "2020 (solo anno)",
     "settings.advanced.timeline_years": "Cronologia: solo anni",
     "settings.advanced.timeline_years_desc": "Mostra solo gli anni (AAAA) nella cronologia, indipendentemente dal formato data",
+    "settings.advanced.timeline_branching": "Cronologia: Ramificazione",
+    "settings.advanced.timeline_branching_desc": "Mostra le esperienze sovrapposte come rami; disattiva per una cronologia lineare",
     "settings.advanced.seo_indexing": "Indicizzazione motori di ricerca",
     "settings.advanced.seo_indexing_desc": "Controlla come i motori di ricerca gestiscono la tua pagina CV pubblica",
     "settings.advanced.index_follow": "Indicizza, Segui",

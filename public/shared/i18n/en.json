@@ -169,6 +169,8 @@
     "settings.advanced.date_year_only": "2020 (year only)",
     "settings.advanced.timeline_years": "Timeline: Years Only",
     "settings.advanced.timeline_years_desc": "Display only years (YYYY) in the timeline, regardless of date format",
+    "settings.advanced.timeline_branching": "Timeline: Branching",
+    "settings.advanced.timeline_branching_desc": "Show overlapping experiences as branches; disable for a flat timeline",
     "settings.advanced.seo_indexing": "Search Engine Indexing",
     "settings.advanced.seo_indexing_desc": "Control how search engines handle your public CV page",
     "settings.advanced.index_follow": "Index, Follow",

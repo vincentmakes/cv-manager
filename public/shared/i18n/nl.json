@@ -169,6 +169,8 @@
     "settings.advanced.date_year_only": "2020 (alleen jaar)",
     "settings.advanced.timeline_years": "Tijdlijn: Alleen jaren",
     "settings.advanced.timeline_years_desc": "Toon alleen jaren (JJJJ) in de tijdlijn, ongeacht de datumnotatie",
+    "settings.advanced.timeline_branching": "Tijdlijn: Vertakking",
+    "settings.advanced.timeline_branching_desc": "Toon overlappende ervaringen als vertakkingen; schakel uit voor een platte tijdlijn",
     "settings.advanced.seo_indexing": "Zoekmachine-indexering",
     "settings.advanced.seo_indexing_desc": "Bepaal hoe zoekmachines je openbare CV-pagina behandelen",
     "settings.advanced.index_follow": "Indexeren, Volgen",

@@ -169,6 +169,8 @@
     "settings.advanced.date_year_only": "2020 (nur Jahr)",
     "settings.advanced.timeline_years": "Zeitleiste: Nur Jahre",
     "settings.advanced.timeline_years_desc": "Nur Jahre (JJJJ) in der Zeitleiste anzeigen, unabhängig vom Datumsformat",
+    "settings.advanced.timeline_branching": "Zeitleiste: Verzweigung",
+    "settings.advanced.timeline_branching_desc": "Überlappende Erfahrungen als Verzweigungen anzeigen; deaktivieren für eine flache Zeitleiste",
     "settings.advanced.seo_indexing": "Suchmaschinenindexierung",
     "settings.advanced.seo_indexing_desc": "Steuern Sie, wie Suchmaschinen Ihre öffentliche Lebenslaufseite behandeln",
     "settings.advanced.index_follow": "Indexieren, Folgen",

@@ -76,6 +76,7 @@ function escapeHtml(text) {
 // Global date format setting - loaded from settings API
 let dateFormatSetting = 'MMM YYYY'; // default: "Jan 2020"
 let timelineYearOnly = true; // default: show years only in timeline
+let timelineBranching = true; // default: show branching for overlapping items
 
 const DATE_FORMAT_OPTIONS = [
     { value: 'MMM YYYY', label: 'Jan 2020', example: 'Jan 2020' },
@@ -259,6 +260,16 @@ async function loadDateFormatSetting(allSettings) {
         }
     } catch (err) {
         // Use default (false)
+    }
+    try {
+        if (allSettings && allSettings.timelineBranching !== undefined) {
+            timelineBranching = allSettings.timelineBranching !== 'false';
+        } else {
+            const result = await api('/api/settings/timelineBranching');
+            timelineBranching = result.value !== 'false';
+        }
+    } catch (err) {
+        // Use default (true)
     }
 }
 
@@ -490,7 +501,9 @@ function renderTimelineItems(items, options) {
     // Filter out hidden experiences so the timeline is regenerated dynamically
     const visibleItems = items.filter(item => item.visible !== false);
 
-    let { branches, segments } = computeTimelineBranches(visibleItems);
+    let { branches, segments } = timelineBranching
+        ? computeTimelineBranches(visibleItems)
+        : { branches: [], segments: visibleItems.map(item => ({ item, track: 0, branchGroup: null, startNum: parseDateForSort(item.start_date), endNum: item.end_date ? parseDateForSort(item.end_date) : (new Date().getFullYear() * 100 + (new Date().getMonth() + 1)) })) };
 
     const positions = computeTimePositions(segments);
 
