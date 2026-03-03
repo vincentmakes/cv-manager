@@ -365,19 +365,14 @@ function computeTimelineBranches(items) {
 
     for (let i = 1; i < segments.length; i++) {
         // Find ALL preceding items that genuinely overlap.
-        // Threshold: >= 2 months for most items, but short-duration items (1 month)
-        // that fall entirely within another item's range count as parallel too.
-        const durationI = segments[i].endMonths - segments[i].startMonths;
-        const minOverlap = Math.min(2, Math.max(1, durationI));
+        // Require >= 3 months of overlap to branch. This filters out brief
+        // transitional overlaps (starting a new job 1-2 months before leaving
+        // the old one) while correctly branching any genuinely concurrent
+        // positions, regardless of how long either position lasted.
         const overlapping = [];
         for (let j = 0; j < i; j++) {
             const overlapMonths = Math.min(segments[j].endMonths, segments[i].endMonths) - segments[i].startMonths;
-            // Require both absolute minimum overlap AND that the overlap covers
-            // at least half the current item's duration. This prevents brief
-            // transitional overlaps (starting a new role months before leaving
-            // the old one) from creating visual branches — only genuinely
-            // concurrent positions should branch.
-            if (overlapMonths >= minOverlap && overlapMonths >= durationI * 0.5) {
+            if (overlapMonths >= 3) {
                 overlapping.push(j);
             }
         }
@@ -1375,10 +1370,9 @@ function renderBulletListPublic(items) {
 }
 
 // Adjust timeline container height for print so branch track stays proportional.
-// Print CSS reduces vertical padding from 70+70=140px to 50+50=100px (40px less).
-// Timeline elements also shrink ~80% in print (fonts 11→9px, dots 12→10px), so
-// we reduce height by 66px (40px padding + 26px extra) to scale the branch offset
-// proportionally with the smaller elements.
+// Print uses the same padding as screen (70px 10px) but elements are ~80% smaller
+// (fonts 11→9px, dots 12→10px). Reduce height slightly so the branch offset
+// percentage stays visually proportional with the smaller elements.
 (function() {
     let savedHeight = null;
     window.addEventListener('beforeprint', function() {
@@ -1387,7 +1381,9 @@ function renderBulletListPublic(items) {
         const h = parseInt(container.style.height);
         if (!h) return;
         savedHeight = container.style.height;
-        container.style.height = (h - 66) + 'px';
+        // Only reduce by ~20px to account for smaller text/dots in print,
+        // without shifting the track midpoint significantly
+        container.style.height = (h - 20) + 'px';
     });
     window.addEventListener('afterprint', function() {
         if (savedHeight === null) return;

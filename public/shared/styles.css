@@ -353,9 +353,16 @@ body {
     top: calc(50% - var(--branch-offset-pct, 28px));
 }
 
-/* CSS fallback for branch line in print (SVG doesn't render on Safari iOS) */
+/* CSS fallback for branch line in print (SVG doesn't render on Safari iOS).
+   Hidden on screen; shown in @media print as the primary branch line. */
 .timeline-branch-line {
     display: none;
+    position: absolute;
+    top: calc(50% - var(--branch-offset-pct, 28px));
+    height: 3px;
+    background: var(--accent);
+    border-radius: 1.5px;
+    transform: translateY(-50%);
 }
 
 /* Items */
@@ -1094,18 +1101,13 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-connectors {
         overflow: visible !important;
     }
-    /* Branch curves: improve SVG rendering in print */
+    /* Branch visualization in print: use CSS fallback instead of SVG.
+       Safari iOS doesn't render SVGs reliably in print, causing floating dots. */
     #section-timeline:not(.hidden-print) .timeline-branch-curves {
-        overflow: visible !important;
+        display: none !important;
     }
-    #section-timeline:not(.hidden-print) .timeline-branch-curves path {
-        stroke: var(--accent) !important;
-        stroke-width: 3px !important;
-    }
-    /* CSS fallback branch line — hidden by default since SVG branch curves render.
-       Was causing a "double line" when both the SVG and CSS fallback were visible. */
     #section-timeline:not(.hidden-print) .timeline-branch-line {
-        display: none;
+        display: block !important;
     }
     #section-timeline:not(.hidden-print) .timeline-track {
         height: 3px;
