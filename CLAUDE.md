@@ -61,11 +61,12 @@ The project follows [Semantic Versioning](https://semver.org/):
 - **MINOR** (x.Y.0): New features (new sections, new settings, new capabilities)
 - **PATCH** (x.y.Z): Bug fixes, translation fixes, small improvements
 
-**Version must be updated in two files:**
+**Version must be updated in three files:**
 1. `package.json` → `"version"` field
 2. `version.json` → `"version"` field
+3. `package-lock.json` → `"version"` field (appears twice: top-level and inside `packages[""]`)
 
-Both must always match. The admin UI checks `version.json` on GitHub to show update notifications.
+All three must always match. The admin UI checks `version.json` on GitHub to show update notifications.
 
 **Changelog:** `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/) format. Every version bump must have a corresponding changelog entry with the date in `YYYY-MM-DD` format. Use categories: `Added`, `Changed`, `Fixed`, `Removed`.
 
@@ -79,8 +80,9 @@ Before committing, always complete these steps:
 
 1. **Determine bump type** — Bug fix → PATCH, new feature → MINOR, breaking change → MAJOR
 2. **Update `package.json`** — Increment the `"version"` field
-3. **Update `version.json`** — Increment the `"version"` field (must match `package.json`)
-4. **Update `CHANGELOG.md`** — Add a new `## [x.y.z] - YYYY-MM-DD` entry at the top with a description of the change under the appropriate category (`Added`, `Changed`, `Fixed`, `Removed`)
+3. **Update `package-lock.json`** — Increment the `"version"` field in both the top-level object and inside `packages[""]`
+4. **Update `version.json`** — Increment the `"version"` field (must match `package.json`)
+5. **Update `CHANGELOG.md`** — Add a new `## [x.y.z] - YYYY-MM-DD` entry at the top with a description of the change under the appropriate category (`Added`, `Changed`, `Fixed`, `Removed`)
 
 **Do not** batch multiple unrelated changes into a single version bump — each logical change set gets its own version.
 
