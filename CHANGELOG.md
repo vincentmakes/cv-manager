@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.11.5] - 2026-03-03
+
+### Fixed
+- Timeline branches that don't have enough horizontal space for S-curves now collapse gracefully to the main line instead of rendering distorted curves
+
 ## [1.11.4] - 2026-03-03
 
 ### Fixed

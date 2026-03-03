@@ -478,7 +478,42 @@ function renderTimelineItems(items, options) {
     // Filter out hidden experiences so the timeline is regenerated dynamically
     const visibleItems = items.filter(item => item.visible !== false);
 
-    const { branches, segments } = computeTimelineBranches(visibleItems);
+    let { branches, segments } = computeTimelineBranches(visibleItems);
+
+    const positions = computeTimePositions(segments);
+
+    // Collapse branches that don't have enough horizontal space for S-curves.
+    // Each S-curve needs curveW (24px); fork + merge need at least ~2.5× that.
+    const containerW = container.offsetWidth;
+    if (containerW > 0) {
+        const minBranchSpanPx = 60; // ~2.5 × curveW (24px)
+        branches.forEach(branch => {
+            let firstBranchIdx = -1, lastBranchIdx = -1;
+            for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+                if (segments[i].track === 1) {
+                    if (firstBranchIdx === -1) firstBranchIdx = i;
+                    lastBranchIdx = i;
+                }
+            }
+            if (firstBranchIdx === -1) return;
+            const forkPx = (positions[firstBranchIdx].startPct / 100) * containerW;
+            const lastOngoing = !segments[lastBranchIdx].item.end_date;
+            const mergePx = lastOngoing
+                ? containerW
+                : (positions[lastBranchIdx].endPct / 100) * containerW;
+            if (mergePx - forkPx < minBranchSpanPx) {
+                branch.collapsed = true;
+                for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+                    if (segments[i].track === 1) {
+                        segments[i].track = 0;
+                        segments[i].branchGroup = null;
+                    }
+                }
+            }
+        });
+        branches = branches.filter(b => !b.collapsed);
+    }
+
     const hasBranches = branches.length > 0;
 
     if (timelineContainer) {
@@ -487,8 +522,6 @@ function renderTimelineItems(items, options) {
 
     const uniqueCountries = new Set(visibleItems.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
     const showFlags = uniqueCountries.size > 1;
-
-    const positions = computeTimePositions(segments);
 
     let mainTrackIdx = 0;
     let lastCountry = null;
