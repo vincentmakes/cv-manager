@@ -4,6 +4,19 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.11.2] - 2026-03-03
+
+### Fixed
+- Timeline parallel experience detection now checks all overlapping items instead of only the nearest, preventing incorrect track assignments when 3+ jobs overlap
+- Timeline overlap threshold uses actual months instead of raw YYYYMM subtraction, with adaptive minimum so short-duration items (e.g. 1-month acting roles) are correctly detected as parallel
+- Timeline cards no longer overflow the container — bidirectional clamping keeps cards within bounds
+- Timeline container height calculation accounts for full branch offset (28px) instead of partial (8px)
+- Timeline chevrons now appear on the branch line for branch-track items (moved into .timeline-items to share coordinate system with dots)
+- Timeline chevrons render between branch lines and dots (z-index layering: SVG lines 1 → chevrons 2 → dots/flags 3)
+- Timeline card offsets use percentage-based left positioning so they scale correctly across container sizes
+- Timeline print: removed double branch line caused by both SVG curves and CSS fallback rendering simultaneously
+- Timeline hover no longer breaks card centering (transform now preserves translateX(-50%))
+
 ## [1.11.1] - 2026-03-02
 
 ### Added

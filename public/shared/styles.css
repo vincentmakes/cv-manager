@@ -189,6 +189,7 @@ body {
     position: relative;
     padding: 70px 10px;
     min-height: 220px;
+    overflow: hidden;
 }
 
 .timeline-track {
@@ -206,7 +207,7 @@ body {
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
-    z-index: 3;
+    z-index: 2;
     line-height: 0;
     pointer-events: none;
 }
@@ -246,7 +247,7 @@ body {
 
 .timeline-content:hover {
     background: var(--light);
-    transform: scale(1.05);
+    transform: translateX(-50%) scale(1.05);
     border-color: var(--primary-light);
     z-index: 10;
 }
@@ -301,7 +302,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2;
+    z-index: 3;
 }
 
 .timeline-flag {
@@ -313,7 +314,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2;
+    z-index: 3;
     object-fit: cover;
     background: var(--white);
 }
@@ -345,6 +346,11 @@ body {
 
 .timeline-item.timeline-branch-track.bottom .timeline-content {
     top: calc(50% + 36px);
+}
+
+/* Chevrons on the branch track — same offset as dots (both in .timeline-items) */
+.timeline-chevron.timeline-chevron-branch {
+    top: calc(50% - var(--branch-offset-pct, 28px));
 }
 
 /* CSS fallback for branch line in print (SVG doesn't render on Safari iOS) */
@@ -1071,14 +1077,12 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-period { font-size: 8px; }
     #section-timeline:not(.hidden-print) .timeline-content {
         padding: 6px 8px;
-        transform: translateX(-50%) !important;
         max-width: min(90px, calc(100% + 20px));
         min-width: 40px;
         overflow: hidden;
         text-overflow: ellipsis;
         transition: none !important;
     }
-    #section-timeline:not(.hidden-print) .timeline-connectors { display: none !important; }
     /* Only resize dots/flags in print — do NOT override top/left/transform
        because that kills the branch-track offset (calc(50% - var(--branch-offset-pct)))
        due to the #id selector having higher specificity than class-only selectors */
@@ -1086,6 +1090,10 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     #section-timeline:not(.hidden-print) .timeline-card-logo { width: 70px; height: 22px; }
     #section-timeline:not(.hidden-print) .timeline-chevron svg { width: 10px; height: 14px; }
+    /* Connector lines from dots to offset cards — visible in print */
+    #section-timeline:not(.hidden-print) .timeline-connectors {
+        overflow: visible !important;
+    }
     /* Branch curves: improve SVG rendering in print */
     #section-timeline:not(.hidden-print) .timeline-branch-curves {
         overflow: visible !important;
@@ -1094,16 +1102,10 @@ body.has-preview-banner .container {
         stroke: var(--accent) !important;
         stroke-width: 3px !important;
     }
-    /* CSS fallback branch line — Safari iOS doesn't render SVG in print */
+    /* CSS fallback branch line — hidden by default since SVG branch curves render.
+       Was causing a "double line" when both the SVG and CSS fallback were visible. */
     #section-timeline:not(.hidden-print) .timeline-branch-line {
-        display: block;
-        position: absolute;
-        top: calc(50% - var(--branch-offset-pct, 8%));
-        height: 3px;
-        background: var(--accent);
-        border-radius: 2px;
-        transform: translateY(-50%);
-        z-index: 1;
+        display: none;
     }
     #section-timeline:not(.hidden-print) .timeline-track {
         height: 3px;
