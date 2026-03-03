@@ -6,7 +6,7 @@ Um sistema auto-hospedado de gerenciamento de CV/currículo, implantado via Dock
 
 ## O que é o CV Manager?
 
-CV Manager é uma aplicação web que roda no seu próprio servidor via Docker. Ele oferece duas interfaces:
+CV Manager é uma aplicação web que roda no seu próprio servidor via Docker. Ela oferece duas interfaces:
 
 - **Admin** (porta padrão 3000) — onde você cria e gerencia seu CV
 - **Público** (porta padrão 3001) — uma versão somente leitura que você pode compartilhar com recrutadores, empregadores ou qualquer pessoa

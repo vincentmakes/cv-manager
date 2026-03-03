@@ -4,7 +4,7 @@
 
 Klik op het **bewerkingspictogram** bij de headersectie. U kunt het volgende instellen:
 
-- **Naam** en **Initialen** (getoond in de avatarcirkel als er geen foto is geupload)
+- **Naam** en **Initialen** (getoond in de avatarcirkel als er geen foto is geüpload)
 - **Titel** (uw hoofdfunctie/positie)
 - **Ondertitel** (aanvullende context, bijv. afdeling of specialisatie)
 - **Biografie** (professionele samenvatting — regelovergangen worden behouden)
@@ -37,7 +37,7 @@ Elke werkervaring kan een **bedrijfslogo** hebben. Logo's verschijnen op de tijd
 
 ### Logo's hergebruiken
 
-Klik op **Bestaande gebruiken** om het logoraster te openen, dat alle eerder geuploadde logo's toont. Klik op een logo om het te hergebruiken — zo voorkomt u dat u hetzelfde logo meerdere keren uploadt.
+Klik op **Bestaande gebruiken** om het logoraster te openen, dat alle eerder geüploade logo's toont. Klik op een logo om het te hergebruiken — zo voorkomt u dat u hetzelfde logo meerdere keren uploadt.
 
 ### Automatisch invullen
 
@@ -65,11 +65,11 @@ Elk item heeft een **diploma/titel**, **instelling**, **start-/einddatums** en e
 
 ## Vaardigheden
 
-Vaardigheden zijn georganiseerd in **categorieen** (bijv. "Programmeertalen", "Tools & Platformen"). Elke categorie bevat individuele vaardigheidstags. Categorieen kunnen een **pictogram** hebben dat gekozen wordt uit een vooraf ingestelde lijst: code, server, database, cloud, instellingen, gebruikers, aktetas, cpu, lagen of standaard. Als er geen pictogram is gekozen, detecteert het systeem er automatisch een op basis van de categorienaam (bijv. een categorie met de naam "Programmeren" krijgt automatisch het codepictogram).
+Vaardigheden zijn georganiseerd in **categorieën** (bijv. "Programmeertalen", "Tools & Platformen"). Elke categorie bevat individuele vaardigheidstags. Categorieen kunnen een **pictogram** hebben dat gekozen wordt uit een vooraf ingestelde lijst: code, server, database, cloud, instellingen, gebruikers, aktentas, cpu, lagen of standaard. Als er geen pictogram is gekozen, detecteert het systeem er automatisch een op basis van de categorienaam (bijv. een categorie met de naam "Programmeren" krijgt automatisch het codepictogram).
 
 ## Projecten
 
-Elk project heeft een **titel**, **beschrijving**, **technologieen** (getoond als tags) en een optionele **externe link**.
+Elk project heeft een **titel**, **beschrijving**, **technologieën** (getoond als tags) en een optionele **externe link**.
 
 ## Zichtbaarheid van items
 

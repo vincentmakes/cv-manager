@@ -14,16 +14,16 @@
 ## Edição
 
 ??? question "Como marco uma posição como 'atual'?"
-    Deixe o campo **End Date** vazio. Ele será exibido como "Present" no CV.
+    Deixe o campo **Data de Término** vazio. Ele será exibido como "Presente" no CV.
 
 ??? question "Posso reordenar itens dentro de uma seção?"
     Sim. A maioria dos itens suporta reordenação por arrastar e soltar. A ordem é salva automaticamente.
 
 ??? question "Como adiciono marcadores a uma experiência?"
-    Edite a experiência e insira os destaques no campo **Highlights** — um marcador por linha.
+    Edite a experiência e insira os destaques no campo **Destaques** — um marcador por linha.
 
 ??? question "Como adiciono um logotipo da empresa?"
-    Edite a experiência, role até a seção **Company Logo** e clique em **Choose image** para fazer upload. Você também pode clicar em **Use existing** para reutilizar um logotipo já enviado. Ative o toggle **"Sync logo across all [Company]"** para aplicar o mesmo logotipo a todas as experiências naquela empresa.
+    Edite a experiência, role até a seção **Logotipo da Empresa** e clique em **Escolher imagem** para fazer upload. Você também pode clicar em **Usar existente** para reutilizar um logotipo já enviado. Ative o toggle **"Sincronizar logotipo em todas as experiências da [Empresa]"** para aplicar o mesmo logotipo a todas as experiências naquela empresa.
 
 ??? question "Excluí algo acidentalmente. Posso desfazer?"
     Não há recurso de desfazer. Como as edições são salvas automaticamente no dataset ativo, a alteração é persistida imediatamente. Se você tem uma exportação anterior ou um dataset salvo separado, pode restaurar a partir deles. É uma boa prática exportar seu CV regularmente como backup.
@@ -34,10 +34,10 @@
     Não há limite rígido. Crie quantas precisar.
 
 ??? question "Posso alterar o tipo de layout de uma seção personalizada após criá-la?"
-    Sim. Edite a seção e selecione um layout diferente. Note que alguns campos podem não ser transferidos entre tipos de layout (ex.: mudar de cards para social links).
+    Sim. Edite a seção e selecione um layout diferente. Note que alguns campos podem não ser transferidos entre tipos de layout (ex.: mudar de cartões para links sociais).
 
-??? question "Qual a diferença entre os layouts 'Bullet Points' e 'Free Text'?"
-    **Bullet Points** renderiza cada linha como um item de lista com marcador e um título de grupo. **Free Text** renderiza texto simples com quebras de linha preservadas e sem título — semelhante à seção Sobre/Bio.
+??? question "Qual a diferença entre os layouts 'Marcadores' e 'Texto Livre'?"
+    **Marcadores** renderiza cada linha como um item de lista com marcador e um título de grupo. **Texto Livre** renderiza texto simples com quebras de linha preservadas e sem título — semelhante à seção Sobre/Bio.
 
 ## Impressão e PDF
 
@@ -45,18 +45,18 @@
     A saída de impressão usa estilos de impressão dedicados, otimizados para papel. Alguns efeitos visuais (estados de hover, animações, gradientes) são simplificados. Itens ocultos e controles de admin são removidos automaticamente.
 
 ??? question "Como faço para encaixar meu CV em menos páginas?"
-    Tente ativar **Allow Section Splits** e **Allow Item Splits** nas configurações de Print & Export. Você também pode ocultar itens ou seções menos importantes, ou usar layouts de seções personalizadas mais compactos. Também ajuste a escala de impressão pela caixa de diálogo de impressão de qualquer navegador (às vezes fica um pouco escondida).
+    Tente ativar **Permitir Divisão de Seções** e **Permitir Divisão de Itens** nas configurações de Impressão e Exportação. Você também pode ocultar itens ou seções menos importantes, ou usar layouts de seções personalizadas mais compactos. Também ajuste a escala de impressão pela caixa de diálogo de impressão de qualquer navegador (às vezes fica um pouco escondida).
 
 ??? question "Por que alguns itens estão faltando no meu CV impresso?"
     Verifique se esses itens foram alternados para oculto (ícone de olho). Itens ocultos são excluídos da saída de impressão e da visualização pública.
 
 ??? question "Os números de página não estão aparecendo?"
-    Certifique-se de que **Page Numbers** está ativado em Settings → Print & Export. Alguns visualizadores de PDF do navegador podem não exibir números de página gerados por CSS — tente baixar o PDF e abri-lo em um leitor dedicado.
+    Certifique-se de que **Números de Página** está ativado em Configurações → Impressão e Exportação. Alguns visualizadores de PDF do navegador podem não exibir números de página gerados por CSS — tente baixar o PDF e abri-lo em um leitor dedicado.
 
 ## Linha do Tempo
 
 ??? question "A linha do tempo mostra as datas erradas / apenas anos / datas completas?"
-    A linha do tempo tem sua própria configuração de data. Vá em **Settings → Advanced → Timeline: Years Only** para alternar entre exibição apenas de anos e o formato completo de data.
+    A linha do tempo tem sua própria configuração de data. Vá em **Configurações → Avançado → Linha do Tempo: Apenas Anos** para alternar entre exibição apenas de anos e o formato completo de data.
 
 ??? question "Posso adicionar entradas diretamente na linha do tempo?"
     Não. A linha do tempo é gerada automaticamente a partir das suas experiências profissionais. Adicione ou edite experiências e a linha do tempo é atualizada automaticamente.
@@ -76,30 +76,30 @@
     Clique no **ícone de globo** na barra de ferramentas e selecione um idioma na grade suspensa. A alteração é aplicada imediatamente e salva entre sessões.
 
 ??? question "Como verifico qual versão estou usando?"
-    Abra **Settings** — o número da versão é mostrado no canto inferior esquerdo do modal (ex.: `v1.11.0`).
+    Abra **Configurações** — o número da versão é mostrado no canto inferior esquerdo do modal (ex.: `v1.11.0`).
 
 ??? question "Não vejo o banner de atualização mesmo havendo uma nova versão disponível?"
     A verificação de versão é armazenada em cache por 24 horas. Reinicie seu servidor (ou container Docker) para limpar o cache e forçar uma nova verificação. Seu servidor também precisa de acesso de saída à internet para alcançar `raw.githubusercontent.com`.
 
 ## Datasets / Múltiplos CVs
 
-??? question "O que é o dataset 'Default'?"
-    O dataset padrão é a versão do seu CV que os visitantes veem na sua URL raiz (`/`). Na primeira instalação, o CV Manager cria automaticamente um dataset "Default" a partir dos dados do seu CV. Você pode alterar qual dataset é o padrão a qualquer momento usando o botão de rádio no modal Open.
+??? question "O que é o conjunto de dados 'Default'?"
+    O conjunto de dados padrão é a versão do seu CV que os visitantes veem na sua URL raiz (`/`). Na primeira instalação, o CV Manager cria automaticamente um conjunto de dados "Default" a partir dos dados do seu CV. Você pode alterar qual conjunto de dados é o padrão a qualquer momento usando o botão de rádio no modal Abrir.
 
 ??? question "Minhas edições são salvas automaticamente?"
-    Sim. Toda alteração que você faz no admin (adicionar, editar, excluir, reordenar, alternar visibilidade) é automaticamente salva no dataset ativo após um curto intervalo. O banner mostra "Saving…" e depois "✓ Saved" para confirmar.
+    Sim. Toda alteração que você faz no admin (adicionar, editar, excluir, reordenar, alternar visibilidade) é automaticamente salva no conjunto de dados ativo após um curto intervalo. O banner mostra "Salvando…" e depois "Salvo" para confirmar.
 
-??? question "O que acontece quando eu 'Carrego' um dataset?"
-    Carregar um dataset alterna sua cópia de trabalho para esse dataset. Suas edições anteriores já foram salvas automaticamente, então nada é perdido.
+??? question "O que acontece quando eu 'Carrego' um conjunto de dados?"
+    Carregar um conjunto de dados alterna sua cópia de trabalho para esse conjunto de dados. Suas edições anteriores já foram salvas automaticamente, então nada é perdido.
 
 ??? question "Os visitantes podem ver minhas edições em tempo real?"
-    Não. O site público serve o dataset padrão congelado, não suas edições ao vivo. Os visitantes só veem as alterações depois que o salvamento automático as grava no dataset padrão. Se você estiver editando um dataset que não é o padrão, os visitantes não verão essas alterações até que você o defina como padrão.
+    Não. O site público serve o conjunto de dados padrão congelado, não suas edições ao vivo. Os visitantes só veem as alterações depois que o salvamento automático as grava no conjunto de dados padrão. Se você estiver editando um conjunto de dados que não é o padrão, os visitantes não verão essas alterações até que você o defina como padrão.
 
-??? question "Os visitantes podem ver meus datasets salvos?"
-    Somente se você torná-los públicos. Cada dataset tem um toggle no modal Open. Quando definido como público, essa versão se torna acessível em `/v/slug` no site público (porta 3001). Datasets privados são visualizáveis apenas pela interface de admin.
+??? question "Os visitantes podem ver meus conjuntos de dados salvos?"
+    Somente se você torná-los públicos. Cada conjunto de dados tem um toggle no modal Abrir. Quando definido como público, essa versão se torna acessível em `/v/slug` no site público (porta 3001). Conjuntos de dados privados são visualizáveis apenas pela interface de admin.
 
 ??? question "Como compartilho uma versão específica do CV com alguém?"
-    Abra o modal **Open...**, ative o toggle do dataset para público e clique no ícone de cópia ao lado da URL do slug. Compartilhe esse link — ele funciona no site público sem expor sua interface de admin.
+    Abra o modal **Abrir...**, ative o toggle do conjunto de dados para público e clique no ícone de cópia ao lado da URL do slug. Compartilhe esse link — ele funciona no site público sem expor sua interface de admin.
 
 ??? question "Posso ter várias versões públicas ao mesmo tempo?"
     Sim. Você pode tornar quantos datasets quiser públicos. Cada um recebe sua própria URL (ex.: `/v/technical-cv-1`, `/v/marketing-cv-2`). A página principal `/` mostra o dataset padrão.

@@ -2,27 +2,27 @@
 
 ## Imprimindo Seu CV
 
-Clique em **Print / PDF** na barra de ferramentas (ou pressione `Ctrl+P` / `Cmd+P`). Use a opção "Salvar como PDF" do seu navegador para criar um arquivo PDF. A saída de impressão exclui todos os controles de admin, itens ocultos e seções ocultas.
+Clique em **Imprimir / PDF** na barra de ferramentas (ou pressione `Ctrl+P` / `Cmd+P`). Use a opção "Salvar como PDF" do seu navegador para criar um arquivo PDF. A saída de impressão exclui todos os controles de admin, itens ocultos e seções ocultas.
 
 ## Números de Página
 
-Ative os números de página em **Settings → Print & Export → Page Numbers**. Você pode configurar:
+Ative os números de página em **Configurações → Impressão e Exportação → Números de Página**. Você pode configurar:
 
 - **Posição**: topo ou rodapé da página
-- **Formato**: "Page 1 of 3", "1 / 3", "1" ou "- 1 -"
+- **Formato**: "Página 1 de 3", "1 / 3", "1" ou "- 1 -"
 
 ## Divisão de Página
 
 Duas opções controlam como o conteúdo é dividido entre páginas:
 
-- **Allow Section Splits** — permite que uma seção comece em uma página e continue na próxima (em vez de empurrar a seção inteira para uma nova página)
-- **Allow Item Splits** — permite que itens individuais (como um cartão de experiência) sejam divididos entre páginas
+- **Permitir Divisão de Seções** — permite que uma seção comece em uma página e continue na próxima (em vez de empurrar a seção inteira para uma nova página)
+- **Permitir Divisão de Itens** — permite que itens individuais (como um cartão de experiência) sejam divididos entre páginas
 
-Ambas estão em **Settings → Print & Export**. Se o seu CV tem seções longas, ativar essas opções evita espaço em branco excessivo.
+Ambas estão em **Configurações → Impressão e Exportação**. Se o seu CV tem seções longas, ativar essas opções evita espaço em branco excessivo.
 
 ## Botão de Impressão Público
 
-Ative **Settings → Print & Export → Public Print Button** para mostrar ou ocultar um botão de impressão no CV público. Quando ativado, os visitantes podem imprimir seu CV diretamente.
+Ative **Configurações → Impressão e Exportação → Botão de Impressão Público** para mostrar ou ocultar um botão de impressão no CV público. Quando ativado, os visitantes podem imprimir seu CV diretamente.
 
 ## Melhores Práticas para Saída em PDF
 
