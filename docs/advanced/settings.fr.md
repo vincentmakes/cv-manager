@@ -1,24 +1,24 @@
-# Parametres avances
+# Paramètres avancés
 
-## Indexation par les moteurs de recherche (meta robots)
+## Indexation par les moteurs de recherche (balise meta Robots)
 
-Controlez la facon dont les moteurs de recherche interagissent avec votre CV public dans **Parametres → Avance → Indexation par les moteurs de recherche** :
+Contrôlez la façon dont les moteurs de recherche interagissent avec votre CV public dans **Settings → Advanced → Search Engine Indexing** :
 
 | Option | Effet |
 |--------|-------|
-| **Index, Follow** | Le CV apparait dans les resultats de recherche, les moteurs de recherche suivent vos liens (par defaut) |
-| **No Index, Follow** | Le CV est masque des resultats de recherche, mais les liens sont suivis |
-| **Index, No Follow** | Le CV apparait dans les resultats de recherche, mais les liens sortants sont ignores |
+| **Index, Follow** | Le CV apparaît dans les résultats de recherche, les moteurs de recherche suivent vos liens (par défaut) |
+| **No Index, Follow** | Le CV est masqué des résultats de recherche, mais les liens sont suivis |
+| **Index, No Follow** | Le CV apparaît dans les résultats de recherche, mais les liens sortants sont ignorés |
 | **No Index, No Follow** | Totalement invisible pour les moteurs de recherche |
 
-Ce parametre affecte a la fois la balise `<meta name="robots">` et le fichier `/robots.txt`, et est applique cote serveur pour la compatibilite avec tous les robots d'indexation.
+Ce paramètre affecte à la fois la balise `<meta name="robots">` et le fichier `/robots.txt`, et est appliqué côté serveur pour assurer la compatibilité avec tous les robots d'indexation.
 
-## Indexation des URL versionnees
+## Indexation des URL versionnées
 
-Par defaut, les URL versionnees publiques (`/v/slug`) ne sont **pas indexees** par les moteurs de recherche — elles recoivent une balise meta `noindex, nofollow`. Cela est utile si vous souhaitez partager des liens directs sans que ces pages apparaissent dans les resultats de recherche.
+Par défaut, les URL versionnées publiques (`/v/slug`) ne sont **pas indexées** par les moteurs de recherche — elles reçoivent une balise meta `noindex, nofollow`. Cela est utile si vous souhaitez partager des liens directs sans que ces pages apparaissent dans les résultats de recherche.
 
-Pour permettre aux moteurs de recherche d'explorer les URL versionnees, activez **Indexer les URL versionnees** dans **Parametres → Avance**. Ce parametre est independant de l'option principale d'indexation par les moteurs de recherche ci-dessus, qui n'affecte que la page principale `/`.
+Pour permettre aux moteurs de recherche d'explorer les URL versionnées, activez **Index Versioned URLs** dans **Settings → Advanced**. Ce paramètre est indépendant de l'option principale d'indexation par les moteurs de recherche ci-dessus, qui n'affecte que la page principale `/`.
 
 ## Code de suivi
 
-Collez le code de suivi analytique (Google Analytics, Matomo, Plausible, etc.) dans **Parametres → Avance → Code de suivi**. Le code est injecte uniquement dans les pages publiques du CV — pas dans l'interface d'administration.
+Collez votre code de suivi analytique (Google Analytics, Matomo, Plausible, etc.) dans **Settings → Advanced → Tracking Code**. Le code est injecté uniquement dans les pages du CV public — pas dans l'interface d'administration.
