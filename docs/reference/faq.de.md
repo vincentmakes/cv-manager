@@ -130,7 +130,7 @@
     Ändern Sie das Host-Port-Mapping in Ihrer Docker-Konfiguration. Zum Beispiel: Mappen Sie auf `3010:3000` und `3011:3001`. Ändern Sie **nicht** die Umgebungsvariable `PUBLIC_PORT` — das ist der interne Container-Port.
 
 ??? question "Wie sichere ich meine Daten?"
-    Zwei Optionen: Verwenden Sie den **Export**-Button in der Admin-Werkzeugleiste (exportiert JSON), oder sichern Sie das Verzeichnis `data/`, das die SQLite-Datenbank und hochgeladene Bilder enthält.
+    Zwei Optionen: Verwenden Sie die **Exportieren**-Schaltfläche in der Admin-Werkzeugleiste (exportiert JSON), oder sichern Sie das Verzeichnis `data/`, das die SQLite-Datenbank und hochgeladene Bilder enthält.
 
 ??? question "Das Profilbild wird nicht angezeigt?"
     Stellen Sie sicher, dass das Bild über die Admin-Oberfläche hochgeladen wurde. Die Datei wird unter `data/uploads/picture.jpeg` gespeichert. Überprüfen Sie die Dateiberechtigungen, wenn Sie unter Linux arbeiten.

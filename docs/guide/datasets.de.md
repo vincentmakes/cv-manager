@@ -4,13 +4,13 @@
 
 Datensätze sind gespeicherte Momentaufnahmen Ihres Lebenslaufs. Ein Datensatz ist immer der **Standard** — das ist die Version, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Sie können zusätzliche Datensätze für verschiedene Zielgruppen erstellen (z. B. einen technischen Lebenslauf, einen Management-Lebenslauf) und diese über eigene URLs teilen.
 
-Bei der Erstinstallation von CV Manager wird automatisch ein "Default"-Datensatz aus Ihren Lebenslaufdaten erstellt. Alle Änderungen, die Sie im Admin-Bereich vornehmen, werden **automatisch gespeichert** — es gibt keinen separaten "Speichern"-Schritt.
+Bei der Erstinstallation von CV Manager wird automatisch ein Standard-Datensatz aus Ihren Lebenslaufdaten erstellt. Alle Änderungen, die Sie im Admin-Bereich vornehmen, werden **automatisch gespeichert** — es gibt keinen separaten „Speichern"-Schritt.
 
 ## Das Banner des aktiven Datensatzes
 
 Ein Banner unterhalb der Werkzeugleiste zeigt an, welchen Datensatz Sie gerade bearbeiten. Es zeigt:
 
-- Den **Datensatznamen** (z. B. "Default", "Technischer Lebenslauf")
+- Den **Datensatznamen** (z. B. „Standard", „Technischer Lebenslauf")
 - Ein **„Standard"-Badge**, wenn dieser Datensatz unter `/` angezeigt wird
 - Einen **Autospeicher-Status** — zeigt kurz „Speichern…" und dann „✓ Gespeichert" nach jeder Änderung
 

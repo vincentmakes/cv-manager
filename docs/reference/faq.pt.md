@@ -113,7 +113,7 @@
 ## Site Público e SEO
 
 ??? question "Como compartilho meu CV?"
-    Compartilhe a URL do seu servidor público (porta 3001). Se você configurou um domínio com Cloudflare Tunnel ou proxy reverso, compartilhe esse domínio. A URL raiz sempre mostra seu dataset padrão. Você também pode compartilhar versões específicas usando URLs públicas versionadas (veja [Datasets](../guide/datasets.pt.md)).
+    Compartilhe a URL do seu servidor público (porta 3001). Se você configurou um domínio com Cloudflare Tunnel ou proxy reverso, compartilhe esse domínio. A URL raiz sempre mostra seu conjunto de dados padrão. Você também pode compartilhar versões específicas usando URLs públicas versionadas (veja [Conjuntos de Dados](../guide/datasets.pt.md)).
 
 ??? question "Os mecanismos de busca vão indexar meu CV?"
     Por padrão, sim — a página pública principal inclui meta tags adequadas, um sitemap e robots.txt. Para impedir a indexação, altere a configuração **Indexação por Mecanismos de Busca** para "No Index" em Configurações → Avançado. URLs públicas versionadas (`/v/slug`) **não são indexadas** por padrão; ative **Indexar URLs Versionadas** se quiser que elas sejam rastreadas.
@@ -124,7 +124,7 @@
 ## Docker e Infraestrutura
 
 ??? question "Minhas alterações não estão aparecendo no site público?"
-    O site público serve o **dataset padrão**, que é atualizado automaticamente quando você edita no admin. Tente um hard refresh (`Ctrl+Shift+R`) no site público. Se estiver rodando containers separados, certifique-se de que eles compartilham o mesmo volume de dados.
+    O site público serve o **conjunto de dados padrão**, que é atualizado automaticamente quando você edita no admin. Tente um hard refresh (`Ctrl+Shift+R`) no site público. Se estiver rodando containers separados, certifique-se de que eles compartilham o mesmo volume de dados.
 
 ??? question "Estou recebendo um erro de 'port already in use'?"
     Altere o mapeamento de porta do host na sua configuração Docker. Por exemplo, mapeie para `3010:3000` e `3011:3001`. **Não** altere a variável de ambiente `PUBLIC_PORT` — essa é a porta interna do container.

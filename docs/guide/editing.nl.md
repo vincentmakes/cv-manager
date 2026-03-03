@@ -65,7 +65,7 @@ Elk item heeft een **diploma/titel**, **instelling**, **start-/einddatums** en e
 
 ## Vaardigheden
 
-Vaardigheden zijn georganiseerd in **categorieën** (bijv. "Programmeertalen", "Tools & Platformen"). Elke categorie bevat individuele vaardigheidstags. Categorieen kunnen een **pictogram** hebben dat gekozen wordt uit een vooraf ingestelde lijst: code, server, database, cloud, instellingen, gebruikers, aktentas, cpu, lagen of standaard. Als er geen pictogram is gekozen, detecteert het systeem er automatisch een op basis van de categorienaam (bijv. een categorie met de naam "Programmeren" krijgt automatisch het codepictogram).
+Vaardigheden zijn georganiseerd in **categorieën** (bijv. "Programmeertalen", "Tools & Platformen"). Elke categorie bevat individuele vaardigheidstags. Categorieën kunnen een **pictogram** hebben dat gekozen wordt uit een vooraf ingestelde lijst: code, server, database, cloud, instellingen, gebruikers, aktentas, cpu, lagen of standaard. Als er geen pictogram is gekozen, detecteert het systeem er automatisch een op basis van de categorienaam (bijv. een categorie met de naam "Programmeren" krijgt automatisch het codepictogram).
 
 ## Projecten
 
