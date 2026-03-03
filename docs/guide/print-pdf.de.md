@@ -2,27 +2,27 @@
 
 ## Ihren Lebenslauf drucken
 
-Klicken Sie auf **Print / PDF** in der Werkzeugleiste (oder drücken Sie `Ctrl+P` / `Cmd+P`). Verwenden Sie die "Als PDF speichern"-Option Ihres Browsers, um eine PDF-Datei zu erstellen. Die Druckausgabe schließt alle Admin-Steuerelemente, ausgeblendete Einträge und ausgeblendete Abschnitte aus.
+Klicken Sie auf **Drucken / PDF** in der Werkzeugleiste (oder drücken Sie `Ctrl+P` / `Cmd+P`). Verwenden Sie die „Als PDF speichern"-Option Ihres Browsers, um eine PDF-Datei zu erstellen. Die Druckausgabe schließt alle Admin-Steuerelemente, ausgeblendete Einträge und ausgeblendete Abschnitte aus.
 
 ## Seitenzahlen
 
-Aktivieren Sie Seitenzahlen unter **Settings → Print & Export → Page Numbers**. Sie können konfigurieren:
+Aktivieren Sie Seitenzahlen unter **Einstellungen → Drucken & Export → Seitenzahlen**. Sie können konfigurieren:
 
 - **Position**: oben oder unten auf der Seite
-- **Format**: "Page 1 of 3", "1 / 3", "1" oder "- 1 -"
+- **Format**: „Seite 1 von 3", „1 / 3", „1" oder „- 1 -"
 
 ## Seitenumbrüche
 
 Zwei Optionen steuern, wie Inhalte über Seiten hinweg umgebrochen werden:
 
-- **Allow Section Splits** — erlaubt es, dass ein Abschnitt auf einer Seite beginnt und auf der nächsten fortgesetzt wird (anstatt den gesamten Abschnitt auf eine neue Seite zu verschieben)
-- **Allow Item Splits** — erlaubt es, dass einzelne Einträge (wie eine Erfahrungskarte) über Seiten hinweg umgebrochen werden
+- **Abschnittsumbrüche erlauben** — erlaubt es, dass ein Abschnitt auf einer Seite beginnt und auf der nächsten fortgesetzt wird (anstatt den gesamten Abschnitt auf eine neue Seite zu verschieben)
+- **Eintragsumbrüche erlauben** — erlaubt es, dass einzelne Einträge (wie eine Erfahrungskarte) über Seiten hinweg umgebrochen werden
 
-Beide Optionen finden Sie unter **Settings → Print & Export**. Wenn Ihr Lebenslauf lange Abschnitte hat, vermeidet das Aktivieren dieser Optionen übermäßigen Leerraum.
+Beide Optionen finden Sie unter **Einstellungen → Drucken & Export**. Wenn Ihr Lebenslauf lange Abschnitte hat, vermeidet das Aktivieren dieser Optionen übermäßigen Leerraum.
 
 ## Öffentlicher Druck-Button
 
-Schalten Sie **Settings → Print & Export → Public Print Button** um, um einen Druck-Button auf dem öffentlichen Lebenslauf ein- oder auszublenden. Wenn aktiviert, können Besucher Ihren Lebenslauf direkt drucken.
+Schalten Sie **Einstellungen → Drucken & Export → Öffentliche Drucktaste** um, um eine Druckschaltfläche auf dem öffentlichen Lebenslauf ein- oder auszublenden. Wenn aktiviert, können Besucher Ihren Lebenslauf direkt drucken.
 
 ## Best Practices für die PDF-Ausgabe
 

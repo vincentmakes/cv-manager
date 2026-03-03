@@ -14,16 +14,16 @@
 ## Bearbeitung
 
 ??? question "Wie markiere ich eine Stelle als 'aktuell'?"
-    Lassen Sie das Feld **End Date** leer. Es wird auf dem Lebenslauf als "Present" angezeigt.
+    Lassen Sie das Feld **Enddatum** leer. Es wird auf dem Lebenslauf als „Aktuell" angezeigt.
 
 ??? question "Kann ich Einträge innerhalb eines Abschnitts umsortieren?"
     Ja. Die meisten Einträge unterstützen Drag-and-Drop-Umsortierung. Die Reihenfolge wird automatisch gespeichert.
 
 ??? question "Wie füge ich Aufzählungspunkte zu einer Berufserfahrung hinzu?"
-    Bearbeiten Sie die Berufserfahrung und geben Sie Highlights im Feld **Highlights** ein — ein Aufzählungspunkt pro Zeile.
+    Bearbeiten Sie die Berufserfahrung und geben Sie Ihre Erfolge im Feld **Wichtige Erfolge** ein — ein Aufzählungspunkt pro Zeile.
 
 ??? question "Wie füge ich ein Firmenlogo hinzu?"
-    Bearbeiten Sie die Berufserfahrung, scrollen Sie zum Abschnitt **Company Logo** und klicken Sie auf **Choose image**, um ein Bild hochzuladen. Sie können auch auf **Use existing** klicken, um ein bereits hochgeladenes Logo wiederzuverwenden. Aktivieren Sie den Schalter **"Sync logo across all [Company]"**, um dasselbe Logo auf alle Berufserfahrungen bei diesem Unternehmen anzuwenden.
+    Bearbeiten Sie die Berufserfahrung, scrollen Sie zum Abschnitt **Firmenlogo** und klicken Sie auf **Bild auswählen**, um ein Bild hochzuladen. Sie können auch auf **Vorhandenes verwenden** klicken, um ein bereits hochgeladenes Logo wiederzuverwenden. Aktivieren Sie den Schalter **„Logo über alle [Unternehmen]-Erfahrungen synchronisieren"**, um dasselbe Logo auf alle Berufserfahrungen bei diesem Unternehmen anzuwenden.
 
 ??? question "Ich habe versehentlich etwas gelöscht. Kann ich das rückgängig machen?"
     Es gibt keine Rückgängig-Funktion. Da Änderungen automatisch im aktiven Datensatz gespeichert werden, wird die Änderung sofort persistiert. Wenn Sie einen früheren Export oder einen separaten gespeicherten Datensatz haben, können Sie von dort wiederherstellen. Es empfiehlt sich, Ihren Lebenslauf regelmäßig als Backup zu exportieren.
@@ -36,8 +36,8 @@
 ??? question "Kann ich den Layout-Typ eines benutzerdefinierten Abschnitts nachträglich ändern?"
     Ja. Bearbeiten Sie den Abschnitt und wählen Sie ein anderes Layout. Beachten Sie, dass einige Felder möglicherweise nicht zwischen Layout-Typen übertragen werden (z. B. beim Wechsel von Karten zu Social Links).
 
-??? question "Was ist der Unterschied zwischen den Layouts 'Bullet Points' und 'Free Text'?"
-    **Bullet Points** rendert jede Zeile als Aufzählungspunkt mit einem Gruppentitel. **Free Text** rendert reinen Text mit beibehaltenen Zeilenumbrüchen und ohne Titel — ähnlich dem About/Bio-Abschnitt.
+??? question "Was ist der Unterschied zwischen den Layouts 'Aufzählungspunkte' und 'Freitext'?"
+    **Aufzählungspunkte** rendert jede Zeile als Aufzählungspunkt mit einem Gruppentitel. **Freitext** rendert reinen Text mit beibehaltenen Zeilenumbrüchen und ohne Titel — ähnlich dem Über-mich-/Bio-Abschnitt.
 
 ## Drucken & PDF
 
@@ -45,13 +45,13 @@
     Die Druckausgabe verwendet dedizierte Druckstile, die für Papier optimiert sind. Einige visuelle Effekte (Hover-Zustände, Animationen, Verläufe) werden vereinfacht. Ausgeblendete Einträge und Admin-Steuerelemente werden automatisch entfernt.
 
 ??? question "Wie bringe ich meinen Lebenslauf auf weniger Seiten unter?"
-    Versuchen Sie, **Allow Section Splits** und **Allow Item Splits** in den Print & Export-Einstellungen zu aktivieren. Sie können auch weniger wichtige Einträge oder Abschnitte ausblenden oder kompaktere Layouts für benutzerdefinierte Abschnitte verwenden. Außerdem können Sie die Druckausgabe über den Druckdialog jedes Browsers skalieren (manchmal etwas versteckt).
+    Versuchen Sie, **Abschnittsumbrüche erlauben** und **Eintragsumbrüche erlauben** in den Drucken-&-Export-Einstellungen zu aktivieren. Sie können auch weniger wichtige Einträge oder Abschnitte ausblenden oder kompaktere Layouts für benutzerdefinierte Abschnitte verwenden. Außerdem können Sie die Druckausgabe über den Druckdialog jedes Browsers skalieren (manchmal etwas versteckt).
 
 ??? question "Warum fehlen einige Einträge in meinem gedruckten Lebenslauf?"
     Prüfen Sie, ob diese Einträge auf ausgeblendet gesetzt wurden (Augen-Symbol). Ausgeblendete Einträge werden von der Druckausgabe und der öffentlichen Ansicht ausgeschlossen.
 
 ??? question "Seitenzahlen werden nicht angezeigt?"
-    Stellen Sie sicher, dass **Page Numbers** unter Settings → Print & Export aktiviert ist. Einige Browser-PDF-Viewer zeigen CSS-generierte Seitenzahlen möglicherweise nicht an — versuchen Sie, das PDF herunterzuladen und in einem dedizierten Reader zu öffnen.
+    Stellen Sie sicher, dass **Seitenzahlen** unter Einstellungen → Drucken & Export aktiviert ist. Einige Browser-PDF-Viewer zeigen CSS-generierte Seitenzahlen möglicherweise nicht an — versuchen Sie, das PDF herunterzuladen und in einem dedizierten Reader zu öffnen.
 
 ## Zeitleiste
 

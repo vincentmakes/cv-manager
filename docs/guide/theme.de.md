@@ -19,7 +19,7 @@ Gehen Sie zu **Einstellungen → Erweitert → Datumsformat**, um zu wählen, wi
 |--------|----------|
 | MMM YYYY | Jan 2020 |
 | MMM YY | Jan 20 |
-| MMMM YYYY | January 2020 |
+| MMMM YYYY | Januar 2020 |
 | MM/YYYY | 01/2020 |
 | MM.YYYY | 01.2020 |
 | MM-YYYY | 01-2020 |

@@ -11,39 +11,39 @@ Bei der Erstinstallation von CV Manager wird automatisch ein "Default"-Datensatz
 Ein Banner unterhalb der Werkzeugleiste zeigt an, welchen Datensatz Sie gerade bearbeiten. Es zeigt:
 
 - Den **Datensatznamen** (z. B. "Default", "Technischer Lebenslauf")
-- Ein **"Default"-Badge**, wenn dieser Datensatz unter `/` angezeigt wird
-- Einen **Auto-Save-Status** — zeigt kurz "Saving…" und dann "✓ Saved" nach jeder Änderung
+- Ein **„Standard"-Badge**, wenn dieser Datensatz unter `/` angezeigt wird
+- Einen **Autospeicher-Status** — zeigt kurz „Speichern…" und dann „✓ Gespeichert" nach jeder Änderung
 
 Jede Änderung, die Sie vornehmen (Einträge hinzufügen, Inhalte bearbeiten, Reihenfolge ändern, Sichtbarkeit umschalten), wird nach einer kurzen Verzögerung automatisch im aktiven Datensatz gespeichert.
 
 ## Einen neuen Datensatz speichern
 
-Klicken Sie auf **Save As...** in der Werkzeugleiste, geben Sie einen Namen ein (z. B. "Technischer Lebenslauf", "Marketing-Stelle"), und Ihr aktueller Lebenslauf-Zustand wird als neuer Snapshot gespeichert. Der neue Datensatz wird zum aktiven Datensatz.
+Klicken Sie auf **Speichern unter...** in der Werkzeugleiste, geben Sie einen Namen ein (z. B. „Technischer Lebenslauf", „Marketing-Stelle"), und Ihr aktueller Lebenslauf-Zustand wird als neuer Snapshot gespeichert. Der neue Datensatz wird zum aktiven Datensatz.
 
 ## Das Öffnen-Modal
 
-Klicken Sie auf **Open...**, um alle gespeicherten Datensätze anzuzeigen. Eine **Legende** oben erklärt die drei Steuerelemente:
+Klicken Sie auf **Öffnen...**, um alle gespeicherten Datensätze anzuzeigen. Eine **Legende** oben erklärt die drei Steuerelemente:
 
 | Steuerelement | Zweck |
 |---------------|-------|
 | **Optionsfeld** | Wählt aus, welcher Datensatz unter Ihrer Stamm-URL `/` angezeigt wird (der Standard) |
 | **Schalter** | Gibt andere Datensätze unter einer eigenen `/v/slug`-URL frei |
-| **Augen-Button** | Vorschau eines gespeicherten Datensatzes, ohne ihn öffentlich zu machen |
+| **Augen-Schaltfläche** | Vorschau eines gespeicherten Datensatzes, ohne ihn öffentlich zu machen |
 
 Jede Datensatz-Zeile zeigt:
 
 - **Name** und Datum der letzten Aktualisierung
-- **"Default"-Badge** — beim Datensatz, der mit dem Optionsfeld ausgewählt wurde
-- **"Editing"-Badge** — beim Datensatz, der aktuell im Admin-Bereich geladen ist
+- **„Standard"-Badge** — beim Datensatz, der mit dem Optionsfeld ausgewählt wurde
+- **„Bearbeitung"-Badge** — beim Datensatz, der aktuell im Admin-Bereich geladen ist
 - Eine **versionierte URL** (z. B. `/v/technical-cv-1`) — beim Standard-Datensatz ausgeblendet, da dieser unter `/` angezeigt wird
-- **Load**-Button — wechselt zu diesem Datensatz (zeigt "Reload", wenn er bereits aktiv ist)
-- **Delete**-Button — löscht den Datensatz dauerhaft (deaktiviert beim aktuellen Standard)
+- **Laden**-Schaltfläche — wechselt zu diesem Datensatz (zeigt „Neu laden", wenn er bereits aktiv ist)
+- **Löschen**-Schaltfläche — löscht den Datensatz dauerhaft (deaktiviert beim aktuellen Standard)
 
 ## Den Standard-Datensatz festlegen
 
 Der Standard-Datensatz ist die Version, die Besucher sehen, wenn sie Ihre Stamm-URL (`/`) aufrufen. So ändern Sie ihn:
 
-1. Öffnen Sie das **Open...**-Modal
+1. Öffnen Sie das **Öffnen...**-Modal
 2. Klicken Sie auf das **Optionsfeld** neben dem Datensatz, den Sie als öffentlichen Lebenslauf verwenden möchten
 3. Die Änderung wird sofort wirksam — die öffentliche Seite zeigt nun diesen Datensatz an
 
@@ -55,9 +55,9 @@ Jeder gespeicherte Datensatz (außer dem Standard) erhält einen eindeutigen URL
 
 Um eine bestimmte Version öffentlich zu teilen:
 
-1. Öffnen Sie das **Open...**-Modal
+1. Öffnen Sie das **Öffnen...**-Modal
 2. Finden Sie den Datensatz, den Sie teilen möchten
-3. Schalten Sie den **Schalter** daneben um — er wird blau und ein grünes **Public**-Badge erscheint
+3. Schalten Sie den **Schalter** daneben um — er wird blau und ein grünes **Öffentlich**-Badge erscheint
 4. Die `/v/slug`-URL ist nun auf der **öffentlichen Seite** (Port 3001) zugänglich
 
 So können Sie maßgeschneiderte Lebenslauf-Versionen mit verschiedenen Zielgruppen teilen. Sie könnten beispielsweise einen "Technischen Lebenslauf" für Ingenieur-Stellen öffentlich machen, während Sie einen "Management-Lebenslauf" privat halten, bis er benötigt wird.

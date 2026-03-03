@@ -57,7 +57,7 @@ Klicken Sie auf die Schaltfläche **Entfernen** im Logo-Bereich, um ein Logo von
 
 ## Zertifizierungen
 
-Jede Zertifizierung hat einen **Namen**, einen **Anbieter**, ein **Ausstellungsdatum** sowie optional ein **Ablaufdatum** und eine **Anmeldeinformation-ID**.
+Jede Zertifizierung hat einen **Namen**, einen **Anbieter**, ein **Ausstellungsdatum** sowie optional ein **Ablaufdatum** und eine **Nachweis-ID**.
 
 ## Ausbildung
 
