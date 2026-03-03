@@ -20,7 +20,7 @@ Cuando dos o más experiencias laborales se superponen en el tiempo, la línea d
 - Si una posición paralela está en curso (sin fecha de fin), la línea de la rama se extiende hasta el borde derecho de la línea de tiempo
 - Las tarjetas de los elementos en la pista de rama se posicionan por separado para evitar superposiciones con las tarjetas de la pista principal
 
-No se necesita configuración — la ramificación es completamente automática basada en las fechas de sus experiencias.
+No se necesita configuración — la ramificación es completamente automática basada en las fechas de sus experiencias. Si prefiere una línea de tiempo plana sin ramificaciones, puede desactivarlas en **Configuración → Avanzado → Línea de tiempo: Ramificación**.
 
 ### ¿Cuándo se crea una ramificación?
 
@@ -38,6 +38,10 @@ Si mantiene una posición de larga duración (por ejemplo, un trabajo a tiempo p
 - **Sin superposición** — las posiciones sucesivas sin superposición de fechas permanecen en la pista principal.
 - **Espacio horizontal insuficiente** — si la línea de tiempo está muy comprimida (muchos elementos en un ancho reducido), las ramificaciones que serían demasiado estrechas para mostrarse claramente se aplanan automáticamente a la pista principal.
 
+## Activar/Desactivar ramificación de la línea de tiempo
+
+De forma predeterminada, la ramificación de la línea de tiempo está activada. Puede desactivarla en **Configuración → Avanzado → Línea de tiempo: Ramificación**. Cuando está desactivada, todas las experiencias se muestran en un diseño plano y alternado en una sola pista — no se muestran curvas de bifurcación/fusión ni líneas de rama elevadas, incluso si las experiencias se superponen en el tiempo.
+
 ## Formato de fecha de la línea de tiempo
 
-De forma predeterminada, la línea de tiempo muestra solo los años (por ejemplo, "2020 - 2023"). Puede cambiar esto en **Settings → Advanced → Timeline: Years Only**. Cuando está desactivado, la línea de tiempo utiliza el mismo formato de fecha que el resto de su CV.
+De forma predeterminada, la línea de tiempo muestra solo los años (por ejemplo, "2020 - 2023"). Puede cambiar esto en **Configuración → Avanzado → Línea de tiempo: Solo años**. Cuando está desactivado, la línea de tiempo utiliza el mismo formato de fecha que el resto de su CV.

@@ -20,7 +20,7 @@ Wanneer twee of meer werkervaringen in tijd overlappen, kan de tijdlijn deze aut
 - Als een parallelle positie doorloopt (geen einddatum), strekt de vertakkingslijn zich uit tot de rechterrand van de tijdlijn
 - Kaarten voor items op het vertakkingsspoor worden apart gepositioneerd om overlap met kaarten op het hoofdspoor te voorkomen
 
-Er is geen configuratie nodig — vertakking is volledig automatisch op basis van uw ervaringsdatums.
+Er is geen configuratie nodig — vertakking is volledig automatisch op basis van uw ervaringsdatums. Als u de voorkeur geeft aan een platte tijdlijn zonder vertakkingen, kunt u deze uitschakelen in **Instellingen → Geavanceerd → Tijdlijn: Vertakking**.
 
 ### Wanneer wordt een vertakking aangemaakt?
 
@@ -37,6 +37,10 @@ Als u een langlopende positie bekleedt (bijv. een parttime of bijbaan) naast een
 - **Overlappingen van 1–2 maanden** tussen twee lange posities worden behandeld als functiewisselingen, niet als parallelle dienstverbanden. Dit is het meest voorkomende geval — u begint een nieuwe rol kort voordat uw opzegtermijn bij de oude eindigt.
 - **Geen overlap** — opeenvolgende posities zonder datumoverlap blijven op het hoofdspoor.
 - **Onvoldoende horizontale ruimte** — als de tijdlijn zeer gecomprimeerd is (veel items in een smalle breedte), worden vertakkingen die te smal zouden zijn om duidelijk weer te geven automatisch teruggebracht naar het hoofdspoor.
+
+## Tijdlijnvertakking in-/uitschakelen
+
+Standaard is tijdlijnvertakking ingeschakeld. U kunt deze uitschakelen in **Instellingen → Geavanceerd → Tijdlijn: Vertakking**. Wanneer uitgeschakeld, worden alle ervaringen weergegeven in een platte, afwisselende lay-out op één enkel spoor — er worden geen splitsings-/samenvoegingscurven of verhoogde vertakkingslijnen getoond, zelfs als ervaringen in tijd overlappen.
 
 ## Datumnotatie op de tijdlijn
 
