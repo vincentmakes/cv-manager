@@ -469,23 +469,59 @@ async function loadTimeline() {
 
 // Shared timeline rendering used by both admin and public views.
 // Items must have: { company, role, countryCode, logo, visible, id, start_date, end_date }
-// Options: interactive (adds click handlers / hidden-print class for admin)
+// Options: interactive (adds click handlers for admin)
 function renderTimelineItems(items, options) {
     const interactive = options && options.interactive;
     const container = document.getElementById('timelineItems');
     const timelineContainer = container.closest('.timeline-container');
 
-    const { branches, segments } = computeTimelineBranches(items);
+    // Filter out hidden experiences so the timeline is regenerated dynamically
+    const visibleItems = items.filter(item => item.visible !== false);
+
+    let { branches, segments } = computeTimelineBranches(visibleItems);
+
+    const positions = computeTimePositions(segments);
+
+    // Collapse branches that don't have enough horizontal space for S-curves.
+    // Each S-curve needs curveW (24px); fork + merge need at least ~2.5× that.
+    const containerW = container.offsetWidth;
+    if (containerW > 0) {
+        const minBranchSpanPx = 60; // ~2.5 × curveW (24px)
+        branches.forEach(branch => {
+            let firstBranchIdx = -1, lastBranchIdx = -1;
+            for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+                if (segments[i].track === 1) {
+                    if (firstBranchIdx === -1) firstBranchIdx = i;
+                    lastBranchIdx = i;
+                }
+            }
+            if (firstBranchIdx === -1) return;
+            const forkPx = (positions[firstBranchIdx].startPct / 100) * containerW;
+            const lastOngoing = !segments[lastBranchIdx].item.end_date;
+            const mergePx = lastOngoing
+                ? containerW
+                : (positions[lastBranchIdx].endPct / 100) * containerW;
+            if (mergePx - forkPx < minBranchSpanPx) {
+                branch.collapsed = true;
+                for (let i = branch.forkBeforeIdx; i <= branch.mergeAfterIdx; i++) {
+                    if (segments[i].track === 1) {
+                        segments[i].track = 0;
+                        segments[i].branchGroup = null;
+                    }
+                }
+            }
+        });
+        branches = branches.filter(b => !b.collapsed);
+    }
+
     const hasBranches = branches.length > 0;
 
     if (timelineContainer) {
         timelineContainer.classList.toggle('has-branches', hasBranches);
     }
 
-    const uniqueCountries = new Set(items.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
+    const uniqueCountries = new Set(visibleItems.map(i => (i.countryCode || '').toLowerCase()).filter(Boolean));
     const showFlags = uniqueCountries.size > 1;
-
-    const positions = computeTimePositions(segments);
 
     let mainTrackIdx = 0;
     let lastCountry = null;
@@ -532,7 +568,6 @@ function renderTimelineItems(items, options) {
             ? `<img src="https://flagcdn.com/w40/${countryCode}.png" class="timeline-flag" alt="${countryCode.toUpperCase()}" onerror="this.outerHTML='<div class=\\'timeline-dot\\'></div>'">`
             : '<div class="timeline-dot"></div>';
 
-        const hiddenClass = interactive && item.visible === false ? 'hidden-print' : '';
         const branchClass = seg.track === 1 ? 'timeline-branch-track' : '';
 
         const { leftPct, widthPct } = positions[idx];
@@ -547,7 +582,7 @@ function renderTimelineItems(items, options) {
             : `style="left: ${itemLeft}%; width: ${widthPct}%;"`;
 
         return `
-            <div class="timeline-item ${pos} ${branchClass} ${hiddenClass}" ${interactiveAttrs}>
+            <div class="timeline-item ${pos} ${branchClass}" ${interactiveAttrs}>
                 <div class="timeline-content">
                     ${companyLine}
                     <div class="timeline-role">${escapeHtml(item.role)}</div>

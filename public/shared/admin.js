@@ -848,11 +848,15 @@ async function toggleSection(section) {
 // Toggle Item Visibility
 async function toggleVisibility(endpoint, id, visible) {
     const data = await api(`/api/${endpoint}/${id}`);
-    await api(`/api/${endpoint}/${id}`, { 
-        method: 'PUT', 
-        body: { ...data, visible } 
+    await api(`/api/${endpoint}/${id}`, {
+        method: 'PUT',
+        body: { ...data, visible }
     });
     await reloadSection(endpoint);
+    // Regenerate timeline when experience visibility changes
+    if (endpoint === 'experiences') {
+        await loadTimeline();
+    }
     toast(t('toast.visibility_updated'));
     autoSaveActiveDataset();
 }
