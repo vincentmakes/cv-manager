@@ -403,7 +403,17 @@ function computeTimelineBranches(items) {
         }
         if (branchPartner === -1) branchPartner = overlapping[overlapping.length - 1];
 
-        const existingBranch = branches.find(b => b.mergeAfterIdx >= i - 1 && segments[branchPartner].branchGroup === branches.indexOf(b));
+        const existingBranch = branches.find(b => {
+            const bIdx = branches.indexOf(b);
+            // Extend if immediately adjacent and same group
+            if (b.mergeAfterIdx >= i - 1 && segments[branchPartner].branchGroup === bIdx) return true;
+            // Also extend if branching from the same main-track anchor item.
+            // This keeps one continuous branch for parallel employment (e.g. a
+            // long-running side job alongside multiple sequential main positions)
+            // even when short intermediate items don't meet the overlap threshold.
+            if (b.forkBeforeIdx === branchPartner) return true;
+            return false;
+        });
         if (existingBranch) {
             existingBranch.mergeAfterIdx = i;
             segments[i].branchGroup = branches.indexOf(existingBranch);
