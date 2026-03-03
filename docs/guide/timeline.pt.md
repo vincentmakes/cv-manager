@@ -20,7 +20,7 @@ Quando duas ou mais experiências profissionais se sobrepõem no tempo, a linha 
 - Se uma posição paralela estiver em andamento (sem data de término), a linha da ramificação se estende até a borda direita da linha do tempo
 - Cartões de itens na trilha ramificada são posicionados separadamente para evitar sobreposição com cartões da trilha principal
 
-Nenhuma configuração é necessária — a ramificação é totalmente automática com base nas datas das suas experiências.
+Nenhuma configuração é necessária — a ramificação é totalmente automática com base nas datas das suas experiências. Se preferir uma linha do tempo plana sem ramificações, pode desativá-las em **Configurações → Avançado → Linha do Tempo: Ramificação**.
 
 ### Quando uma ramificação é criada?
 
@@ -37,6 +37,10 @@ Se você mantém uma posição de longa duração (por exemplo, um trabalho em t
 - **Sobreposições de 1 a 2 meses** entre duas posições longas são tratadas como transições de emprego, não como emprego paralelo. Este é o caso mais comum — você começa um novo cargo pouco antes do término do aviso prévio no anterior.
 - **Sem sobreposição** — posições sucessivas sem sobreposição de datas permanecem na trilha principal.
 - **Espaço horizontal insuficiente** — se a linha do tempo estiver muito comprimida (muitos itens em uma largura reduzida), ramificações que seriam estreitas demais para serem exibidas claramente são automaticamente achatadas de volta à trilha principal.
+
+## Ativar/Desativar Ramificação da Linha do Tempo
+
+Por padrão, a ramificação da linha do tempo está ativada. Pode desativá-la em **Configurações → Avançado → Linha do Tempo: Ramificação**. Quando desativada, todas as experiências são exibidas num layout plano e alternado numa única trilha — não são mostradas curvas de bifurcação/fusão nem linhas de ramificação elevadas, mesmo que as experiências se sobreponham no tempo.
 
 ## Formato de Data da Linha do Tempo
 

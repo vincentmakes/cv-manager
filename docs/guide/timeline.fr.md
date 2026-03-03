@@ -20,7 +20,7 @@ Lorsque deux ou plusieurs expériences professionnelles se chevauchent dans le t
 - Si un poste parallèle est en cours (sans date de fin), la ligne de branche s'étend jusqu'au bord droit de la chronologie
 - Les cartes des éléments sur la piste secondaire sont positionnées séparément pour éviter le chevauchement avec les cartes de la piste principale
 
-Aucune configuration n'est nécessaire — l'embranchement est entièrement automatique en fonction des dates de vos expériences.
+Aucune configuration n'est nécessaire — l'embranchement est entièrement automatique en fonction des dates de vos expériences. Si vous préférez une chronologie plate sans embranchements, vous pouvez les désactiver dans **Paramètres → Avancé → Chronologie : Embranchement**.
 
 ### Quand un embranchement est-il créé ?
 
@@ -37,6 +37,10 @@ Si vous occupez un poste de longue durée (par ex. un emploi à temps partiel ou
 - **Les chevauchements de 1 à 2 mois** entre deux postes longs sont traités comme des transitions professionnelles, et non comme des emplois simultanés. C'est le cas le plus courant — vous commencez un nouveau poste peu avant la fin de votre préavis à l'ancien.
 - **Aucun chevauchement** — les postes successifs sans chevauchement de dates restent sur la piste principale.
 - **Espace horizontal insuffisant** — si la chronologie est très compressée (beaucoup d'éléments dans une largeur réduite), les embranchements trop étroits pour être affichés clairement sont automatiquement ramenés sur la piste principale.
+
+## Activer/Désactiver l'embranchement de la chronologie
+
+Par défaut, l'embranchement de la chronologie est activé. Vous pouvez le désactiver dans **Paramètres → Avancé → Chronologie : Embranchement**. Lorsque cette option est désactivée, toutes les expériences sont affichées dans une disposition plate et alternée sur une seule piste — aucune courbe de séparation/fusion ni ligne de branche surélevée n'est affichée, même si des expériences se chevauchent dans le temps.
 
 ## Format de date de la chronologie
 

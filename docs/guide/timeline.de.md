@@ -20,7 +20,7 @@ Wenn sich zwei oder mehr Berufserfahrungen zeitlich überlappen, kann der Zeitst
 - Wenn eine parallele Position noch andauert (kein Enddatum), erstreckt sich die Nebenspur bis zum rechten Rand des Zeitstrahls
 - Karten für Nebenspur-Elemente werden separat positioniert, um Überlappungen mit Hauptspur-Karten zu vermeiden
 
-Es ist keine Konfiguration erforderlich — die Verzweigung erfolgt vollautomatisch basierend auf Ihren Erfahrungsdaten.
+Es ist keine Konfiguration erforderlich — die Verzweigung erfolgt vollautomatisch basierend auf Ihren Erfahrungsdaten. Wenn Sie einen flachen Zeitstrahl ohne Verzweigungen bevorzugen, können Sie diese unter **Einstellungen → Erweitert → Zeitstrahl: Verzweigung** deaktivieren.
 
 ### Wann wird eine Verzweigung erstellt?
 
@@ -37,6 +37,10 @@ Wenn Sie eine langfristige Position (z. B. eine Teilzeit- oder Nebentätigkeit) 
 - **Überlappungen von 1–2 Monaten** zwischen zwei langen Positionen werden als Stellenwechsel behandelt, nicht als parallele Beschäftigung. Dies ist der häufigste Fall — Sie beginnen eine neue Rolle kurz bevor Ihre Kündigungsfrist bei der alten endet.
 - **Keine Überlappung** — aufeinanderfolgende Positionen ohne zeitliche Überschneidung bleiben auf dem Hauptstrang.
 - **Unzureichender horizontaler Platz** — Wenn der Zeitstrahl sehr komprimiert ist (viele Einträge auf engem Raum), werden Verzweigungen, die zu schmal zur Darstellung wären, automatisch wieder auf den Hauptstrang zurückgeführt.
+
+## Zeitstrahl-Verzweigung umschalten
+
+Standardmäßig ist die Zeitstrahl-Verzweigung aktiviert. Sie können sie unter **Einstellungen → Erweitert → Zeitstrahl: Verzweigung** deaktivieren. Wenn deaktiviert, werden alle Erfahrungen in einem flachen, abwechselnden Layout auf einem einzelnen Strang dargestellt — es werden keine Gabelungs-/Zusammenführungskurven oder erhöhten Nebenspuren angezeigt, auch wenn sich Erfahrungen zeitlich überlappen.
 
 ## Zeitstrahl-Datumsformat
 

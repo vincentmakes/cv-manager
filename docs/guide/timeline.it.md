@@ -20,7 +20,7 @@ Quando due o più esperienze lavorative si sovrappongono nel tempo, la timeline 
 - Se una posizione parallela è ancora in corso (senza data di fine), la linea della ramificazione si estende fino al bordo destro della timeline
 - Le schede degli elementi sulla traccia secondaria sono posizionate separatamente per evitare sovrapposizioni con le schede della traccia principale
 
-Non è necessaria alcuna configurazione — la ramificazione è completamente automatica in base alle date delle esperienze.
+Non è necessaria alcuna configurazione — la ramificazione è completamente automatica in base alle date delle esperienze. Se si preferisce una timeline piatta senza ramificazioni, è possibile disattivarle in **Impostazioni → Avanzate → Timeline: Ramificazione**.
 
 ### Quando viene creata una ramificazione?
 
@@ -37,6 +37,10 @@ Se si mantiene una posizione di lunga durata (ad es. un lavoro part-time o un'at
 - **Le sovrapposizioni di 1–2 mesi** tra due posizioni lunghe vengono trattate come transizioni lavorative, non come impiego parallelo. Questo è il caso più comune: si inizia un nuovo ruolo poco prima che termini il preavviso nel precedente.
 - **Nessuna sovrapposizione** — le posizioni successive senza sovrapposizione di date restano sulla traccia principale.
 - **Spazio orizzontale insufficiente** — se la timeline è molto compressa (molti elementi in una larghezza ridotta), le ramificazioni troppo strette per essere visualizzate chiaramente vengono automaticamente riportate sulla traccia principale.
+
+## Attivare/Disattivare la ramificazione della timeline
+
+Per impostazione predefinita, la ramificazione della timeline è attivata. È possibile disattivarla in **Impostazioni → Avanzate → Timeline: Ramificazione**. Quando disattivata, tutte le esperienze vengono visualizzate in un layout piatto e alternato su un'unica traccia — non vengono mostrate curve di biforcazione/fusione né linee di ramificazione sopraelevate, anche se le esperienze si sovrappongono nel tempo.
 
 ## Formato data della timeline
 

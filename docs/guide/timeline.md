@@ -20,7 +20,7 @@ When two or more work experiences overlap in time, the timeline can automaticall
 - If a parallel position is ongoing (no end date), the branch line extends to the right edge of the timeline
 - Cards for branch-track items are positioned separately to avoid overlapping with main-track cards
 
-No configuration is needed — branching is fully automatic based on your experience dates.
+No configuration is needed — branching is fully automatic based on your experience dates. If you prefer a flat timeline without branching, you can disable it in **Settings → Advanced → Timeline: Branching**.
 
 ### When does a branch get created?
 
@@ -37,6 +37,10 @@ If you hold one long-running position (e.g., a part-time or side role) alongside
 - **Overlaps of 1–2 months** between two long positions are treated as job transitions, not parallel employment. This is the most common case — you start a new role shortly before your notice period ends at the old one.
 - **No overlap at all** — sequential positions with no date overlap stay on the main track.
 - **Insufficient horizontal space** — if the timeline is very compressed (many items in a short width), branches that would be too narrow to display clearly are automatically flattened back to the main track.
+
+## Timeline Branching Toggle
+
+By default, timeline branching is enabled. You can disable it in **Settings → Advanced → Timeline: Branching**. When disabled, all experiences are rendered in a flat, alternating layout on a single track — no fork/merge curves or elevated branch lines are shown, even if experiences overlap in time.
 
 ## Timeline Date Format
 
