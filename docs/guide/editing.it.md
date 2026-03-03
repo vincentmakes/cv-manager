@@ -49,7 +49,7 @@ Quando viene impostato un logo, appare un interruttore: **"Sincronizza il logo s
 
 - Il logo viene applicato a **tutte** le esperienze con lo stesso nome aziendale — incluse quelle nei dataset salvati
 - Le future esperienze per la stessa azienda erediteranno automaticamente il logo
-- La disattivazione **non** rimuove i loghi gia applicati — interrompe solo la propagazione automatica futura
+- La disattivazione **non** rimuove i loghi già applicati — interrompe solo la propagazione automatica futura
 
 ### Rimozione di un logo
 
@@ -71,7 +71,7 @@ Le competenze sono organizzate in **categorie** (ad es. "Linguaggi di programmaz
 
 Ogni progetto ha un **titolo**, una **descrizione**, le **tecnologie** (mostrate come etichette) e un **link esterno** opzionale.
 
-## Visibilita degli elementi
+## Visibilità degli elementi
 
 Ogni singolo elemento (esperienza, certificazione, voce di formazione, ecc.) ha un **interruttore di visibilità**. Gli elementi nascosti vengono esclusi dalla stampa/PDF e dalla vista pubblica, ma restano nell'admin per un utilizzo futuro.
 

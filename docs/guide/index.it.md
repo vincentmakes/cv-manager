@@ -22,7 +22,7 @@ CV Manager verifica automaticamente su GitHub la disponibilità di versioni più
 
 > **Aggiornamento disponibile: v1.12.0** (versione attuale v1.11.0) — *Novità*
 
-Il link "Novità" apre il changelog. È possibile chiudere il banner con il pulsante X.
+Il link "Novità" apre il changelog. Potete chiudere il banner con il pulsante X.
 
 !!! note "Nota"
-    Il controllo della versione viene memorizzato nella cache per 24 ore. Riavviare il server (o il container Docker) per svuotare la cache e forzare un nuovo controllo.
+    Il controllo della versione viene memorizzato nella cache per 24 ore. Riavviate il server (o il container Docker) per svuotare la cache e forzare un nuovo controllo.
