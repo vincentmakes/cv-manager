@@ -4,14 +4,6 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.12.0] - 2026-03-03
-
-### Added
-- Documentation website using Material for MkDocs with multi-language architecture
-- Structured docs split from USER_GUIDE.md into Getting Started, User Guide, Advanced, and Reference sections
-- MkDocs configuration with i18n plugin prepared for 8 languages (English active)
-- Cloudflare Pages deployment support via requirements-docs.txt
-
 ## [1.11.1] - 2026-03-02
 
 ### Added
