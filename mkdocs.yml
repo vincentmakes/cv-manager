@@ -63,192 +63,188 @@ plugins:
           name: English
           build: true
           default: true
-        # ---------------------------------------------------------------
-        # To add a language: uncomment the block, create <page>.<locale>.md
-        # files in docs/, and translate the nav_translations values.
-        # ---------------------------------------------------------------
-        # - locale: de
-        #   name: Deutsch
-        #   build: true
-        #   nav_translations:
-        #     Home: Startseite
-        #     Getting Started: Erste Schritte
-        #     Installation: Installation
-        #     First Steps: Erste Schritte
-        #     User Guide: Benutzerhandbuch
-        #     Sections: Abschnitte
-        #     Editing Content: Inhalte bearbeiten
-        #     Custom Sections: Benutzerdefinierte Abschnitte
-        #     Timeline: Zeitleiste
-        #     Theme & Appearance: Design & Darstellung
-        #     Language: Sprache
-        #     Datasets: Datensätze
-        #     Print & PDF: Drucken & PDF
-        #     Import & Export: Import & Export
-        #     Advanced: Erweitert
-        #     Settings: Einstellungen
-        #     Security & Privacy: Sicherheit & Datenschutz
-        #     ATS Compatibility: ATS-Kompatibilität
-        #     Reference: Referenz
-        #     FAQ: FAQ
-        #     Keyboard Shortcuts: Tastenkürzel
-        #     Support: Support
-        # - locale: fr
-        #   name: Français
-        #   build: true
-        #   nav_translations:
-        #     Home: Accueil
-        #     Getting Started: Premiers pas
-        #     Installation: Installation
-        #     First Steps: Premiers pas
-        #     User Guide: Guide utilisateur
-        #     Sections: Sections
-        #     Editing Content: Modifier le contenu
-        #     Custom Sections: Sections personnalisées
-        #     Timeline: Chronologie
-        #     Theme & Appearance: Thème & Apparence
-        #     Language: Langue
-        #     Datasets: Jeux de données
-        #     Print & PDF: Impression & PDF
-        #     Import & Export: Import & Export
-        #     Advanced: Avancé
-        #     Settings: Paramètres
-        #     Security & Privacy: Sécurité & Confidentialité
-        #     ATS Compatibility: Compatibilité ATS
-        #     Reference: Référence
-        #     FAQ: FAQ
-        #     Keyboard Shortcuts: Raccourcis clavier
-        #     Support: Support
-        # - locale: nl
-        #   name: Nederlands
-        #   build: true
-        #   nav_translations:
-        #     Home: Home
-        #     Getting Started: Aan de slag
-        #     Installation: Installatie
-        #     First Steps: Eerste stappen
-        #     User Guide: Gebruikershandleiding
-        #     Sections: Secties
-        #     Editing Content: Inhoud bewerken
-        #     Custom Sections: Aangepaste secties
-        #     Timeline: Tijdlijn
-        #     Theme & Appearance: Thema & Uiterlijk
-        #     Language: Taal
-        #     Datasets: Datasets
-        #     Print & PDF: Afdrukken & PDF
-        #     Import & Export: Import & Export
-        #     Advanced: Geavanceerd
-        #     Settings: Instellingen
-        #     Security & Privacy: Beveiliging & Privacy
-        #     ATS Compatibility: ATS-compatibiliteit
-        #     Reference: Referentie
-        #     FAQ: FAQ
-        #     Keyboard Shortcuts: Sneltoetsen
-        #     Support: Ondersteuning
-        # - locale: es
-        #   name: Español
-        #   build: true
-        #   nav_translations:
-        #     Home: Inicio
-        #     Getting Started: Primeros pasos
-        #     Installation: Instalación
-        #     First Steps: Primeros pasos
-        #     User Guide: Guía del usuario
-        #     Sections: Secciones
-        #     Editing Content: Editar contenido
-        #     Custom Sections: Secciones personalizadas
-        #     Timeline: Línea de tiempo
-        #     Theme & Appearance: Tema y Apariencia
-        #     Language: Idioma
-        #     Datasets: Conjuntos de datos
-        #     Print & PDF: Imprimir y PDF
-        #     Import & Export: Importar y Exportar
-        #     Advanced: Avanzado
-        #     Settings: Configuración
-        #     Security & Privacy: Seguridad y Privacidad
-        #     ATS Compatibility: Compatibilidad ATS
-        #     Reference: Referencia
-        #     FAQ: FAQ
-        #     Keyboard Shortcuts: Atajos de teclado
-        #     Support: Soporte
-        # - locale: it
-        #   name: Italiano
-        #   build: true
-        #   nav_translations:
-        #     Home: Home
-        #     Getting Started: Per iniziare
-        #     Installation: Installazione
-        #     First Steps: Primi passi
-        #     User Guide: Guida utente
-        #     Sections: Sezioni
-        #     Editing Content: Modifica contenuto
-        #     Custom Sections: Sezioni personalizzate
-        #     Timeline: Cronologia
-        #     Theme & Appearance: Tema e Aspetto
-        #     Language: Lingua
-        #     Datasets: Set di dati
-        #     Print & PDF: Stampa e PDF
-        #     Import & Export: Importa e Esporta
-        #     Advanced: Avanzato
-        #     Settings: Impostazioni
-        #     Security & Privacy: Sicurezza e Privacy
-        #     ATS Compatibility: Compatibilità ATS
-        #     Reference: Riferimenti
-        #     FAQ: FAQ
-        #     Keyboard Shortcuts: Scorciatoie da tastiera
-        #     Support: Supporto
-        # - locale: pt
-        #   name: Português
-        #   build: true
-        #   nav_translations:
-        #     Home: Início
-        #     Getting Started: Primeiros passos
-        #     Installation: Instalação
-        #     First Steps: Primeiros passos
-        #     User Guide: Guia do usuário
-        #     Sections: Seções
-        #     Editing Content: Editar conteúdo
-        #     Custom Sections: Seções personalizadas
-        #     Timeline: Linha do tempo
-        #     Theme & Appearance: Tema e Aparência
-        #     Language: Idioma
-        #     Datasets: Conjuntos de dados
-        #     Print & PDF: Imprimir e PDF
-        #     Import & Export: Importar e Exportar
-        #     Advanced: Avançado
-        #     Settings: Configurações
-        #     Security & Privacy: Segurança e Privacidade
-        #     ATS Compatibility: Compatibilidade ATS
-        #     Reference: Referência
-        #     FAQ: FAQ
-        #     Keyboard Shortcuts: Atalhos de teclado
-        #     Support: Suporte
-        # - locale: zh
-        #   name: 中文
-        #   build: true
-        #   nav_translations:
-        #     Home: 首页
-        #     Getting Started: 快速开始
-        #     Installation: 安装
-        #     First Steps: 第一步
-        #     User Guide: 用户指南
-        #     Sections: 章节
-        #     Editing Content: 编辑内容
-        #     Custom Sections: 自定义章节
-        #     Timeline: 时间线
-        #     Theme & Appearance: 主题与外观
-        #     Language: 语言
-        #     Datasets: 数据集
-        #     Print & PDF: 打印与 PDF
-        #     Import & Export: 导入与导出
-        #     Advanced: 高级
-        #     Settings: 设置
-        #     Security & Privacy: 安全与隐私
-        #     ATS Compatibility: ATS 兼容性
-        #     Reference: 参考
-        #     FAQ: 常见问题
-        #     Keyboard Shortcuts: 键盘快捷键
-        #     Support: 支持
+        - locale: de
+          name: Deutsch
+          build: true
+          nav_translations:
+            Home: Startseite
+            Getting Started: Erste Schritte
+            Installation: Installation
+            First Steps: Erste Schritte
+            User Guide: Benutzerhandbuch
+            Sections: Abschnitte
+            Editing Content: Inhalte bearbeiten
+            Custom Sections: Benutzerdefinierte Abschnitte
+            Timeline: Zeitleiste
+            Theme & Appearance: Design & Darstellung
+            Language: Sprache
+            Datasets: Datensätze
+            Print & PDF: Drucken & PDF
+            Import & Export: Import & Export
+            Advanced: Erweitert
+            Settings: Einstellungen
+            Security & Privacy: Sicherheit & Datenschutz
+            ATS Compatibility: ATS-Kompatibilität
+            Reference: Referenz
+            FAQ: FAQ
+            Keyboard Shortcuts: Tastenkürzel
+            Support: Support
+        - locale: fr
+          name: Français
+          build: true
+          nav_translations:
+            Home: Accueil
+            Getting Started: Premiers pas
+            Installation: Installation
+            First Steps: Premiers pas
+            User Guide: Guide utilisateur
+            Sections: Sections
+            Editing Content: Modifier le contenu
+            Custom Sections: Sections personnalisées
+            Timeline: Chronologie
+            Theme & Appearance: Thème & Apparence
+            Language: Langue
+            Datasets: Jeux de données
+            Print & PDF: Impression & PDF
+            Import & Export: Import & Export
+            Advanced: Avancé
+            Settings: Paramètres
+            Security & Privacy: Sécurité & Confidentialité
+            ATS Compatibility: Compatibilité ATS
+            Reference: Référence
+            FAQ: FAQ
+            Keyboard Shortcuts: Raccourcis clavier
+            Support: Support
+        - locale: nl
+          name: Nederlands
+          build: true
+          nav_translations:
+            Home: Home
+            Getting Started: Aan de slag
+            Installation: Installatie
+            First Steps: Eerste stappen
+            User Guide: Gebruikershandleiding
+            Sections: Secties
+            Editing Content: Inhoud bewerken
+            Custom Sections: Aangepaste secties
+            Timeline: Tijdlijn
+            Theme & Appearance: Thema & Uiterlijk
+            Language: Taal
+            Datasets: Datasets
+            Print & PDF: Afdrukken & PDF
+            Import & Export: Import & Export
+            Advanced: Geavanceerd
+            Settings: Instellingen
+            Security & Privacy: Beveiliging & Privacy
+            ATS Compatibility: ATS-compatibiliteit
+            Reference: Referentie
+            FAQ: FAQ
+            Keyboard Shortcuts: Sneltoetsen
+            Support: Ondersteuning
+        - locale: es
+          name: Español
+          build: true
+          nav_translations:
+            Home: Inicio
+            Getting Started: Primeros pasos
+            Installation: Instalación
+            First Steps: Primeros pasos
+            User Guide: Guía del usuario
+            Sections: Secciones
+            Editing Content: Editar contenido
+            Custom Sections: Secciones personalizadas
+            Timeline: Línea de tiempo
+            Theme & Appearance: Tema y Apariencia
+            Language: Idioma
+            Datasets: Conjuntos de datos
+            Print & PDF: Imprimir y PDF
+            Import & Export: Importar y Exportar
+            Advanced: Avanzado
+            Settings: Configuración
+            Security & Privacy: Seguridad y Privacidad
+            ATS Compatibility: Compatibilidad ATS
+            Reference: Referencia
+            FAQ: FAQ
+            Keyboard Shortcuts: Atajos de teclado
+            Support: Soporte
+        - locale: it
+          name: Italiano
+          build: true
+          nav_translations:
+            Home: Home
+            Getting Started: Per iniziare
+            Installation: Installazione
+            First Steps: Primi passi
+            User Guide: Guida utente
+            Sections: Sezioni
+            Editing Content: Modifica contenuto
+            Custom Sections: Sezioni personalizzate
+            Timeline: Cronologia
+            Theme & Appearance: Tema e Aspetto
+            Language: Lingua
+            Datasets: Set di dati
+            Print & PDF: Stampa e PDF
+            Import & Export: Importa e Esporta
+            Advanced: Avanzato
+            Settings: Impostazioni
+            Security & Privacy: Sicurezza e Privacy
+            ATS Compatibility: Compatibilità ATS
+            Reference: Riferimenti
+            FAQ: FAQ
+            Keyboard Shortcuts: Scorciatoie da tastiera
+            Support: Supporto
+        - locale: pt
+          name: Português
+          build: true
+          nav_translations:
+            Home: Início
+            Getting Started: Primeiros passos
+            Installation: Instalação
+            First Steps: Primeiros passos
+            User Guide: Guia do usuário
+            Sections: Seções
+            Editing Content: Editar conteúdo
+            Custom Sections: Seções personalizadas
+            Timeline: Linha do tempo
+            Theme & Appearance: Tema e Aparência
+            Language: Idioma
+            Datasets: Conjuntos de dados
+            Print & PDF: Imprimir e PDF
+            Import & Export: Importar e Exportar
+            Advanced: Avançado
+            Settings: Configurações
+            Security & Privacy: Segurança e Privacidade
+            ATS Compatibility: Compatibilidade ATS
+            Reference: Referência
+            FAQ: FAQ
+            Keyboard Shortcuts: Atalhos de teclado
+            Support: Suporte
+        - locale: zh
+          name: 中文
+          build: true
+          nav_translations:
+            Home: 首页
+            Getting Started: 快速开始
+            Installation: 安装
+            First Steps: 第一步
+            User Guide: 用户指南
+            Sections: 章节
+            Editing Content: 编辑内容
+            Custom Sections: 自定义章节
+            Timeline: 时间线
+            Theme & Appearance: 主题与外观
+            Language: 语言
+            Datasets: 数据集
+            Print & PDF: 打印与 PDF
+            Import & Export: 导入与导出
+            Advanced: 高级
+            Settings: 设置
+            Security & Privacy: 安全与隐私
+            ATS Compatibility: ATS 兼容性
+            Reference: 参考
+            FAQ: 常见问题
+            Keyboard Shortcuts: 键盘快捷键
+            Support: 支持
 
   - search:
       lang:
@@ -263,6 +259,9 @@ markdown_extensions:
   - pymdownx.superfences            # Fenced code blocks, diagrams
   - pymdownx.tabbed:                # Content tabs
       alternate_style: true
+  - pymdownx.emoji:                  # :material-*: icons
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list                       # HTML attributes on elements
   - md_in_html                      # Markdown inside HTML blocks
   - tables                          # Pipe tables
@@ -315,31 +314,31 @@ extra:
       as well as to measure the effectiveness of our documentation.
       With your consent, you're helping us to make our documentation better.
 
-  # Language selector in the header (only English active for now)
+  # Language selector in the header
   alternate:
     - name: English
       link: /
       lang: en
-    # - name: Deutsch
-    #   link: /de/
-    #   lang: de
-    # - name: Français
-    #   link: /fr/
-    #   lang: fr
-    # - name: Nederlands
-    #   link: /nl/
-    #   lang: nl
-    # - name: Español
-    #   link: /es/
-    #   lang: es
-    # - name: Italiano
-    #   link: /it/
-    #   lang: it
-    # - name: Português
-    #   link: /pt/
-    #   lang: pt
-    # - name: 中文
-    #   link: /zh/
-    #   lang: zh
+    - name: Deutsch
+      link: /de/
+      lang: de
+    - name: Français
+      link: /fr/
+      lang: fr
+    - name: Nederlands
+      link: /nl/
+      lang: nl
+    - name: Español
+      link: /es/
+      lang: es
+    - name: Italiano
+      link: /it/
+      lang: it
+    - name: Português
+      link: /pt/
+      lang: pt
+    - name: 中文
+      link: /zh/
+      lang: zh
 
 copyright: CV Manager — Self-hosted CV/Resume Management
