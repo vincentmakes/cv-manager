@@ -23,7 +23,7 @@ Jeder Erfahrungseintrag umfasst:
 - **Jobtitel** und **Unternehmensname**
 - **Startdatum** und **Enddatum** (lassen Sie das Enddatum für aktuelle Positionen leer — es wird „Aktuell" angezeigt)
 - **Standort** und **Ländercode** (2-Buchstaben-Code wie `us`, `ch`, `fr` — wird für Flaggen-Symbole im Zeitstrahl verwendet)
-- **Highlights** — Aufzählungspunkte, die Ihre Leistungen beschreiben (einer pro Zeile)
+- **Wichtige Erfolge** — Aufzählungspunkte, die Ihre Leistungen beschreiben (einer pro Zeile)
 
 ## Unternehmenslogos
 
