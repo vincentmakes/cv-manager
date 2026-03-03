@@ -247,7 +247,7 @@ body {
 
 .timeline-content:hover {
     background: var(--light);
-    transform: scale(1.05);
+    transform: translateX(-50%) scale(1.05);
     border-color: var(--primary-light);
     z-index: 10;
 }
@@ -348,9 +348,11 @@ body {
     top: calc(50% + 36px);
 }
 
-/* Chevrons on the branch track */
+/* Chevrons on the branch track — use fixed 28px (not --branch-offset-pct)
+   because the chevron is in .timeline-container (includes padding) while
+   --branch-offset-pct is a percentage of .timeline-items (content only) */
 .timeline-chevron.timeline-chevron-branch {
-    top: calc(50% - var(--branch-offset-pct, 28px));
+    top: calc(50% - 28px);
 }
 
 /* CSS fallback for branch line in print (SVG doesn't render on Safari iOS) */
@@ -1090,6 +1092,10 @@ body.has-preview-banner .container {
     #section-timeline:not(.hidden-print) .timeline-flag { width: 16px; height: 16px; }
     #section-timeline:not(.hidden-print) .timeline-card-logo { width: 70px; height: 22px; }
     #section-timeline:not(.hidden-print) .timeline-chevron svg { width: 10px; height: 14px; }
+    /* Connector lines from dots to offset cards — visible in print */
+    #section-timeline:not(.hidden-print) .timeline-connectors {
+        overflow: visible !important;
+    }
     /* Branch curves: improve SVG rendering in print */
     #section-timeline:not(.hidden-print) .timeline-branch-curves {
         overflow: visible !important;

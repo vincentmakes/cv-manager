@@ -589,17 +589,6 @@ function renderTimelineItems(items, options) {
     layoutTimelineCards(timelineContainer);
     renderBranchCurves(timelineContainer, segments, branches, positions);
 
-    // Re-run card layout at print dimensions so offsets and connector lines
-    // are correct for the printed page (print CSS changes card/container sizes)
-    if (window._timelinePrintAbort) window._timelinePrintAbort.abort();
-    const ac = new AbortController();
-    window._timelinePrintAbort = ac;
-    window.addEventListener('beforeprint', () => {
-        layoutTimelineCards(timelineContainer);
-    }, { signal: ac.signal });
-    window.addEventListener('afterprint', () => {
-        requestAnimationFrame(() => layoutTimelineCards(timelineContainer));
-    }, { signal: ac.signal });
 }
 
 // Detect overlapping timeline cards and offset them, drawing angled connector lines
@@ -615,10 +604,13 @@ function layoutTimelineCards(timelineContainer) {
     const allItems = itemsContainer.querySelectorAll('.timeline-item');
     if (!allItems.length) return;
 
-    // Reset to base centering transform
+    // Reset to base positioning (centered on dot via left:50% + translateX(-50%))
     allItems.forEach(item => {
         const content = item.querySelector('.timeline-content');
-        if (content) content.style.transform = 'translateX(-50%)';
+        if (content) {
+            content.style.left = '50%';
+            content.style.transform = 'translateX(-50%)';
+        }
     });
 
     const containerRect = itemsContainer.getBoundingClientRect();
@@ -706,10 +698,14 @@ function layoutTimelineCards(timelineContainer) {
 
     cards.forEach(card => {
         if (Math.abs(card.offsetX) > 1) {
-            card.content.style.transform = `translateX(calc(-50% + ${card.offsetX}px))`;
+            // Use percentage-based left offset so positioning scales for print
+            const itemWidth = card.item.offsetWidth;
+            const offsetPct = (card.offsetX / itemWidth) * 100;
+            card.content.style.left = `calc(50% + ${offsetPct}%)`;
 
             // Draw angled connector from dot to card center
-            const dotX = card.item.offsetLeft + card.item.offsetWidth / 2;
+            // SVG viewBox uses pixel coords that scale via preserveAspectRatio="none"
+            const dotX = card.item.offsetLeft + itemWidth / 2;
             const dotY = card.isBranch ? mainY - 28 : mainY;
             const cardCenterX = dotX + card.offsetX;
             const cardY = card.isTop ? dotY - 16 : dotY + 16;
