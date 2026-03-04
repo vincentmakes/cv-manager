@@ -904,7 +904,6 @@ body {
 .custom-picture-grid-1 { grid-template-columns: 1fr; }
 
 .custom-picture-item {
-    max-width: 100%;
     text-align: center;
 }
 
@@ -913,6 +912,14 @@ body {
     height: auto;
     border-radius: 8px;
     display: block;
+}
+
+.custom-picture-grid-1 .custom-picture-item {
+    max-width: 300px;
+}
+
+.custom-picture-grid-2 .custom-picture-item {
+    max-width: 100%;
 }
 
 .custom-picture-grid-3 .custom-picture-item {
