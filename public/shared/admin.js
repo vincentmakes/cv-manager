@@ -3343,10 +3343,18 @@ async function saveCustomItem() {
 
     try {
         let itemId = currentCustomItem.itemId;
+
+        // For picture-grid edits, preserve existing image unless being changed
+        let image;
+        if (section.layout_type === 'picture-grid' && itemId) {
+            const existingItem = section.items.find(i => i.id === itemId);
+            image = pictureGridRemoved ? '' : (existingItem?.image || '');
+        }
+
         if (itemId) {
             await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
                 method: 'PUT',
-                body: { title, subtitle, description, link, metadata }
+                body: { title, subtitle, description, link, image, metadata }
             });
             toast(t('toast.item_updated'));
         } else {
@@ -3359,20 +3367,11 @@ async function saveCustomItem() {
         }
 
         // Handle picture upload for picture-grid
-        if (section.layout_type === 'picture-grid' && itemId) {
-            if (pictureGridRemoved) {
-                // Clear the image field (file already deleted by server on next upload or we handle it)
-                await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
-                    method: 'PUT',
-                    body: { title, subtitle, description, link, image: '', metadata }
-                });
-            }
-            if (pendingPictureGridFile) {
-                const formData = new FormData();
-                formData.append('picture', pendingPictureGridFile);
-                const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
-                if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
-            }
+        if (section.layout_type === 'picture-grid' && itemId && pendingPictureGridFile) {
+            const formData = new FormData();
+            formData.append('picture', pendingPictureGridFile);
+            const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
+            if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
         }
 
         closeCustomItemModal();
