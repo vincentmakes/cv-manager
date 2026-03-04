@@ -905,9 +905,6 @@ body {
 
 .custom-picture-item {
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .custom-picture-img {
@@ -916,9 +913,6 @@ body {
     border-radius: 8px;
     display: block;
 }
-
-.custom-picture-grid-1 .custom-picture-img { max-width: 200px; }
-.custom-picture-grid-2 .custom-picture-img { max-width: 250px; }
 
 .custom-picture-grid-3 .custom-picture-img {
     width: 100%;
