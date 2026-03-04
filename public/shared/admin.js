@@ -2951,6 +2951,7 @@ async function updateSectionColumns(sectionId, columns) {
             method: 'PUT',
             body: { metadata: { columns } }
         });
+        toast(t('toast.section_updated'));
         // Reload section data from server, refresh items view and main page
         await loadCustomSectionsData();
         manageCustomSectionItems(sectionId);
