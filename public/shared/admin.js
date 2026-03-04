@@ -482,6 +482,9 @@ function renderCustomSection(section) {
         case 'free-text':
             contentHtml = renderFreeTextLayout(items);
             break;
+        case 'picture-grid':
+            contentHtml = renderPictureGridLayout(items);
+            break;
         default:
             contentHtml = renderGridLayout(items, 3);
     }
@@ -621,6 +624,21 @@ function renderFreeTextLayout(items) {
             <div class="custom-free-text ${visible ? '' : 'hidden-print'}">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
                 <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
+            </div>
+        `;
+    }).join('')}</div>`;
+}
+
+// Picture grid layout - display uploaded images in a 3-column grid
+function renderPictureGridLayout(items) {
+    if (items.length === 0) return `<p class="empty-section">${t('custom_item.no_pictures')}</p>`;
+
+    return `<div class="custom-picture-grid">${items.map(item => {
+        const visible = item.visible !== false;
+        return `
+            <div class="custom-picture-item ${visible ? '' : 'hidden-print'}">
+                ${item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="${escapeHtml(item.title || '')}" class="custom-picture-img">` : `<div class="custom-picture-placeholder">${t('custom_item.no_image')}</div>`}
+                ${item.title ? `<div class="custom-picture-caption">${escapeHtml(item.title)}</div>` : ''}
             </div>
         `;
     }).join('')}</div>`;
@@ -3036,14 +3054,15 @@ async function manageCustomSectionItems(sectionId) {
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Add Item
+            ${section.layout_type === 'picture-grid' ? t('custom_item.add_picture') : t('custom_item.add_item')}
         </button>
         <div class="custom-items-list" data-section-id="${sectionId}">
             ${items.length === 0 ? '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>' : items.map(item => `
                 <div class="custom-item-row" data-id="${item.id}" draggable="true">
                     <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
+                    ${section.layout_type === 'picture-grid' && item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="custom-item-thumb">` : ''}
                     <div class="custom-item-info">
-                        <div class="custom-item-title">${escapeHtml(item.title || 'Untitled')}</div>
+                        <div class="custom-item-title">${escapeHtml(item.title || (section.layout_type === 'picture-grid' ? t('custom_item.picture') : 'Untitled'))}</div>
                         ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                     </div>
                     <div class="custom-item-actions">
@@ -3149,6 +3168,28 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <div class="form-hint">${t('custom_item.text_content_hint')}</div>
             </div>
         `;
+    } else if (section.layout_type === 'picture-grid') {
+        // Picture grid form - picture upload with optional caption
+        formHtml = `
+            <div class="form-group">
+                <label class="form-label">${t('custom_item.picture')}</label>
+                <div class="picture-grid-preview" id="ci-picture-preview">
+                    ${item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="picture-grid-preview-img">` : `<div class="picture-grid-placeholder">${t('custom_item.no_image')}</div>`}
+                </div>
+                <input type="file" id="ci-picture-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewPictureGridImage(this)">
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-picture-file').click()">
+                        ${t('custom_item.choose_picture')}
+                    </button>
+                    ${item.image ? `<button type="button" class="btn btn-ghost btn-sm" onclick="removePictureGridImage()" id="ci-remove-picture-btn">${t('custom_item.remove_picture')}</button>` : ''}
+                </div>
+                <div class="form-hint">${t('custom_item.picture_hint')}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('custom_item.caption_optional')}</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}" placeholder="${t('custom_item.caption_placeholder')}">
+            </div>
+        `;
     } else {
         // Generic form for other layouts
         const hideTitle = item.metadata?.hideTitle || false;
@@ -3213,9 +3254,54 @@ function updateSocialPlatformFields() {
     titleInput.placeholder = placeholders[platform] || 'Display Name';
 }
 
+// Picture grid helpers
+let pendingPictureGridFile = null;
+let pictureGridRemoved = false;
+
+function previewPictureGridImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) { toast(t('toast.file_too_large'), 'error'); return; }
+    pendingPictureGridFile = file;
+    pictureGridRemoved = false;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const preview = document.getElementById('ci-picture-preview');
+        if (preview) preview.innerHTML = `<img src="${e.target.result}" alt="" class="picture-grid-preview-img">`;
+        // Show remove button
+        let removeBtn = document.getElementById('ci-remove-picture-btn');
+        if (!removeBtn) {
+            const btnContainer = input.previousElementSibling?.nextElementSibling || input.nextElementSibling;
+            if (btnContainer) {
+                removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-ghost btn-sm';
+                removeBtn.id = 'ci-remove-picture-btn';
+                removeBtn.onclick = removePictureGridImage;
+                removeBtn.textContent = t('custom_item.remove_picture');
+                btnContainer.appendChild(removeBtn);
+            }
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removePictureGridImage() {
+    pendingPictureGridFile = null;
+    pictureGridRemoved = true;
+    const preview = document.getElementById('ci-picture-preview');
+    if (preview) preview.innerHTML = `<div class="picture-grid-placeholder">${t('custom_item.no_image')}</div>`;
+    const fileInput = document.getElementById('ci-picture-file');
+    if (fileInput) fileInput.value = '';
+    const removeBtn = document.getElementById('ci-remove-picture-btn');
+    if (removeBtn) removeBtn.remove();
+}
+
 function closeCustomItemModal() {
     document.getElementById('customItemModalOverlay').classList.remove('active');
     currentCustomItem.itemId = null;
+    pendingPictureGridFile = null;
+    pictureGridRemoved = false;
 }
 
 async function saveCustomItem() {
@@ -3237,33 +3323,58 @@ async function saveCustomItem() {
         metadata = { hideTitle };
     }
     
-    // Validation - title not required for bullet-list, free-text, or when hideTitle is checked
-    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && !metadata.hideTitle && !title) {
+    // Validation - title not required for bullet-list, free-text, picture-grid, or when hideTitle is checked
+    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && section.layout_type !== 'picture-grid' && !metadata.hideTitle && !title) {
         toast(t('toast.enter_title'), 'error');
         return;
     }
-    
+
     // Bullet list and free text require description
     if ((section.layout_type === 'bullet-list' || section.layout_type === 'free-text') && !description) {
         toast(section.layout_type === 'free-text' ? t('toast.enter_text') : t('toast.enter_bullet'), 'error');
         return;
     }
-    
+
+    // Picture grid requires either an existing image, a pending file, or it's an edit with an image
+    if (section.layout_type === 'picture-grid' && !currentCustomItem.itemId && !pendingPictureGridFile) {
+        toast(t('toast.select_picture'), 'error');
+        return;
+    }
+
     try {
-        if (currentCustomItem.itemId) {
-            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${currentCustomItem.itemId}`, { 
-                method: 'PUT', 
-                body: { title, subtitle, description, link, metadata } 
+        let itemId = currentCustomItem.itemId;
+        if (itemId) {
+            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
+                method: 'PUT',
+                body: { title, subtitle, description, link, metadata }
             });
             toast(t('toast.item_updated'));
         } else {
-            await api(`/api/custom-sections/${currentCustomItem.sectionId}/items`, {
+            const result = await api(`/api/custom-sections/${currentCustomItem.sectionId}/items`, {
                 method: 'POST',
                 body: { title, subtitle, description, link, metadata }
             });
+            itemId = result.id;
             toast(t('toast.item_added'));
         }
-        
+
+        // Handle picture upload for picture-grid
+        if (section.layout_type === 'picture-grid' && itemId) {
+            if (pictureGridRemoved) {
+                // Clear the image field (file already deleted by server on next upload or we handle it)
+                await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
+                    method: 'PUT',
+                    body: { title, subtitle, description, link, image: '', metadata }
+                });
+            }
+            if (pendingPictureGridFile) {
+                const formData = new FormData();
+                formData.append('picture', pendingPictureGridFile);
+                const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
+                if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
+            }
+        }
+
         closeCustomItemModal();
         await loadCustomSectionsData();
         manageCustomSectionItems(currentCustomItem.sectionId);

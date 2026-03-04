@@ -275,7 +275,8 @@ const SVG_ICONS = {
     dribbble: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>',
     behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>',
     bullets: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l11 0M9 12l11 0M9 18l11 0"/><path d="M5 6l0 .01M5 12l0 .01M5 18l0 .01" stroke-linecap="round"/></svg>',
-    freetext: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>'
+    freetext: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+    pictureGrid: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M7 7L5 9M18 7l-2 2M7 18l-2 2"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>'
 };
 
 // Layout types as array for frontend iteration
@@ -286,7 +287,8 @@ const LAYOUT_TYPES = [
     { id: 'list', name: 'Vertical List', icon: SVG_ICONS.list },
     { id: 'cards', name: 'Card Grid', icon: SVG_ICONS.cards },
     { id: 'bullet-list', name: 'Bullet Points', icon: SVG_ICONS.bullets },
-    { id: 'free-text', name: 'Free Text', icon: SVG_ICONS.freetext }
+    { id: 'free-text', name: 'Free Text', icon: SVG_ICONS.freetext },
+    { id: 'picture-grid', name: 'Picture Grid', icon: SVG_ICONS.pictureGrid }
 ];
 
 // Social platform definitions as array for frontend iteration
@@ -1412,6 +1414,14 @@ if (PUBLIC_ONLY) {
         if (section) {
             db.prepare('DELETE FROM section_visibility WHERE section_name = ?').run(section.section_key);
         }
+        // Clean up picture files for all items in this section
+        const items = db.prepare('SELECT image FROM custom_section_items WHERE section_id = ? AND image IS NOT NULL').all(req.params.id);
+        items.forEach(item => {
+            if (item.image) {
+                const imgPath = path.join(uploadsPath, item.image);
+                try { if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath); } catch (e) {}
+            }
+        });
         db.prepare('DELETE FROM custom_section_items WHERE section_id = ?').run(req.params.id);
         db.prepare('DELETE FROM custom_sections WHERE id = ?').run(req.params.id);
         res.json({ success: true });
@@ -1443,8 +1453,28 @@ if (PUBLIC_ONLY) {
     });
 
     app.delete('/api/custom-sections/:id/items/:itemId', (req, res) => {
+        const item = db.prepare('SELECT image FROM custom_section_items WHERE id = ? AND section_id = ?').get(req.params.itemId, req.params.id);
+        if (item && item.image) {
+            const imgPath = path.join(uploadsPath, item.image);
+            try { if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath); } catch (e) {}
+        }
         db.prepare('DELETE FROM custom_section_items WHERE id = ? AND section_id = ?').run(req.params.itemId, req.params.id);
         res.json({ success: true });
+    });
+
+    // Custom section item picture upload
+    const csItemPicStorage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => { const ext = path.extname(file.originalname).toLowerCase() || '.jpg'; cb(null, `cs_${req.params.id}_${req.params.itemId}_${Date.now()}${ext}`); } });
+    const csItemPicUpload = multer({ storage: csItemPicStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
+    app.post('/api/custom-sections/:id/items/:itemId/picture', csItemPicUpload.single('picture'), (req, res) => {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        // Delete old picture if exists
+        const item = db.prepare('SELECT image FROM custom_section_items WHERE id = ? AND section_id = ?').get(req.params.itemId, req.params.id);
+        if (item && item.image) {
+            const oldPath = path.join(uploadsPath, item.image);
+            try { if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath); } catch (e) {}
+        }
+        db.prepare('UPDATE custom_section_items SET image = ? WHERE id = ? AND section_id = ?').run(req.file.filename, req.params.itemId, req.params.id);
+        res.json({ success: true, filename: req.file.filename });
     });
 
     // Layout types and social platforms metadata

@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.14.0] - 2026-03-04
+
+### Added
+- Picture Grid layout type for custom sections — upload images displayed in a responsive 3-column grid, centered when fewer than 3 pictures are present
+- Full CRUD for picture grid items with file upload, optional captions, and automatic file cleanup on deletion
+
 ## [1.13.0] - 2026-03-03
 
 ### Added
