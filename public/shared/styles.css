@@ -895,10 +895,13 @@ body {
 /* Picture Grid Layout */
 .custom-picture-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     justify-items: center;
 }
+
+.custom-picture-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.custom-picture-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.custom-picture-grid-1 { grid-template-columns: 1fr; }
 
 .custom-picture-item {
     width: 100%;
@@ -907,10 +910,13 @@ body {
 
 .custom-picture-img {
     width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
     border-radius: 8px;
     display: block;
+}
+
+.custom-picture-grid-3 .custom-picture-img {
+    aspect-ratio: 1;
+    object-fit: cover;
 }
 
 .custom-picture-caption {
@@ -922,7 +928,7 @@ body {
 
 .custom-picture-placeholder {
     width: 100%;
-    aspect-ratio: 1;
+    min-height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -933,12 +939,16 @@ body {
     font-size: 13px;
 }
 
+.custom-picture-grid-3 .custom-picture-placeholder { aspect-ratio: 1; min-height: unset; }
+
 .custom-picture-empty-cell {
     width: 100%;
-    aspect-ratio: 1;
+    min-height: 120px;
     border: 1px dashed var(--gray-200);
     border-radius: 8px;
 }
+
+.custom-picture-grid-3 .custom-picture-empty-cell { aspect-ratio: 1; min-height: unset; }
 
 /* Picture grid modal preview */
 .picture-grid-preview {

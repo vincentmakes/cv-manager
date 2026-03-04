@@ -220,6 +220,7 @@
     "custom_section.icon_briefcase": "Mallette",
     "custom_section.items_suffix": "- Éléments",
     "custom_section.items_count": "{{count}} éléments",
+    "custom_section.grid_columns": "Colonnes de grille",
 
     "custom_item.edit_title": "Modifier l'élément",
     "custom_item.add_title": "Ajouter un élément",

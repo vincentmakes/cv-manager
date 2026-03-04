@@ -1297,7 +1297,7 @@ function renderCustomSectionPublic(section, layoutTypes, socialPlatforms) {
             contentHtml = renderFreeTextPublic(items);
             break;
         case 'picture-grid':
-            contentHtml = renderPictureGridPublic(items);
+            contentHtml = renderPictureGridPublic(items, section.metadata?.columns || 3);
             break;
         default:
             contentHtml = renderGridPublic(items, 3);
@@ -1455,13 +1455,13 @@ function renderFreeTextPublic(items) {
 }
 
 // Picture grid layout for public view
-function renderPictureGridPublic(items) {
+function renderPictureGridPublic(items, columns = 3) {
     if (items.length === 0) return '';
 
     const visibleItems = items.filter(item => item.visible !== false && item.image);
     if (visibleItems.length === 0) return '';
 
-    return `<div class="custom-picture-grid">${visibleItems.map(item => `
+    return `<div class="custom-picture-grid custom-picture-grid-${columns}">${visibleItems.map(item => `
         <div class="custom-picture-item">
             <img src="/uploads/${escapeHtml(item.image)}" alt="${escapeHtml(item.title || '')}" class="custom-picture-img">
             ${item.title ? `<div class="custom-picture-caption">${escapeHtml(item.title)}</div>` : ''}

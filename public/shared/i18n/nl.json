@@ -10,7 +10,6 @@
     "toolbar.print": "Afdrukken / PDF",
     "toolbar.menu": "Menu",
     "toolbar.change_theme": "Themakleur wijzigen",
-
     "theme.title": "Themakleur",
     "theme.brightness": "Helderheid",
     "theme.reset": "Herstellen",
@@ -23,7 +22,6 @@
     "theme.cyan": "Cyaan",
     "theme.indigo": "Indigo",
     "theme.pink": "Roze",
-
     "banner.update": "Update beschikbaar: v{{latest}} (je gebruikt v{{current}})",
     "banner.whats_new": "Wat is nieuw",
     "banner.dismiss": "Sluiten",
@@ -32,7 +30,6 @@
     "banner.saving": "Opslaan…",
     "banner.saved": "✓ Opgeslagen",
     "banner.save_failed": "Opslaan mislukt",
-
     "section.about": "Professionele samenvatting",
     "section.timeline": "Carrièretijdlijn",
     "section.experience": "Werkervaring",
@@ -40,7 +37,6 @@
     "section.education": "Opleiding",
     "section.skills": "Vaardigheden & Expertise",
     "section.projects": "Uitgelichte projecten",
-
     "action.edit_profile": "Profiel bewerken",
     "action.edit_about": "Over mij bewerken",
     "action.toggle_visibility": "Zichtbaarheid wijzigen",
@@ -49,7 +45,6 @@
     "action.add_education": "Opleiding toevoegen",
     "action.add_skill": "Vaardigheidscategorie toevoegen",
     "action.add_project": "Project toevoegen",
-
     "btn.save": "Opslaan",
     "btn.cancel": "Annuleren",
     "btn.delete": "Verwijderen",
@@ -58,7 +53,6 @@
     "btn.done": "Gereed",
     "btn.add_item": "Item toevoegen",
     "btn.delete_section": "Sectie verwijderen",
-
     "modal.edit": "Bewerken",
     "modal.edit_experience": "Ervaring bewerken",
     "modal.add_experience": "Ervaring toevoegen",
@@ -70,7 +64,6 @@
     "modal.add_skill": "Vaardigheidscategorie toevoegen",
     "modal.edit_project": "Project bewerken",
     "modal.add_project": "Project toevoegen",
-
     "form.profile_picture": "Profielfoto",
     "form.show_profile_picture": "Profielfoto tonen",
     "form.choose_image": "Afbeelding kiezen",
@@ -120,7 +113,6 @@
     "form.project_title": "Projecttitel",
     "form.technologies": "Technologieën (kommagescheiden)",
     "form.link_optional": "Link (optioneel)",
-
     "icon.code": "Code / Programmeren",
     "icon.server": "Server / Infrastructuur",
     "icon.database": "Database / Data",
@@ -131,21 +123,18 @@
     "icon.cpu": "AI / Machine Learning",
     "icon.layers": "Architectuur / Ontwerp",
     "icon.default": "Standaard",
-
     "settings.title": "Instellingen",
     "settings.tab.sections": "Secties & Koppen",
     "settings.tab.custom": "Aangepaste secties",
     "settings.tab.print": "Afdrukken & Exporteren",
     "settings.tab.advanced": "Geavanceerd",
     "settings.version.update_available": "Update beschikbaar: v{{version}}",
-
     "settings.sections.info": "Sleep secties om ze te herschikken, of gebruik de pijlknoppen. Schakel zichtbaarheid in of uit met het oogicoon. Klik op sectienamen om koppen te bewerken.",
     "settings.sections.click_to_edit": "Klik om sectiekop te bewerken",
     "settings.sections.reset_default": "Standaard herstellen",
     "settings.custom.info": "Maak aangepaste secties met verschillende indelingen. Aangepaste secties verschijnen in de sectievolgordelijst hierboven.",
     "settings.custom.add": "Aangepaste sectie toevoegen",
     "settings.custom.no_sections": "Nog geen aangepaste secties.\nKlik op \"Aangepaste sectie toevoegen\" om er een te maken.",
-
     "settings.print.public_button": "Openbare afdrukknop",
     "settings.print.public_button_desc": "Afdrukknop tonen op openbare site",
     "settings.print.page_numbers": "Paginanummers",
@@ -162,7 +151,6 @@
     "settings.print.section_splits_desc": "Laat secties over pagina's doorlopen (items blijven intact)",
     "settings.print.item_splits": "Itemsplitsing toestaan",
     "settings.print.item_splits_desc": "Laat ook items over pagina's doorlopen voor maximale compactheid",
-
     "settings.advanced.info": "Geavanceerde instellingen voor opmaak, SEO, analytics en aangepaste integraties.",
     "settings.advanced.date_format": "Datumnotatie",
     "settings.advanced.date_format_desc": "Kies hoe datums worden weergegeven op je CV",
@@ -186,9 +174,7 @@
     "settings.advanced.tracking_code": "Trackingcode",
     "settings.advanced.tracking_code_desc": "Plak hier je analytics-trackingcode (Google Analytics, Matomo, enz.). Deze code wordt ingevoegd in de openbare CV-pagina's.",
     "settings.advanced.tracking_code_hint": "Code wordt ingevoegd vóór de afsluitende </head>-tag. Wijzigingen worden opgeslagen wanneer je op \"Wijzigingen opslaan\" klikt.",
-
     "settings.language.info": "Kies de weergavetaal voor de CV Manager-interface. Dit heeft geen invloed op de inhoud van je CV.",
-
     "datasets.title": "Opgeslagen datasets",
     "datasets.legend.radio": "selecteer welke dataset bezoekers zien op je hoofd-URL",
     "datasets.legend.toggle": "deel andere datasets via hun eigen /v/slug-URL",
@@ -203,7 +189,6 @@
     "datasets.load": "Laden",
     "datasets.enter_name": "Voer een naam in voor deze dataset:",
     "datasets.cannot_delete_default": "Kan de standaarddataset niet verwijderen",
-
     "custom_section.edit_title": "Aangepaste sectie bewerken",
     "custom_section.add_title": "Aangepaste sectie toevoegen",
     "custom_section.section_name": "Sectienaam",
@@ -220,7 +205,7 @@
     "custom_section.icon_briefcase": "Aktetas",
     "custom_section.items_suffix": "- Items",
     "custom_section.items_count": "{{count}} items",
-
+    "custom_section.grid_columns": "Rasterkolommen",
     "custom_item.edit_title": "Item bewerken",
     "custom_item.add_title": "Item toevoegen",
     "custom_item.platform": "Platform",
@@ -253,7 +238,6 @@
     "custom_item.caption_placeholder": "bijv. Fotobeschrijving",
     "custom_item.add_picture": "Afbeelding toevoegen",
     "custom_item.add_item": "Item toevoegen",
-
     "toast.saved": "Succesvol opgeslagen",
     "toast.deleted": "Verwijderd",
     "toast.visibility_updated": "Zichtbaarheid bijgewerkt",
@@ -310,17 +294,14 @@
     "toast.item_deleted": "Item verwijderd",
     "toast.item_delete_failed": "Verwijderen van item mislukt",
     "toast.failed_save": "Opslaan mislukt",
-
     "confirm.delete_item": "Weet je zeker dat je dit item wilt verwijderen?",
     "confirm.delete_dataset": "Dataset \"{{name}}\" verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "confirm.delete_section": "Deze aangepaste sectie en alle items verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "confirm.delete_custom_item": "Dit item verwijderen?",
     "confirm.delete_logo": "Dit ongebruikte logo verwijderen? Dit kan niet ongedaan worden gemaakt.",
-
     "present": "Heden",
     "loading": "Laden...",
     "items": "items",
-
     "view_link": "Bekijken →",
     "learn_more": "Meer informatie →",
     "view_project": "Project bekijken"

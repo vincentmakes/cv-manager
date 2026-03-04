@@ -220,6 +220,7 @@
     "custom_section.icon_briefcase": "Aktentasche",
     "custom_section.items_suffix": "- Einträge",
     "custom_section.items_count": "{{count}} Einträge",
+    "custom_section.grid_columns": "Rasterspalten",
 
     "custom_item.edit_title": "Eintrag bearbeiten",
     "custom_item.add_title": "Eintrag hinzufügen",

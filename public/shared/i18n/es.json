@@ -10,7 +10,6 @@
     "toolbar.print": "Imprimir / PDF",
     "toolbar.menu": "Menú",
     "toolbar.change_theme": "Cambiar color del tema",
-
     "theme.title": "Color del tema",
     "theme.brightness": "Brillo",
     "theme.reset": "Restablecer",
@@ -23,7 +22,6 @@
     "theme.cyan": "Cian",
     "theme.indigo": "Índigo",
     "theme.pink": "Rosa",
-
     "banner.update": "Actualización disponible: v{{latest}} (estás en v{{current}})",
     "banner.whats_new": "Novedades",
     "banner.dismiss": "Descartar",
@@ -32,7 +30,6 @@
     "banner.saving": "Guardando…",
     "banner.saved": "✓ Guardado",
     "banner.save_failed": "Error al guardar",
-
     "section.about": "Resumen profesional",
     "section.timeline": "Trayectoria profesional",
     "section.experience": "Experiencia laboral",
@@ -40,7 +37,6 @@
     "section.education": "Educación",
     "section.skills": "Habilidades y competencias",
     "section.projects": "Proyectos destacados",
-
     "action.edit_profile": "Editar perfil",
     "action.edit_about": "Editar acerca de",
     "action.toggle_visibility": "Alternar visibilidad",
@@ -49,7 +45,6 @@
     "action.add_education": "Añadir educación",
     "action.add_skill": "Añadir categoría de habilidad",
     "action.add_project": "Añadir proyecto",
-
     "btn.save": "Guardar",
     "btn.cancel": "Cancelar",
     "btn.delete": "Eliminar",
@@ -58,7 +53,6 @@
     "btn.done": "Hecho",
     "btn.add_item": "Añadir elemento",
     "btn.delete_section": "Eliminar sección",
-
     "modal.edit": "Editar",
     "modal.edit_experience": "Editar experiencia",
     "modal.add_experience": "Añadir experiencia",
@@ -70,7 +64,6 @@
     "modal.add_skill": "Añadir categoría de habilidad",
     "modal.edit_project": "Editar proyecto",
     "modal.add_project": "Añadir proyecto",
-
     "form.profile_picture": "Foto de perfil",
     "form.show_profile_picture": "Mostrar foto de perfil",
     "form.choose_image": "Elegir imagen",
@@ -120,7 +113,6 @@
     "form.project_title": "Título del proyecto",
     "form.technologies": "Tecnologías (separadas por comas)",
     "form.link_optional": "Enlace (opcional)",
-
     "icon.code": "Código / Programación",
     "icon.server": "Servidor / Infraestructura",
     "icon.database": "Base de datos / Datos",
@@ -131,21 +123,18 @@
     "icon.cpu": "IA / Aprendizaje automático",
     "icon.layers": "Arquitectura / Diseño",
     "icon.default": "Predeterminado",
-
     "settings.title": "Configuración",
     "settings.tab.sections": "Secciones y encabezados",
     "settings.tab.custom": "Secciones personalizadas",
     "settings.tab.print": "Impresión y exportación",
     "settings.tab.advanced": "Avanzado",
     "settings.version.update_available": "Actualización disponible: v{{version}}",
-
     "settings.sections.info": "Arrastra las secciones para reordenarlas o usa los botones de flecha. Alterna la visibilidad con el icono de ojo. Haz clic en los nombres de sección para editar los encabezados.",
     "settings.sections.click_to_edit": "Haz clic para editar el encabezado de la sección",
     "settings.sections.reset_default": "Restablecer a predeterminado",
     "settings.custom.info": "Crea secciones personalizadas con diferentes diseños. Las secciones personalizadas aparecen en la lista de orden de secciones de arriba.",
     "settings.custom.add": "Añadir sección personalizada",
     "settings.custom.no_sections": "Aún no hay secciones personalizadas.\nHaz clic en \"Añadir sección personalizada\" para crear una.",
-
     "settings.print.public_button": "Botón público de impresión",
     "settings.print.public_button_desc": "Mostrar botón de impresión en el sitio público",
     "settings.print.page_numbers": "Números de página",
@@ -162,7 +151,6 @@
     "settings.print.section_splits_desc": "Permitir que las secciones se dividan entre páginas (los elementos se mantienen intactos)",
     "settings.print.item_splits": "Permitir división de elementos",
     "settings.print.item_splits_desc": "Permitir también que los elementos se dividan entre páginas para máxima compacidad",
-
     "settings.advanced.info": "Configuración avanzada para formato, SEO, analíticas e integraciones personalizadas.",
     "settings.advanced.date_format": "Formato de fecha",
     "settings.advanced.date_format_desc": "Elige cómo se muestran las fechas en tu CV",
@@ -186,9 +174,7 @@
     "settings.advanced.tracking_code": "Código de seguimiento",
     "settings.advanced.tracking_code_desc": "Pega aquí tu código de seguimiento de analíticas (Google Analytics, Matomo, etc.). Este código se inyectará en las páginas públicas del CV.",
     "settings.advanced.tracking_code_hint": "El código se inserta antes de la etiqueta de cierre </head>. Los cambios se guardan al hacer clic en \"Guardar cambios\".",
-
     "settings.language.info": "Elige el idioma de visualización de la interfaz del gestor de CV. Esto no afecta el contenido de tu CV.",
-
     "datasets.title": "Conjuntos de datos guardados",
     "datasets.legend.radio": "selecciona qué conjunto de datos ven los visitantes en tu URL raíz",
     "datasets.legend.toggle": "comparte otros conjuntos de datos en su propia URL /v/slug",
@@ -203,7 +189,6 @@
     "datasets.load": "Cargar",
     "datasets.enter_name": "Introduce un nombre para este conjunto de datos:",
     "datasets.cannot_delete_default": "No se puede eliminar el conjunto de datos predeterminado",
-
     "custom_section.edit_title": "Editar sección personalizada",
     "custom_section.add_title": "Añadir sección personalizada",
     "custom_section.section_name": "Nombre de sección",
@@ -220,7 +205,7 @@
     "custom_section.icon_briefcase": "Maletín",
     "custom_section.items_suffix": "- Elementos",
     "custom_section.items_count": "{{count}} elementos",
-
+    "custom_section.grid_columns": "Columnas de cuadrícula",
     "custom_item.edit_title": "Editar elemento",
     "custom_item.add_title": "Añadir elemento",
     "custom_item.platform": "Plataforma",
@@ -253,7 +238,6 @@
     "custom_item.caption_placeholder": "ej. Descripción de la foto",
     "custom_item.add_picture": "Añadir imagen",
     "custom_item.add_item": "Añadir elemento",
-
     "toast.saved": "Guardado correctamente",
     "toast.deleted": "Eliminado",
     "toast.visibility_updated": "Visibilidad actualizada",
@@ -310,17 +294,14 @@
     "toast.item_deleted": "Elemento eliminado",
     "toast.item_delete_failed": "Error al eliminar el elemento",
     "toast.failed_save": "Error al guardar",
-
     "confirm.delete_item": "¿Estás seguro de que deseas eliminar este elemento?",
     "confirm.delete_dataset": "¿Eliminar el conjunto de datos \"{{name}}\"? Esta acción no se puede deshacer.",
     "confirm.delete_section": "¿Eliminar esta sección personalizada y todos sus elementos? Esta acción no se puede deshacer.",
     "confirm.delete_custom_item": "¿Eliminar este elemento?",
     "confirm.delete_logo": "¿Eliminar este logo no utilizado? Esta acción no se puede deshacer.",
-
     "present": "Actualidad",
     "loading": "Cargando...",
     "items": "elementos",
-
     "view_link": "Ver →",
     "learn_more": "Más información →",
     "view_project": "Ver proyecto"

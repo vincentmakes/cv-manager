@@ -1191,6 +1191,36 @@
     color: var(--gray-700);
 }
 
+.columns-selector {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.columns-btn {
+    width: 40px;
+    height: 36px;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-600);
+    transition: all 0.15s ease;
+}
+
+.columns-btn:hover {
+    border-color: var(--primary-light);
+    background: var(--very-light);
+}
+
+.columns-btn.selected {
+    border-color: var(--primary);
+    background: var(--light);
+    color: var(--primary);
+}
+
 /* Custom Items List */
 .custom-items-list {
     max-height: 300px;
