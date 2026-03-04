@@ -905,6 +905,7 @@ body {
 
 .custom-picture-item {
     text-align: center;
+    max-width: 100%;
 }
 
 .custom-picture-img {
@@ -912,6 +913,10 @@ body {
     height: auto;
     border-radius: 8px;
     display: block;
+}
+
+.custom-picture-grid-3 .custom-picture-item {
+    justify-self: stretch;
 }
 
 .custom-picture-grid-3 .custom-picture-img {
