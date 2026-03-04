@@ -2955,6 +2955,7 @@ async function updateSectionColumns(sectionId, columns) {
         await loadCustomSectionsData();
         manageCustomSectionItems(sectionId);
         await loadCustomSections();
+        autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.save_failed'), 'error');
     }
