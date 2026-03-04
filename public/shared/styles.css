@@ -909,12 +909,13 @@ body {
 }
 
 .custom-picture-img {
-    width: 100%;
+    max-width: 100%;
     border-radius: 8px;
     display: block;
 }
 
 .custom-picture-grid-3 .custom-picture-img {
+    width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
 }
