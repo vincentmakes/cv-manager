@@ -631,9 +631,9 @@ function renderFreeTextLayout(items) {
 
 // Picture grid layout - display uploaded images in a 3-column grid
 function renderPictureGridLayout(items) {
-    if (items.length === 0) return `<p class="empty-section">${t('custom_item.no_pictures')}</p>`;
+    if (items.length === 0) return `<div class="custom-picture-grid"><div class="custom-picture-empty-cell no-print"></div><div class="custom-picture-empty-cell no-print"></div><div class="custom-picture-empty-cell no-print"></div></div>`;
 
-    return `<div class="custom-picture-grid">${items.map(item => {
+    const itemsHtml = items.map(item => {
         const visible = item.visible !== false;
         return `
             <div class="custom-picture-item ${visible ? '' : 'hidden-print'}">
@@ -641,7 +641,13 @@ function renderPictureGridLayout(items) {
                 ${item.title ? `<div class="custom-picture-caption">${escapeHtml(item.title)}</div>` : ''}
             </div>
         `;
-    }).join('')}</div>`;
+    }).join('');
+
+    // Pad with empty cells to fill the row of 3
+    const remainder = items.length % 3;
+    const emptyCells = remainder === 0 ? '' : Array(3 - remainder).fill('<div class="custom-picture-empty-cell no-print"></div>').join('');
+
+    return `<div class="custom-picture-grid">${itemsHtml}${emptyCells}</div>`;
 }
 
 // Load Sections with visibility toggle (admin version)

@@ -933,6 +933,13 @@ body {
     font-size: 13px;
 }
 
+.custom-picture-empty-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px dashed var(--gray-200);
+    border-radius: 8px;
+}
+
 /* Picture grid modal preview */
 .picture-grid-preview {
     width: 200px;
