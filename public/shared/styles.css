@@ -900,11 +900,14 @@ body {
 }
 
 .custom-picture-grid-3 { grid-template-columns: repeat(3, 1fr); }
-.custom-picture-grid-2 { grid-template-columns: repeat(2, auto); justify-content: center; }
-.custom-picture-grid-1 { grid-template-columns: auto; justify-content: center; }
+.custom-picture-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.custom-picture-grid-1 { grid-template-columns: 1fr; }
 
 .custom-picture-item {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .custom-picture-img {
@@ -914,9 +917,8 @@ body {
     display: block;
 }
 
-.custom-picture-grid-3 .custom-picture-item {
-    width: 100%;
-}
+.custom-picture-grid-1 .custom-picture-img { max-width: 200px; }
+.custom-picture-grid-2 .custom-picture-img { max-width: 250px; }
 
 .custom-picture-grid-3 .custom-picture-img {
     width: 100%;
