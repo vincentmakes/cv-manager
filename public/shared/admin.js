@@ -483,7 +483,7 @@ function renderCustomSection(section) {
             contentHtml = renderFreeTextLayout(items);
             break;
         case 'picture-grid':
-            contentHtml = renderPictureGridLayout(items);
+            contentHtml = renderPictureGridLayout(items, section.metadata?.columns || 3);
             break;
         default:
             contentHtml = renderGridLayout(items, 3);
@@ -629,11 +629,11 @@ function renderFreeTextLayout(items) {
     }).join('')}</div>`;
 }
 
-// Picture grid layout - display uploaded images in a 3-column grid
-function renderPictureGridLayout(items) {
-    if (items.length === 0) return `<p class="empty-section">${t('custom_item.no_pictures')}</p>`;
+// Picture grid layout - display uploaded images in a configurable grid
+function renderPictureGridLayout(items, columns = 3) {
+    if (items.length === 0) return `<div class="custom-picture-grid custom-picture-grid-${columns}">${Array(columns).fill('<div class="custom-picture-empty-cell no-print"></div>').join('')}</div>`;
 
-    return `<div class="custom-picture-grid">${items.map(item => {
+    const itemsHtml = items.map(item => {
         const visible = item.visible !== false;
         return `
             <div class="custom-picture-item ${visible ? '' : 'hidden-print'}">
@@ -641,7 +641,13 @@ function renderPictureGridLayout(items) {
                 ${item.title ? `<div class="custom-picture-caption">${escapeHtml(item.title)}</div>` : ''}
             </div>
         `;
-    }).join('')}</div>`;
+    }).join('');
+
+    // Pad with empty cells to fill the row
+    const remainder = items.length % columns;
+    const emptyCells = remainder === 0 ? '' : Array(columns - remainder).fill('<div class="custom-picture-empty-cell no-print"></div>').join('');
+
+    return `<div class="custom-picture-grid custom-picture-grid-${columns}">${itemsHtml}${emptyCells}</div>`;
 }
 
 // Load Sections with visibility toggle (admin version)
@@ -2899,6 +2905,13 @@ async function openCustomSectionModal(id = null) {
             </div>
             <input type="hidden" id="cs-layout" value="${section.layout_type || 'grid-3'}">
         </div>
+        <div class="form-group" id="cs-columns-group" style="display: ${(section.layout_type === 'picture-grid') ? '' : 'none'}">
+            <label class="form-label">${t('custom_section.grid_columns')}</label>
+            <div class="columns-selector">
+                ${[1,2,3].map(n => `<button type="button" class="columns-btn ${(section.metadata?.columns || 3) === n ? 'selected' : ''}" onclick="selectPictureGridColumns(${n})">${n}</button>`).join('')}
+            </div>
+            <input type="hidden" id="cs-columns" value="${section.metadata?.columns || 3}">
+        </div>
         <div class="form-group">
             <label class="form-label">${t('custom_section.section_icon')}</label>
             <select class="form-select" id="cs-icon">
@@ -2922,6 +2935,31 @@ function selectLayoutType(layoutId) {
         opt.classList.toggle('selected', opt.dataset.layout === layoutId);
     });
     document.getElementById('cs-layout').value = layoutId;
+    const colGroup = document.getElementById('cs-columns-group');
+    if (colGroup) colGroup.style.display = layoutId === 'picture-grid' ? '' : 'none';
+}
+
+function selectPictureGridColumns(n) {
+    document.querySelectorAll('.columns-btn').forEach(btn => btn.classList.remove('selected'));
+    document.querySelector(`.columns-btn:nth-child(${n})`).classList.add('selected');
+    document.getElementById('cs-columns').value = n;
+}
+
+async function updateSectionColumns(sectionId, columns) {
+    try {
+        await api(`/api/custom-sections/${sectionId}`, {
+            method: 'PUT',
+            body: { metadata: { columns } }
+        });
+        toast(t('toast.section_updated'));
+        // Reload section data from server, refresh items view and main page
+        await loadCustomSectionsData();
+        manageCustomSectionItems(sectionId);
+        await loadCustomSections();
+        autoSaveActiveDataset();
+    } catch (err) {
+        toast(t('toast.save_failed'), 'error');
+    }
 }
 
 async function closeCustomSectionModal() {
@@ -2964,23 +3002,30 @@ async function saveCustomSection() {
     const name = nameEl.value.trim();
     const layout_type = layoutEl.value;
     const icon = iconEl.value;
-    
+
+    // Build section metadata
+    let metadata = {};
+    if (layout_type === 'picture-grid') {
+        const columns = parseInt(document.getElementById('cs-columns')?.value) || 3;
+        metadata = { columns };
+    }
+
     if (!name) {
         toast(t('toast.enter_section_name'), 'error');
         return;
     }
-    
+
     try {
         if (currentCustomSection.id) {
-            await api(`/api/custom-sections/${currentCustomSection.id}`, { 
-                method: 'PUT', 
-                body: { name, layout_type, icon } 
+            await api(`/api/custom-sections/${currentCustomSection.id}`, {
+                method: 'PUT',
+                body: { name, layout_type, icon, metadata }
             });
             toast(t('toast.section_updated'));
         } else {
             await api('/api/custom-sections', {
                 method: 'POST',
-                body: { name, layout_type, icon }
+                body: { name, layout_type, icon, metadata }
             });
             toast(t('toast.section_created'));
         }
@@ -3048,9 +3093,18 @@ async function manageCustomSectionItems(sectionId) {
         cancelBtn.setAttribute('onclick', 'closeCustomSectionModal()');
     }
     
+    const currentColumns = section.metadata?.columns || 3;
     document.getElementById('customSectionModalBody').innerHTML = `
-        <div class="settings-info" style="margin-bottom: 12px;">
-            Layout: <strong>${escapeHtml(layoutType.name)}</strong> | ${items.length} items
+        <div class="settings-info" style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span>Layout: <strong>${escapeHtml(layoutType.name)}</strong> | ${items.length} items</span>
+            ${section.layout_type === 'picture-grid' ? `
+                <span style="display: flex; align-items: center; gap: 6px;">
+                    ${t('custom_section.grid_columns')}:
+                    <span class="columns-selector" style="margin-top: 0;">
+                        ${[1,2,3].map(n => `<button type="button" class="columns-btn ${currentColumns === n ? 'selected' : ''}" onclick="updateSectionColumns(${sectionId}, ${n})">${n}</button>`).join('')}
+                    </span>
+                </span>
+            ` : ''}
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -3343,10 +3397,18 @@ async function saveCustomItem() {
 
     try {
         let itemId = currentCustomItem.itemId;
+
+        // For picture-grid edits, preserve existing image unless being changed
+        let image;
+        if (section.layout_type === 'picture-grid' && itemId) {
+            const existingItem = section.items.find(i => i.id === itemId);
+            image = pictureGridRemoved ? '' : (existingItem?.image || '');
+        }
+
         if (itemId) {
             await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
                 method: 'PUT',
-                body: { title, subtitle, description, link, metadata }
+                body: { title, subtitle, description, link, image, metadata }
             });
             toast(t('toast.item_updated'));
         } else {
@@ -3359,20 +3421,11 @@ async function saveCustomItem() {
         }
 
         // Handle picture upload for picture-grid
-        if (section.layout_type === 'picture-grid' && itemId) {
-            if (pictureGridRemoved) {
-                // Clear the image field (file already deleted by server on next upload or we handle it)
-                await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
-                    method: 'PUT',
-                    body: { title, subtitle, description, link, image: '', metadata }
-                });
-            }
-            if (pendingPictureGridFile) {
-                const formData = new FormData();
-                formData.append('picture', pendingPictureGridFile);
-                const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
-                if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
-            }
+        if (section.layout_type === 'picture-grid' && itemId && pendingPictureGridFile) {
+            const formData = new FormData();
+            formData.append('picture', pendingPictureGridFile);
+            const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
+            if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
         }
 
         closeCustomItemModal();

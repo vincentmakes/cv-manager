@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.14.1] - 2026-03-04
+
+### Fixed
+- Picture grid column setting lost on dataset save/load — metadata was not included in gatherCvData or the dataset restore INSERT
+- Picture grid images no longer stretch beyond their natural size in 1 and 2-column modes (use auto-sized grid columns instead of 1fr)
+
 ## [1.14.0] - 2026-03-04
 
 ### Added

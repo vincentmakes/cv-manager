@@ -10,7 +10,6 @@
     "toolbar.print": "Stampa / PDF",
     "toolbar.menu": "Menu",
     "toolbar.change_theme": "Cambia colore del tema",
-
     "theme.title": "Colore del tema",
     "theme.brightness": "Luminosità",
     "theme.reset": "Ripristina",
@@ -23,7 +22,6 @@
     "theme.cyan": "Ciano",
     "theme.indigo": "Indaco",
     "theme.pink": "Rosa",
-
     "banner.update": "Aggiornamento disponibile: v{{latest}} (versione attuale v{{current}})",
     "banner.whats_new": "Novità",
     "banner.dismiss": "Ignora",
@@ -32,7 +30,6 @@
     "banner.saving": "Salvataggio…",
     "banner.saved": "✓ Salvato",
     "banner.save_failed": "Salvataggio fallito",
-
     "section.about": "Profilo professionale",
     "section.timeline": "Cronologia della carriera",
     "section.experience": "Esperienza lavorativa",
@@ -40,7 +37,6 @@
     "section.education": "Formazione",
     "section.skills": "Competenze e specializzazioni",
     "section.projects": "Progetti in evidenza",
-
     "action.edit_profile": "Modifica profilo",
     "action.edit_about": "Modifica informazioni",
     "action.toggle_visibility": "Cambia visibilità",
@@ -49,7 +45,6 @@
     "action.add_education": "Aggiungi formazione",
     "action.add_skill": "Aggiungi categoria competenze",
     "action.add_project": "Aggiungi progetto",
-
     "btn.save": "Salva",
     "btn.cancel": "Annulla",
     "btn.delete": "Elimina",
@@ -58,7 +53,6 @@
     "btn.done": "Fatto",
     "btn.add_item": "Aggiungi elemento",
     "btn.delete_section": "Elimina sezione",
-
     "modal.edit": "Modifica",
     "modal.edit_experience": "Modifica esperienza",
     "modal.add_experience": "Aggiungi esperienza",
@@ -70,7 +64,6 @@
     "modal.add_skill": "Aggiungi categoria competenze",
     "modal.edit_project": "Modifica progetto",
     "modal.add_project": "Aggiungi progetto",
-
     "form.profile_picture": "Foto profilo",
     "form.show_profile_picture": "Mostra foto profilo",
     "form.choose_image": "Scegli immagine",
@@ -120,7 +113,6 @@
     "form.project_title": "Titolo progetto",
     "form.technologies": "Tecnologie (separate da virgola)",
     "form.link_optional": "Link (opzionale)",
-
     "icon.code": "Codice / Programmazione",
     "icon.server": "Server / Infrastruttura",
     "icon.database": "Database / Dati",
@@ -131,21 +123,18 @@
     "icon.cpu": "IA / Machine Learning",
     "icon.layers": "Architettura / Design",
     "icon.default": "Predefinito",
-
     "settings.title": "Impostazioni",
     "settings.tab.sections": "Sezioni e titoli",
     "settings.tab.custom": "Sezioni personalizzate",
     "settings.tab.print": "Stampa ed esportazione",
     "settings.tab.advanced": "Avanzate",
     "settings.version.update_available": "Aggiornamento disponibile: v{{version}}",
-
     "settings.sections.info": "Trascina le sezioni per riordinarle o usa i pulsanti freccia. Attiva o disattiva la visibilità con l'icona dell'occhio. Clicca sui nomi delle sezioni per modificare i titoli.",
     "settings.sections.click_to_edit": "Clicca per modificare il titolo della sezione",
     "settings.sections.reset_default": "Ripristina predefinito",
     "settings.custom.info": "Crea sezioni personalizzate con layout diversi. Le sezioni personalizzate appaiono nell'elenco di ordinamento delle sezioni sopra.",
     "settings.custom.add": "Aggiungi sezione personalizzata",
     "settings.custom.no_sections": "Nessuna sezione personalizzata.\nClicca \"Aggiungi sezione personalizzata\" per crearne una.",
-
     "settings.print.public_button": "Pulsante stampa pubblico",
     "settings.print.public_button_desc": "Mostra il pulsante stampa sul sito pubblico",
     "settings.print.page_numbers": "Numeri di pagina",
@@ -162,7 +151,6 @@
     "settings.print.section_splits_desc": "Permetti alle sezioni di continuare su più pagine (gli elementi restano intatti)",
     "settings.print.item_splits": "Consenti divisione elementi",
     "settings.print.item_splits_desc": "Permetti anche agli elementi di continuare su più pagine per la massima compattezza",
-
     "settings.advanced.info": "Impostazioni avanzate per formattazione, SEO, analisi e integrazioni personalizzate.",
     "settings.advanced.date_format": "Formato data",
     "settings.advanced.date_format_desc": "Scegli come vengono visualizzate le date nel tuo CV",
@@ -186,9 +174,7 @@
     "settings.advanced.tracking_code": "Codice di tracciamento",
     "settings.advanced.tracking_code_desc": "Incolla qui il tuo codice di tracciamento analitico (Google Analytics, Matomo, ecc.). Questo codice verrà inserito nelle pagine CV pubbliche.",
     "settings.advanced.tracking_code_hint": "Il codice viene inserito prima del tag di chiusura </head>. Le modifiche vengono salvate quando clicchi \"Salva modifiche\".",
-
     "settings.language.info": "Scegli la lingua di visualizzazione per l'interfaccia del CV Manager. Questo non influisce sul contenuto del tuo CV.",
-
     "datasets.title": "Dataset salvati",
     "datasets.legend.radio": "seleziona quale dataset vedranno i visitatori all'URL principale",
     "datasets.legend.toggle": "condividi altri dataset al loro URL /v/slug",
@@ -203,7 +189,6 @@
     "datasets.load": "Carica",
     "datasets.enter_name": "Inserisci un nome per questo dataset:",
     "datasets.cannot_delete_default": "Impossibile eliminare il dataset predefinito",
-
     "custom_section.edit_title": "Modifica sezione personalizzata",
     "custom_section.add_title": "Aggiungi sezione personalizzata",
     "custom_section.section_name": "Nome sezione",
@@ -220,7 +205,7 @@
     "custom_section.icon_briefcase": "Valigetta",
     "custom_section.items_suffix": "- Elementi",
     "custom_section.items_count": "{{count}} elementi",
-
+    "custom_section.grid_columns": "Colonne della griglia",
     "custom_item.edit_title": "Modifica elemento",
     "custom_item.add_title": "Aggiungi elemento",
     "custom_item.platform": "Piattaforma",
@@ -253,7 +238,6 @@
     "custom_item.caption_placeholder": "es. Descrizione della foto",
     "custom_item.add_picture": "Aggiungi immagine",
     "custom_item.add_item": "Aggiungi elemento",
-
     "toast.saved": "Salvato con successo",
     "toast.deleted": "Eliminato",
     "toast.visibility_updated": "Visibilità aggiornata",
@@ -310,17 +294,14 @@
     "toast.item_deleted": "Elemento eliminato",
     "toast.item_delete_failed": "Eliminazione elemento fallita",
     "toast.failed_save": "Salvataggio fallito",
-
     "confirm.delete_item": "Sei sicuro di voler eliminare questo elemento?",
     "confirm.delete_dataset": "Eliminare il dataset \"{{name}}\"? Questa azione non può essere annullata.",
     "confirm.delete_section": "Eliminare questa sezione personalizzata e tutti i suoi elementi? Questa azione non può essere annullata.",
     "confirm.delete_custom_item": "Eliminare questo elemento?",
     "confirm.delete_logo": "Eliminare questo logo inutilizzato? Questa azione non può essere annullata.",
-
     "present": "Presente",
     "loading": "Caricamento...",
     "items": "elementi",
-
     "view_link": "Vedi →",
     "learn_more": "Scopri di più →",
     "view_project": "Vedi progetto"

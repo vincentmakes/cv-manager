@@ -220,6 +220,7 @@
     "custom_section.icon_briefcase": "Briefcase",
     "custom_section.items_suffix": "- Items",
     "custom_section.items_count": "{{count}} items",
+    "custom_section.grid_columns": "Grid Columns",
 
     "custom_item.edit_title": "Edit Item",
     "custom_item.add_title": "Add Item",
