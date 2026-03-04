@@ -2945,6 +2945,26 @@ function selectPictureGridColumns(n) {
     document.getElementById('cs-columns').value = n;
 }
 
+async function updateSectionColumns(sectionId, columns) {
+    try {
+        await api(`/api/custom-sections/${sectionId}`, {
+            method: 'PUT',
+            body: { metadata: { columns } }
+        });
+        // Update local state
+        const section = customSections.find(s => s.id === sectionId);
+        if (section) {
+            section.metadata = { ...section.metadata, columns };
+        }
+        // Refresh the items view to update the button states
+        manageCustomSectionItems(sectionId);
+        // Refresh main page rendering
+        await loadAllSections();
+    } catch (err) {
+        toast(t('toast.save_failed'), 'error');
+    }
+}
+
 async function closeCustomSectionModal() {
     document.getElementById('customSectionModalOverlay').classList.remove('active');
     
@@ -3076,9 +3096,18 @@ async function manageCustomSectionItems(sectionId) {
         cancelBtn.setAttribute('onclick', 'closeCustomSectionModal()');
     }
     
+    const currentColumns = section.metadata?.columns || 3;
     document.getElementById('customSectionModalBody').innerHTML = `
-        <div class="settings-info" style="margin-bottom: 12px;">
-            Layout: <strong>${escapeHtml(layoutType.name)}</strong> | ${items.length} items
+        <div class="settings-info" style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span>Layout: <strong>${escapeHtml(layoutType.name)}</strong> | ${items.length} items</span>
+            ${section.layout_type === 'picture-grid' ? `
+                <span style="display: flex; align-items: center; gap: 6px;">
+                    ${t('custom_section.grid_columns')}:
+                    <span class="columns-selector" style="margin-top: 0;">
+                        ${[1,2,3].map(n => `<button type="button" class="columns-btn ${currentColumns === n ? 'selected' : ''}" onclick="updateSectionColumns(${sectionId}, ${n})">${n}</button>`).join('')}
+                    </span>
+                </span>
+            ` : ''}
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
