@@ -2951,15 +2951,10 @@ async function updateSectionColumns(sectionId, columns) {
             method: 'PUT',
             body: { metadata: { columns } }
         });
-        // Update local state
-        const section = customSections.find(s => s.id === sectionId);
-        if (section) {
-            section.metadata = { ...section.metadata, columns };
-        }
-        // Refresh the items view to update the button states
+        // Reload section data from server, refresh items view and main page
+        await loadCustomSectionsData();
         manageCustomSectionItems(sectionId);
-        // Refresh main page rendering
-        await loadAllSections();
+        await loadCustomSections();
     } catch (err) {
         toast(t('toast.save_failed'), 'error');
     }
