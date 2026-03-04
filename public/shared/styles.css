@@ -892,6 +892,80 @@ body {
     margin: 0;
 }
 
+/* Picture Grid Layout */
+.custom-picture-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    justify-items: center;
+}
+
+.custom-picture-item {
+    width: 100%;
+    text-align: center;
+}
+
+.custom-picture-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}
+
+.custom-picture-caption {
+    font-size: 13px;
+    color: var(--gray-600);
+    margin-top: 6px;
+    text-align: center;
+}
+
+.custom-picture-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--very-light);
+    border: 2px dashed var(--gray-300);
+    border-radius: 8px;
+    color: var(--gray-400);
+    font-size: 13px;
+}
+
+/* Picture grid modal preview */
+.picture-grid-preview {
+    width: 200px;
+    height: 200px;
+    border: 2px dashed var(--gray-300);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--very-light);
+}
+
+.picture-grid-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.picture-grid-placeholder {
+    color: var(--gray-400);
+    font-size: 13px;
+}
+
+/* Thumbnail in item list */
+.custom-item-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
 /* Public Print Button */
 .public-print-btn {
     position: fixed;
@@ -1215,7 +1289,10 @@ body.has-preview-banner .container {
     .custom-bullet-list li { font-size: 11px; margin-bottom: 2px; }
     .custom-item-link, .custom-card-link { font-size: 10px; }
     .custom-grid-item, .custom-list-item, .custom-card, .custom-bullet-group { padding: 10px; }
-    
+    .custom-picture-grid { gap: 10px; }
+    .custom-picture-img { border-radius: 4px; }
+    .custom-picture-caption { font-size: 10px; }
+
     .hidden-print { display: none !important; }
 }
 
@@ -1230,6 +1307,7 @@ body.has-preview-banner .container {
     .section { padding: 18px; }
     #section-timeline { display: none; }
     .cert-grid, .skills-grid, .projects-grid { grid-template-columns: 1fr; }
+    .custom-picture-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
 /* Mobile print - show timeline again (only if not hidden by user choice) */

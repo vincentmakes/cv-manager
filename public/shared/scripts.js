@@ -1296,6 +1296,9 @@ function renderCustomSectionPublic(section, layoutTypes, socialPlatforms) {
         case 'free-text':
             contentHtml = renderFreeTextPublic(items);
             break;
+        case 'picture-grid':
+            contentHtml = renderPictureGridPublic(items);
+            break;
         default:
             contentHtml = renderGridPublic(items, 3);
     }
@@ -1449,4 +1452,19 @@ function renderFreeTextPublic(items) {
             </div>
         `;
     }).join('')}</div>`;
+}
+
+// Picture grid layout for public view
+function renderPictureGridPublic(items) {
+    if (items.length === 0) return '';
+
+    const visibleItems = items.filter(item => item.visible !== false && item.image);
+    if (visibleItems.length === 0) return '';
+
+    return `<div class="custom-picture-grid">${visibleItems.map(item => `
+        <div class="custom-picture-item">
+            <img src="/uploads/${escapeHtml(item.image)}" alt="${escapeHtml(item.title || '')}" class="custom-picture-img">
+            ${item.title ? `<div class="custom-picture-caption">${escapeHtml(item.title)}</div>` : ''}
+        </div>
+    `).join('')}</div>`;
 }
