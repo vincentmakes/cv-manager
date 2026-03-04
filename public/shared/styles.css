@@ -914,12 +914,9 @@ body {
     display: block;
 }
 
-.custom-picture-grid-1 .custom-picture-item {
-    max-width: 300px;
-}
-
+.custom-picture-grid-1 .custom-picture-item,
 .custom-picture-grid-2 .custom-picture-item {
-    max-width: 100%;
+    width: fit-content;
 }
 
 .custom-picture-grid-3 .custom-picture-item {

@@ -7,7 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 ## [1.14.1] - 2026-03-04
 
 ### Fixed
-- Picture grid images no longer stretch to full container width in 1-column mode; capped at 300px for a natural size
+- Picture grid images no longer stretch beyond their natural size in 1 and 2-column modes
 
 ## [1.14.0] - 2026-03-04
 
