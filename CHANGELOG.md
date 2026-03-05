@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.14.2] - 2026-03-05
+
+### Fixed
+- Security: Update multer from 2.1.0 to 2.1.1 to fix high-severity DoS vulnerability via uncontrolled recursion (CVE-2026-3520)
+
 ## [1.14.1] - 2026-03-04
 
 ### Fixed
