@@ -1626,7 +1626,7 @@ function renderTimelineLayoutPublic(items) {
             location: meta.location,
             logo: item.image,
             highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
-            showLogo: !!item.image,
+            showLogo: showExperienceLogos && !!item.image,
             showDuration: showExperienceDuration
         });
     }).join('');

@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.4] - 2026-03-05
+
+### Fixed
+- Additional Experiences logos now respect the "Experience: Show Logos" setting — disabling it hides logos in all experience-style sections
+
+### Changed
+- Updated Additional Experiences layout icon to Material Design WorkHistory style (briefcase with clock overlay)
+
 ## [1.17.3] - 2026-03-05
 
 ### Changed
