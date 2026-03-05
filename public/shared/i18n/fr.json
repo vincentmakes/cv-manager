@@ -183,6 +183,12 @@
     "settings.advanced.seo_hint_nofollow": "Les moteurs de recherche ne suivront pas les liens sortants",
     "settings.advanced.index_versioned": "Indexer les URL versionnées",
     "settings.advanced.index_versioned_desc": "Permettre aux moteurs de recherche d'indexer les CV versionnés publics (/v/slug). Lorsque désactivé, les pages versionnées obtiennent un noindex.",
+    "settings.advanced.experience_logos": "Expérience : Afficher les logos",
+    "settings.advanced.experience_logos_desc": "Afficher les logos d'entreprise à côté des expériences professionnelles",
+    "settings.advanced.timeline_logos": "Chronologie : Afficher les logos",
+    "settings.advanced.timeline_logos_desc": "Afficher les logos d'entreprise dans les cartes de la chronologie",
+    "settings.advanced.experience_duration": "Expérience : Afficher la durée",
+    "settings.advanced.experience_duration_desc": "Afficher la durée du poste (ex. 2 ans 3 mois) à côté des dates",
     "settings.advanced.tracking_code": "Code de suivi",
     "settings.advanced.tracking_code_desc": "Collez votre code de suivi analytique ici (Google Analytics, Matomo, etc.). Ce code sera injecté dans les pages CV publiques.",
     "settings.advanced.tracking_code_hint": "Le code est inséré avant la balise fermante </head>. Les modifications sont enregistrées lorsque vous cliquez sur « Enregistrer les modifications ».",
@@ -317,6 +323,10 @@
     "confirm.delete_section": "Supprimer cette section personnalisée et tous ses éléments ? Cette action est irréversible.",
     "confirm.delete_custom_item": "Supprimer cet élément ?",
     "confirm.delete_logo": "Supprimer ce logo inutilisé ? Cette action est irréversible.",
+
+    "duration.years": "{{count}} an",
+    "duration.months": "{{count}} mois",
+    "duration.years_months": "{{years}} ans {{months}} mois",
 
     "present": "En poste",
     "loading": "Chargement...",

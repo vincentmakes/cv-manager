@@ -399,6 +399,24 @@ body {
     color: var(--gray-700);
 }
 
+/* Experience Logo — consistent indent when logos enabled */
+.item-card.has-logo {
+    position: relative;
+    padding-left: 76px; /* 16px card padding + 48px logo + 12px gap */
+}
+
+.experience-logo {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
 .item-date {
     font-size: 12px;
     color: var(--gray-500);
@@ -406,6 +424,14 @@ body {
     padding: 3px 10px;
     border-radius: var(--radius-sm);
     white-space: nowrap;
+}
+
+.item-duration {
+    display: block;
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 400;
+    margin-top: 2px;
 }
 
 .item-location {
@@ -1258,6 +1284,8 @@ body.has-preview-banner .container {
         break-inside: auto;
     }
     .item-card { padding: 10px; margin-bottom: 6px; border-radius: 0; }
+    .item-card.has-logo { padding-left: 46px; }
+    .experience-logo { width: 28px; height: 28px; left: 10px; top: 10px; overflow: visible; }
     .items-list { gap: 6px; }
     .item-title { font-size: 13px; }
     .item-subtitle { font-size: 12px; }
@@ -1332,6 +1360,8 @@ body.has-preview-banner .container {
     #section-timeline { display: none; }
     .cert-grid, .skills-grid, .projects-grid { grid-template-columns: 1fr; }
     .custom-picture-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .experience-logo { display: none; }
+    .item-card.has-logo { padding-left: 16px; }
 }
 
 /* Mobile print - show timeline again (only if not hidden by user choice) */

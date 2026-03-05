@@ -77,6 +77,9 @@ function escapeHtml(text) {
 let dateFormatSetting = 'MMM YYYY'; // default: "Jan 2020"
 let timelineYearOnly = true; // default: show years only in timeline
 let timelineBranching = true; // default: show branching for overlapping items
+let showExperienceLogos = false; // default: don't show logos in experience cards
+let showTimelineLogos = true; // default: show logos in timeline cards
+let showExperienceDuration = false; // default: don't show duration in experience cards
 
 const DATE_FORMAT_OPTIONS = [
     { value: 'MMM YYYY', label: 'Jan 2020', example: 'Jan 2020' },
@@ -271,6 +274,67 @@ async function loadDateFormatSetting(allSettings) {
     } catch (err) {
         // Use default (true)
     }
+    try {
+        if (allSettings && allSettings.showExperienceLogos !== undefined) {
+            showExperienceLogos = allSettings.showExperienceLogos === 'true';
+        } else {
+            const result = await api('/api/settings/showExperienceLogos');
+            showExperienceLogos = result.value === 'true';
+        }
+    } catch (err) {
+        // Use default (false)
+    }
+    try {
+        if (allSettings && allSettings.showTimelineLogos !== undefined) {
+            showTimelineLogos = allSettings.showTimelineLogos !== 'false';
+        } else {
+            const result = await api('/api/settings/showTimelineLogos');
+            showTimelineLogos = result.value !== 'false';
+        }
+    } catch (err) {
+        // Use default (true)
+    }
+    try {
+        if (allSettings && allSettings.showExperienceDuration !== undefined) {
+            showExperienceDuration = allSettings.showExperienceDuration === 'true';
+        } else {
+            const result = await api('/api/settings/showExperienceDuration');
+            showExperienceDuration = result.value === 'true';
+        }
+    } catch (err) {
+        // Use default (false)
+    }
+}
+
+// Calculate duration between two dates, returns "X yrs Y mos" format
+function calculateDuration(startDate, endDate) {
+    if (!startDate) return '';
+    const parseDate = (d) => {
+        if (!d) return new Date();
+        if (/^\d{4}-\d{2}$/.test(d)) {
+            const [y, m] = d.split('-').map(Number);
+            return new Date(y, m - 1);
+        }
+        if (/^\d{4}$/.test(d)) return new Date(parseInt(d), 0);
+        const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const match = d.match(/^([A-Za-z]+)\s+(\d{4})$/);
+        if (match) {
+            const mi = months.indexOf(match[1].toLowerCase().substring(0, 3));
+            return new Date(parseInt(match[2]), mi >= 0 ? mi : 0);
+        }
+        return new Date();
+    };
+    const start = parseDate(startDate);
+    const end = parseDate(endDate);
+    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    if (months < 0) months = 0;
+    // Add 1 month to include the current/end month (LinkedIn convention)
+    months += 1;
+    const yrs = Math.floor(months / 12);
+    const mos = months % 12;
+    if (yrs === 0) return t('duration.months', { count: mos });
+    if (mos === 0) return t('duration.years', { count: yrs });
+    return t('duration.years_months', { years: yrs, months: mos });
 }
 
 // Format timeline period - uses year only if setting enabled, otherwise global date format
@@ -598,7 +662,7 @@ function renderTimelineItems(items, options) {
         const { leftPct, widthPct } = positions[idx];
         const itemLeft = leftPct - widthPct / 2;
 
-        const companyLine = item.logo
+        const companyLine = (showTimelineLogos && item.logo)
             ? `<img src="/uploads/${encodeURIComponent(item.logo)}" class="timeline-card-logo" alt="${escapeHtml(item.company)}" onerror="this.outerHTML='<div class=\\'timeline-company\\'>${escapeHtml(item.company)}</div>'">`
             : `<div class="timeline-company">${escapeHtml(item.company)}</div>`;
 
