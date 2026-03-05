@@ -4,6 +4,49 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.20.4] - 2026-03-05
+
+### Fixed
+- Fix timeline card click-to-scroll on public page by including experience `id` in the public API response
+
+## [1.20.3] - 2026-03-05
+
+### Fixed
+- Fix timeline card click-to-scroll not working on saved dataset previews and public versioned URLs
+
+## [1.20.2] - 2026-03-05
+
+### Changed
+- Redesign icon picker as a full-screen overlay popup instead of an inline dropdown to eliminate double scrollbars and cramped layout
+- Migrate icon library from Google Material Icons to Google Material Symbols Outlined
+- Use `view_column_2` icon for 2-column grid custom section layout
+
+## [1.20.1] - 2026-03-05
+
+### Changed
+- Redesign skill category icon picker as a popup dropdown with trigger button instead of embedded grid
+- Use `splitscreen` icon for 2-column grid custom section layout (replaces invalid `view_column_2`)
+
+## [1.20.0] - 2026-03-05
+
+### Added
+- Visual icon picker grid for skill categories with 30 Material Icons to choose from
+- 20 new skill category icons: Security, Web, Mobile, Terminal, API, Analytics, Science, Build, Design, Education, Protection, Performance, Communication, Testing, Health, Music, Photography, Sports, Sustainability, Finance
+- Auto-detection mappings for new icon categories based on skill category names
+
+### Fixed
+- Toolbar Language and Help buttons not showing icons (btn-icon-only hiding Material Icons spans)
+- Custom section 2-column grid using wrong icon (view_column → view_column_2)
+- Material Icons being too small in buttons, add-buttons, and modal close buttons
+- Mobile toolbar menu not showing text labels alongside icons
+
+## [1.19.0] - 2026-03-05
+
+### Changed
+- Migrate all UI icons from inline SVGs to Google Material Icons font
+- Add `materialIcon()` helper function for consistent icon rendering in JavaScript
+- Update CLAUDE.md with icon library guidelines and usage patterns
+
 ## [1.18.0] - 2026-03-05
 
 ### Added

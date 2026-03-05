@@ -1,24 +1,49 @@
 /* CV Manager - Shared JavaScript */
 
-// SVG Icons for contact badges
+// Material Icon helper function
+function materialIcon(name, size = 16) {
+    return `<span class="material-symbols-outlined" style="font-size:${size}px">${name}</span>`;
+}
+
+// Icons for contact badges and skill categories
 const icons = {
-    email: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-    phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
-    location: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    email: materialIcon('email', 14),
+    phone: materialIcon('phone', 14),
+    location: materialIcon('location_on', 14),
     linkedin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
-    languages: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-    link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>',
-    // Skill category icons (flat style)
-    code: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-    server: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
-    database: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
-    cloud: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
-    settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    briefcase: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
-    cpu: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
-    layers: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
-    default: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    languages: materialIcon('language', 14),
+    link: materialIcon('open_in_new', 14),
+    // Skill category icons
+    code: materialIcon('code', 16),
+    server: materialIcon('dns', 16),
+    database: materialIcon('storage', 16),
+    cloud: materialIcon('cloud', 16),
+    settings: materialIcon('settings', 16),
+    users: materialIcon('group', 16),
+    briefcase: materialIcon('work', 16),
+    cpu: materialIcon('memory', 16),
+    layers: materialIcon('layers', 16),
+    security: materialIcon('security', 16),
+    web: materialIcon('language', 16),
+    mobile: materialIcon('phone_iphone', 16),
+    terminal: materialIcon('terminal', 16),
+    api: materialIcon('api', 16),
+    analytics: materialIcon('analytics', 16),
+    science: materialIcon('science', 16),
+    build: materialIcon('build', 16),
+    palette: materialIcon('palette', 16),
+    school: materialIcon('school', 16),
+    shield: materialIcon('shield', 16),
+    rocket: materialIcon('rocket_launch', 16),
+    chat: materialIcon('chat', 16),
+    bug: materialIcon('bug_report', 16),
+    heart: materialIcon('favorite', 16),
+    music: materialIcon('music_note', 16),
+    photo: materialIcon('photo_camera', 16),
+    sports: materialIcon('sports_soccer', 16),
+    eco: materialIcon('eco', 16),
+    finance: materialIcon('account_balance', 16),
+    default: materialIcon('info', 16)
 };
 
 // Get skill icon based on category name or icon hint
@@ -33,7 +58,17 @@ function getSkillIcon(iconHint, categoryName) {
         'leadership': 'users', 'management': 'users', 'soft skills': 'users', 'team': 'users',
         'business': 'briefcase', 'enterprise': 'briefcase', 'strategy': 'briefcase',
         'architecture': 'layers', 'design': 'layers',
-        'ai': 'cpu', 'machine learning': 'cpu', 'artificial intelligence': 'cpu'
+        'ai': 'cpu', 'machine learning': 'cpu', 'artificial intelligence': 'cpu',
+        'security': 'security', 'compliance': 'security', 'cyber': 'security',
+        'web': 'web', 'frontend': 'web', 'html': 'web', 'css': 'web',
+        'mobile': 'mobile', 'ios': 'mobile', 'android': 'mobile',
+        'testing': 'bug', 'qa': 'bug', 'quality': 'bug',
+        'analytics': 'analytics', 'metrics': 'analytics', 'reporting': 'analytics',
+        'ci/cd': 'build', 'pipeline': 'build', 'automation': 'build',
+        'api': 'api', 'integration': 'api', 'microservices': 'api',
+        'ui': 'palette', 'ux': 'palette', 'graphic': 'palette',
+        'education': 'school', 'training': 'school', 'teaching': 'school',
+        'finance': 'finance', 'banking': 'finance', 'accounting': 'finance'
     };
     
     // Check if iconHint matches an icon name directly (new format)
@@ -556,7 +591,7 @@ async function loadTimeline() {
 
 // Shared timeline rendering used by both admin and public views.
 // Items must have: { company, role, countryCode, logo, visible, id, start_date, end_date }
-// Options: interactive (adds click handlers for admin)
+// Options: interactive (adds click handlers to scroll to experience cards)
 function renderTimelineItems(items, options) {
     const interactive = options && options.interactive;
     const container = document.getElementById('timelineItems');
