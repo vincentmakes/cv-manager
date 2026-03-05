@@ -1048,6 +1048,16 @@ function profileForm(d) {
             <label class="form-label">${t('form.linkedin_url')}</label>
             <input type="text" class="form-input" id="f-linkedin" value="${escapeHtml(d.linkedin || '')}">
         </div>
+        <div class="form-group">
+            <label class="form-label">${t('form.open_to_work')}</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-openToWork" ${d.open_to_work == 1 ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="form-hint" style="margin:0">${t('form.open_to_work_hint')}</span>
+            </div>
+        </div>
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">${t('form.email')}</label>
@@ -1319,7 +1329,8 @@ async function saveItem() {
                 email: val('f-email'),
                 phone: val('f-phone'),
                 visible: true,
-                profile_picture_enabled: checked('f-profilePictureEnabled')
+                profile_picture_enabled: checked('f-profilePictureEnabled'),
+                open_to_work: checked('f-openToWork')
             };
             await api('/api/profile', { method: 'PUT', body: data });
             await uploadProfilePicture();

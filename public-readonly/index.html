@@ -267,6 +267,7 @@
             pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
             
             const badges = [];
+            if (p.open_to_work == 1) badges.push(`<span class="contact-badge open-to-work-badge">${materialIcon('work', 14)} ${t('badge.open_to_work')}</span>`);
             if (p.location) badges.push(`<span class="contact-badge" itemprop="address">${icons.location} ${escapeHtml(p.location)}</span>`);
             if (p.linkedin) badges.push(`<a href="${escapeHtml(p.linkedin)}" class="contact-badge" target="_blank" rel="noopener" itemprop="url">${icons.linkedin} LinkedIn</a>`);
             if (p.languages) badges.push(`<span class="contact-badge">${icons.languages} ${escapeHtml(p.languages)}</span>`);

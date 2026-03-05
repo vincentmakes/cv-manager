@@ -32,6 +32,7 @@
     "banner.saving": "Speichern…",
     "banner.saved": "✓ Gespeichert",
     "banner.save_failed": "Speichern fehlgeschlagen",
+    "badge.open_to_work": "Offen für Arbeit",
 
     "section.about": "Berufliche Zusammenfassung",
     "section.timeline": "Karriereverlauf",
@@ -94,6 +95,8 @@
     "form.location": "Standort",
     "form.languages": "Sprachen",
     "form.linkedin_url": "LinkedIn-URL",
+    "form.open_to_work": "Offen für Arbeit",
+    "form.open_to_work_hint": "Zeigt ein Abzeichen auf Ihrem öffentlichen Lebenslauf",
     "form.email": "E-Mail",
     "form.phone": "Telefon",
     "form.job_title": "Berufsbezeichnung",

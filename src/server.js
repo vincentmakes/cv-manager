@@ -274,7 +274,7 @@ const SVG_ICONS = {
     edit: '<span class="material-symbols-outlined" style="font-size:16px">edit</span>',
     dribbble: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>',
     behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>',
-    bluesky: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-2.4 1.8-5 5.2-6 7.5-.6 1.4-.8 3 .2 4.2 1 1.2 2.8 1.3 4.2.8-.4 1.5-1.2 3-3.4 4.5h10c-2.2-1.5-3-3-3.4-4.5 1.4.5 3.2.4 4.2-.8 1-1.2.8-2.8.2-4.2-1-2.3-3.6-5.7-6-7.5z"/></svg>',
+    bluesky: '<svg width="16" height="16" viewBox="0 0 600 530" fill="currentColor"><path d="M135.72 44.03C202.216 93.951 273.74 195.401 300 249.98c26.262-54.578 97.784-156.03 164.28-205.95C512.26 8.009 590-19.862 590 68.825c0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.636-175.91-31.518-189.63-71.766-2.514-7.38-3.69-10.832-3.706-7.905-.016-2.927 1.192.525-3.706 7.905-13.72 40.248-67.24 197.402-189.63 71.765-64.444-66.128-34.605-132.256 82.697-152.22-67.106 11.42-142.547-7.45-163.25-81.432C20.155 217.613 10 86.536 10 68.824c0-88.687 77.74-60.816 125.72-24.795z"/></svg>',
     bullets: '<span class="material-symbols-outlined" style="font-size:20px">format_list_bulleted</span>',
     freetext: '<span class="material-symbols-outlined" style="font-size:20px">notes</span>',
     pictureGrid: '<span class="material-symbols-outlined" style="font-size:20px">photo_library</span>',
@@ -313,7 +313,7 @@ const SOCIAL_PLATFORMS = [
 if (!PUBLIC_ONLY) {
     // Step 1: Create tables (without sort_order in section_visibility for compatibility)
     db.exec(`
-        CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, profile_picture_enabled INTEGER DEFAULT 1, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, profile_picture_enabled INTEGER DEFAULT 1, open_to_work INTEGER DEFAULT 0, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
         CREATE TABLE IF NOT EXISTS experiences (id INTEGER PRIMARY KEY AUTOINCREMENT, job_title TEXT NOT NULL, company_name TEXT NOT NULL, start_date TEXT, end_date TEXT, location TEXT, country_code TEXT DEFAULT '', highlights TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS certifications (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, provider TEXT, issue_date TEXT, expiry_date TEXT, credential_id TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
@@ -448,6 +448,15 @@ if (!PUBLIC_ONLY) {
             db.exec('ALTER TABLE profile ADD COLUMN profile_picture_enabled INTEGER DEFAULT 1');
         }
     } catch (err) { console.log('Migration check (profile_picture_enabled):', err.message); }
+
+    // Step 2f2: Migration - add open_to_work column to profile if missing
+    try {
+        const profileOpenInfo = db.prepare("PRAGMA table_info(profile)").all();
+        if (!profileOpenInfo.some(col => col.name === 'open_to_work')) {
+            console.log('Migrating profile table: adding open_to_work');
+            db.exec('ALTER TABLE profile ADD COLUMN open_to_work INTEGER DEFAULT 0');
+        }
+    } catch (err) { console.log('Migration check (open_to_work):', err.message); }
 
     // Step 2g: Migration - add is_default column to saved_datasets if missing
     try {
@@ -866,7 +875,7 @@ if (PUBLIC_ONLY) {
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
 
-    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled FROM profile WHERE id = 1').get() || {}); });
+    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, open_to_work FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => {
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
@@ -920,7 +929,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
     publicApp.get('/api/cv', (req, res) => {
-        const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get();
+        const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get();
         const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all();
         const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
         const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
@@ -1740,7 +1749,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
-    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled FROM profile WHERE id = 1').get() || {}); });
+    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, open_to_work FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => {
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
@@ -1793,7 +1802,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
