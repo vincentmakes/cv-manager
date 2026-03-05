@@ -356,17 +356,71 @@
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-hint { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
 
-/* Icon Picker Grid */
-.icon-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    max-height: 240px;
-    overflow-y: auto;
-    padding: 8px;
+/* Icon Picker */
+.icon-picker-wrapper { position: relative; }
+
+.icon-picker-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
     border: 1px solid var(--gray-300);
     border-radius: var(--radius-sm);
-    background: var(--gray-50);
+    background: var(--white);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.15s ease;
+}
+
+.icon-picker-trigger:hover { border-color: var(--primary); }
+
+.icon-picker-trigger .material-icons:first-child {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.icon-picker-trigger-label {
+    flex: 1;
+    text-align: left;
+    color: var(--gray-700);
+}
+
+.icon-picker-arrow {
+    font-size: 18px !important;
+    color: var(--gray-400) !important;
+    transition: transform 0.15s ease;
+}
+
+.icon-picker-dropdown.active ~ .icon-picker-trigger .icon-picker-arrow,
+.icon-picker-trigger:has(~ .icon-picker-dropdown.active) .icon-picker-arrow {
+    transform: rotate(180deg);
+}
+
+.icon-picker-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    z-index: 10;
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-300);
+    padding: 12px;
+}
+
+.icon-picker-dropdown.active { display: block; }
+
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    max-height: 320px;
+    overflow-y: auto;
 }
 
 .icon-picker-item {
@@ -396,7 +450,7 @@
 }
 
 .icon-picker-item .material-icons {
-    font-size: 22px;
+    font-size: 24px;
     color: var(--gray-700);
 }
 

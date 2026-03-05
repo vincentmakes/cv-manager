@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.20.1] - 2026-03-05
+
+### Changed
+- Redesign skill category icon picker as a popup dropdown with trigger button instead of embedded grid
+- Use `splitscreen` icon for 2-column grid custom section layout (replaces invalid `view_column_2`)
+
 ## [1.20.0] - 2026-03-05
 
 ### Added

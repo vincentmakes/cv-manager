@@ -1180,41 +1180,45 @@ function educationForm(d) {
     `;
 }
 
-function skillForm(d) {
-    const iconOptions = [
-        { value: 'code', label: t('icon.code'), icon: 'code' },
-        { value: 'server', label: t('icon.server'), icon: 'dns' },
-        { value: 'database', label: t('icon.database'), icon: 'storage' },
-        { value: 'cloud', label: t('icon.cloud'), icon: 'cloud' },
-        { value: 'settings', label: t('icon.settings'), icon: 'settings' },
-        { value: 'users', label: t('icon.users'), icon: 'group' },
-        { value: 'briefcase', label: t('icon.briefcase'), icon: 'work' },
-        { value: 'cpu', label: t('icon.cpu'), icon: 'memory' },
-        { value: 'layers', label: t('icon.layers'), icon: 'layers' },
-        { value: 'security', label: t('icon.security'), icon: 'security' },
-        { value: 'web', label: t('icon.web'), icon: 'language' },
-        { value: 'mobile', label: t('icon.mobile'), icon: 'phone_iphone' },
-        { value: 'terminal', label: t('icon.terminal'), icon: 'terminal' },
-        { value: 'api', label: t('icon.api'), icon: 'api' },
-        { value: 'analytics', label: t('icon.analytics'), icon: 'analytics' },
-        { value: 'science', label: t('icon.science'), icon: 'science' },
-        { value: 'build', label: t('icon.build'), icon: 'build' },
-        { value: 'palette', label: t('icon.palette'), icon: 'palette' },
-        { value: 'school', label: t('icon.school'), icon: 'school' },
-        { value: 'shield', label: t('icon.shield'), icon: 'shield' },
-        { value: 'rocket', label: t('icon.rocket'), icon: 'rocket_launch' },
-        { value: 'chat', label: t('icon.chat'), icon: 'chat' },
-        { value: 'bug', label: t('icon.bug'), icon: 'bug_report' },
-        { value: 'heart', label: t('icon.heart'), icon: 'favorite' },
-        { value: 'music', label: t('icon.music'), icon: 'music_note' },
-        { value: 'photo', label: t('icon.photo'), icon: 'photo_camera' },
-        { value: 'sports', label: t('icon.sports'), icon: 'sports_soccer' },
-        { value: 'eco', label: t('icon.eco'), icon: 'eco' },
-        { value: 'finance', label: t('icon.finance'), icon: 'account_balance' },
-        { value: 'default', label: t('icon.default'), icon: 'info' }
+function getIconOptions() {
+    return [
+        { value: 'code', icon: 'code' },
+        { value: 'server', icon: 'dns' },
+        { value: 'database', icon: 'storage' },
+        { value: 'cloud', icon: 'cloud' },
+        { value: 'settings', icon: 'settings' },
+        { value: 'users', icon: 'group' },
+        { value: 'briefcase', icon: 'work' },
+        { value: 'cpu', icon: 'memory' },
+        { value: 'layers', icon: 'layers' },
+        { value: 'security', icon: 'security' },
+        { value: 'web', icon: 'language' },
+        { value: 'mobile', icon: 'phone_iphone' },
+        { value: 'terminal', icon: 'terminal' },
+        { value: 'api', icon: 'api' },
+        { value: 'analytics', icon: 'analytics' },
+        { value: 'science', icon: 'science' },
+        { value: 'build', icon: 'build' },
+        { value: 'palette', icon: 'palette' },
+        { value: 'school', icon: 'school' },
+        { value: 'shield', icon: 'shield' },
+        { value: 'rocket', icon: 'rocket_launch' },
+        { value: 'chat', icon: 'chat' },
+        { value: 'bug', icon: 'bug_report' },
+        { value: 'heart', icon: 'favorite' },
+        { value: 'music', icon: 'music_note' },
+        { value: 'photo', icon: 'photo_camera' },
+        { value: 'sports', icon: 'sports_soccer' },
+        { value: 'eco', icon: 'eco' },
+        { value: 'finance', icon: 'account_balance' },
+        { value: 'default', icon: 'info' }
     ];
+}
 
-    const selectedIcon = d.icon || 'default';
+function skillForm(d) {
+    const iconOptions = getIconOptions();
+    const selectedValue = d.icon || 'default';
+    const selected = iconOptions.find(o => o.value === selectedValue) || iconOptions[iconOptions.length - 1];
 
     return `
         <div class="form-group">
@@ -1223,14 +1227,23 @@ function skillForm(d) {
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.icon')}</label>
-            <input type="hidden" id="f-icon" value="${escapeHtml(selectedIcon)}">
-            <div class="icon-picker-grid">
-                ${iconOptions.map(opt => `
-                    <button type="button" class="icon-picker-item${selectedIcon === opt.value ? ' active' : ''}" data-icon="${opt.value}" onclick="selectIcon(this)" title="${opt.label}">
-                        <span class="material-icons">${opt.icon}</span>
-                        <span class="icon-picker-label">${opt.label}</span>
-                    </button>
-                `).join('')}
+            <input type="hidden" id="f-icon" value="${escapeHtml(selectedValue)}">
+            <div class="icon-picker-wrapper">
+                <button type="button" class="icon-picker-trigger" id="iconPickerTrigger" onclick="toggleIconPicker()">
+                    <span class="material-icons" id="iconPickerSelected">${selected.icon}</span>
+                    <span class="icon-picker-trigger-label" id="iconPickerLabel">${t('icon.' + selected.value)}</span>
+                    <span class="material-icons icon-picker-arrow">expand_more</span>
+                </button>
+                <div class="icon-picker-dropdown" id="iconPickerDropdown">
+                    <div class="icon-picker-grid">
+                        ${iconOptions.map(opt => `
+                            <button type="button" class="icon-picker-item${selectedValue === opt.value ? ' active' : ''}" data-icon="${opt.value}" data-material="${opt.icon}" onclick="selectIcon(this)" title="${t('icon.' + opt.value)}">
+                                <span class="material-icons">${opt.icon}</span>
+                                <span class="icon-picker-label">${t('icon.' + opt.value)}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         </div>
         <div class="form-group">
@@ -1535,10 +1548,18 @@ async function reloadSection(endpoint) {
     }
 }
 
+function toggleIconPicker() {
+    const dropdown = document.getElementById('iconPickerDropdown');
+    if (dropdown) dropdown.classList.toggle('active');
+}
+
 function selectIcon(btn) {
     btn.closest('.icon-picker-grid').querySelectorAll('.icon-picker-item').forEach(el => el.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('f-icon').value = btn.dataset.icon;
+    document.getElementById('iconPickerSelected').textContent = btn.dataset.material;
+    document.getElementById('iconPickerLabel').textContent = btn.title;
+    document.getElementById('iconPickerDropdown').classList.remove('active');
 }
 
 function val(id) {
@@ -2696,6 +2717,11 @@ function initColorPicker() {
         const langWrapper = document.querySelector('.language-picker-wrapper');
         if (langDropdown && langWrapper && langDropdown.classList.contains('active') && !langWrapper.contains(e.target)) {
             langDropdown.classList.remove('active');
+        }
+        const iconDropdown = document.getElementById('iconPickerDropdown');
+        const iconWrapper = iconDropdown && iconDropdown.closest('.icon-picker-wrapper');
+        if (iconDropdown && iconWrapper && iconDropdown.classList.contains('active') && !iconWrapper.contains(e.target)) {
+            iconDropdown.classList.remove('active');
         }
     });
 }
