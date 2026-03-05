@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.18.0] - 2026-03-05
+
+### Added
+- Reorder work experiences with up/down arrow buttons shown on hover
+- Experience ordering now uses user-defined sort order (instead of only date-based sorting)
+- Experiences included in the generic reorder API endpoint
+
 ## [1.17.0] - 2026-03-05
 
 ### Added

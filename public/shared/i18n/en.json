@@ -49,6 +49,8 @@
     "action.add_education": "Add Education",
     "action.add_skill": "Add Skill Category",
     "action.add_project": "Add Project",
+    "action.move_up": "Move Up",
+    "action.move_down": "Move Down",
 
     "btn.save": "Save",
     "btn.cancel": "Cancel",
