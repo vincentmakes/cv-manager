@@ -485,6 +485,9 @@ function renderCustomSection(section) {
         case 'picture-grid':
             contentHtml = renderPictureGridLayout(items, section.metadata?.columns || 3);
             break;
+        case 'timeline':
+            contentHtml = renderTimelineLayout(items);
+            break;
         default:
             contentHtml = renderGridLayout(items, 3);
     }
@@ -650,6 +653,34 @@ function renderPictureGridLayout(items, columns = 3) {
     return `<div class="custom-picture-grid custom-picture-grid-${columns}">${itemsHtml}${emptyCells}</div>`;
 }
 
+function renderTimelineLayout(items) {
+    if (items.length === 0) return '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>';
+
+    // Sort by start_date DESC (newest first)
+    const sorted = [...items].sort((a, b) => {
+        const dateA = parseDateForSort(a.metadata?.start_date || '');
+        const dateB = parseDateForSort(b.metadata?.start_date || '');
+        return dateB - dateA;
+    });
+
+    return sorted.map(item => {
+        const meta = item.metadata || {};
+        return renderExperienceCard({
+            id: `cs_${item.id}`,
+            title: item.title,
+            subtitle: item.subtitle,
+            startDate: meta.start_date,
+            endDate: meta.end_date,
+            location: meta.location,
+            logo: item.image,
+            highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
+            visible: item.visible !== false,
+            showLogo: showExperienceLogos && !!item.image,
+            showDuration: showExperienceDuration
+        });
+    }).join('');
+}
+
 // Load Sections with visibility toggle (admin version)
 async function loadSectionsAdmin() {
     const sections = await api('/api/sections');
@@ -680,41 +711,34 @@ async function loadExperiences() {
     
     const container = document.getElementById('experienceList');
     
-    container.innerHTML = experiences.map(exp => `
-        <article class="item-card ${exp.visible ? '' : 'hidden-print'} ${showExperienceLogos ? 'has-logo' : ''}" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
-            <div class="item-actions">
-                <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
-                    ${visibilityIcon(exp.visible)}
-                </button>
-                <button class="item-btn" onclick="openModal('experience', ${exp.id})" title="Edit">
-                    ${editIcon()}
-                </button>
-                <button class="item-btn delete" onclick="confirmDelete('experiences', ${exp.id})" title="Delete">
-                    ${deleteIcon()}
-                </button>
-            </div>
-            <div class="item-header">
-                ${showExperienceLogos && exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="experience-logo" alt="${escapeHtml(exp.company_name)}" onerror="this.style.display='none'">` : ''}
-                <div>
-                    <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
-                    <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
-                        <span itemprop="name">${escapeHtml(exp.company_name)}</span>
-                    </div>
-                </div>
-                <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
-                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
-                    ${showExperienceDuration ? `<span class="item-duration">${calculateDuration(exp.start_date, exp.end_date)}</span>` : ''}
-                </span>
-            </div>
-            ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
-            ${exp.highlights && exp.highlights.length ? `
-                <ul class="item-highlights" itemprop="description">
-                    ${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
-                </ul>
-            ` : ''}
-        </article>
-    `).join('');
+    container.innerHTML = experiences.map(exp => {
+        const actionsHtml = `<div class="item-actions">
+            <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
+                ${visibilityIcon(exp.visible)}
+            </button>
+            <button class="item-btn" onclick="openModal('experience', ${exp.id})" title="Edit">
+                ${editIcon()}
+            </button>
+            <button class="item-btn delete" onclick="confirmDelete('experiences', ${exp.id})" title="Delete">
+                ${deleteIcon()}
+            </button>
+        </div>`;
+        return renderExperienceCard({
+            id: exp.id,
+            title: exp.job_title,
+            subtitle: exp.company_name,
+            startDate: exp.start_date,
+            endDate: exp.end_date,
+            location: exp.location,
+            logo: exp.logo_filename,
+            highlights: exp.highlights || [],
+            visible: exp.visible,
+            showLogo: showExperienceLogos,
+            showDuration: showExperienceDuration,
+            schemaOrg: true,
+            actionsHtml
+        });
+    }).join('');
 }
 
 // Load Certifications (admin version with edit controls)
@@ -1031,14 +1055,15 @@ function profileForm(d) {
     `;
 }
 
-function experienceForm(d) {
+// Shared logo upload HTML - reused by experience and timeline item modals
+function logoUploadHtml(filename) {
     return `
         <div class="form-group">
             <label class="form-label">${t('form.company_logo')}</label>
             <div class="logo-upload-container">
                 <div class="logo-upload-preview" id="logoUploadPreview">
-                    ${d.logo_filename
-                        ? `<img src="/uploads/${encodeURIComponent(d.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
+                    ${filename
+                        ? `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
                         : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
                     }
                 </div>
@@ -1051,7 +1076,14 @@ function experienceForm(d) {
                 <div class="logo-picker-grid" id="logoPickerGrid" style="display:none;"></div>
             </div>
             <div class="form-hint">${t('form.logo_hint')}</div>
-            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none; margin-top: 6px;">
+        </div>`;
+}
+
+function experienceForm(d) {
+    return `
+        ${logoUploadHtml(d.logo_filename)}
+        <div class="form-group" style="margin-top: -8px;">
+            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none;">
                 <label class="toggle-switch">
                     <input type="checkbox" id="f-logo-apply-global" onchange="onLogoPropagateToggle(this.checked)">
                     <span class="toggle-slider"></span>
@@ -2950,19 +2982,6 @@ async function openCustomSectionModal(id = null) {
             </div>
             <input type="hidden" id="cs-columns" value="${section.metadata?.columns || 3}">
         </div>
-        <div class="form-group">
-            <label class="form-label">${t('custom_section.section_icon')}</label>
-            <select class="form-select" id="cs-icon">
-                <option value="default" ${section.icon === 'default' ? 'selected' : ''}>${t('custom_section.icon_default')}</option>
-                <option value="star" ${section.icon === 'star' ? 'selected' : ''}>${t('custom_section.icon_star')}</option>
-                <option value="book" ${section.icon === 'book' ? 'selected' : ''}>${t('custom_section.icon_book')}</option>
-                <option value="link" ${section.icon === 'link' ? 'selected' : ''}>${t('custom_section.icon_link')}</option>
-                <option value="globe" ${section.icon === 'globe' ? 'selected' : ''}>${t('custom_section.icon_globe')}</option>
-                <option value="heart" ${section.icon === 'heart' ? 'selected' : ''}>${t('custom_section.icon_heart')}</option>
-                <option value="award" ${section.icon === 'award' ? 'selected' : ''}>${t('custom_section.icon_award')}</option>
-                <option value="briefcase" ${section.icon === 'briefcase' ? 'selected' : ''}>${t('custom_section.icon_briefcase')}</option>
-            </select>
-        </div>
     `;
     
     document.getElementById('customSectionModalOverlay').classList.add('active');
@@ -3000,6 +3019,23 @@ async function updateSectionColumns(sectionId, columns) {
     }
 }
 
+async function updateSectionTimelineToggle(sectionId, showOnTimeline) {
+    try {
+        const section = customSections.find(s => s.id === sectionId);
+        const existingMeta = section?.metadata || {};
+        await api(`/api/custom-sections/${sectionId}`, {
+            method: 'PUT',
+            body: { metadata: { ...existingMeta, show_on_timeline: showOnTimeline } }
+        });
+        await loadCustomSectionsData();
+        await loadCustomSections();
+        if (typeof loadTimeline === 'function') loadTimeline();
+        autoSaveActiveDataset();
+    } catch (err) {
+        toast(t('toast.save_failed'), 'error');
+    }
+}
+
 async function closeCustomSectionModal() {
     document.getElementById('customSectionModalOverlay').classList.remove('active');
     
@@ -3030,16 +3066,14 @@ async function closeCustomSectionModal() {
 async function saveCustomSection() {
     const nameEl = document.getElementById('cs-name');
     const layoutEl = document.getElementById('cs-layout');
-    const iconEl = document.getElementById('cs-icon');
-    
-    if (!nameEl || !layoutEl || !iconEl) {
+
+    if (!nameEl || !layoutEl) {
         toast(t('toast.form_not_ready'), 'error');
         return;
     }
-    
+
     const name = nameEl.value.trim();
     const layout_type = layoutEl.value;
-    const icon = iconEl.value;
 
     // Build section metadata
     let metadata = {};
@@ -3057,13 +3091,13 @@ async function saveCustomSection() {
         if (currentCustomSection.id) {
             await api(`/api/custom-sections/${currentCustomSection.id}`, {
                 method: 'PUT',
-                body: { name, layout_type, icon, metadata }
+                body: { name, layout_type, metadata }
             });
             toast(t('toast.section_updated'));
         } else {
             await api('/api/custom-sections', {
                 method: 'POST',
-                body: { name, layout_type, icon, metadata }
+                body: { name, layout_type, metadata }
             });
             toast(t('toast.section_created'));
         }
@@ -3143,6 +3177,12 @@ async function manageCustomSectionItems(sectionId) {
                     </span>
                 </span>
             ` : ''}
+            ${section.layout_type === 'timeline' ? `
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" ${section.metadata?.show_on_timeline ? 'checked' : ''} onchange="updateSectionTimelineToggle(${sectionId}, this.checked)" style="width: 16px; height: 16px;">
+                    <span>${t('custom_section.show_on_timeline')}</span>
+                </label>
+            ` : ''}
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -3152,10 +3192,10 @@ async function manageCustomSectionItems(sectionId) {
             ${items.length === 0 ? '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>' : items.map(item => `
                 <div class="custom-item-row" data-id="${item.id}" draggable="true">
                     <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
-                    ${section.layout_type === 'picture-grid' && item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="custom-item-thumb">` : ''}
+                    ${(section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="custom-item-thumb">` : ''}
                     <div class="custom-item-info">
                         <div class="custom-item-title">${escapeHtml(item.title || (section.layout_type === 'picture-grid' ? t('custom_item.picture') : 'Untitled'))}</div>
-                        ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                        ${section.layout_type === 'timeline' ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle || '')}${item.metadata?.start_date ? ` | ${escapeHtml(item.metadata.start_date)} - ${item.metadata.end_date ? escapeHtml(item.metadata.end_date) : t('present')}` : ''}</div>` : (item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : '')}
                     </div>
                     <div class="custom-item-actions">
                         <button class="item-btn" onclick="openCustomItemModal(${sectionId}, ${item.id})" title="Edit">
@@ -3258,6 +3298,47 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <label class="form-label">${t('custom_item.text_content')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="10" placeholder="${t('custom_item.text_content_placeholder')}">${escapeHtml(item.description || '')}</textarea>
                 <div class="form-hint">${t('custom_item.text_content_hint')}</div>
+            </div>
+        `;
+    } else if (section.layout_type === 'timeline') {
+        // Timeline form - reuses experience logo management (same element IDs, since only one modal is open at a time)
+        const meta = item.metadata || {};
+        pendingLogo = null;
+        currentModal.existingLogo = item.image || null;
+        currentModal.existingPropagate = false;
+        formHtml = `
+            ${logoUploadHtml(item.image)}
+            <div class="form-group">
+                <label class="form-label">${t('form.job_title')}</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">${t('form.company')}</label>
+                    <input type="text" class="form-input" id="ci-subtitle" value="${escapeHtml(item.subtitle || '')}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${t('form.country_code')}</label>
+                    <input type="text" class="form-input" id="ci-country-code" value="${escapeHtml(meta.country_code || '')}" maxlength="2" placeholder="${t('form.country_code_placeholder')}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">${t('form.start_date')}</label>
+                    <input type="text" class="form-input" id="ci-start-date" value="${escapeHtml(meta.start_date || '')}" placeholder="${t('form.start_date_placeholder')}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${t('form.end_date')}</label>
+                    <input type="text" class="form-input" id="ci-end-date" value="${escapeHtml(meta.end_date || '')}" placeholder="${t('form.end_date_placeholder')}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.location')}</label>
+                <input type="text" class="form-input" id="ci-location" value="${escapeHtml(meta.location || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.highlights')}</label>
+                <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {
@@ -3394,6 +3475,7 @@ function closeCustomItemModal() {
     currentCustomItem.itemId = null;
     pendingPictureGridFile = null;
     pictureGridRemoved = false;
+    pendingLogo = null;
 }
 
 async function saveCustomItem() {
@@ -3410,13 +3492,26 @@ async function saveCustomItem() {
         const platform = document.getElementById('ci-platform')?.value || 'custom';
         const platformData = socialPlatforms.find(p => p.id === platform);
         metadata = { platform, icon: platformData?.icon, color: platformData?.color };
+    } else if (section.layout_type === 'timeline') {
+        const startRaw = document.getElementById('ci-start-date')?.value?.trim() || '';
+        const endRaw = document.getElementById('ci-end-date')?.value?.trim() || '';
+        const startResult = startRaw ? normalizeDate(startRaw) : { value: '' };
+        if (startResult.error) { toast(startResult.error, 'error'); return; }
+        const endResult = endRaw ? normalizeDate(endRaw) : { value: '' };
+        if (endResult.error) { toast(endResult.error, 'error'); return; }
+        metadata = {
+            start_date: startResult.value,
+            end_date: endResult.value,
+            location: document.getElementById('ci-location')?.value?.trim() || '',
+            country_code: document.getElementById('ci-country-code')?.value?.trim() || ''
+        };
     } else {
         const hideTitle = document.getElementById('ci-hide-title')?.checked || false;
         metadata = { hideTitle };
     }
-    
-    // Validation - title not required for bullet-list, free-text, picture-grid, or when hideTitle is checked
-    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && section.layout_type !== 'picture-grid' && !metadata.hideTitle && !title) {
+
+    // Validation - title not required for bullet-list, free-text, picture-grid, timeline, or when hideTitle is checked
+    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && section.layout_type !== 'picture-grid' && section.layout_type !== 'timeline' && !metadata.hideTitle && !title) {
         toast(t('toast.enter_title'), 'error');
         return;
     }
@@ -3442,6 +3537,11 @@ async function saveCustomItem() {
             const existingItem = section.items.find(i => i.id === itemId);
             image = pictureGridRemoved ? '' : (existingItem?.image || '');
         }
+        // For timeline edits, image is handled separately via logo system
+        if (section.layout_type === 'timeline' && itemId && !pendingLogo) {
+            const existingItem = section.items.find(i => i.id === itemId);
+            image = existingItem?.image || '';
+        }
 
         if (itemId) {
             await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}`, {
@@ -3466,9 +3566,32 @@ async function saveCustomItem() {
             if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
         }
 
+        // Handle logo for timeline items (reuses pendingLogo from shared logo system)
+        if (section.layout_type === 'timeline' && itemId && pendingLogo) {
+            if (pendingLogo === 'remove') {
+                await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'DELETE' });
+            } else if (pendingLogo.reuse) {
+                await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, {
+                    method: 'PUT',
+                    body: { filename: pendingLogo.reuse }
+                });
+            } else if (pendingLogo instanceof File) {
+                const formData = new FormData();
+                formData.append('picture', pendingLogo);
+                const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
+                if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
+            }
+            pendingLogo = null;
+        }
+
         closeCustomItemModal();
         await loadCustomSectionsData();
         manageCustomSectionItems(currentCustomItem.sectionId);
+        // Refresh timeline if this is a timeline-layout section
+        if (section.layout_type === 'timeline') {
+            await loadCustomSections();
+            if (typeof loadTimeline === 'function') loadTimeline();
+        }
         autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.item_save_failed'), 'error');
@@ -3482,7 +3605,13 @@ async function confirmDeleteCustomItem(sectionId, itemId) {
         await api(`/api/custom-sections/${sectionId}/items/${itemId}`, { method: 'DELETE' });
         toast(t('toast.item_deleted'));
         await loadCustomSectionsData();
+        const section = customSections.find(s => s.id === sectionId);
         manageCustomSectionItems(sectionId);
+        // Refresh timeline if this is a timeline-layout section
+        if (section && section.layout_type === 'timeline') {
+            await loadCustomSections();
+            if (typeof loadTimeline === 'function') loadTimeline();
+        }
         autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.item_delete_failed'), 'error');

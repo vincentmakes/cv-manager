@@ -876,7 +876,7 @@
    Settings Modal Styles
    =========================== */
 
-.settings-modal .modal { max-width: 560px; }
+.settings-modal .modal { max-width: 640px; }
 
 .settings-section-item {
     display: flex;
@@ -1057,7 +1057,7 @@
    Settings Modal Tabs & Custom Sections
    =========================== */
 
-.modal-lg { max-width: 600px; }
+.modal-lg { max-width: 680px; }
 
 .settings-tabs {
     display: flex;

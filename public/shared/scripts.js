@@ -1036,16 +1036,21 @@ function scrollToExperience(timelineItem) {
     const role = timelineItem.dataset.role;
     
     let targetCard = null;
-    
-    // Try to find by ID first (scoped to experience section)
-    if (expId) {
+
+    // Try to find by ID first
+    if (expId && expId.toString().startsWith('cs_')) {
+        // Custom section timeline item - search in custom section containers
+        targetCard = document.querySelector(`.custom-section .item-card[data-id="${expId}"]`);
+    } else if (expId) {
+        // Standard experience - search in experience section
         targetCard = document.querySelector(`#experienceList .item-card[data-id="${expId}"]`);
     }
-    
-    // Fall back to matching by company and role (public mode)
+
+    // Fall back to matching by company and role
     if (!targetCard && company && role) {
-        const expCards = document.querySelectorAll('#experienceList .item-card');
-        for (const card of expCards) {
+        // Search both experience and custom section containers
+        const allCards = document.querySelectorAll('.item-card');
+        for (const card of allCards) {
             const cardCompany = card.querySelector('.item-subtitle span')?.textContent || '';
             const cardRole = card.querySelector('.item-title')?.textContent || '';
             if (cardCompany === company && cardRole === role) {
@@ -1319,6 +1324,81 @@ async function generateATSContent() {
 }
 
 // ===========================
+// Shared Experience Card Renderer
+// ===========================
+// Single source of truth for rendering experience-style item cards.
+// Used by: admin experiences, admin timeline layout, public experiences, public timeline layout.
+//
+// opts: {
+//   id, title, subtitle, startDate, endDate, location, logo,
+//   highlights (array of strings), visible (bool),
+//   showLogo (bool), showDuration (bool), schemaOrg (bool),
+//   actionsHtml (string, optional - admin action buttons),
+//   extraClasses (string, optional)
+// }
+function renderExperienceCard(opts) {
+    const {
+        id = '', title = '', subtitle = '', startDate = '', endDate = '',
+        location = '', logo = '', highlights = [], visible = true,
+        showLogo = false, showDuration = false, schemaOrg = false,
+        actionsHtml = '', extraClasses = ''
+    } = opts;
+
+    const hasLogo = showLogo && logo;
+    const visClass = visible ? '' : 'hidden-print';
+    const logoClass = showLogo ? 'has-logo' : '';
+    const schemaAttrs = schemaOrg ? ' itemscope itemtype="https://schema.org/OrganizationRole"' : '';
+
+    const logoHtml = hasLogo
+        ? `<img src="/uploads/${encodeURIComponent(logo)}" class="experience-logo" alt="${escapeHtml(subtitle)}" onerror="this.style.display='none'">`
+        : '';
+
+    const titleHtml = schemaOrg
+        ? `<h3 class="item-title" itemprop="roleName">${escapeHtml(title)}</h3>`
+        : `<h3 class="item-title">${escapeHtml(title)}</h3>`;
+
+    const subtitleHtml = schemaOrg
+        ? `<div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">${escapeHtml(subtitle)}</span></div>`
+        : `<div class="item-subtitle"><span>${escapeHtml(subtitle)}</span></div>`;
+
+    let dateHtml;
+    if (schemaOrg) {
+        dateHtml = `<time itemprop="startDate" datetime="${startDate || ''}">${formatDate(startDate)}</time> - <time itemprop="endDate" datetime="${endDate || ''}">${endDate ? formatDate(endDate) : t('present')}</time>`;
+    } else {
+        dateHtml = `${formatDate(startDate)} - ${endDate ? formatDate(endDate) : t('present')}`;
+    }
+    if (showDuration) {
+        dateHtml += ` <span class="item-duration">${calculateDuration(startDate, endDate)}</span>`;
+    }
+
+    const locationHtml = location
+        ? `<div class="item-location">${escapeHtml(location)}</div>`
+        : '';
+
+    let highlightsHtml = '';
+    if (highlights.length) {
+        const itemProp = schemaOrg ? ' itemprop="description"' : '';
+        highlightsHtml = `<ul class="item-highlights"${itemProp}>${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>`;
+    }
+
+    const classes = ['item-card', visClass, logoClass, extraClasses].filter(Boolean).join(' ');
+
+    return `<article class="${classes}" data-id="${id}"${schemaAttrs}>
+        ${actionsHtml}
+        <div class="item-header">
+            ${logoHtml}
+            <div>
+                ${titleHtml}
+                ${subtitleHtml}
+            </div>
+            <span class="item-date">${dateHtml}</span>
+        </div>
+        ${locationHtml}
+        ${highlightsHtml}
+    </article>`;
+}
+
+// ===========================
 // Shared Custom Section Rendering (Public)
 // ===========================
 
@@ -1362,6 +1442,9 @@ function renderCustomSectionPublic(section, layoutTypes, socialPlatforms) {
             break;
         case 'picture-grid':
             contentHtml = renderPictureGridPublic(items, section.metadata?.columns || 3);
+            break;
+        case 'timeline':
+            contentHtml = renderTimelineLayoutPublic(items);
             break;
         default:
             contentHtml = renderGridPublic(items, 3);
@@ -1519,6 +1602,36 @@ function renderFreeTextPublic(items) {
 }
 
 // Picture grid layout for public view
+function renderTimelineLayoutPublic(items) {
+    if (items.length === 0) return '';
+
+    const visibleItems = items.filter(item => item.visible !== false);
+    if (visibleItems.length === 0) return '';
+
+    // Sort by start_date DESC (newest first)
+    visibleItems.sort((a, b) => {
+        const dateA = parseDateForSort(a.metadata?.start_date || '');
+        const dateB = parseDateForSort(b.metadata?.start_date || '');
+        return dateB - dateA;
+    });
+
+    return visibleItems.map(item => {
+        const meta = item.metadata || {};
+        return renderExperienceCard({
+            id: `cs_${item.id}`,
+            title: item.title,
+            subtitle: item.subtitle,
+            startDate: meta.start_date,
+            endDate: meta.end_date,
+            location: meta.location,
+            logo: item.image,
+            highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
+            showLogo: showExperienceLogos && !!item.image,
+            showDuration: showExperienceDuration
+        });
+    }).join('');
+}
+
 function renderPictureGridPublic(items, columns = 3) {
     if (items.length === 0) return '';
 

@@ -4,6 +4,31 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.0] - 2026-03-05
+
+### Added
+- Backend endpoints for reusing and removing logos on custom section items (PUT/DELETE)
+
+### Changed
+- Renamed "Timeline" layout type to "Additional Experiences" with Material Design WorkHistory icon (briefcase with clock)
+- Revamped Additional Experiences item modal to match Work Experience: full logo management with Choose Image, Use Existing, and Remove buttons
+- Moved "Show on Career Timeline" toggle from section settings to items management view for easier access
+- Extracted shared `renderExperienceCard()` in scripts.js — single source of truth for all experience-style cards (admin/public, experiences/timeline)
+- Extracted shared `logoUploadHtml()` — single source of truth for logo upload UI (Experience and Additional Experiences modals)
+- Additional Experiences cards now show duration and logos, matching Work Experience behavior
+- Additional Experiences logos respect the "Experience: Show Logos" setting
+- Increased settings modal width from 560px to 640px and sub-modals from 600px to 680px
+
+### Removed
+- Removed unused "Section Icon" dropdown from custom section settings (was stored but never rendered)
+
+## [1.16.0] - 2026-03-05
+
+### Added
+- Timeline layout type for custom sections: create experience-like entries (job title, company, dates, location, highlights, logo) in custom sections
+- "Show on Career Timeline" toggle: when enabled, timeline custom section items appear on the Career Timeline alongside standard work experiences, including branching support
+- Full i18n support for the new timeline layout across all 8 languages
+
 ## [1.15.0] - 2026-03-05
 
 ### Added
