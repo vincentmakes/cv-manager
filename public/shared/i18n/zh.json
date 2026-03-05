@@ -246,8 +246,6 @@
     "custom_item.caption_placeholder": "例如：照片描述",
     "custom_item.add_picture": "添加图片",
     "custom_item.add_item": "添加条目",
-    "custom_item.show_on_timeline": "在职业时间线上显示",
-    "custom_item.show_on_timeline_hint": "在职业时间线上与标准工作经历一起显示此条目",
     "toast.saved": "保存成功",
     "toast.deleted": "已删除",
     "toast.visibility_updated": "可见性已更新",

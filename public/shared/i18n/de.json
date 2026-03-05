@@ -262,8 +262,6 @@
     "custom_item.caption_placeholder": "z. B. Bildbeschreibung",
     "custom_item.add_picture": "Bild hinzufügen",
     "custom_item.add_item": "Eintrag hinzufügen",
-    "custom_item.show_on_timeline": "Im Karrierezeitstrahl anzeigen",
-    "custom_item.show_on_timeline_hint": "Diesen Eintrag im Karrierezeitstrahl zusammen mit den normalen Berufserfahrungen anzeigen",
 
     "toast.saved": "Erfolgreich gespeichert",
     "toast.deleted": "Gelöscht",

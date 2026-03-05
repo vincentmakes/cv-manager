@@ -8,10 +8,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Changed
 - Renamed "Timeline" layout type to "Additional Experiences" in Custom Section settings
-- Revamped Additional Experiences item modal to match the Work Experience modal: full logo management with Choose Image, Use Existing, and Remove buttons
-- Moved "Show on Career Timeline" toggle from section-level to per-item level, allowing individual items to be shown or hidden on the timeline
+- Revamped Additional Experiences item modal to match the Work Experience modal: full logo management with Choose Image, Use Existing, and Remove buttons, reusing the shared logo system
+- Moved "Show on Career Timeline" toggle from section settings to items management view for easier access
 - Added backend endpoints for reusing and removing logos on custom section items (PUT/DELETE)
-- Full i18n support for new per-item timeline toggle across all 8 languages
+- Eliminated code duplication: extracted shared `logoUploadHtml()` function used by both Experience and Additional Experiences modals
 
 ## [1.16.0] - 2026-03-05
 

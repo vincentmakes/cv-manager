@@ -262,8 +262,6 @@
     "custom_item.caption_placeholder": "e.g., Photo description",
     "custom_item.add_picture": "Add Picture",
     "custom_item.add_item": "Add Item",
-    "custom_item.show_on_timeline": "Show on Career Timeline",
-    "custom_item.show_on_timeline_hint": "Display this item on the Career Timeline alongside standard work experiences",
 
     "toast.saved": "Saved successfully",
     "toast.deleted": "Deleted",

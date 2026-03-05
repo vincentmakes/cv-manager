@@ -246,8 +246,6 @@
     "custom_item.caption_placeholder": "bijv. Fotobeschrijving",
     "custom_item.add_picture": "Afbeelding toevoegen",
     "custom_item.add_item": "Item toevoegen",
-    "custom_item.show_on_timeline": "Tonen op carrièretijdlijn",
-    "custom_item.show_on_timeline_hint": "Dit item weergeven op de carrièretijdlijn samen met standaard werkervaringen",
     "toast.saved": "Succesvol opgeslagen",
     "toast.deleted": "Verwijderd",
     "toast.visibility_updated": "Zichtbaarheid bijgewerkt",

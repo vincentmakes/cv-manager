@@ -246,8 +246,6 @@
     "custom_item.caption_placeholder": "ej. Descripción de la foto",
     "custom_item.add_picture": "Añadir imagen",
     "custom_item.add_item": "Añadir elemento",
-    "custom_item.show_on_timeline": "Mostrar en la línea temporal",
-    "custom_item.show_on_timeline_hint": "Mostrar este elemento en la línea temporal junto con las experiencias laborales",
     "toast.saved": "Guardado correctamente",
     "toast.deleted": "Eliminado",
     "toast.visibility_updated": "Visibilidad actualizada",

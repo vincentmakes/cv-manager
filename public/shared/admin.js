@@ -1066,14 +1066,15 @@ function profileForm(d) {
     `;
 }
 
-function experienceForm(d) {
+// Shared logo upload HTML - reused by experience and timeline item modals
+function logoUploadHtml(filename) {
     return `
         <div class="form-group">
             <label class="form-label">${t('form.company_logo')}</label>
             <div class="logo-upload-container">
                 <div class="logo-upload-preview" id="logoUploadPreview">
-                    ${d.logo_filename
-                        ? `<img src="/uploads/${encodeURIComponent(d.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
+                    ${filename
+                        ? `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
                         : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
                     }
                 </div>
@@ -1086,7 +1087,14 @@ function experienceForm(d) {
                 <div class="logo-picker-grid" id="logoPickerGrid" style="display:none;"></div>
             </div>
             <div class="form-hint">${t('form.logo_hint')}</div>
-            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none; margin-top: 6px;">
+        </div>`;
+}
+
+function experienceForm(d) {
+    return `
+        ${logoUploadHtml(d.logo_filename)}
+        <div class="form-group" style="margin-top: -8px;">
+            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none;">
                 <label class="toggle-switch">
                     <input type="checkbox" id="f-logo-apply-global" onchange="onLogoPropagateToggle(this.checked)">
                     <span class="toggle-slider"></span>
@@ -2978,13 +2986,6 @@ async function openCustomSectionModal(id = null) {
             </div>
             <input type="hidden" id="cs-layout" value="${section.layout_type || 'grid-3'}">
         </div>
-        <div class="form-group" id="cs-timeline-toggle-group" style="display: ${section.layout_type === 'timeline' ? '' : 'none'}">
-            <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="cs-show-on-timeline" ${section.metadata?.show_on_timeline ? 'checked' : ''} style="width: 16px; height: 16px;">
-                <span>${t('custom_section.show_on_timeline')}</span>
-            </label>
-            <div class="form-hint">${t('custom_section.show_on_timeline_hint')}</div>
-        </div>
         <div class="form-group" id="cs-columns-group" style="display: ${(section.layout_type === 'picture-grid') ? '' : 'none'}">
             <label class="form-label">${t('custom_section.grid_columns')}</label>
             <div class="columns-selector">
@@ -3017,8 +3018,6 @@ function selectLayoutType(layoutId) {
     document.getElementById('cs-layout').value = layoutId;
     const colGroup = document.getElementById('cs-columns-group');
     if (colGroup) colGroup.style.display = layoutId === 'picture-grid' ? '' : 'none';
-    const timelineToggle = document.getElementById('cs-timeline-toggle-group');
-    if (timelineToggle) timelineToggle.style.display = layoutId === 'timeline' ? '' : 'none';
 }
 
 function selectPictureGridColumns(n) {
@@ -3038,6 +3037,23 @@ async function updateSectionColumns(sectionId, columns) {
         await loadCustomSectionsData();
         manageCustomSectionItems(sectionId);
         await loadCustomSections();
+        autoSaveActiveDataset();
+    } catch (err) {
+        toast(t('toast.save_failed'), 'error');
+    }
+}
+
+async function updateSectionTimelineToggle(sectionId, showOnTimeline) {
+    try {
+        const section = customSections.find(s => s.id === sectionId);
+        const existingMeta = section?.metadata || {};
+        await api(`/api/custom-sections/${sectionId}`, {
+            method: 'PUT',
+            body: { metadata: { ...existingMeta, show_on_timeline: showOnTimeline } }
+        });
+        await loadCustomSectionsData();
+        await loadCustomSections();
+        if (typeof loadTimeline === 'function') loadTimeline();
         autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.save_failed'), 'error');
@@ -3090,9 +3106,6 @@ async function saveCustomSection() {
     if (layout_type === 'picture-grid') {
         const columns = parseInt(document.getElementById('cs-columns')?.value) || 3;
         metadata = { columns };
-    } else if (layout_type === 'timeline') {
-        const show_on_timeline = document.getElementById('cs-show-on-timeline')?.checked || false;
-        metadata = { show_on_timeline };
     }
 
     if (!name) {
@@ -3189,6 +3202,12 @@ async function manageCustomSectionItems(sectionId) {
                         ${[1,2,3].map(n => `<button type="button" class="columns-btn ${currentColumns === n ? 'selected' : ''}" onclick="updateSectionColumns(${sectionId}, ${n})">${n}</button>`).join('')}
                     </span>
                 </span>
+            ` : ''}
+            ${section.layout_type === 'timeline' ? `
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" ${section.metadata?.show_on_timeline ? 'checked' : ''} onchange="updateSectionTimelineToggle(${sectionId}, this.checked)" style="width: 16px; height: 16px;">
+                    <span>${t('custom_section.show_on_timeline')}</span>
+                </label>
             ` : ''}
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
@@ -3308,31 +3327,13 @@ function openCustomItemModal(sectionId, itemId = null) {
             </div>
         `;
     } else if (section.layout_type === 'timeline') {
-        // Timeline form - experience-like fields with full logo management
+        // Timeline form - reuses experience logo management (same element IDs, since only one modal is open at a time)
         const meta = item.metadata || {};
-        const showOnTimeline = meta.show_on_timeline !== undefined ? meta.show_on_timeline : (section.metadata?.show_on_timeline || false);
-        pendingTimelineLogo = null;
-        currentTimelineLogoFile = item.image || null;
+        pendingLogo = null;
+        currentModal.existingLogo = item.image || null;
+        currentModal.existingPropagate = false;
         formHtml = `
-            <div class="form-group">
-                <label class="form-label">${t('form.company_logo')}</label>
-                <div class="logo-upload-container">
-                    <div class="logo-upload-preview" id="ciLogoUploadPreview">
-                        ${item.image
-                            ? `<img src="/uploads/${encodeURIComponent(item.image)}?${Date.now()}" alt="" id="ciLogoPreviewImg">`
-                            : `<div class="logo-preview-placeholder" id="ciLogoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
-                        }
-                    </div>
-                    <div class="logo-upload-actions">
-                        <input type="file" id="ci-logo-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewTimelineLogo(this)">
-                        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-logo-file').click()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ${t('form.choose_image')}</button>
-                        <button type="button" class="btn btn-ghost btn-sm" onclick="showTimelineLogoPicker()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> ${t('form.use_existing')}</button>
-                        <button type="button" class="btn btn-ghost btn-sm" onclick="removeTimelineLogo()" style="color: var(--gray-500)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${t('form.remove')}</button>
-                    </div>
-                    <div class="logo-picker-grid" id="ciLogoPickerGrid" style="display:none;"></div>
-                </div>
-                <div class="form-hint">${t('form.logo_hint')}</div>
-            </div>
+            ${logoUploadHtml(item.image)}
             <div class="form-group">
                 <label class="form-label">${t('form.job_title')}</label>
                 <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
@@ -3364,13 +3365,6 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="ci-show-on-timeline" ${showOnTimeline ? 'checked' : ''} style="width: 16px; height: 16px;">
-                    <span>${t('custom_item.show_on_timeline')}</span>
-                </label>
-                <div class="form-hint">${t('custom_item.show_on_timeline_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {
@@ -3502,75 +3496,12 @@ function removePictureGridImage() {
     if (removeBtn) removeBtn.remove();
 }
 
-// Timeline logo helpers (reuses experience logo picker)
-let pendingTimelineLogo = null;
-let currentTimelineLogoFile = null;
-
-function previewTimelineLogo(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        if (file.size > 5 * 1024 * 1024) {
-            toast(t('toast.image_too_large'), 'error');
-            input.value = '';
-            return;
-        }
-        pendingTimelineLogo = file;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('ciLogoUploadPreview');
-            if (preview) preview.innerHTML = `<img src="${e.target.result}" alt="" id="ciLogoPreviewImg">`;
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function removeTimelineLogo() {
-    pendingTimelineLogo = 'remove';
-    const preview = document.getElementById('ciLogoUploadPreview');
-    if (preview) preview.innerHTML = '<div class="logo-preview-placeholder" id="ciLogoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
-    const fileInput = document.getElementById('ci-logo-file');
-    if (fileInput) fileInput.value = '';
-}
-
-async function showTimelineLogoPicker() {
-    const grid = document.getElementById('ciLogoPickerGrid');
-    if (!grid) return;
-    if (grid.style.display !== 'none') { grid.style.display = 'none'; return; }
-    try {
-        const logos = await api('/api/logos');
-        if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
-        grid.innerHTML = logos.map(l => {
-            const label = l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>` : '';
-            return `<div class="logo-picker-item" title="${escapeHtml(l.company || '')}">
-                <div class="logo-picker-img" onclick="selectTimelineLogo('${escapeHtml(l.filename)}')">
-                    <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
-                </div>
-                ${label}
-            </div>`;
-        }).join('');
-        grid.style.display = 'flex';
-    } catch (err) {
-        toast(t('toast.logo_upload_failed'), 'error');
-    }
-}
-
-function selectTimelineLogo(filename) {
-    pendingTimelineLogo = { reuse: filename };
-    const preview = document.getElementById('ciLogoUploadPreview');
-    if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="ciLogoPreviewImg">`;
-    const grid = document.getElementById('ciLogoPickerGrid');
-    if (grid) grid.style.display = 'none';
-    const fileInput = document.getElementById('ci-logo-file');
-    if (fileInput) fileInput.value = '';
-}
-
 function closeCustomItemModal() {
     document.getElementById('customItemModalOverlay').classList.remove('active');
     currentCustomItem.itemId = null;
     pendingPictureGridFile = null;
     pictureGridRemoved = false;
-    pendingTimelineLogo = null;
-    currentTimelineLogoFile = null;
+    pendingLogo = null;
 }
 
 async function saveCustomItem() {
@@ -3598,8 +3529,7 @@ async function saveCustomItem() {
             start_date: startResult.value,
             end_date: endResult.value,
             location: document.getElementById('ci-location')?.value?.trim() || '',
-            country_code: document.getElementById('ci-country-code')?.value?.trim() || '',
-            show_on_timeline: document.getElementById('ci-show-on-timeline')?.checked || false
+            country_code: document.getElementById('ci-country-code')?.value?.trim() || ''
         };
     } else {
         const hideTitle = document.getElementById('ci-hide-title')?.checked || false;
@@ -3634,7 +3564,7 @@ async function saveCustomItem() {
             image = pictureGridRemoved ? '' : (existingItem?.image || '');
         }
         // For timeline edits, image is handled separately via logo system
-        if (section.layout_type === 'timeline' && itemId && !pendingTimelineLogo) {
+        if (section.layout_type === 'timeline' && itemId && !pendingLogo) {
             const existingItem = section.items.find(i => i.id === itemId);
             image = existingItem?.image || '';
         }
@@ -3662,21 +3592,22 @@ async function saveCustomItem() {
             if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
         }
 
-        // Handle logo for timeline items
-        if (section.layout_type === 'timeline' && itemId && pendingTimelineLogo) {
-            if (pendingTimelineLogo === 'remove') {
+        // Handle logo for timeline items (reuses pendingLogo from shared logo system)
+        if (section.layout_type === 'timeline' && itemId && pendingLogo) {
+            if (pendingLogo === 'remove') {
                 await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'DELETE' });
-            } else if (pendingTimelineLogo.reuse) {
+            } else if (pendingLogo.reuse) {
                 await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, {
                     method: 'PUT',
-                    body: { filename: pendingTimelineLogo.reuse }
+                    body: { filename: pendingLogo.reuse }
                 });
-            } else if (pendingTimelineLogo instanceof File) {
+            } else if (pendingLogo instanceof File) {
                 const formData = new FormData();
-                formData.append('picture', pendingTimelineLogo);
+                formData.append('picture', pendingLogo);
                 const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
                 if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
             }
+            pendingLogo = null;
         }
 
         closeCustomItemModal();

@@ -1524,17 +1524,12 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/timeline', (req, res) => {
         const experiences = db.prepare(`SELECT id, company_name, job_title, start_date, end_date, country_code, visible, logo_filename FROM experiences ORDER BY start_date ASC`).all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), start_date: exp.start_date, end_date: exp.end_date, countryCode: exp.country_code || '', visible: !!exp.visible, logo: exp.logo_filename || null }));
-        const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all();
-        const sectionMeta = {};
-        for (const s of timelineSections) { sectionMeta[s.id] = s.metadata ? JSON.parse(s.metadata) : {}; }
+        const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all().filter(s => { const meta = s.metadata ? JSON.parse(s.metadata) : {}; return meta.show_on_timeline; });
         const customItems = [];
         for (const section of timelineSections) {
             const items = db.prepare(`SELECT * FROM custom_section_items WHERE section_id = ? ORDER BY sort_order ASC`).all(section.id);
             for (const item of items) {
                 const meta = item.metadata ? JSON.parse(item.metadata) : {};
-                // Per-item show_on_timeline takes precedence; fall back to section-level setting
-                const showOnTimeline = meta.show_on_timeline !== undefined ? meta.show_on_timeline : (sectionMeta[section.id].show_on_timeline || false);
-                if (!showOnTimeline) continue;
                 customItems.push({ id: `cs_${item.id}`, company: item.subtitle || '', role: item.title || '', period: formatPeriod(meta.start_date, meta.end_date), start_date: meta.start_date || '', end_date: meta.end_date || '', countryCode: meta.country_code || '', visible: !!item.visible, logo: item.image || null });
             }
         }
