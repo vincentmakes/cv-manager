@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.20.4] - 2026-03-05
+
+### Fixed
+- Fix timeline card click-to-scroll on public page by including experience `id` in the public API response
+
 ## [1.20.3] - 2026-03-05
 
 ### Fixed
