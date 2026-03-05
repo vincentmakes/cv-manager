@@ -398,29 +398,69 @@
     transform: rotate(180deg);
 }
 
-.icon-picker-dropdown {
+.icon-picker-overlay {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 4px;
-    z-index: 10;
-    background: var(--white);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--gray-300);
-    padding: 12px;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,26,77,0.4);
+    backdrop-filter: blur(2px);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
 
-.icon-picker-dropdown.active { display: block; }
+.icon-picker-overlay.active { display: flex; }
+
+.icon-picker-popup {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    width: 480px;
+    max-width: 95vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.icon-picker-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.icon-picker-popup-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.icon-picker-popup-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-picker-popup-close:hover { background: var(--danger); color: var(--white); }
+.icon-picker-popup-close .material-symbols-outlined { font-size: 16px; }
 
 .icon-picker-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    max-height: 320px;
+    gap: 8px;
+    padding: 16px 20px;
     overflow-y: auto;
+    flex: 1;
 }
 
 .icon-picker-item {
@@ -1766,6 +1806,8 @@
         flex-shrink: 0;
     }
     .modal-title { font-size: 16px; }
+    .icon-picker-popup { width: 95vw; }
+    .icon-picker-grid { grid-template-columns: repeat(5, 1fr); }
 }
 
 /* Version Display (Settings Footer) */

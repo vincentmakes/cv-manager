@@ -1234,7 +1234,15 @@ function skillForm(d) {
                     <span class="icon-picker-trigger-label" id="iconPickerLabel">${t('icon.' + selected.value)}</span>
                     <span class="material-symbols-outlined icon-picker-arrow">expand_more</span>
                 </button>
-                <div class="icon-picker-dropdown" id="iconPickerDropdown">
+            </div>
+            <div class="icon-picker-overlay" id="iconPickerOverlay" onclick="if(event.target===this)closeIconPicker()">
+                <div class="icon-picker-popup">
+                    <div class="icon-picker-popup-header">
+                        <span class="icon-picker-popup-title">${t('form.icon')}</span>
+                        <button type="button" class="icon-picker-popup-close" onclick="closeIconPicker()">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
                     <div class="icon-picker-grid">
                         ${iconOptions.map(opt => `
                             <button type="button" class="icon-picker-item${selectedValue === opt.value ? ' active' : ''}" data-icon="${opt.value}" data-material="${opt.icon}" onclick="selectIcon(this)" title="${t('icon.' + opt.value)}">
@@ -1549,8 +1557,13 @@ async function reloadSection(endpoint) {
 }
 
 function toggleIconPicker() {
-    const dropdown = document.getElementById('iconPickerDropdown');
-    if (dropdown) dropdown.classList.toggle('active');
+    const overlay = document.getElementById('iconPickerOverlay');
+    if (overlay) overlay.classList.toggle('active');
+}
+
+function closeIconPicker() {
+    const overlay = document.getElementById('iconPickerOverlay');
+    if (overlay) overlay.classList.remove('active');
 }
 
 function selectIcon(btn) {
@@ -1559,7 +1572,7 @@ function selectIcon(btn) {
     document.getElementById('f-icon').value = btn.dataset.icon;
     document.getElementById('iconPickerSelected').textContent = btn.dataset.material;
     document.getElementById('iconPickerLabel').textContent = btn.title;
-    document.getElementById('iconPickerDropdown').classList.remove('active');
+    closeIconPicker();
 }
 
 function val(id) {
@@ -2717,11 +2730,6 @@ function initColorPicker() {
         const langWrapper = document.querySelector('.language-picker-wrapper');
         if (langDropdown && langWrapper && langDropdown.classList.contains('active') && !langWrapper.contains(e.target)) {
             langDropdown.classList.remove('active');
-        }
-        const iconDropdown = document.getElementById('iconPickerDropdown');
-        const iconWrapper = iconDropdown && iconDropdown.closest('.icon-picker-wrapper');
-        if (iconDropdown && iconWrapper && iconDropdown.classList.contains('active') && !iconWrapper.contains(e.target)) {
-            iconDropdown.classList.remove('active');
         }
     });
 }

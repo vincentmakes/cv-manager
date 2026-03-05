@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.20.2] - 2026-03-05
+
+### Changed
+- Redesign icon picker as a full-screen overlay popup instead of an inline dropdown to eliminate double scrollbars and cramped layout
+- Migrate icon library from Google Material Icons to Google Material Symbols Outlined
+- Use `view_column_2` icon for 2-column grid custom section layout
+
 ## [1.20.1] - 2026-03-05
 
 ### Changed
