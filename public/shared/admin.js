@@ -665,23 +665,18 @@ function renderTimelineLayout(items) {
 
     return sorted.map(item => {
         const meta = item.metadata || {};
-        const visible = item.visible !== false;
-        const highlights = item.description ? item.description.split('\n').filter(h => h.trim()) : [];
-        return `
-        <article class="item-card ${visible ? '' : 'hidden-print'}" data-id="cs_${item.id}">
-            <div class="item-header">
-                ${item.image ? `<img src="/uploads/${encodeURIComponent(item.image)}" class="experience-logo" alt="${escapeHtml(item.subtitle || '')}" onerror="this.style.display='none'">` : ''}
-                <div>
-                    <h3 class="item-title">${escapeHtml(item.title || '')}</h3>
-                    <div class="item-subtitle"><span>${escapeHtml(item.subtitle || '')}</span></div>
-                </div>
-                <span class="item-date">
-                    ${formatDate(meta.start_date)} - ${meta.end_date ? formatDate(meta.end_date) : t('present')}
-                </span>
-            </div>
-            ${meta.location ? `<div class="item-location">${escapeHtml(meta.location)}</div>` : ''}
-            ${highlights.length ? `<ul class="item-highlights">${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
-        </article>`;
+        return renderExperienceCard({
+            id: `cs_${item.id}`,
+            title: item.title,
+            subtitle: item.subtitle,
+            startDate: meta.start_date,
+            endDate: meta.end_date,
+            location: meta.location,
+            logo: item.image,
+            highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
+            visible: item.visible !== false,
+            showLogo: !!item.image
+        });
     }).join('');
 }
 
@@ -715,41 +710,34 @@ async function loadExperiences() {
     
     const container = document.getElementById('experienceList');
     
-    container.innerHTML = experiences.map(exp => `
-        <article class="item-card ${exp.visible ? '' : 'hidden-print'} ${showExperienceLogos ? 'has-logo' : ''}" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
-            <div class="item-actions">
-                <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
-                    ${visibilityIcon(exp.visible)}
-                </button>
-                <button class="item-btn" onclick="openModal('experience', ${exp.id})" title="Edit">
-                    ${editIcon()}
-                </button>
-                <button class="item-btn delete" onclick="confirmDelete('experiences', ${exp.id})" title="Delete">
-                    ${deleteIcon()}
-                </button>
-            </div>
-            <div class="item-header">
-                ${showExperienceLogos && exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="experience-logo" alt="${escapeHtml(exp.company_name)}" onerror="this.style.display='none'">` : ''}
-                <div>
-                    <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
-                    <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
-                        <span itemprop="name">${escapeHtml(exp.company_name)}</span>
-                    </div>
-                </div>
-                <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
-                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
-                    ${showExperienceDuration ? `<span class="item-duration">${calculateDuration(exp.start_date, exp.end_date)}</span>` : ''}
-                </span>
-            </div>
-            ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
-            ${exp.highlights && exp.highlights.length ? `
-                <ul class="item-highlights" itemprop="description">
-                    ${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
-                </ul>
-            ` : ''}
-        </article>
-    `).join('');
+    container.innerHTML = experiences.map(exp => {
+        const actionsHtml = `<div class="item-actions">
+            <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
+                ${visibilityIcon(exp.visible)}
+            </button>
+            <button class="item-btn" onclick="openModal('experience', ${exp.id})" title="Edit">
+                ${editIcon()}
+            </button>
+            <button class="item-btn delete" onclick="confirmDelete('experiences', ${exp.id})" title="Delete">
+                ${deleteIcon()}
+            </button>
+        </div>`;
+        return renderExperienceCard({
+            id: exp.id,
+            title: exp.job_title,
+            subtitle: exp.company_name,
+            startDate: exp.start_date,
+            endDate: exp.end_date,
+            location: exp.location,
+            logo: exp.logo_filename,
+            highlights: exp.highlights || [],
+            visible: exp.visible,
+            showLogo: showExperienceLogos,
+            showDuration: showExperienceDuration,
+            schemaOrg: true,
+            actionsHtml
+        });
+    }).join('');
 }
 
 // Load Certifications (admin version with edit controls)

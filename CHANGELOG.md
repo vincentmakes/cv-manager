@@ -4,6 +4,16 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.1] - 2026-03-05
+
+### Fixed
+- Fixed logo overlapping text in Additional Experiences cards (missing `has-logo` class)
+- Additional Experiences items now show logos on both admin and public views
+
+### Changed
+- Extracted shared `renderExperienceCard()` function in scripts.js — single source of truth for experience-style cards used by admin experiences, public experiences, admin timeline layout, and public timeline layout
+- Removed 4 near-identical card renderers, replaced with one shared function accepting a normalized options object
+
 ## [1.17.0] - 2026-03-05
 
 ### Changed

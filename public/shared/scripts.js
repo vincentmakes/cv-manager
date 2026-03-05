@@ -1324,6 +1324,81 @@ async function generateATSContent() {
 }
 
 // ===========================
+// Shared Experience Card Renderer
+// ===========================
+// Single source of truth for rendering experience-style item cards.
+// Used by: admin experiences, admin timeline layout, public experiences, public timeline layout.
+//
+// opts: {
+//   id, title, subtitle, startDate, endDate, location, logo,
+//   highlights (array of strings), visible (bool),
+//   showLogo (bool), showDuration (bool), schemaOrg (bool),
+//   actionsHtml (string, optional - admin action buttons),
+//   extraClasses (string, optional)
+// }
+function renderExperienceCard(opts) {
+    const {
+        id = '', title = '', subtitle = '', startDate = '', endDate = '',
+        location = '', logo = '', highlights = [], visible = true,
+        showLogo = false, showDuration = false, schemaOrg = false,
+        actionsHtml = '', extraClasses = ''
+    } = opts;
+
+    const hasLogo = showLogo && logo;
+    const visClass = visible ? '' : 'hidden-print';
+    const logoClass = showLogo ? 'has-logo' : '';
+    const schemaAttrs = schemaOrg ? ' itemscope itemtype="https://schema.org/OrganizationRole"' : '';
+
+    const logoHtml = hasLogo
+        ? `<img src="/uploads/${encodeURIComponent(logo)}" class="experience-logo" alt="${escapeHtml(subtitle)}" onerror="this.style.display='none'">`
+        : '';
+
+    const titleHtml = schemaOrg
+        ? `<h3 class="item-title" itemprop="roleName">${escapeHtml(title)}</h3>`
+        : `<h3 class="item-title">${escapeHtml(title)}</h3>`;
+
+    const subtitleHtml = schemaOrg
+        ? `<div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">${escapeHtml(subtitle)}</span></div>`
+        : `<div class="item-subtitle"><span>${escapeHtml(subtitle)}</span></div>`;
+
+    let dateHtml;
+    if (schemaOrg) {
+        dateHtml = `<time itemprop="startDate" datetime="${startDate || ''}">${formatDate(startDate)}</time> - <time itemprop="endDate" datetime="${endDate || ''}">${endDate ? formatDate(endDate) : t('present')}</time>`;
+    } else {
+        dateHtml = `${formatDate(startDate)} - ${endDate ? formatDate(endDate) : t('present')}`;
+    }
+    if (showDuration) {
+        dateHtml += ` <span class="item-duration">${calculateDuration(startDate, endDate)}</span>`;
+    }
+
+    const locationHtml = location
+        ? `<div class="item-location">${escapeHtml(location)}</div>`
+        : '';
+
+    let highlightsHtml = '';
+    if (highlights.length) {
+        const itemProp = schemaOrg ? ' itemprop="description"' : '';
+        highlightsHtml = `<ul class="item-highlights"${itemProp}>${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>`;
+    }
+
+    const classes = ['item-card', visClass, logoClass, extraClasses].filter(Boolean).join(' ');
+
+    return `<article class="${classes}" data-id="${id}"${schemaAttrs}>
+        ${actionsHtml}
+        <div class="item-header">
+            ${logoHtml}
+            <div>
+                ${titleHtml}
+                ${subtitleHtml}
+            </div>
+            <span class="item-date">${dateHtml}</span>
+        </div>
+        ${locationHtml}
+        ${highlightsHtml}
+    </article>`;
+}
+
+// ===========================
 // Shared Custom Section Rendering (Public)
 // ===========================
 
@@ -1542,21 +1617,17 @@ function renderTimelineLayoutPublic(items) {
 
     return visibleItems.map(item => {
         const meta = item.metadata || {};
-        const highlights = item.description ? item.description.split('\n').filter(h => h.trim()) : [];
-        return `
-        <article class="item-card" data-id="cs_${item.id}">
-            <div class="item-header">
-                <div>
-                    <h3 class="item-title">${escapeHtml(item.title || '')}</h3>
-                    <div class="item-subtitle"><span>${escapeHtml(item.subtitle || '')}</span></div>
-                </div>
-                <span class="item-date">
-                    ${formatDate(meta.start_date)} - ${meta.end_date ? formatDate(meta.end_date) : t('present')}
-                </span>
-            </div>
-            ${meta.location ? `<div class="item-location">${escapeHtml(meta.location)}</div>` : ''}
-            ${highlights.length ? `<ul class="item-highlights">${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
-        </article>`;
+        return renderExperienceCard({
+            id: `cs_${item.id}`,
+            title: item.title,
+            subtitle: item.subtitle,
+            startDate: meta.start_date,
+            endDate: meta.end_date,
+            location: meta.location,
+            logo: item.image,
+            highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
+            showLogo: !!item.image
+        });
     }).join('');
 }
 
