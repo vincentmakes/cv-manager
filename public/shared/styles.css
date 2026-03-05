@@ -399,20 +399,22 @@ body {
     color: var(--gray-700);
 }
 
-/* Experience Logo (shown inline in item-header) */
+/* Experience Logo — consistent indent when logos enabled */
+.item-card.has-logo {
+    position: relative;
+    padding-left: 76px; /* 16px card padding + 48px logo + 12px gap */
+}
+
 .experience-logo {
+    position: absolute;
+    left: 16px;
+    top: 16px;
     width: 48px;
     height: 48px;
     object-fit: contain;
     object-position: center;
     border-radius: var(--radius-sm);
     flex-shrink: 0;
-}
-
-/* Align content with title when logo is present */
-.item-card.has-logo .item-location,
-.item-card.has-logo .item-highlights {
-    margin-left: 60px; /* 48px logo + 12px gap */
 }
 
 .item-date {
@@ -1282,6 +1284,8 @@ body.has-preview-banner .container {
         break-inside: auto;
     }
     .item-card { padding: 10px; margin-bottom: 6px; border-radius: 0; }
+    .item-card.has-logo { padding-left: 70px; }
+    .item-card.has-logo .experience-logo { left: 10px; top: 10px; }
     .items-list { gap: 6px; }
     .item-title { font-size: 13px; }
     .item-subtitle { font-size: 12px; }
