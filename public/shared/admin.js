@@ -985,16 +985,6 @@ function editProfile() {
 function profileForm(d) {
     return `
         <div class="form-group">
-            <label class="form-label">${t('form.open_to_work')}</label>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="f-openToWork" ${d.open_to_work == 1 ? 'checked' : ''}>
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="form-hint" style="margin:0">${t('form.open_to_work_hint')}</span>
-            </div>
-        </div>
-        <div class="form-group">
             <label class="form-label">${t('form.profile_picture')}</label>
             <div class="profile-upload-container">
                 <div class="profile-upload-preview" id="profileUploadPreview">
@@ -1021,6 +1011,16 @@ function profileForm(d) {
                 </div>
             </div>
             <div class="form-hint">${t('form.picture_hint')}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">${t('form.open_to_work')}</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-openToWork" ${d.open_to_work == 1 ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="form-hint" style="margin:0">${t('form.open_to_work_hint')}</span>
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group">

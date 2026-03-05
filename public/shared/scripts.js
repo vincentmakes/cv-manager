@@ -435,9 +435,20 @@ async function loadProfile(includePrivate = false) {
         profileImg.style.display = 'none';
     }
     
+    // Open to Work overlay on profile picture
+    const existingOverlay = document.querySelector('.open-to-work-overlay');
+    if (existingOverlay) existingOverlay.remove();
+    if (p.open_to_work == 1) {
+        const overlay = document.createElement('div');
+        overlay.className = 'open-to-work-overlay';
+        overlay.innerHTML = `<span>${t('badge.open_to_work')}</span>`;
+        document.getElementById('profileImage').appendChild(overlay);
+        // Show profile image container even if picture is disabled, so overlay is visible
+        if (p.profile_picture_enabled != 1) document.getElementById('profileImage').style.display = 'flex';
+    }
+
     // Build contact badges
     const badges = [];
-    if (p.open_to_work == 1) badges.push(`<span class="contact-badge open-to-work-badge">${materialIcon('work', 14)} ${t('badge.open_to_work')}</span>`);
     if (includePrivate && p.email) badges.push(`<a href="mailto:${escapeHtml(p.email)}" class="contact-badge" itemprop="email">${icons.email} ${escapeHtml(p.email)}</a>`);
     if (includePrivate && p.phone) badges.push(`<a href="tel:${escapeHtml(p.phone)}" class="contact-badge" itemprop="telephone">${icons.phone} ${escapeHtml(p.phone)}</a>`);
     if (p.location) badges.push(`<span class="contact-badge" itemprop="address">${icons.location} ${escapeHtml(p.location)}</span>`);
