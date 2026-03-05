@@ -342,11 +342,12 @@
             document.getElementById('experienceList').innerHTML = visible.map(exp => `
                 <article class="item-card" data-id="${exp.id || ''}" itemscope itemtype="https://schema.org/OrganizationRole">
                     <div class="item-header">
+                        ${showExperienceLogos && exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="experience-logo" alt="${escapeHtml(exp.company_name)}" onerror="this.style.display='none'">` : ''}
                         <div>
                             <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                             <div class="item-subtitle" itemprop="memberOf"><span itemprop="name">${escapeHtml(exp.company_name)}</span></div>
                         </div>
-                        <span class="item-date">${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : t('present')}</span>
+                        <span class="item-date">${formatDate(exp.start_date)} - ${exp.end_date ? formatDate(exp.end_date) : t('present')}${showExperienceDuration ? ` <span class="item-duration">${calculateDuration(exp.start_date, exp.end_date)}</span>` : ''}</span>
                     </div>
                     ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
                     ${exp.highlights && exp.highlights.length ? `<ul class="item-highlights">${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}

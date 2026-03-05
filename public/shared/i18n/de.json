@@ -183,6 +183,12 @@
     "settings.advanced.seo_hint_nofollow": "Suchmaschinen folgen ausgehenden Links nicht",
     "settings.advanced.index_versioned": "Versionierte URLs indexieren",
     "settings.advanced.index_versioned_desc": "Suchmaschinen erlauben, öffentliche versionierte Lebensläufe (/v/slug) zu indexieren. Wenn deaktiviert, erhalten versionierte Seiten noindex.",
+    "settings.advanced.experience_logos": "Erfahrung: Logos anzeigen",
+    "settings.advanced.experience_logos_desc": "Firmenlogos neben den Berufserfahrungen anzeigen",
+    "settings.advanced.timeline_logos": "Zeitleiste: Logos anzeigen",
+    "settings.advanced.timeline_logos_desc": "Firmenlogos in Zeitleisten-Karten anzeigen, wenn verfügbar",
+    "settings.advanced.experience_duration": "Erfahrung: Dauer anzeigen",
+    "settings.advanced.experience_duration_desc": "Beschäftigungsdauer (z.B. 2 J. 3 Mon.) neben Daten anzeigen",
     "settings.advanced.tracking_code": "Tracking-Code",
     "settings.advanced.tracking_code_desc": "Fügen Sie hier Ihren Analytics-Tracking-Code ein (Google Analytics, Matomo usw.). Dieser Code wird in die öffentlichen Lebenslaufseiten eingefügt.",
     "settings.advanced.tracking_code_hint": "Der Code wird vor dem schließenden </head>-Tag eingefügt. Änderungen werden gespeichert, wenn Sie auf \"Änderungen speichern\" klicken.",
@@ -317,6 +323,10 @@
     "confirm.delete_section": "Diesen benutzerdefinierten Abschnitt und alle seine Einträge löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm.delete_custom_item": "Diesen Eintrag löschen?",
     "confirm.delete_logo": "Dieses unbenutzte Logo löschen? Dies kann nicht rückgängig gemacht werden.",
+
+    "duration.years": "{{count}} J.",
+    "duration.months": "{{count}} Mon.",
+    "duration.years_months": "{{years}} J. {{months}} Mon.",
 
     "present": "Aktuell",
     "loading": "Laden...",

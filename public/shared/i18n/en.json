@@ -183,6 +183,12 @@
     "settings.advanced.seo_hint_nofollow": "Search engines won't follow outbound links",
     "settings.advanced.index_versioned": "Index Versioned URLs",
     "settings.advanced.index_versioned_desc": "Allow search engines to index public versioned CVs (/v/slug). When off, versioned pages get noindex.",
+    "settings.advanced.experience_logos": "Experience: Show Logos",
+    "settings.advanced.experience_logos_desc": "Display company logos alongside work experience entries",
+    "settings.advanced.timeline_logos": "Timeline: Show Logos",
+    "settings.advanced.timeline_logos_desc": "Display company logos in timeline cards when available",
+    "settings.advanced.experience_duration": "Experience: Show Duration",
+    "settings.advanced.experience_duration_desc": "Display job duration (e.g. 2 yrs 3 mos) next to dates",
     "settings.advanced.tracking_code": "Tracking Code",
     "settings.advanced.tracking_code_desc": "Paste your analytics tracking code here (Google Analytics, Matomo, etc.). This code will be injected into the public CV pages.",
     "settings.advanced.tracking_code_hint": "Code is inserted before the closing </head> tag. Changes are saved when you click \"Save Changes\".",
@@ -317,6 +323,10 @@
     "confirm.delete_section": "Delete this custom section and all its items? This cannot be undone.",
     "confirm.delete_custom_item": "Delete this item?",
     "confirm.delete_logo": "Delete this unused logo? This cannot be undone.",
+
+    "duration.years": "{{count}} yr",
+    "duration.months": "{{count}} mos",
+    "duration.years_months": "{{years}} yrs {{months}} mos",
 
     "present": "Present",
     "loading": "Loading...",

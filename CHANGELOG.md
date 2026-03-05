@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.15.0] - 2026-03-05
+
+### Added
+- Work experience logos: optional setting to display company logos alongside experience entries (disabled by default)
+- Timeline logos toggle: setting to show/hide company logos in timeline cards (enabled by default)
+- Experience duration display: optional setting to show job duration (e.g. "2 yrs 3 mos") next to dates, similar to LinkedIn (disabled by default)
+- All three new settings available in Settings > Advanced with full i18n support across all 8 languages
+
 ## [1.14.2] - 2026-03-05
 
 ### Fixed

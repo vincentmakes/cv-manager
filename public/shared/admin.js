@@ -694,6 +694,7 @@ async function loadExperiences() {
                 </button>
             </div>
             <div class="item-header">
+                ${showExperienceLogos && exp.logo_filename ? `<img src="/uploads/${encodeURIComponent(exp.logo_filename)}" class="experience-logo" alt="${escapeHtml(exp.company_name)}" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="roleName">${escapeHtml(exp.job_title)}</h3>
                     <div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization">
@@ -703,6 +704,7 @@ async function loadExperiences() {
                 <span class="item-date">
                     <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
                     <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
+                    ${showExperienceDuration ? `<span class="item-duration">${calculateDuration(exp.start_date, exp.end_date)}</span>` : ''}
                 </span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
@@ -1971,6 +1973,21 @@ async function loadPublicSettings() {
     const timelineBranchingEl = document.getElementById('settingTimelineBranching');
     if (timelineBranchingEl) timelineBranchingEl.checked = timelineBranchingSetting.value !== 'false';
 
+    // Load experience logos setting (default: disabled)
+    const experienceLogosSetting = await api('/api/settings/showExperienceLogos');
+    const experienceLogosEl = document.getElementById('settingExperienceLogos');
+    if (experienceLogosEl) experienceLogosEl.checked = experienceLogosSetting.value === 'true';
+
+    // Load timeline logos setting (default: enabled)
+    const timelineLogosSetting = await api('/api/settings/showTimelineLogos');
+    const timelineLogosEl = document.getElementById('settingTimelineLogos');
+    if (timelineLogosEl) timelineLogosEl.checked = timelineLogosSetting.value !== 'false';
+
+    // Load experience duration setting (default: disabled)
+    const experienceDurationSetting = await api('/api/settings/showExperienceDuration');
+    const experienceDurationEl = document.getElementById('settingExperienceDuration');
+    if (experienceDurationEl) experienceDurationEl.checked = experienceDurationSetting.value === 'true';
+
     // Load robots meta setting
     const robotsMeta = await api('/api/settings/robotsMeta');
     const robotsEl = document.getElementById('settingRobotsMeta');
@@ -2245,6 +2262,27 @@ async function saveSettingsSectionOrder() {
         if (timelineBranchingEl) {
             await api('/api/settings/timelineBranching', { method: 'PUT', body: { value: timelineBranchingEl.checked.toString() } });
             timelineBranching = timelineBranchingEl.checked;
+        }
+
+        // Also save experience logos
+        const experienceLogosEl = document.getElementById('settingExperienceLogos');
+        if (experienceLogosEl) {
+            await api('/api/settings/showExperienceLogos', { method: 'PUT', body: { value: experienceLogosEl.checked.toString() } });
+            showExperienceLogos = experienceLogosEl.checked;
+        }
+
+        // Also save timeline logos
+        const timelineLogosEl = document.getElementById('settingTimelineLogos');
+        if (timelineLogosEl) {
+            await api('/api/settings/showTimelineLogos', { method: 'PUT', body: { value: timelineLogosEl.checked.toString() } });
+            showTimelineLogos = timelineLogosEl.checked;
+        }
+
+        // Also save experience duration
+        const experienceDurationEl = document.getElementById('settingExperienceDuration');
+        if (experienceDurationEl) {
+            await api('/api/settings/showExperienceDuration', { method: 'PUT', body: { value: experienceDurationEl.checked.toString() } });
+            showExperienceDuration = experienceDurationEl.checked;
         }
 
         // Also save robots meta

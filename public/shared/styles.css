@@ -399,6 +399,17 @@ body {
     color: var(--gray-700);
 }
 
+/* Experience Logo (shown inline in item-header) */
+.experience-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    background: var(--white);
+}
+
 .item-date {
     font-size: 12px;
     color: var(--gray-500);
@@ -406,6 +417,14 @@ body {
     padding: 3px 10px;
     border-radius: var(--radius-sm);
     white-space: nowrap;
+}
+
+.item-duration {
+    display: block;
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 400;
+    margin-top: 2px;
 }
 
 .item-location {
