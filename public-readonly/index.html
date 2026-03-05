@@ -266,6 +266,17 @@
             pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
             pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
             
+            // Open to Work overlay on profile picture
+            const existingOtw = document.querySelector('.open-to-work-overlay');
+            if (existingOtw) existingOtw.remove();
+            if (p.open_to_work == 1) {
+                const profileEl = document.getElementById('profileImage');
+                const overlay = document.createElement('div');
+                overlay.className = 'open-to-work-overlay';
+                profileEl.appendChild(overlay);
+                if (p.profile_picture_enabled != 1) profileEl.style.display = 'flex';
+            }
+
             const badges = [];
             if (p.location) badges.push(`<span class="contact-badge" itemprop="address">${icons.location} ${escapeHtml(p.location)}</span>`);
             if (p.linkedin) badges.push(`<a href="${escapeHtml(p.linkedin)}" class="contact-badge" target="_blank" rel="noopener" itemprop="url">${icons.linkedin} LinkedIn</a>`);
@@ -378,8 +389,9 @@
             if (!education) return;
             const visible = education.filter(e => e.visible !== false);
             document.getElementById('educationList').innerHTML = visible.map(edu => `
-                <article class="item-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+                <article class="item-card${edu.logo_filename ? ' has-logo' : ''}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
                     <div class="item-header">
+                        ${edu.logo_filename ? `<img src="/uploads/${encodeURIComponent(edu.logo_filename)}" class="experience-logo" alt="${escapeHtml(edu.institution_name)}" onerror="this.style.display='none'">` : ''}
                         <div>
                             <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
                             <div class="item-subtitle"><span itemprop="name">${escapeHtml(edu.institution_name)}</span></div>

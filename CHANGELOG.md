@@ -4,6 +4,23 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.22.0] - 2026-03-05
+
+### Added
+- Open to Work badge: toggle in profile editor to display a green "Open to Work" badge on your public CV header (hidden in print)
+- Translations for Open to Work feature in all 8 supported languages
+
+### Fixed
+- Bluesky social link icon now displays the correct butterfly logo instead of a spade shape
+- Open to Work toggle now persists when saving profile
+- Moved Open to Work toggle to top of profile modal for better visibility
+
+## [1.21.0] - 2026-03-05
+
+### Added
+- Education logos: upload and display institution logos next to education entries, with the same modal and features as experience logos (upload, reuse, propagate across matching institution names)
+- Bluesky social link platform option in Social Links custom sections
+
 ## [1.20.4] - 2026-03-05
 
 ### Fixed

@@ -157,6 +157,18 @@ body {
     color: var(--white);
 }
 
+.open-to-work-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/shared/open-to-work.png') center/cover no-repeat;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+}
+
 /* Sections */
 .section {
     background: var(--white);
@@ -1150,7 +1162,7 @@ body.has-preview-banner .container {
 @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { background: white !important; margin: 0 !important; padding: 0 !important; }
-    .toolbar, .add-btn, .item-actions, .section-actions, .no-print { display: none !important; }
+    .toolbar, .add-btn, .item-actions, .section-actions, .no-print, .open-to-work-overlay { display: none !important; }
     .container { max-width: 100% !important; margin: 0 !important; padding: 0 10px !important; margin-top: 0 !important; }
     
     /* Header - keep horizontal layout like desktop */
