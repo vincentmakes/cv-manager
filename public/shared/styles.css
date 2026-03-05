@@ -37,7 +37,7 @@ body {
     min-height: 100vh;
 }
 
-.material-icons {
+.material-symbols-outlined {
     font-size: inherit;
     vertical-align: middle;
     line-height: 1;
@@ -147,7 +147,7 @@ body {
     gap: 6px;
 }
 
-.contact-badge svg, .contact-badge .material-icons {
+.contact-badge svg, .contact-badge .material-symbols-outlined {
     flex-shrink: 0;
     opacity: 0.9;
 }
@@ -552,7 +552,7 @@ body {
 .skill-icon svg {
     stroke: var(--primary);
 }
-.skill-icon .material-icons {
+.skill-icon .material-symbols-outlined {
     color: var(--primary);
 }
 
@@ -625,7 +625,7 @@ body {
     color: var(--white);
 }
 
-.project-link svg, .project-link .material-icons {
+.project-link svg, .project-link .material-symbols-outlined {
     width: 14px;
     height: 14px;
     font-size: 14px;
@@ -1052,7 +1052,7 @@ body {
     box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4);
 }
 
-.public-print-btn svg, .public-print-btn .material-icons {
+.public-print-btn svg, .public-print-btn .material-symbols-outlined {
     flex-shrink: 0;
 }
 
@@ -1080,7 +1080,7 @@ body {
     flex: 1;
 }
 
-.preview-banner-content svg, .preview-banner-content .material-icons {
+.preview-banner-content svg, .preview-banner-content .material-symbols-outlined {
     flex-shrink: 0;
     opacity: 0.9;
 }
@@ -1109,7 +1109,7 @@ body {
     background: rgba(255, 255, 255, 0.3);
 }
 
-.preview-banner-btn svg, .preview-banner-btn .material-icons {
+.preview-banner-btn svg, .preview-banner-btn .material-symbols-outlined {
     flex-shrink: 0;
 }
 
@@ -1335,7 +1335,7 @@ body.has-preview-banner .container {
     .project-title { font-size: 13px; }
     .project-link { width: 20px; height: 20px; }
     .project-link svg { width: 10px; height: 10px; }
-    .project-link .material-icons { font-size: 10px; }
+    .project-link .material-symbols-outlined { font-size: 10px; }
     .project-description { font-size: 11px; margin-bottom: 6px; }
     .tech-tag { font-size: 9px; padding: 2px 6px; }
     

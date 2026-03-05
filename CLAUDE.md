@@ -243,38 +243,38 @@ Dates are stored as `YYYY-MM` or `YYYY`. Display format is configurable per user
 
 ## Icons
 
-The project uses **Google Material Icons** as the standard icon library, loaded via CDN in both HTML files.
+The project uses **Google Material Symbols Outlined** as the standard icon library, loaded via CDN in both HTML files.
 
 ### Usage
 
 **In HTML:**
 ```html
-<span class="material-icons">edit</span>
+<span class="material-symbols-outlined">edit</span>
 ```
 
 **In JavaScript (use the helper function):**
 ```js
-materialIcon('edit', 14)  // Returns: <span class="material-icons" style="font-size:14px">edit</span>
+materialIcon('edit', 14)  // Returns: <span class="material-symbols-outlined" style="font-size:14px">edit</span>
 ```
 
-**Icon reference:** Browse available icons at https://fonts.google.com/icons (filter by "Material Icons").
+**Icon reference:** Browse available icons at https://fonts.google.com/icons (filter by "Material Symbols Outlined").
 
 ### Exceptions
 
-- **Brand/social icons** (LinkedIn, GitHub, Twitter, Instagram, YouTube, Dribbble, Behance) remain as inline SVGs because Material Icons does not include brand logos. These are defined in `src/server.js` (`SVG_ICONS` object) and `public/shared/scripts.js` (`icons` object).
+- **Brand/social icons** (LinkedIn, GitHub, Twitter, Instagram, YouTube, Dribbble, Behance) remain as inline SVGs because Material Symbols does not include brand logos. These are defined in `src/server.js` (`SVG_ICONS` object) and `public/shared/scripts.js` (`icons` object).
 - **Timeline connector SVGs** (`scripts.js` lines ~816–1001) are structural drawing elements for the career timeline visualization, not icons. These remain as programmatically generated SVGs.
 - **Timeline chevron** (`scripts.js`) is a custom decorative arrow element, not a standard icon.
 
 ### Adding New Icons
 
 1. Find the icon name at https://fonts.google.com/icons
-2. Use `<span class="material-icons">icon_name</span>` in HTML
+2. Use `<span class="material-symbols-outlined">icon_name</span>` in HTML
 3. Use `materialIcon('icon_name', size)` in JavaScript
-4. CSS classes like `.icon-btn .material-icons`, `.item-btn .material-icons` automatically size icons to match their containers
+4. CSS classes like `.icon-btn .material-symbols-outlined`, `.item-btn .material-symbols-outlined` automatically size icons to match their containers
 
 ### CSS Integration
 
-The base `.material-icons` class is defined in `styles.css` with `vertical-align: middle` and `line-height: 1`. Context-specific sizing is handled via parent selectors (e.g., `.icon-btn .material-icons { font-size: 16px; }`).
+The base `.material-symbols-outlined` class is defined in `styles.css` with `vertical-align: middle` and `line-height: 1`. Context-specific sizing is handled via parent selectors (e.g., `.icon-btn .material-symbols-outlined { font-size: 16px; }`).
 
 ## Environment Variables
 

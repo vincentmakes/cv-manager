@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="/shared/styles.css">
     <link rel="stylesheet" href="/shared/admin.css">
 </head>
@@ -19,16 +19,16 @@
         <div class="toolbar-title">CV Manager</div>
         <div class="toolbar-actions" id="toolbarActions">
             <button class="btn btn-secondary" onclick="openDatasetsModal()">
-                <span class="material-icons">folder_open</span>
+                <span class="material-symbols-outlined">folder_open</span>
                 <span data-i18n="toolbar.open">Open...</span>
             </button>
             <button class="btn btn-secondary" onclick="saveAsDataset()">
-                <span class="material-icons">save_alt</span>
+                <span class="material-symbols-outlined">save_alt</span>
                 <span data-i18n="toolbar.save_as">Save As...</span>
             </button>
             <div class="color-picker-wrapper">
                 <button class="btn btn-secondary" onclick="toggleColorPicker()" data-i18n-title="toolbar.change_theme" title="Change Theme Color">
-                    <span class="material-icons">palette</span>
+                    <span class="material-symbols-outlined">palette</span>
                     <span data-i18n="toolbar.theme">Theme</span>
                 </button>
                 <div class="color-picker-dropdown" id="colorPickerDropdown">
@@ -62,21 +62,21 @@
                 </div>
             </div>
             <button class="btn btn-secondary" onclick="openSettingsModal()">
-                <span class="material-icons">settings</span>
+                <span class="material-symbols-outlined">settings</span>
                 <span data-i18n="toolbar.settings">Settings</span>
             </button>
             <button class="btn btn-secondary" onclick="exportData()">
-                <span class="material-icons">upload</span>
+                <span class="material-symbols-outlined">upload</span>
                 <span data-i18n="toolbar.export">Export</span>
             </button>
             <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
-                <span class="material-icons">download</span>
+                <span class="material-symbols-outlined">download</span>
                 <span data-i18n="toolbar.import">Import</span>
             </button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
             <div class="language-picker-wrapper">
                 <button class="btn btn-secondary btn-icon-only" onclick="toggleLanguagePicker()" data-i18n-title="toolbar.language" title="Language">
-                    <span class="material-icons">language</span>
+                    <span class="material-symbols-outlined">language</span>
                 </button>
                 <div class="language-picker-dropdown" id="languagePickerDropdown">
                     <div class="language-picker-header" data-i18n="settings.language.info">Choose the display language for the CV Manager interface.</div>
@@ -84,19 +84,19 @@
                 </div>
             </div>
             <a href="https://docs-cv-manager.verdet.me/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" data-i18n-title="toolbar.help" title="Help">
-                <span class="material-icons">help_outline</span>
+                <span class="material-symbols-outlined">help_outline</span>
             </a>
             <button class="btn btn-primary toolbar-print-inline" onclick="window.print()">
-                <span class="material-icons">print</span>
+                <span class="material-symbols-outlined">print</span>
                 <span data-i18n="toolbar.print">Print / PDF</span>
             </button>
         </div>
         <div class="toolbar-end">
             <button class="btn btn-primary toolbar-print-mobile" onclick="window.print()" title="Print / PDF">
-                <span class="material-icons">print</span>
+                <span class="material-symbols-outlined">print</span>
             </button>
             <button class="btn btn-secondary toolbar-hamburger" onclick="toggleMobileMenu(event)" title="Menu" id="toolbarHamburger">
-                <span class="material-icons">menu</span>
+                <span class="material-symbols-outlined">menu</span>
             </button>
         </div>
     </div>
@@ -104,7 +104,7 @@
     <!-- Update Banner (hidden by default) -->
     <div id="updateBanner" class="update-banner no-print" style="display: none;">
         <div class="update-banner-content">
-            <span class="material-icons">info</span>
+            <span class="material-symbols-outlined">info</span>
             <span id="updateBannerText"></span>
             <a id="updateBannerLink" href="#" target="_blank" rel="noopener noreferrer" class="update-banner-link" data-i18n="banner.whats_new">What's new</a>
             <button class="update-banner-dismiss" onclick="dismissUpdateBanner()" data-i18n-title="banner.dismiss" title="Dismiss">&times;</button>
@@ -114,7 +114,7 @@
     <!-- Active Dataset Banner (hidden by default) -->
     <div id="activeDatasetBanner" class="active-dataset-banner no-print" style="display: none;">
         <div class="active-dataset-banner-content">
-            <span class="material-icons" style="font-size:14px">edit</span>
+            <span class="material-symbols-outlined" style="font-size:14px">edit</span>
             <span class="active-dataset-label" data-i18n="banner.editing">Editing:</span>
             <span id="activeDatasetName" class="active-dataset-name"></span>
             <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
@@ -133,7 +133,7 @@
         <header class="header" id="section-header" itemscope itemtype="https://schema.org/Person">
             <div class="section-actions no-print">
                 <button class="icon-btn" onclick="editProfile()" data-i18n-title="action.edit_profile" title="Edit Profile">
-                    <span class="material-icons">edit</span>
+                    <span class="material-symbols-outlined">edit</span>
                 </button>
             </div>
             <div class="header-content">
@@ -156,10 +156,10 @@
                 <h2 class="section-title" data-i18n="section.about">Professional Summary</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="openModal('profile')" data-i18n-title="action.edit_about" title="Edit About">
-                        <span class="material-icons">edit</span>
+                        <span class="material-symbols-outlined">edit</span>
                     </button>
                     <button class="icon-btn" onclick="toggleSection('about')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-about">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
@@ -172,7 +172,7 @@
                 <h2 class="section-title" data-i18n="section.timeline">Career Timeline</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('timeline')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-timeline">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
@@ -188,13 +188,13 @@
                 <h2 class="section-title" data-i18n="section.experience">Work Experience</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('experience')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-experience">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="items-list" id="experienceList"></div>
             <button class="add-btn no-print" onclick="openModal('experience')">
-                <span class="material-icons">add</span>
+                <span class="material-symbols-outlined">add</span>
                 <span data-i18n="action.add_experience">Add Experience</span>
             </button>
         </section>
@@ -205,13 +205,13 @@
                 <h2 class="section-title" data-i18n="section.certifications">Certifications</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('certifications')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-certifications">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="cert-grid" id="certGrid"></div>
             <button class="add-btn no-print" onclick="openModal('certification')">
-                <span class="material-icons">add</span>
+                <span class="material-symbols-outlined">add</span>
                 <span data-i18n="action.add_certification">Add Certification</span>
             </button>
         </section>
@@ -222,13 +222,13 @@
                 <h2 class="section-title" data-i18n="section.education">Education</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('education')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-education">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="items-list" id="educationList"></div>
             <button class="add-btn no-print" onclick="openModal('education')">
-                <span class="material-icons">add</span>
+                <span class="material-symbols-outlined">add</span>
                 <span data-i18n="action.add_education">Add Education</span>
             </button>
         </section>
@@ -239,13 +239,13 @@
                 <h2 class="section-title" data-i18n="section.skills">Skills & Expertise</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('skills')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-skills">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="skills-grid" id="skillsGrid"></div>
             <button class="add-btn no-print" onclick="openModal('skill')">
-                <span class="material-icons">add</span>
+                <span class="material-symbols-outlined">add</span>
                 <span data-i18n="action.add_skill">Add Skill Category</span>
             </button>
         </section>
@@ -256,13 +256,13 @@
                 <h2 class="section-title" data-i18n="section.projects">Featured Projects</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('projects')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-projects">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="projects-grid" id="projectsGrid"></div>
             <button class="add-btn no-print" onclick="openModal('project')">
-                <span class="material-icons">add</span>
+                <span class="material-symbols-outlined">add</span>
                 <span data-i18n="action.add_project">Add Project</span>
             </button>
         </section>
@@ -274,7 +274,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" id="modalTitle">Edit</h3>
                 <button class="modal-close" onclick="closeModal()">
-                    <span class="material-icons">close</span>
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="modal-body" id="modalBody"></div>
@@ -296,7 +296,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" data-i18n="datasets.title">Saved Datasets</h3>
                 <button class="modal-close" onclick="closeDatasetsModal()">
-                    <span class="material-icons">close</span>
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="modal-body" id="datasetsModalBody">
@@ -310,7 +310,7 @@
                         <span><strong>Toggle</strong> — share other datasets at their own <code>/v/slug</code> URL</span>
                     </div>
                     <div class="datasets-legend-item">
-                        <span class="material-icons legend-icon" style="font-size:14px">visibility</span>
+                        <span class="material-symbols-outlined legend-icon" style="font-size:14px">visibility</span>
                         <span><strong>Eye</strong> — preview a saved dataset without making it public</span>
                     </div>
                 </div>
@@ -331,7 +331,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" data-i18n="settings.title">Settings</h3>
                 <button class="modal-close" onclick="closeSettingsModal()">
-                    <span class="material-icons">close</span>
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="modal-body">
@@ -356,7 +356,7 @@
                         Create custom sections with different layouts. Custom sections appear in the section order list above.
                     </div>
                     <button class="add-btn" onclick="openCustomSectionModal()" style="margin-top: 0; margin-bottom: 16px;">
-                        <span class="material-icons">add</span>
+                        <span class="material-symbols-outlined">add</span>
                         <span data-i18n="settings.custom.add">Add Custom Section</span>
                     </button>
                     <div id="customSectionsList"></div>
@@ -556,7 +556,7 @@
                     <!-- Tracking Code Setting -->
                     <div class="settings-field">
                         <label class="settings-field-label">
-                            <span class="material-icons" style="font-size:16px">bar_chart</span>
+                            <span class="material-symbols-outlined" style="font-size:16px">bar_chart</span>
                             <span data-i18n="settings.advanced.tracking_code">Tracking Code</span>
                         </label>
                         <div class="settings-field-desc" data-i18n="settings.advanced.tracking_code_desc">
@@ -569,7 +569,7 @@
                             spellcheck="false"
                         ></textarea>
                         <div class="settings-field-hint">
-                            <span class="material-icons" style="font-size:12px">info</span>
+                            <span class="material-symbols-outlined" style="font-size:12px">info</span>
                             Code is inserted before the closing &lt;/head&gt; tag. Changes are saved when you click "Save Changes".
                         </div>
                     </div>
@@ -592,7 +592,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" id="customSectionModalTitle" data-i18n="custom_section.add_title">Add Custom Section</h3>
                 <button class="modal-close" onclick="closeCustomSectionModal()">
-                    <span class="material-icons">close</span>
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="modal-body" id="customSectionModalBody"></div>
@@ -614,7 +614,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" id="customItemModalTitle" data-i18n="custom_item.add_title">Add Item</h3>
                 <button class="modal-close" onclick="closeCustomItemModal()">
-                    <span class="material-icons">close</span>
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="modal-body" id="customItemModalBody"></div>

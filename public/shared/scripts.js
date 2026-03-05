@@ -2,7 +2,7 @@
 
 // Material Icon helper function
 function materialIcon(name, size = 16) {
-    return `<span class="material-icons" style="font-size:${size}px">${name}</span>`;
+    return `<span class="material-symbols-outlined" style="font-size:${size}px">${name}</span>`;
 }
 
 // Icons for contact badges and skill categories

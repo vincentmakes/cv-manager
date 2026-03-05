@@ -20,8 +20,8 @@ function toggleMobileMenu(e) {
     actions.classList.toggle('mobile-open', mobileMenuOpen);
     // Swap hamburger icon to X when open
     hamburger.innerHTML = mobileMenuOpen
-        ? '<span class="material-icons">close</span>'
-        : '<span class="material-icons">menu</span>';
+        ? '<span class="material-symbols-outlined">close</span>'
+        : '<span class="material-symbols-outlined">menu</span>';
 }
 
 function closeMobileMenu() {
@@ -30,7 +30,7 @@ function closeMobileMenu() {
     const actions = document.getElementById('toolbarActions');
     const hamburger = document.getElementById('toolbarHamburger');
     if (actions) actions.classList.remove('mobile-open');
-    if (hamburger) hamburger.innerHTML = '<span class="material-icons">menu</span>';
+    if (hamburger) hamburger.innerHTML = '<span class="material-symbols-outlined">menu</span>';
 }
 
 // Close mobile menu when clicking outside
@@ -498,7 +498,7 @@ function renderCustomSection(section) {
                 <h2 class="section-title">${escapeHtml(section.name)}</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="Toggle Visibility" id="toggle-${section.section_key}">
-                        <span class="material-icons">visibility</span>
+                        <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
             </div>
@@ -506,7 +506,7 @@ function renderCustomSection(section) {
                 ${contentHtml}
             </div>
             <button class="add-btn no-print" onclick="manageCustomSectionItems(${section.id})">
-                <span class="material-icons">add</span>
+                <span class="material-symbols-outlined">add</span>
                 Manage Items
             </button>
         </section>
@@ -995,11 +995,11 @@ function profileForm(d) {
                     </div>
                     <input type="file" id="f-picture" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfilePicture(this)">
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-picture').click()">
-                        <span class="material-icons" style="font-size:14px">image</span>
+                        <span class="material-symbols-outlined" style="font-size:14px">image</span>
                         ${t('form.choose_image')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="removeProfilePicture()">
-                        <span class="material-icons" style="font-size:14px">delete</span>
+                        <span class="material-symbols-outlined" style="font-size:14px">delete</span>
                         ${t('form.remove')}
                     </button>
                 </div>
@@ -1064,14 +1064,14 @@ function logoUploadHtml(filename) {
                 <div class="logo-upload-preview" id="logoUploadPreview">
                     ${filename
                         ? `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
-                        : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><span class="material-icons" style="font-size:20px">image</span></div>`
+                        : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><span class="material-symbols-outlined" style="font-size:20px">image</span></div>`
                     }
                 </div>
                 <div class="logo-upload-actions">
                     <input type="file" id="f-logo" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewLogo(this)">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><span class="material-icons" style="font-size:14px">image</span> ${t('form.choose_image')}</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="showLogoPicker()"><span class="material-icons" style="font-size:14px">inventory_2</span> ${t('form.use_existing')}</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><span class="material-icons" style="font-size:14px">delete</span> ${t('form.remove')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><span class="material-symbols-outlined" style="font-size:14px">image</span> ${t('form.choose_image')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="showLogoPicker()"><span class="material-symbols-outlined" style="font-size:14px">inventory_2</span> ${t('form.use_existing')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><span class="material-symbols-outlined" style="font-size:14px">delete</span> ${t('form.remove')}</button>
                 </div>
                 <div class="logo-picker-grid" id="logoPickerGrid" style="display:none;"></div>
             </div>
@@ -1230,15 +1230,15 @@ function skillForm(d) {
             <input type="hidden" id="f-icon" value="${escapeHtml(selectedValue)}">
             <div class="icon-picker-wrapper">
                 <button type="button" class="icon-picker-trigger" id="iconPickerTrigger" onclick="toggleIconPicker()">
-                    <span class="material-icons" id="iconPickerSelected">${selected.icon}</span>
+                    <span class="material-symbols-outlined" id="iconPickerSelected">${selected.icon}</span>
                     <span class="icon-picker-trigger-label" id="iconPickerLabel">${t('icon.' + selected.value)}</span>
-                    <span class="material-icons icon-picker-arrow">expand_more</span>
+                    <span class="material-symbols-outlined icon-picker-arrow">expand_more</span>
                 </button>
                 <div class="icon-picker-dropdown" id="iconPickerDropdown">
                     <div class="icon-picker-grid">
                         ${iconOptions.map(opt => `
                             <button type="button" class="icon-picker-item${selectedValue === opt.value ? ' active' : ''}" data-icon="${opt.value}" data-material="${opt.icon}" onclick="selectIcon(this)" title="${t('icon.' + opt.value)}">
-                                <span class="material-icons">${opt.icon}</span>
+                                <span class="material-symbols-outlined">${opt.icon}</span>
                                 <span class="icon-picker-label">${t('icon.' + opt.value)}</span>
                             </button>
                         `).join('')}
@@ -1649,7 +1649,7 @@ function previewLogo(input) {
 function removeLogo() {
     pendingLogo = 'remove';
     const preview = document.getElementById('logoUploadPreview');
-    preview.innerHTML = '<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><span class="material-icons" style="font-size:20px">image</span></div>';
+    preview.innerHTML = '<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><span class="material-symbols-outlined" style="font-size:20px">image</span></div>';
     const fileInput = document.getElementById('f-logo');
     if (fileInput) fileInput.value = '';
     updateLogoApplyGlobal();
@@ -1810,18 +1810,18 @@ function toast(msg, type = 'success') {
 // Icons
 function visibilityIcon(visible) {
     return visible
-        ? '<span class="material-icons" style="font-size:14px">visibility</span>'
-        : '<span class="material-icons" style="font-size:14px">visibility_off</span>';
+        ? '<span class="material-symbols-outlined" style="font-size:14px">visibility</span>'
+        : '<span class="material-symbols-outlined" style="font-size:14px">visibility_off</span>';
 }
 
 function printerIcon(printVisible) {
     return printVisible
-        ? '<span class="material-icons" style="font-size:14px">print</span>'
-        : '<span class="material-icons" style="font-size:14px">print_disabled</span>';
+        ? '<span class="material-symbols-outlined" style="font-size:14px">print</span>'
+        : '<span class="material-symbols-outlined" style="font-size:14px">print_disabled</span>';
 }
 
 function dragHandleIcon() {
-    return '<span class="material-icons" style="font-size:14px">drag_indicator</span>';
+    return '<span class="material-symbols-outlined" style="font-size:14px">drag_indicator</span>';
 }
 
 // ===========================
@@ -1984,23 +1984,23 @@ async function saveItemOrder(type, container) {
 }
 
 function editIcon() {
-    return '<span class="material-icons" style="font-size:14px">edit</span>';
+    return '<span class="material-symbols-outlined" style="font-size:14px">edit</span>';
 }
 
 function deleteIcon() {
-    return '<span class="material-icons" style="font-size:14px">delete</span>';
+    return '<span class="material-symbols-outlined" style="font-size:14px">delete</span>';
 }
 
 function linkIcon() {
-    return '<span class="material-icons" style="font-size:14px">open_in_new</span>';
+    return '<span class="material-symbols-outlined" style="font-size:14px">open_in_new</span>';
 }
 
 function moveUpIcon() {
-    return '<span class="material-icons" style="font-size:14px">expand_less</span>';
+    return '<span class="material-symbols-outlined" style="font-size:14px">expand_less</span>';
 }
 
 function moveDownIcon() {
-    return '<span class="material-icons" style="font-size:14px">expand_more</span>';
+    return '<span class="material-symbols-outlined" style="font-size:14px">expand_more</span>';
 }
 
 async function moveExperience(id, direction) {
@@ -2204,7 +2204,7 @@ function renderSettingsSections() {
         return `
         <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
             <div class="settings-section-drag">
-                <span class="material-icons" style="font-size:16px">drag_handle</span>
+                <span class="material-symbols-outlined" style="font-size:16px">drag_handle</span>
             </div>
             <div class="settings-section-name-wrap">
                 <input type="text" class="settings-section-name-input"
@@ -2215,7 +2215,7 @@ function renderSettingsSections() {
                     title="${t('settings.sections.click_to_edit')}"
                 />
                 ${isCustomName ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="${t('settings.sections.reset_default')}: ${escapeHtml(translatedDefault)}">
-                    <span class="material-icons" style="font-size:12px">sync</span>
+                    <span class="material-symbols-outlined" style="font-size:12px">sync</span>
                 </button>` : ''}
             </div>
             <div class="settings-section-actions">
@@ -2226,10 +2226,10 @@ function renderSettingsSections() {
                     ${printerIcon(section.print_visible !== false)}
                 </button>
                 <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', -1)" title="Move Up" ${index === 0 ? 'disabled' : ''}>
-                    <span class="material-icons" style="font-size:14px">expand_less</span>
+                    <span class="material-symbols-outlined" style="font-size:14px">expand_less</span>
                 </button>
                 <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', 1)" title="Move Down" ${index === settingsSectionOrder.length - 1 ? 'disabled' : ''}>
-                    <span class="material-icons" style="font-size:14px">expand_more</span>
+                    <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
                 </button>
             </div>
         </div>
@@ -2501,7 +2501,7 @@ async function loadDatasetsList() {
                 ${showSlugUrl ? `<div class="dataset-url">
                     <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
                     <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
-                        <span class="material-icons" style="font-size:12px">content_copy</span>
+                        <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
                     </button>
                     ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
                 </div>` : ''}
@@ -2518,7 +2518,7 @@ async function loadDatasetsList() {
                     </div>` : ''}
                 ${ds.slug && !isDefault ? `
                     <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
-                        <span class="material-icons" style="font-size:14px">visibility</span>
+                        <span class="material-symbols-outlined" style="font-size:14px">visibility</span>
                     </button>` : ''}
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">${isActive ? 'Reload' : 'Load'}</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
@@ -3010,10 +3010,10 @@ async function loadCustomSectionsList() {
                 </div>
                 <div class="custom-section-actions">
                     <button class="btn btn-ghost btn-sm" onclick="openCustomSectionModal(${section.id})" title="Edit Section">
-                        <span class="material-icons" style="font-size:14px">edit</span>
+                        <span class="material-symbols-outlined" style="font-size:14px">edit</span>
                     </button>
                     <button class="btn btn-ghost btn-sm" onclick="manageCustomSectionItems(${section.id})" title="Manage Items">
-                        <span class="material-icons" style="font-size:14px">list</span>
+                        <span class="material-symbols-outlined" style="font-size:14px">list</span>
                     </button>
                 </div>
             </div>
@@ -3284,7 +3284,7 @@ async function manageCustomSectionItems(sectionId) {
             ` : ''}
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
-            <span class="material-icons">add</span>
+            <span class="material-symbols-outlined">add</span>
             ${section.layout_type === 'picture-grid' ? t('custom_item.add_picture') : t('custom_item.add_item')}
         </button>
         <div class="custom-items-list" data-section-id="${sectionId}">

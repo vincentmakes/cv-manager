@@ -258,26 +258,26 @@ function serveDatasetData(req, res) {
 // Layout types for custom sections
 // SVG icons (matching app style)
 const SVG_ICONS = {
-    link: '<span class="material-icons" style="font-size:20px">link</span>',
-    grid2: '<span class="material-icons" style="font-size:20px">splitscreen</span>',
-    grid3: '<span class="material-icons" style="font-size:20px">view_week</span>',
-    list: '<span class="material-icons" style="font-size:20px">format_list_bulleted</span>',
-    cards: '<span class="material-icons" style="font-size:20px">grid_view</span>',
+    link: '<span class="material-symbols-outlined" style="font-size:20px">link</span>',
+    grid2: '<span class="material-symbols-outlined" style="font-size:20px">view_column_2</span>',
+    grid3: '<span class="material-symbols-outlined" style="font-size:20px">view_week</span>',
+    list: '<span class="material-symbols-outlined" style="font-size:20px">format_list_bulleted</span>',
+    cards: '<span class="material-symbols-outlined" style="font-size:20px">grid_view</span>',
     linkedin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
     github: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>',
     twitter: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>',
     instagram: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
     youtube: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>',
-    globe: '<span class="material-icons" style="font-size:16px">language</span>',
-    mail: '<span class="material-icons" style="font-size:16px">email</span>',
-    phone: '<span class="material-icons" style="font-size:16px">phone</span>',
-    edit: '<span class="material-icons" style="font-size:16px">edit</span>',
+    globe: '<span class="material-symbols-outlined" style="font-size:16px">language</span>',
+    mail: '<span class="material-symbols-outlined" style="font-size:16px">email</span>',
+    phone: '<span class="material-symbols-outlined" style="font-size:16px">phone</span>',
+    edit: '<span class="material-symbols-outlined" style="font-size:16px">edit</span>',
     dribbble: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>',
     behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>',
-    bullets: '<span class="material-icons" style="font-size:20px">format_list_bulleted</span>',
-    freetext: '<span class="material-icons" style="font-size:20px">notes</span>',
-    pictureGrid: '<span class="material-icons" style="font-size:20px">photo_library</span>',
-    timeline: '<span class="material-icons" style="font-size:20px">work_history</span>'
+    bullets: '<span class="material-symbols-outlined" style="font-size:20px">format_list_bulleted</span>',
+    freetext: '<span class="material-symbols-outlined" style="font-size:20px">notes</span>',
+    pictureGrid: '<span class="material-symbols-outlined" style="font-size:20px">photo_library</span>',
+    timeline: '<span class="material-symbols-outlined" style="font-size:20px">work_history</span>'
 };
 
 // Layout types as array for frontend iteration
