@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.3] - 2026-03-05
+
+### Changed
+- Replaced timeline icon with briefcase (work history) icon for Additional Experiences layout in custom section settings
+
 ## [1.17.2] - 2026-03-05
 
 ### Fixed
