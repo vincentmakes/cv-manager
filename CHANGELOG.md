@@ -19,6 +19,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 - Additional Experiences logos respect the "Experience: Show Logos" setting
 - Increased settings modal width from 560px to 640px and sub-modals from 600px to 680px
 
+### Removed
+- Removed unused "Section Icon" dropdown from custom section settings (was stored but never rendered)
+
 ## [1.16.0] - 2026-03-05
 
 ### Added

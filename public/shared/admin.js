@@ -2982,19 +2982,6 @@ async function openCustomSectionModal(id = null) {
             </div>
             <input type="hidden" id="cs-columns" value="${section.metadata?.columns || 3}">
         </div>
-        <div class="form-group">
-            <label class="form-label">${t('custom_section.section_icon')}</label>
-            <select class="form-select" id="cs-icon">
-                <option value="default" ${section.icon === 'default' ? 'selected' : ''}>${t('custom_section.icon_default')}</option>
-                <option value="star" ${section.icon === 'star' ? 'selected' : ''}>${t('custom_section.icon_star')}</option>
-                <option value="book" ${section.icon === 'book' ? 'selected' : ''}>${t('custom_section.icon_book')}</option>
-                <option value="link" ${section.icon === 'link' ? 'selected' : ''}>${t('custom_section.icon_link')}</option>
-                <option value="globe" ${section.icon === 'globe' ? 'selected' : ''}>${t('custom_section.icon_globe')}</option>
-                <option value="heart" ${section.icon === 'heart' ? 'selected' : ''}>${t('custom_section.icon_heart')}</option>
-                <option value="award" ${section.icon === 'award' ? 'selected' : ''}>${t('custom_section.icon_award')}</option>
-                <option value="briefcase" ${section.icon === 'briefcase' ? 'selected' : ''}>${t('custom_section.icon_briefcase')}</option>
-            </select>
-        </div>
     `;
     
     document.getElementById('customSectionModalOverlay').classList.add('active');
@@ -3079,16 +3066,14 @@ async function closeCustomSectionModal() {
 async function saveCustomSection() {
     const nameEl = document.getElementById('cs-name');
     const layoutEl = document.getElementById('cs-layout');
-    const iconEl = document.getElementById('cs-icon');
-    
-    if (!nameEl || !layoutEl || !iconEl) {
+
+    if (!nameEl || !layoutEl) {
         toast(t('toast.form_not_ready'), 'error');
         return;
     }
-    
+
     const name = nameEl.value.trim();
     const layout_type = layoutEl.value;
-    const icon = iconEl.value;
 
     // Build section metadata
     let metadata = {};
@@ -3106,13 +3091,13 @@ async function saveCustomSection() {
         if (currentCustomSection.id) {
             await api(`/api/custom-sections/${currentCustomSection.id}`, {
                 method: 'PUT',
-                body: { name, layout_type, icon, metadata }
+                body: { name, layout_type, metadata }
             });
             toast(t('toast.section_updated'));
         } else {
             await api('/api/custom-sections', {
                 method: 'POST',
-                body: { name, layout_type, icon, metadata }
+                body: { name, layout_type, metadata }
             });
             toast(t('toast.section_created'));
         }
