@@ -22,6 +22,33 @@ Custom sections let you add any content that doesn't fit the built-in sections.
 | **Social Links** | Platform-specific links with icons (LinkedIn, GitHub, Twitter/X, YouTube, Instagram, Dribbble, Behance, Website, Email, Phone, or Custom) |
 | **Bullet Points** | Grouped bullet lists, similar to experience highlights — great for key achievements or competencies |
 | **Free Text** | Plain text block with preserved line breaks — similar to the About section, useful for cover letters, personal statements, or any freeform content |
+| **Picture Grid** | Image gallery with optional captions — great for portfolios, certificates, or visual work samples |
+| **Additional Experiences** | Experience-style entries (job title, company, dates, highlights, logo) — extends your work history without mixing into the main Experience section |
+
+## Picture Grid
+
+The **Picture Grid** layout displays images in a responsive grid with optional captions.
+
+1. Create a custom section and select **Picture Grid** as the layout type
+2. Choose the number of **grid columns** (1, 2, or 3 — default is 3)
+3. Click **Add Picture** to upload images (JPEG, PNG, or WebP, max 5MB)
+4. Optionally add a **caption** below each image
+
+Images are centered and maintain their aspect ratio. In 3-column mode, images display as squares for a uniform look.
+
+## Additional Experiences
+
+The **Additional Experiences** layout creates experience-style entries identical to the built-in Work Experience section. Each item includes:
+
+- **Job title** and **company/organization name**
+- **Start and end dates** (with optional "Present" for current roles)
+- **Location** and **country code**
+- **Highlights** (key achievements, one per line)
+- **Optional logo** (same upload/reuse workflow as company logos)
+
+### Show on Career Timeline
+
+When managing items in an Additional Experiences section, you can enable **"Show items on Career Timeline"**. This merges the additional experience entries into the main timeline visualization — they appear alongside your regular work experiences with full support for branching, logos, and duration display.
 
 ## Hide Title Option
 

@@ -16,6 +16,16 @@ Cliquez sur l'**icône de modification** dans la section d'en-tête. Vous pouvez
 
 Dans la boîte de dialogue de modification du profil, vous pouvez télécharger une photo de profil (JPEG, PNG ou WebP). L'image remplace le cercle d'initiales. Pour la supprimer, utilisez l'option de suppression dans la même boîte de dialogue.
 
+## Badge « Open to Work »
+
+Affichez un badge vert « Open to Work » sur votre CV public pour signaler votre disponibilité aux recruteurs :
+
+1. Cliquez sur l'**icône de modification** dans l'en-tête pour ouvrir l'éditeur de profil
+2. Trouvez le bouton bascule **Open to Work**
+3. Activez-le et enregistrez
+
+Le badge apparaît comme un overlay circulaire sur votre photo de profil (ou à côté de votre avatar s'il n'y a pas de photo). Il est visible sur le site public mais **masqué dans l'export impression/PDF**.
+
 ## Expérience professionnelle
 
 Chaque entrée d'expérience comprend :
@@ -62,6 +72,28 @@ Chaque certification a un **nom**, un **organisme**, une **date de délivrance**
 ## Formation
 
 Chaque entrée a un **diplôme/titre**, un **établissement**, des **dates de début/fin**, et une **description** optionnelle.
+
+## Logos d'établissements
+
+Les entrées de formation peuvent avoir un **logo d'établissement**, tout comme les logos d'entreprise pour les expériences professionnelles.
+
+### Télécharger un logo
+
+1. Modifiez une entrée de formation
+2. Dans la section **Logo de l'établissement**, cliquez sur **Choisir une image** pour télécharger un fichier (JPEG, PNG ou WebP, 5 Mo max)
+3. Une petite image carrée fonctionne le mieux
+
+### Réutiliser des logos
+
+Cliquez sur **Utiliser un existant** pour ouvrir la grille de sélection de logos, qui affiche tous les logos précédemment téléchargés (y compris les logos d'entreprise). Cliquez sur l'un d'eux pour le réutiliser.
+
+### Propagation globale
+
+Lorsqu'un logo est défini, un bouton bascule apparaît : **« Synchroniser le logo sur toutes les formations de [Établissement] »**. Lorsqu'il est activé, le logo est appliqué à toutes les entrées de formation portant le même nom d'établissement — y compris celles des jeux de données enregistrés.
+
+### Supprimer un logo
+
+Cliquez sur le bouton **Supprimer** dans la section logo pour dissocier un logo d'une entrée de formation.
 
 ## Compétences
 

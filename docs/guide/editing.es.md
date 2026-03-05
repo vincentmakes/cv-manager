@@ -16,6 +16,16 @@ Haga clic en el **ícono de edición** en la sección del encabezado. Puede conf
 
 En el diálogo de edición del perfil, puede subir una foto de perfil (JPEG, PNG o WebP). La imagen reemplaza el círculo de iniciales. Para eliminarla, utilice la opción de eliminar en el mismo diálogo.
 
+## Insignia "Open to Work"
+
+Muestre una insignia verde "Open to Work" en su CV público para señalar su disponibilidad a los reclutadores:
+
+1. Haga clic en el **ícono de edición** en el encabezado para abrir el editor de perfil
+2. Encuentre el interruptor **Open to Work**
+3. Actívelo y guarde
+
+La insignia aparece como una superposición circular sobre su foto de perfil (o junto a su avatar si no hay foto). Es visible en el sitio público pero **se oculta en la exportación de impresión/PDF**.
+
 ## Experiencia laboral
 
 Cada entrada de experiencia incluye:
@@ -62,6 +72,28 @@ Cada certificación tiene un **nombre**, **proveedor**, **fecha de emisión**, y
 ## Educación
 
 Cada entrada tiene un **título/grado**, **institución**, **fechas de inicio/fin**, y una **descripción** opcional.
+
+## Logotipos de instituciones
+
+Las entradas de educación pueden tener un **logotipo de institución**, igual que los logotipos de empresa en las experiencias laborales.
+
+### Subir un logotipo
+
+1. Edite una entrada de educación
+2. En la sección **Logotipo de la institución**, haga clic en **Choose image** para subir un archivo (JPEG, PNG o WebP, máximo 5MB)
+3. Una imagen cuadrada pequeña funciona mejor
+
+### Reutilizar logotipos
+
+Haga clic en **Use existing** para abrir la cuadrícula del selector de logotipos, que muestra todos los logotipos subidos previamente (incluyendo logotipos de empresas). Haga clic en uno para reutilizarlo.
+
+### Propagación global
+
+Cuando se establece un logotipo, aparece un interruptor: **"Sincronizar logotipo en todas las entradas de educación de [Institución]"**. Cuando está activado, el logotipo se aplica a todas las entradas de educación con el mismo nombre de institución — incluyendo las de conjuntos de datos guardados.
+
+### Eliminar un logotipo
+
+Haga clic en el botón **Remove** en la sección del logotipo para desvincular un logotipo de una entrada de educación.
 
 ## Habilidades
 

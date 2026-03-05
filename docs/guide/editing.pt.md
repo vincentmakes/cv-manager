@@ -16,6 +16,16 @@ Clique no **ícone de edição** na seção do cabeçalho. Você pode definir:
 
 No diálogo de edição do perfil, você pode enviar uma foto de perfil (JPEG, PNG ou WebP). A imagem substitui o círculo de iniciais. Para removê-la, use a opção de exclusão no mesmo diálogo.
 
+## Badge "Open to Work"
+
+Exiba um badge verde "Open to Work" no seu CV público para sinalizar sua disponibilidade aos recrutadores:
+
+1. Clique no **ícone de edição** no cabeçalho para abrir o editor de perfil
+2. Encontre o botão **Open to Work**
+3. Ative-o e salve
+
+O badge aparece como uma sobreposição circular na sua foto de perfil (ou ao lado do seu avatar se não houver foto). É visível no site público mas **oculto na exportação de impressão/PDF**.
+
 ## Experiência Profissional
 
 Cada entrada de experiência inclui:
@@ -62,6 +72,28 @@ Cada certificação possui um **nome**, **emissor**, **data de emissão** e, opc
 ## Educação
 
 Cada entrada possui um **diploma/título**, **instituição**, **datas de início/término** e uma **descrição** opcional.
+
+## Logotipos de Instituições
+
+Entradas de educação podem ter um **logotipo da instituição**, assim como logotipos de empresas nas experiências profissionais.
+
+### Enviando um Logotipo
+
+1. Edite uma entrada de educação
+2. Na seção **Logotipo da Instituição**, clique em **Escolher imagem** para enviar um arquivo (JPEG, PNG ou WebP, máx. 5MB)
+3. Uma imagem quadrada pequena funciona melhor
+
+### Reutilizando Logotipos
+
+Clique em **Usar existente** para abrir a grade de seleção de logotipos, que mostra todos os logotipos enviados anteriormente (incluindo logotipos de empresas). Clique em um para reutilizá-lo.
+
+### Propagação Global
+
+Quando um logotipo é definido, um botão de alternância aparece: **"Sincronizar logotipo em todas as entradas de educação da [Instituição]"**. Quando ativado, o logotipo é aplicado a todas as entradas de educação com o mesmo nome de instituição — incluindo aquelas em conjuntos de dados salvos.
+
+### Removendo um Logotipo
+
+Clique no botão **Remover** na seção de logotipo para desvincular um logotipo de uma entrada de educação.
 
 ## Habilidades
 

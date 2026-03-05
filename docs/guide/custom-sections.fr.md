@@ -22,6 +22,33 @@ Les sections personnalisées vous permettent d'ajouter tout contenu qui ne corre
 | **Liens sociaux** | Liens spécifiques aux plateformes avec icônes (LinkedIn, GitHub, Twitter/X, YouTube, Instagram, Dribbble, Behance, Site web, E-mail, Téléphone ou Personnalisé) |
 | **Puces** | Listes à puces regroupées, similaires aux points clés d'expérience — idéal pour les réalisations clés ou les compétences |
 | **Texte libre** | Bloc de texte brut avec sauts de ligne préservés — similaire à la section À propos, utile pour les lettres de motivation, déclarations personnelles ou tout contenu libre |
+| **Grille d'images** | Galerie d'images avec légendes optionnelles — idéale pour les portfolios, certificats ou échantillons de travail visuels |
+| **Expériences supplémentaires** | Entrées de type expérience (intitulé de poste, entreprise, dates, points clés, logo) — étend votre parcours professionnel sans mélanger avec la section Expérience principale |
+
+## Grille d'images
+
+La mise en page **Grille d'images** affiche des images dans une grille responsive avec des légendes optionnelles.
+
+1. Créez une section personnalisée et sélectionnez **Grille d'images** comme type de mise en page
+2. Choisissez le nombre de **colonnes** (1, 2 ou 3 — par défaut 3)
+3. Cliquez sur **Ajouter une image** pour télécharger des images (JPEG, PNG ou WebP, 5 Mo max)
+4. Ajoutez éventuellement une **légende** sous chaque image
+
+Les images sont centrées et conservent leurs proportions. En mode 3 colonnes, les images s'affichent en carré pour un rendu uniforme.
+
+## Expériences supplémentaires
+
+La mise en page **Expériences supplémentaires** crée des entrées de type expérience identiques à la section Expérience professionnelle intégrée. Chaque élément comprend :
+
+- **Intitulé de poste** et **nom de l'entreprise/organisation**
+- **Dates de début et de fin** (avec « Actuel » optionnel pour les postes en cours)
+- **Lieu** et **code pays**
+- **Points clés** (réalisations clés, un par ligne)
+- **Logo optionnel** (même processus de téléchargement/réutilisation que les logos d'entreprise)
+
+### Afficher sur la chronologie de carrière
+
+Lors de la gestion des éléments d'une section Expériences supplémentaires, vous pouvez activer **« Afficher les éléments sur la chronologie de carrière »**. Cela fusionne les entrées d'expérience supplémentaires dans la visualisation principale de la chronologie — elles apparaissent aux côtés de vos expériences professionnelles régulières avec prise en charge complète des branchements, logos et affichage de la durée.
 
 ## Option masquer le titre
 
