@@ -4,12 +4,6 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.22.1] - 2026-03-05
-
-### Fixed
-- Open to Work toggle now persists when saving profile (was missing from PUT endpoint)
-- Moved Open to Work toggle to top of profile modal for better visibility
-
 ## [1.22.0] - 2026-03-05
 
 ### Added
@@ -18,6 +12,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Fixed
 - Bluesky social link icon now displays the correct butterfly logo instead of a spade shape
+- Open to Work toggle now persists when saving profile
+- Moved Open to Work toggle to top of profile modal for better visibility
 
 ## [1.21.0] - 2026-03-05
 
