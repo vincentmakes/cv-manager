@@ -409,9 +409,9 @@ body {
     flex-shrink: 0;
 }
 
-/* Align location & highlights with title when logo is present */
-.item-card.has-logo > .item-location,
-.item-card.has-logo > .item-highlights {
+/* Align content with title when logo is present */
+.item-card.has-logo .item-location,
+.item-card.has-logo .item-highlights {
     margin-left: 60px; /* 48px logo + 12px gap */
 }
 
