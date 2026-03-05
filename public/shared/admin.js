@@ -985,6 +985,16 @@ function editProfile() {
 function profileForm(d) {
     return `
         <div class="form-group">
+            <label class="form-label">${t('form.open_to_work')}</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-openToWork" ${d.open_to_work == 1 ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="form-hint" style="margin:0">${t('form.open_to_work_hint')}</span>
+            </div>
+        </div>
+        <div class="form-group">
             <label class="form-label">${t('form.profile_picture')}</label>
             <div class="profile-upload-container">
                 <div class="profile-upload-preview" id="profileUploadPreview">
@@ -1047,16 +1057,6 @@ function profileForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.linkedin_url')}</label>
             <input type="text" class="form-input" id="f-linkedin" value="${escapeHtml(d.linkedin || '')}">
-        </div>
-        <div class="form-group">
-            <label class="form-label">${t('form.open_to_work')}</label>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="f-openToWork" ${d.open_to_work == 1 ? 'checked' : ''}>
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="form-hint" style="margin:0">${t('form.open_to_work_hint')}</span>
-            </div>
         </div>
         <div class="form-row">
             <div class="form-group">
