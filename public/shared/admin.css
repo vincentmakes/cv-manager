@@ -417,7 +417,6 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--gray-200);
-    width: 600px;
     max-width: 95vw;
     max-height: 80vh;
     display: flex;
@@ -456,20 +455,20 @@
 
 .icon-picker-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(6, 40px);
+    justify-content: center;
+    gap: 6px;
     padding: 16px 20px;
     overflow-y: auto;
-    overflow-x: hidden;
-    flex: 1;
 }
 
 .icon-picker-item {
+    position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
     border: 2px solid transparent;
     border-radius: var(--radius-sm);
     background: var(--white);
@@ -500,19 +499,37 @@
 }
 
 .icon-picker-label {
-    font-size: 10px;
-    color: var(--gray-500);
-    text-align: center;
-    line-height: 1.2;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background: var(--primary-dark);
+    color: var(--white);
+    font-size: 11px;
     white-space: nowrap;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.icon-picker-label::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--primary-dark);
+}
+
+.icon-picker-item:hover .icon-picker-label {
+    display: block;
 }
 
 .icon-picker-item.active .icon-picker-label {
-    color: var(--primary);
-    font-weight: 500;
+    color: var(--white);
 }
 
 /* Profile Picture Upload */
@@ -1807,8 +1824,7 @@
         flex-shrink: 0;
     }
     .modal-title { font-size: 16px; }
-    .icon-picker-popup { width: 95vw; }
-    .icon-picker-grid { grid-template-columns: repeat(5, 1fr); }
+    .icon-picker-grid { grid-template-columns: repeat(5, 40px); }
 }
 
 /* Version Display (Settings Footer) */
