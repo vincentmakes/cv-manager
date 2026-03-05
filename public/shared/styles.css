@@ -157,27 +157,19 @@ body {
     color: var(--white);
 }
 
-.open-to-work-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40%;
-    background: #01754F;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 4px;
-    z-index: 2;
+.profile-image-wrapper {
+    position: relative;
+    flex-shrink: 0;
 }
 
-.open-to-work-overlay span {
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    line-height: 1;
+.open-to-work-ring {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: calc(100% + 12px);
+    height: calc(100% + 12px);
+    pointer-events: none;
+    z-index: 2;
 }
 
 /* Sections */
@@ -1174,7 +1166,6 @@ body.has-preview-banner .container {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { background: white !important; margin: 0 !important; padding: 0 !important; }
     .toolbar, .add-btn, .item-actions, .section-actions, .no-print { display: none !important; }
-    .open-to-work-overlay { background: #01754F !important; }
     .container { max-width: 100% !important; margin: 0 !important; padding: 0 10px !important; margin-top: 0 !important; }
     
     /* Header - keep horizontal layout like desktop */

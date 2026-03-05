@@ -266,15 +266,26 @@
             pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
             pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
             
-            // Open to Work overlay on profile picture
-            const existingOverlay = document.querySelector('.open-to-work-overlay');
-            if (existingOverlay) existingOverlay.remove();
+            // Open to Work ring (LinkedIn-style) on profile picture
+            const existingRing = document.querySelector('.open-to-work-ring');
+            if (existingRing) existingRing.remove();
+            const profileEl = document.getElementById('profileImage');
+            const existingWrapper = profileEl.parentElement;
+            if (existingWrapper && existingWrapper.classList.contains('profile-image-wrapper')) {
+                existingWrapper.parentNode.insertBefore(profileEl, existingWrapper);
+                existingWrapper.remove();
+            }
             if (p.open_to_work == 1) {
-                const overlay = document.createElement('div');
-                overlay.className = 'open-to-work-overlay';
-                overlay.innerHTML = `<span>${t('badge.open_to_work')}</span>`;
-                document.getElementById('profileImage').appendChild(overlay);
-                if (p.profile_picture_enabled != 1) document.getElementById('profileImage').style.display = 'flex';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'profile-image-wrapper';
+                profileEl.parentNode.insertBefore(wrapper, profileEl);
+                wrapper.appendChild(profileEl);
+                const ring = document.createElement('div');
+                ring.className = 'open-to-work-ring';
+                const label = '#' + t('badge.open_to_work').replace(/\s+/g, '').toUpperCase();
+                ring.innerHTML = `<svg viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg"><defs><path id="otw-arc" d="M 65,65 m 60,0 a 60,60 0 1,1 -120,0 a 60,60 0 1,1 120,0" fill="none"/></defs><circle cx="65" cy="65" r="60" fill="none" stroke="#01754F" stroke-width="9"/><text font-size="13" font-weight="700" fill="#ffffff" letter-spacing="1.5"><textPath href="#otw-arc" startOffset="62%" text-anchor="middle">${escapeHtml(label)}</textPath></text></svg>`;
+                wrapper.appendChild(ring);
+                if (p.profile_picture_enabled != 1) profileEl.style.display = 'flex';
             }
 
             const badges = [];
