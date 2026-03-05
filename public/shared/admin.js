@@ -675,7 +675,8 @@ function renderTimelineLayout(items) {
             logo: item.image,
             highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
             visible: item.visible !== false,
-            showLogo: !!item.image
+            showLogo: !!item.image,
+            showDuration: showExperienceDuration
         });
     }).join('');
 }
