@@ -4,45 +4,20 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.17.4] - 2026-03-05
-
-### Fixed
-- Additional Experiences logos now respect the "Experience: Show Logos" setting — disabling it hides logos in all experience-style sections
-
-### Changed
-- Updated Additional Experiences layout icon to Material Design WorkHistory style (briefcase with clock overlay)
-
-## [1.17.3] - 2026-03-05
-
-### Changed
-- Replaced timeline icon with briefcase (work history) icon for Additional Experiences layout in custom section settings
-
-## [1.17.2] - 2026-03-05
-
-### Fixed
-- Additional Experiences cards now show duration (e.g. "2 yrs 3 mos") matching Work Experience behavior
-
-### Changed
-- Increased settings modal width from 560px to 640px and sub-modals from 600px to 680px for better readability
-
-## [1.17.1] - 2026-03-05
-
-### Fixed
-- Fixed logo overlapping text in Additional Experiences cards (missing `has-logo` class)
-- Additional Experiences items now show logos on both admin and public views
-
-### Changed
-- Extracted shared `renderExperienceCard()` function in scripts.js — single source of truth for experience-style cards used by admin experiences, public experiences, admin timeline layout, and public timeline layout
-- Removed 4 near-identical card renderers, replaced with one shared function accepting a normalized options object
-
 ## [1.17.0] - 2026-03-05
 
+### Added
+- Backend endpoints for reusing and removing logos on custom section items (PUT/DELETE)
+
 ### Changed
-- Renamed "Timeline" layout type to "Additional Experiences" in Custom Section settings
-- Revamped Additional Experiences item modal to match the Work Experience modal: full logo management with Choose Image, Use Existing, and Remove buttons, reusing the shared logo system
+- Renamed "Timeline" layout type to "Additional Experiences" with Material Design WorkHistory icon (briefcase with clock)
+- Revamped Additional Experiences item modal to match Work Experience: full logo management with Choose Image, Use Existing, and Remove buttons
 - Moved "Show on Career Timeline" toggle from section settings to items management view for easier access
-- Added backend endpoints for reusing and removing logos on custom section items (PUT/DELETE)
-- Eliminated code duplication: extracted shared `logoUploadHtml()` function used by both Experience and Additional Experiences modals
+- Extracted shared `renderExperienceCard()` in scripts.js — single source of truth for all experience-style cards (admin/public, experiences/timeline)
+- Extracted shared `logoUploadHtml()` — single source of truth for logo upload UI (Experience and Additional Experiences modals)
+- Additional Experiences cards now show duration and logos, matching Work Experience behavior
+- Additional Experiences logos respect the "Experience: Show Logos" setting
+- Increased settings modal width from 560px to 640px and sub-modals from 600px to 680px
 
 ## [1.16.0] - 2026-03-05
 
