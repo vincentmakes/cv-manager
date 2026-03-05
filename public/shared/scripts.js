@@ -1165,8 +1165,9 @@ async function loadEducationReadOnly() {
     const container = document.getElementById('educationList');
     
     container.innerHTML = education.map(edu => `
-        <article class="item-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+        <article class="item-card${edu.logo_filename ? ' has-logo' : ''}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="item-header">
+                ${edu.logo_filename ? `<img src="/uploads/${encodeURIComponent(edu.logo_filename)}" class="experience-logo" alt="${escapeHtml(edu.institution_name)}" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
                     <div class="item-subtitle" itemprop="recognizedBy" itemscope itemtype="https://schema.org/EducationalOrganization">
@@ -1174,7 +1175,7 @@ async function loadEducationReadOnly() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
+                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> -
                     <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>

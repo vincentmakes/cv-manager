@@ -274,6 +274,7 @@ const SVG_ICONS = {
     edit: '<span class="material-symbols-outlined" style="font-size:16px">edit</span>',
     dribbble: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>',
     behance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 7h-7M22 12h-7M16.5 17a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM2 17V7h5a3 3 0 0 1 0 6H2m0 4h5.5a3 3 0 0 0 0-6H2"/></svg>',
+    bluesky: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-2.4 1.8-5 5.2-6 7.5-.6 1.4-.8 3 .2 4.2 1 1.2 2.8 1.3 4.2.8-.4 1.5-1.2 3-3.4 4.5h10c-2.2-1.5-3-3-3.4-4.5 1.4.5 3.2.4 4.2-.8 1-1.2.8-2.8.2-4.2-1-2.3-3.6-5.7-6-7.5z"/></svg>',
     bullets: '<span class="material-symbols-outlined" style="font-size:20px">format_list_bulleted</span>',
     freetext: '<span class="material-symbols-outlined" style="font-size:20px">notes</span>',
     pictureGrid: '<span class="material-symbols-outlined" style="font-size:20px">photo_library</span>',
@@ -302,6 +303,7 @@ const SOCIAL_PLATFORMS = [
     { id: 'youtube', name: 'YouTube', icon: SVG_ICONS.youtube, color: '#ff0000' },
     { id: 'dribbble', name: 'Dribbble', icon: SVG_ICONS.dribbble, color: '#ea4c89' },
     { id: 'behance', name: 'Behance', icon: SVG_ICONS.behance, color: '#1769ff' },
+    { id: 'bluesky', name: 'Bluesky', icon: SVG_ICONS.bluesky, color: '#0085ff' },
     { id: 'website', name: 'Website', icon: SVG_ICONS.globe, color: '#0066ff' },
     { id: 'email', name: 'Email', icon: SVG_ICONS.mail, color: '#ea4335' },
     { id: 'phone', name: 'Phone', icon: SVG_ICONS.phone, color: '#34a853' },
@@ -473,6 +475,24 @@ if (!PUBLIC_ONLY) {
             db.exec('ALTER TABLE experiences ADD COLUMN logo_propagate INTEGER DEFAULT 0');
         }
     } catch (err) { console.log('Migration check (logo_propagate):', err.message); }
+
+    // Step 2k: Migration - add logo_filename column to education if missing
+    try {
+        const eduLogoInfo = db.prepare("PRAGMA table_info(education)").all();
+        if (!eduLogoInfo.some(col => col.name === 'logo_filename')) {
+            console.log('Migrating education table: adding logo_filename column');
+            db.exec('ALTER TABLE education ADD COLUMN logo_filename TEXT DEFAULT NULL');
+        }
+    } catch (err) { console.log('Migration check (education logo_filename):', err.message); }
+
+    // Step 2l: Migration - add logo_propagate column to education if missing
+    try {
+        const eduPropInfo = db.prepare("PRAGMA table_info(education)").all();
+        if (!eduPropInfo.some(col => col.name === 'logo_propagate')) {
+            console.log('Migrating education table: adding logo_propagate column');
+            db.exec('ALTER TABLE education ADD COLUMN logo_propagate INTEGER DEFAULT 0');
+        }
+    } catch (err) { console.log('Migration check (education logo_propagate):', err.message); }
 
     // Step 2h: Migration - normalize legacy date formats (e.g., "Jan 2020" → "2020-01")
     // Runs once; creates a flag in settings to avoid re-running on every startup
@@ -903,7 +923,7 @@ if (PUBLIC_ONLY) {
         const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get();
         const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all();
         const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
-        const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
+        const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
         const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all();
         const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
         const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all();
@@ -970,7 +990,9 @@ if (PUBLIC_ONLY) {
         const inUseSet = new Set();
         db.prepare('SELECT logo_filename, company_name FROM experiences WHERE logo_filename IS NOT NULL').all()
             .forEach(r => { if (r.logo_filename) { inUseSet.add(r.logo_filename); if (r.company_name) companyMap[r.logo_filename] = r.company_name; } });
-        // Also check saved datasets for both usage and company names
+        db.prepare('SELECT logo_filename, institution_name FROM education WHERE logo_filename IS NOT NULL').all()
+            .forEach(r => { if (r.logo_filename) { inUseSet.add(r.logo_filename); if (r.institution_name && !companyMap[r.logo_filename]) companyMap[r.logo_filename] = r.institution_name; } });
+        // Also check saved datasets for both usage and company/institution names
         try {
             const datasets = db.prepare('SELECT data FROM saved_datasets').all();
             for (const ds of datasets) {
@@ -982,6 +1004,16 @@ if (PUBLIC_ONLY) {
                                 inUseSet.add(exp.logo_filename);
                                 if (exp.company_name && !companyMap[exp.logo_filename]) {
                                     companyMap[exp.logo_filename] = exp.company_name;
+                                }
+                            }
+                        }
+                    }
+                    if (data.education) {
+                        for (const edu of data.education) {
+                            if (edu.logo_filename) {
+                                inUseSet.add(edu.logo_filename);
+                                if (edu.institution_name && !companyMap[edu.logo_filename]) {
+                                    companyMap[edu.logo_filename] = edu.institution_name;
                                 }
                             }
                         }
@@ -998,15 +1030,20 @@ if (PUBLIC_ONLY) {
         if (!filename || !filename.startsWith('logo_')) return res.status(400).json({ error: 'Invalid filename' });
         const filePath = path.join(uploadsPath, filename);
         if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
-        // Check if in use by current experiences or any saved dataset
+        // Check if in use by current experiences/education or any saved dataset
         const expRef = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(filename).cnt;
         if (expRef > 0) return res.status(409).json({ error: 'Logo is in use by current experiences' });
+        const eduRef = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(filename).cnt;
+        if (eduRef > 0) return res.status(409).json({ error: 'Logo is in use by current education entries' });
         try {
             const datasets = db.prepare('SELECT data FROM saved_datasets').all();
             for (const ds of datasets) {
                 try {
                     const data = JSON.parse(ds.data);
                     if (data.experiences && data.experiences.some(e => e.logo_filename === filename)) {
+                        return res.status(409).json({ error: 'Logo is in use by a saved dataset' });
+                    }
+                    if (data.education && data.education.some(e => e.logo_filename === filename)) {
                         return res.status(409).json({ error: 'Logo is in use by a saved dataset' });
                     }
                 } catch (e) {}
@@ -1206,7 +1243,130 @@ if (PUBLIC_ONLY) {
     app.get('/api/education/:id', (req, res) => { const edu = db.prepare('SELECT * FROM education WHERE id = ?').get(req.params.id); if (!edu) return res.status(404).json({ error: 'Not found' }); res.json({ ...edu, visible: !!edu.visible }); });
     app.post('/api/education', (req, res) => { const { degree_title, institution_name, start_date, end_date, description } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM education').get(); const result = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(degree_title, institution_name, start_date, end_date, description, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
     app.put('/api/education/:id', (req, res) => { const { degree_title, institution_name, start_date, end_date, description, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM education WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE education SET degree_title = ?, institution_name = ?, start_date = ?, end_date = ?, description = ?, visible = ?, sort_order = ? WHERE id = ?`).run(degree_title, institution_name, start_date, end_date, description, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
-    app.delete('/api/education/:id', (req, res) => { db.prepare('DELETE FROM education WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+    app.delete('/api/education/:id', (req, res) => { const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id); if (edu && edu.logo_filename) { const refCountExp = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(edu.logo_filename).cnt; const refCountEdu = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(edu.logo_filename).cnt; if (refCountExp + refCountEdu <= 1) { const logoPath = path.join(uploadsPath, edu.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM education WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+
+    // Education logo upload
+    const eduLogoStorage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => { const ext = path.extname(file.originalname).toLowerCase() || '.jpg'; cb(null, `logo_edu_${req.params.id}_${Date.now()}${ext}`); } });
+    const eduLogoUpload = multer({ storage: eduLogoStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
+    app.post('/api/education/:id/logo', eduLogoUpload.single('logo'), (req, res) => {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id);
+        if (!edu) return res.status(404).json({ error: 'Education not found' });
+        db.prepare('UPDATE education SET logo_filename = ? WHERE id = ?').run(req.file.filename, req.params.id);
+        res.json({ success: true, filename: req.file.filename });
+    });
+    app.delete('/api/education/:id/logo', (req, res) => {
+        const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id);
+        if (!edu) return res.status(404).json({ error: 'Education not found' });
+        db.prepare('UPDATE education SET logo_filename = NULL WHERE id = ?').run(req.params.id);
+        res.json({ success: true });
+    });
+    app.put('/api/education/:id/logo', express.json(), (req, res) => {
+        const { filename } = req.body;
+        if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id);
+        if (!edu) return res.status(404).json({ error: 'Education not found' });
+        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
+        db.prepare('UPDATE education SET logo_filename = ? WHERE id = ?').run(filename, req.params.id);
+        res.json({ success: true, filename });
+    });
+
+    // Education logo propagation endpoints
+    app.post('/api/edu-logos/apply-global', express.json(), (req, res) => {
+        const { institution_name, logo_filename } = req.body;
+        if (!institution_name || !logo_filename) return res.status(400).json({ error: 'institution_name and logo_filename are required' });
+        if (!fs.existsSync(path.join(uploadsPath, logo_filename))) return res.status(404).json({ error: 'Logo file not found' });
+        let updatedCurrent = 0; let updatedDatasets = 0;
+        const result = db.prepare('UPDATE education SET logo_filename = ?, logo_propagate = 1 WHERE institution_name = ?').run(logo_filename, institution_name);
+        updatedCurrent = result.changes;
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.education) {
+                        let changed = false;
+                        for (const edu of data.education) {
+                            if (edu.institution_name === institution_name) {
+                                if (edu.logo_filename !== logo_filename) { edu.logo_filename = logo_filename; changed = true; updatedDatasets++; }
+                                if (!edu.logo_propagate) { edu.logo_propagate = 1; changed = true; }
+                            }
+                        }
+                        if (changed) db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ success: true, updated_current: updatedCurrent, updated_datasets: updatedDatasets });
+    });
+    app.post('/api/edu-logos/remove-global', express.json(), (req, res) => {
+        const { institution_name } = req.body;
+        if (!institution_name) return res.status(400).json({ error: 'institution_name is required' });
+        let updatedCurrent = 0; let updatedDatasets = 0;
+        const result = db.prepare('UPDATE education SET logo_filename = NULL WHERE institution_name = ?').run(institution_name);
+        updatedCurrent = result.changes;
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.education) {
+                        let changed = false;
+                        for (const edu of data.education) {
+                            if (edu.institution_name === institution_name && edu.logo_filename) { edu.logo_filename = null; changed = true; updatedDatasets++; }
+                        }
+                        if (changed) db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ success: true, updated_current: updatedCurrent, updated_datasets: updatedDatasets });
+    });
+    app.post('/api/edu-logos/set-propagate', express.json(), (req, res) => {
+        const { institution_name, propagate } = req.body;
+        if (!institution_name) return res.status(400).json({ error: 'institution_name is required' });
+        const flag = propagate ? 1 : 0;
+        const result = db.prepare('UPDATE education SET logo_propagate = ? WHERE institution_name = ?').run(flag, institution_name);
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.education) {
+                        let changed = false;
+                        for (const edu of data.education) {
+                            if (edu.institution_name === institution_name && (edu.logo_propagate ? 1 : 0) !== flag) { edu.logo_propagate = flag; changed = true; }
+                        }
+                        if (changed) db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ success: true, updated: result.changes });
+    });
+    app.get('/api/logos/by-institution', (req, res) => {
+        const name = (req.query.name || '').trim();
+        if (!name) return res.json({ logo_filename: null });
+        const edu = db.prepare('SELECT logo_filename, logo_propagate FROM education WHERE institution_name = ? AND logo_filename IS NOT NULL LIMIT 1').get(name);
+        if (edu && edu.logo_filename && fs.existsSync(path.join(uploadsPath, edu.logo_filename))) {
+            return res.json({ logo_filename: edu.logo_filename, logo_propagate: !!edu.logo_propagate });
+        }
+        try {
+            const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.education) {
+                        const match = data.education.find(e => e.institution_name === name && e.logo_filename);
+                        if (match && fs.existsSync(path.join(uploadsPath, match.logo_filename))) {
+                            return res.json({ logo_filename: match.logo_filename });
+                        }
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ logo_filename: null });
+    });
 
     app.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: !!cat.visible, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     app.get('/api/skills/:id', (req, res) => { const cat = db.prepare('SELECT * FROM skill_categories WHERE id = ?').get(req.params.id); if (!cat) return res.status(404).json({ error: 'Not found' }); const skills = db.prepare('SELECT name FROM skills WHERE category_id = ? ORDER BY sort_order ASC').all(req.params.id); res.json({ ...cat, visible: !!cat.visible, skills: skills.map(s => s.name) }); });
@@ -1299,7 +1459,7 @@ if (PUBLIC_ONLY) {
             res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
@@ -1539,7 +1699,7 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all(); const customItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all(); const customSectionsData = customSections.map(s => ({ ...s, visible: !!s.visible, metadata: s.metadata ? JSON.parse(s.metadata) : null, items: customItems.filter(i => i.section_id === s.id).map(i => ({ ...i, visible: !!i.visible, metadata: i.metadata ? JSON.parse(i.metadata) : null })) })); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData, customSections: customSectionsData }); });
 
-    app.post('/api/import', (req, res) => { const data = req.body; const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } }); try { importData(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/import', (req, res) => { const data = req.body; const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } }); try { importData(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
     app.get('*', (req, res) => { res.sendFile(path.join(__dirname, '../public/index.html')); });
 
@@ -1633,7 +1793,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });

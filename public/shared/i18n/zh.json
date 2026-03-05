@@ -77,6 +77,8 @@
     "form.delete_logo": "删除标志",
     "form.in_use": "使用中",
     "form.apply_logo_global": "在所有 {{company}} 经历中同步标志",
+    "form.apply_logo_institution": "将标志同步到所有 {{institution}} 教育条目",
+    "form.institution_logo": "机构标志",
     "form.name": "姓名",
     "form.initials": "姓名缩写",
     "form.title": "职位",

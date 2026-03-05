@@ -84,6 +84,8 @@
     "form.delete_logo": "Delete logo",
     "form.in_use": "In use",
     "form.apply_logo_global": "Sync logo across all {{company}} experiences",
+    "form.apply_logo_institution": "Sync logo across all {{institution}} education entries",
+    "form.institution_logo": "Institution Logo",
     "form.name": "Name",
     "form.initials": "Initials",
     "form.title": "Title",

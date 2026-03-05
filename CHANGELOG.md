@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.21.0] - 2026-03-05
+
+### Added
+- Education logos: upload and display institution logos next to education entries, with the same modal and features as experience logos (upload, reuse, propagate across matching institution names)
+- Bluesky social link platform option in Social Links custom sections
+
 ## [1.20.4] - 2026-03-05
 
 ### Fixed

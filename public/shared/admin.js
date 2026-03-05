@@ -778,7 +778,7 @@ async function loadEducation() {
     const container = document.getElementById('educationList');
     
     container.innerHTML = education.map(edu => `
-        <article class="item-card ${edu.visible ? '' : 'hidden-print'}" data-id="${edu.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+        <article class="item-card ${edu.visible ? '' : 'hidden-print'}${edu.logo_filename ? ' has-logo' : ''}" data-id="${edu.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('education', ${edu.id}, ${!edu.visible})" title="Toggle Visibility">
@@ -792,6 +792,7 @@ async function loadEducation() {
                 </button>
             </div>
             <div class="item-header">
+                ${edu.logo_filename ? `<img src="/uploads/${encodeURIComponent(edu.logo_filename)}" class="experience-logo" alt="${escapeHtml(edu.institution_name)}" onerror="this.style.display='none'">` : ''}
                 <div>
                     <h3 class="item-title" itemprop="name">${escapeHtml(edu.degree_title)}</h3>
                     <div class="item-subtitle" itemprop="recognizedBy" itemscope itemtype="https://schema.org/EducationalOrganization">
@@ -799,7 +800,7 @@ async function loadEducation() {
                     </div>
                 </div>
                 <span class="item-date">
-                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> - 
+                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> -
                     <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
@@ -937,6 +938,7 @@ async function openModal(type, id = null) {
             pendingLogo = null;
             currentModal.existingLogo = data.logo_filename || null;
             currentModal.existingPropagate = !!data.logo_propagate;
+            currentModal.logoEntityType = 'experience';
             form = experienceForm(data);
             break;
         case 'certification':
@@ -945,6 +947,10 @@ async function openModal(type, id = null) {
             break;
         case 'education':
             title = id ? t('modal.edit_education') : t('modal.add_education');
+            pendingLogo = null;
+            currentModal.existingLogo = data.logo_filename || null;
+            currentModal.existingPropagate = !!data.logo_propagate;
+            currentModal.logoEntityType = 'education';
             form = educationForm(data);
             break;
         case 'skill':
@@ -960,7 +966,7 @@ async function openModal(type, id = null) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').innerHTML = form;
     document.getElementById('modalOverlay').classList.add('active');
-    if (type === 'experience') {
+    if (type === 'experience' || type === 'education') {
         updateLogoApplyGlobal();
         initLogoPropagate();
     }
@@ -1055,11 +1061,12 @@ function profileForm(d) {
     `;
 }
 
-// Shared logo upload HTML - reused by experience and timeline item modals
-function logoUploadHtml(filename) {
+// Shared logo upload HTML - reused by experience, education, and timeline item modals
+function logoUploadHtml(filename, labelKey) {
+    const label = t(labelKey || 'form.company_logo');
     return `
         <div class="form-group">
-            <label class="form-label">${t('form.company_logo')}</label>
+            <label class="form-label">${label}</label>
             <div class="logo-upload-container">
                 <div class="logo-upload-preview" id="logoUploadPreview">
                     ${filename
@@ -1155,13 +1162,23 @@ function certificationForm(d) {
 
 function educationForm(d) {
     return `
+        ${logoUploadHtml(d.logo_filename, 'form.institution_logo')}
+        <div class="form-group" style="margin-top: -8px;">
+            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-logo-apply-global" onchange="onLogoPropagateToggle(this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="logo-propagate-text" id="logoApplyGlobalText"></span>
+            </div>
+        </div>
         <div class="form-group">
             <label class="form-label">${t('form.degree')}</label>
             <input type="text" class="form-input" id="f-degree_title" value="${escapeHtml(d.degree_title || '')}">
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.institution')}</label>
-            <input type="text" class="form-input" id="f-institution_name" value="${escapeHtml(d.institution_name || '')}">
+            <input type="text" class="form-input" id="f-institution_name" value="${escapeHtml(d.institution_name || '')}" oninput="onInstitutionNameInput()">
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -1396,10 +1413,28 @@ async function saveItem() {
                 description: val('f-description'),
                 visible: true
             };
-            if (id) {
-                await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
-            } else {
-                await api(`/api/${endpoint}`, { method: 'POST', body: data });
+            {
+                const propagateOn = checked('f-logo-apply-global');
+                const wasPropagate = currentModal.existingPropagate;
+                let logoFilename = null;
+                let logoRemoved = (pendingLogo === 'remove');
+                if (id) {
+                    await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
+                    logoFilename = await uploadLogo(id);
+                } else {
+                    const result = await api(`/api/${endpoint}`, { method: 'POST', body: data });
+                    if (result.id) logoFilename = await uploadLogo(result.id);
+                }
+                if (!logoFilename && !logoRemoved) logoFilename = currentModal.existingLogo;
+                if (propagateOn && data.institution_name) {
+                    if (logoRemoved) {
+                        await api('/api/edu-logos/remove-global', { method: 'POST', body: { institution_name: data.institution_name } });
+                    } else if (logoFilename) {
+                        await api('/api/edu-logos/apply-global', { method: 'POST', body: { institution_name: data.institution_name, logo_filename: logoFilename } });
+                    }
+                } else if (!propagateOn && wasPropagate && data.institution_name) {
+                    await api('/api/edu-logos/set-propagate', { method: 'POST', body: { institution_name: data.institution_name, propagate: false } });
+                }
             }
             await loadEducation();
             break;
@@ -1671,12 +1706,16 @@ function removeLogo() {
 function updateLogoApplyGlobal() {
     const label = document.getElementById('logoApplyGlobalLabel');
     if (!label) return;
-    const company = (document.getElementById('f-company_name')?.value || '').trim();
+    const isEducation = currentModal.logoEntityType === 'education';
+    const nameField = isEducation ? 'f-institution_name' : 'f-company_name';
+    const entityName = (document.getElementById(nameField)?.value || '').trim();
     const hasLogo = pendingLogo === 'remove' ? false : (pendingLogo || document.getElementById('logoPreviewImg'));
     const cb = document.getElementById('f-logo-apply-global');
-    if (company && (hasLogo || (cb && cb.checked))) {
+    if (entityName && (hasLogo || (cb && cb.checked))) {
         label.style.display = 'flex';
-        document.getElementById('logoApplyGlobalText').textContent = t('form.apply_logo_global', { company });
+        const textKey = isEducation ? 'form.apply_logo_institution' : 'form.apply_logo_global';
+        const params = isEducation ? { institution: entityName } : { company: entityName };
+        document.getElementById('logoApplyGlobalText').textContent = t(textKey, params);
     } else {
         label.style.display = 'none';
         if (cb) cb.checked = false;
@@ -1715,6 +1754,31 @@ function onCompanyNameInput() {
                 const preview = document.getElementById('logoUploadPreview');
                 if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(result.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`;
                 // If the source experience has propagate enabled, auto-enable the toggle
+                if (result.logo_propagate) {
+                    const cb = document.getElementById('f-logo-apply-global');
+                    if (cb) cb.checked = true;
+                }
+                updateLogoApplyGlobal();
+            }
+        } catch (e) {}
+    }, 400);
+}
+
+let _institutionLogoLookupTimer = null;
+function onInstitutionNameInput() {
+    updateLogoApplyGlobal();
+    clearTimeout(_institutionLogoLookupTimer);
+    if (pendingLogo || currentModal.existingLogo || document.getElementById('logoPreviewImg')) return;
+    const institution = (document.getElementById('f-institution_name')?.value || '').trim();
+    if (!institution) return;
+    _institutionLogoLookupTimer = setTimeout(async () => {
+        if (pendingLogo || document.getElementById('logoPreviewImg')) return;
+        try {
+            const result = await api(`/api/logos/by-institution?name=${encodeURIComponent(institution)}`);
+            if (result.logo_filename) {
+                pendingLogo = { reuse: result.logo_filename };
+                const preview = document.getElementById('logoUploadPreview');
+                if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(result.logo_filename)}?${Date.now()}" alt="" id="logoPreviewImg">`;
                 if (result.logo_propagate) {
                     const cb = document.getElementById('f-logo-apply-global');
                     if (cb) cb.checked = true;
@@ -1776,16 +1840,18 @@ function selectExistingLogo(filename) {
     updateLogoApplyGlobal();
 }
 
-async function uploadLogo(experienceId) {
+async function uploadLogo(entityId) {
+    const entityType = currentModal.logoEntityType || 'experiences';
+    const apiBase = entityType === 'education' ? `/api/education/${entityId}/logo` : `/api/experiences/${entityId}/logo`;
     if (pendingLogo === 'remove') {
-        try { await fetch(`/api/experiences/${experienceId}/logo`, { method: 'DELETE' }); } catch (err) {}
+        try { await fetch(apiBase, { method: 'DELETE' }); } catch (err) {}
         pendingLogo = null;
         return null;
     }
     if (pendingLogo && pendingLogo.reuse) {
         const fname = pendingLogo.reuse;
         try {
-            const response = await api(`/api/experiences/${experienceId}/logo`, { method: 'PUT', body: { filename: fname } });
+            const response = await api(apiBase, { method: 'PUT', body: { filename: fname } });
             if (response.error) throw new Error(response.error);
         } catch (err) {
             toast(t('toast.logo_upload_failed'), 'error');
@@ -1799,7 +1865,7 @@ async function uploadLogo(experienceId) {
         const formData = new FormData();
         formData.append('logo', pendingLogo);
         try {
-            const response = await fetch(`/api/experiences/${experienceId}/logo`, { method: 'POST', body: formData });
+            const response = await fetch(apiBase, { method: 'POST', body: formData });
             if (!response.ok) throw new Error('Upload failed');
             const result = await response.json();
             pendingLogo = null;
@@ -3525,6 +3591,7 @@ function updateSocialPlatformFields() {
         'devto': 'e.g., @username',
         'dribbble': 'e.g., @username',
         'behance': 'e.g., Your Name',
+        'bluesky': 'e.g., @username.bsky.social',
         'website': 'e.g., My Website',
         'email': 'e.g., Contact Email',
         'phone': 'e.g., +1 234 567 8900',

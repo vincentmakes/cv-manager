@@ -84,6 +84,8 @@
     "form.delete_logo": "Logo löschen",
     "form.in_use": "In Verwendung",
     "form.apply_logo_global": "Logo über alle {{company}}-Erfahrungen synchronisieren",
+    "form.apply_logo_institution": "Logo über alle {{institution}} Bildungseinträge synchronisieren",
+    "form.institution_logo": "Logo der Bildungseinrichtung",
     "form.name": "Name",
     "form.initials": "Initialen",
     "form.title": "Titel",

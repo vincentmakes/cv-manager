@@ -77,6 +77,8 @@
     "form.delete_logo": "Logo verwijderen",
     "form.in_use": "In gebruik",
     "form.apply_logo_global": "Logo synchroniseren over alle {{company}}-ervaringen",
+    "form.apply_logo_institution": "Logo synchroniseren voor alle {{institution}} opleidingen",
+    "form.institution_logo": "Logo van instelling",
     "form.name": "Naam",
     "form.initials": "Initialen",
     "form.title": "Titel",
