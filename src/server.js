@@ -259,7 +259,7 @@ function serveDatasetData(req, res) {
 // SVG icons (matching app style)
 const SVG_ICONS = {
     link: '<span class="material-icons" style="font-size:20px">link</span>',
-    grid2: '<span class="material-icons" style="font-size:20px">view_column</span>',
+    grid2: '<span class="material-icons" style="font-size:20px">view_column_2</span>',
     grid3: '<span class="material-icons" style="font-size:20px">view_week</span>',
     list: '<span class="material-icons" style="font-size:20px">format_list_bulleted</span>',
     cards: '<span class="material-icons" style="font-size:20px">grid_view</span>',

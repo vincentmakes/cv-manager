@@ -1182,29 +1182,55 @@ function educationForm(d) {
 
 function skillForm(d) {
     const iconOptions = [
-        { value: 'code', label: t('icon.code') },
-        { value: 'server', label: t('icon.server') },
-        { value: 'database', label: t('icon.database') },
-        { value: 'cloud', label: t('icon.cloud') },
-        { value: 'settings', label: t('icon.settings') },
-        { value: 'users', label: t('icon.users') },
-        { value: 'briefcase', label: t('icon.briefcase') },
-        { value: 'cpu', label: t('icon.cpu') },
-        { value: 'layers', label: t('icon.layers') },
-        { value: 'default', label: t('icon.default') }
+        { value: 'code', label: t('icon.code'), icon: 'code' },
+        { value: 'server', label: t('icon.server'), icon: 'dns' },
+        { value: 'database', label: t('icon.database'), icon: 'storage' },
+        { value: 'cloud', label: t('icon.cloud'), icon: 'cloud' },
+        { value: 'settings', label: t('icon.settings'), icon: 'settings' },
+        { value: 'users', label: t('icon.users'), icon: 'group' },
+        { value: 'briefcase', label: t('icon.briefcase'), icon: 'work' },
+        { value: 'cpu', label: t('icon.cpu'), icon: 'memory' },
+        { value: 'layers', label: t('icon.layers'), icon: 'layers' },
+        { value: 'security', label: t('icon.security'), icon: 'security' },
+        { value: 'web', label: t('icon.web'), icon: 'language' },
+        { value: 'mobile', label: t('icon.mobile'), icon: 'phone_iphone' },
+        { value: 'terminal', label: t('icon.terminal'), icon: 'terminal' },
+        { value: 'api', label: t('icon.api'), icon: 'api' },
+        { value: 'analytics', label: t('icon.analytics'), icon: 'analytics' },
+        { value: 'science', label: t('icon.science'), icon: 'science' },
+        { value: 'build', label: t('icon.build'), icon: 'build' },
+        { value: 'palette', label: t('icon.palette'), icon: 'palette' },
+        { value: 'school', label: t('icon.school'), icon: 'school' },
+        { value: 'shield', label: t('icon.shield'), icon: 'shield' },
+        { value: 'rocket', label: t('icon.rocket'), icon: 'rocket_launch' },
+        { value: 'chat', label: t('icon.chat'), icon: 'chat' },
+        { value: 'bug', label: t('icon.bug'), icon: 'bug_report' },
+        { value: 'heart', label: t('icon.heart'), icon: 'favorite' },
+        { value: 'music', label: t('icon.music'), icon: 'music_note' },
+        { value: 'photo', label: t('icon.photo'), icon: 'photo_camera' },
+        { value: 'sports', label: t('icon.sports'), icon: 'sports_soccer' },
+        { value: 'eco', label: t('icon.eco'), icon: 'eco' },
+        { value: 'finance', label: t('icon.finance'), icon: 'account_balance' },
+        { value: 'default', label: t('icon.default'), icon: 'info' }
     ];
 
+    const selectedIcon = d.icon || 'default';
+
     return `
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">${t('form.category_name')}</label>
-                <input type="text" class="form-input" id="f-name" value="${escapeHtml(d.name || '')}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">${t('form.icon')}</label>
-                <select class="form-select" id="f-icon">
-                    ${iconOptions.map(opt => `<option value="${opt.value}" ${d.icon === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                </select>
+        <div class="form-group">
+            <label class="form-label">${t('form.category_name')}</label>
+            <input type="text" class="form-input" id="f-name" value="${escapeHtml(d.name || '')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">${t('form.icon')}</label>
+            <input type="hidden" id="f-icon" value="${escapeHtml(selectedIcon)}">
+            <div class="icon-picker-grid">
+                ${iconOptions.map(opt => `
+                    <button type="button" class="icon-picker-item${selectedIcon === opt.value ? ' active' : ''}" data-icon="${opt.value}" onclick="selectIcon(this)" title="${opt.label}">
+                        <span class="material-icons">${opt.icon}</span>
+                        <span class="icon-picker-label">${opt.label}</span>
+                    </button>
+                `).join('')}
             </div>
         </div>
         <div class="form-group">
@@ -1507,6 +1533,12 @@ async function reloadSection(endpoint) {
         case 'skills': await loadSkills(); break;
         case 'projects': await loadProjects(); break;
     }
+}
+
+function selectIcon(btn) {
+    btn.closest('.icon-picker-grid').querySelectorAll('.icon-picker-item').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('f-icon').value = btn.dataset.icon;
 }
 
 function val(id) {

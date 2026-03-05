@@ -23,6 +23,26 @@ const icons = {
     briefcase: materialIcon('work', 16),
     cpu: materialIcon('memory', 16),
     layers: materialIcon('layers', 16),
+    security: materialIcon('security', 16),
+    web: materialIcon('language', 16),
+    mobile: materialIcon('phone_iphone', 16),
+    terminal: materialIcon('terminal', 16),
+    api: materialIcon('api', 16),
+    analytics: materialIcon('analytics', 16),
+    science: materialIcon('science', 16),
+    build: materialIcon('build', 16),
+    palette: materialIcon('palette', 16),
+    school: materialIcon('school', 16),
+    shield: materialIcon('shield', 16),
+    rocket: materialIcon('rocket_launch', 16),
+    chat: materialIcon('chat', 16),
+    bug: materialIcon('bug_report', 16),
+    heart: materialIcon('favorite', 16),
+    music: materialIcon('music_note', 16),
+    photo: materialIcon('photo_camera', 16),
+    sports: materialIcon('sports_soccer', 16),
+    eco: materialIcon('eco', 16),
+    finance: materialIcon('account_balance', 16),
     default: materialIcon('info', 16)
 };
 
@@ -38,7 +58,17 @@ function getSkillIcon(iconHint, categoryName) {
         'leadership': 'users', 'management': 'users', 'soft skills': 'users', 'team': 'users',
         'business': 'briefcase', 'enterprise': 'briefcase', 'strategy': 'briefcase',
         'architecture': 'layers', 'design': 'layers',
-        'ai': 'cpu', 'machine learning': 'cpu', 'artificial intelligence': 'cpu'
+        'ai': 'cpu', 'machine learning': 'cpu', 'artificial intelligence': 'cpu',
+        'security': 'security', 'compliance': 'security', 'cyber': 'security',
+        'web': 'web', 'frontend': 'web', 'html': 'web', 'css': 'web',
+        'mobile': 'mobile', 'ios': 'mobile', 'android': 'mobile',
+        'testing': 'bug', 'qa': 'bug', 'quality': 'bug',
+        'analytics': 'analytics', 'metrics': 'analytics', 'reporting': 'analytics',
+        'ci/cd': 'build', 'pipeline': 'build', 'automation': 'build',
+        'api': 'api', 'integration': 'api', 'microservices': 'api',
+        'ui': 'palette', 'ux': 'palette', 'graphic': 'palette',
+        'education': 'school', 'training': 'school', 'teaching': 'school',
+        'finance': 'finance', 'banking': 'finance', 'accounting': 'finance'
     };
     
     // Check if iconHint matches an icon name directly (new format)

@@ -4,11 +4,18 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.19.1] - 2026-03-05
+## [1.20.0] - 2026-03-05
+
+### Added
+- Visual icon picker grid for skill categories with 30 Material Icons to choose from
+- 20 new skill category icons: Security, Web, Mobile, Terminal, API, Analytics, Science, Build, Design, Education, Protection, Performance, Communication, Testing, Health, Music, Photography, Sports, Sustainability, Finance
+- Auto-detection mappings for new icon categories based on skill category names
 
 ### Fixed
-- Fix Material Icons being too small in buttons, add-buttons, and modal close buttons
-- Fix mobile toolbar menu not showing text labels alongside icons
+- Toolbar Language and Help buttons not showing icons (btn-icon-only hiding Material Icons spans)
+- Custom section 2-column grid using wrong icon (view_column → view_column_2)
+- Material Icons being too small in buttons, add-buttons, and modal close buttons
+- Mobile toolbar menu not showing text labels alongside icons
 
 ## [1.19.0] - 2026-03-05
 
