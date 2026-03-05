@@ -1360,6 +1360,8 @@ body.has-preview-banner .container {
     #section-timeline { display: none; }
     .cert-grid, .skills-grid, .projects-grid { grid-template-columns: 1fr; }
     .custom-picture-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .experience-logo { display: none; }
+    .item-card.has-logo { padding-left: 16px; }
 }
 
 /* Mobile print - show timeline again (only if not hidden by user choice) */
