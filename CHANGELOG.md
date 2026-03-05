@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.19.1] - 2026-03-05
+
+### Fixed
+- Fix Material Icons being too small in buttons, add-buttons, and modal close buttons
+- Fix mobile toolbar menu not showing text labels alongside icons
+
 ## [1.19.0] - 2026-03-05
 
 ### Changed
