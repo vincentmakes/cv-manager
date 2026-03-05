@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.19.0] - 2026-03-05
+
+### Changed
+- Migrate all UI icons from inline SVGs to Google Material Icons font
+- Add `materialIcon()` helper function for consistent icon rendering in JavaScript
+- Update CLAUDE.md with icon library guidelines and usage patterns
+
 ## [1.18.0] - 2026-03-05
 
 ### Added

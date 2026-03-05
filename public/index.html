@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/shared/styles.css">
     <link rel="stylesheet" href="/shared/admin.css">
 </head>
@@ -18,16 +19,16 @@
         <div class="toolbar-title">CV Manager</div>
         <div class="toolbar-actions" id="toolbarActions">
             <button class="btn btn-secondary" onclick="openDatasetsModal()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+                <span class="material-icons">folder_open</span>
                 <span data-i18n="toolbar.open">Open...</span>
             </button>
             <button class="btn btn-secondary" onclick="saveAsDataset()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                <span class="material-icons">save_alt</span>
                 <span data-i18n="toolbar.save_as">Save As...</span>
             </button>
             <div class="color-picker-wrapper">
                 <button class="btn btn-secondary" onclick="toggleColorPicker()" data-i18n-title="toolbar.change_theme" title="Change Theme Color">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    <span class="material-icons">palette</span>
                     <span data-i18n="toolbar.theme">Theme</span>
                 </button>
                 <div class="color-picker-dropdown" id="colorPickerDropdown">
@@ -61,21 +62,21 @@
                 </div>
             </div>
             <button class="btn btn-secondary" onclick="openSettingsModal()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="material-icons">settings</span>
                 <span data-i18n="toolbar.settings">Settings</span>
             </button>
             <button class="btn btn-secondary" onclick="exportData()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span class="material-icons">upload</span>
                 <span data-i18n="toolbar.export">Export</span>
             </button>
             <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="material-icons">download</span>
                 <span data-i18n="toolbar.import">Import</span>
             </button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
             <div class="language-picker-wrapper">
                 <button class="btn btn-secondary btn-icon-only" onclick="toggleLanguagePicker()" data-i18n-title="toolbar.language" title="Language">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h20"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2c2.5 2.5 4 5.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-5.5-4-10s1.5-7.5 4-10z"/></svg>
+                    <span class="material-icons">language</span>
                 </button>
                 <div class="language-picker-dropdown" id="languagePickerDropdown">
                     <div class="language-picker-header" data-i18n="settings.language.info">Choose the display language for the CV Manager interface.</div>
@@ -83,19 +84,19 @@
                 </div>
             </div>
             <a href="https://docs-cv-manager.verdet.me/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" data-i18n-title="toolbar.help" title="Help">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+                <span class="material-icons">help_outline</span>
             </a>
             <button class="btn btn-primary toolbar-print-inline" onclick="window.print()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span class="material-icons">print</span>
                 <span data-i18n="toolbar.print">Print / PDF</span>
             </button>
         </div>
         <div class="toolbar-end">
             <button class="btn btn-primary toolbar-print-mobile" onclick="window.print()" title="Print / PDF">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span class="material-icons">print</span>
             </button>
             <button class="btn btn-secondary toolbar-hamburger" onclick="toggleMobileMenu(event)" title="Menu" id="toolbarHamburger">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <span class="material-icons">menu</span>
             </button>
         </div>
     </div>
@@ -103,7 +104,7 @@
     <!-- Update Banner (hidden by default) -->
     <div id="updateBanner" class="update-banner no-print" style="display: none;">
         <div class="update-banner-content">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="material-icons">info</span>
             <span id="updateBannerText"></span>
             <a id="updateBannerLink" href="#" target="_blank" rel="noopener noreferrer" class="update-banner-link" data-i18n="banner.whats_new">What's new</a>
             <button class="update-banner-dismiss" onclick="dismissUpdateBanner()" data-i18n-title="banner.dismiss" title="Dismiss">&times;</button>
@@ -113,7 +114,7 @@
     <!-- Active Dataset Banner (hidden by default) -->
     <div id="activeDatasetBanner" class="active-dataset-banner no-print" style="display: none;">
         <div class="active-dataset-banner-content">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <span class="material-icons" style="font-size:14px">edit</span>
             <span class="active-dataset-label" data-i18n="banner.editing">Editing:</span>
             <span id="activeDatasetName" class="active-dataset-name"></span>
             <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
@@ -132,7 +133,7 @@
         <header class="header" id="section-header" itemscope itemtype="https://schema.org/Person">
             <div class="section-actions no-print">
                 <button class="icon-btn" onclick="editProfile()" data-i18n-title="action.edit_profile" title="Edit Profile">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    <span class="material-icons">edit</span>
                 </button>
             </div>
             <div class="header-content">
@@ -155,10 +156,10 @@
                 <h2 class="section-title" data-i18n="section.about">Professional Summary</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="openModal('profile')" data-i18n-title="action.edit_about" title="Edit About">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        <span class="material-icons">edit</span>
                     </button>
                     <button class="icon-btn" onclick="toggleSection('about')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-about">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
@@ -171,7 +172,7 @@
                 <h2 class="section-title" data-i18n="section.timeline">Career Timeline</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('timeline')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-timeline">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
@@ -187,13 +188,13 @@
                 <h2 class="section-title" data-i18n="section.experience">Work Experience</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('experience')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-experience">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="items-list" id="experienceList"></div>
             <button class="add-btn no-print" onclick="openModal('experience')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="material-icons">add</span>
                 <span data-i18n="action.add_experience">Add Experience</span>
             </button>
         </section>
@@ -204,13 +205,13 @@
                 <h2 class="section-title" data-i18n="section.certifications">Certifications</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('certifications')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-certifications">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="cert-grid" id="certGrid"></div>
             <button class="add-btn no-print" onclick="openModal('certification')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="material-icons">add</span>
                 <span data-i18n="action.add_certification">Add Certification</span>
             </button>
         </section>
@@ -221,13 +222,13 @@
                 <h2 class="section-title" data-i18n="section.education">Education</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('education')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-education">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="items-list" id="educationList"></div>
             <button class="add-btn no-print" onclick="openModal('education')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="material-icons">add</span>
                 <span data-i18n="action.add_education">Add Education</span>
             </button>
         </section>
@@ -238,13 +239,13 @@
                 <h2 class="section-title" data-i18n="section.skills">Skills & Expertise</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('skills')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-skills">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="skills-grid" id="skillsGrid"></div>
             <button class="add-btn no-print" onclick="openModal('skill')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="material-icons">add</span>
                 <span data-i18n="action.add_skill">Add Skill Category</span>
             </button>
         </section>
@@ -255,13 +256,13 @@
                 <h2 class="section-title" data-i18n="section.projects">Featured Projects</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="toggleSection('projects')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-projects">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
             <div class="projects-grid" id="projectsGrid"></div>
             <button class="add-btn no-print" onclick="openModal('project')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="material-icons">add</span>
                 <span data-i18n="action.add_project">Add Project</span>
             </button>
         </section>
@@ -273,7 +274,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" id="modalTitle">Edit</h3>
                 <button class="modal-close" onclick="closeModal()">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="modal-body" id="modalBody"></div>
@@ -295,7 +296,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" data-i18n="datasets.title">Saved Datasets</h3>
                 <button class="modal-close" onclick="closeDatasetsModal()">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="modal-body" id="datasetsModalBody">
@@ -309,7 +310,7 @@
                         <span><strong>Toggle</strong> — share other datasets at their own <code>/v/slug</code> URL</span>
                     </div>
                     <div class="datasets-legend-item">
-                        <svg class="legend-icon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons legend-icon" style="font-size:14px">visibility</span>
                         <span><strong>Eye</strong> — preview a saved dataset without making it public</span>
                     </div>
                 </div>
@@ -330,7 +331,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" data-i18n="settings.title">Settings</h3>
                 <button class="modal-close" onclick="closeSettingsModal()">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="modal-body">
@@ -355,7 +356,7 @@
                         Create custom sections with different layouts. Custom sections appear in the section order list above.
                     </div>
                     <button class="add-btn" onclick="openCustomSectionModal()" style="margin-top: 0; margin-bottom: 16px;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span class="material-icons">add</span>
                         <span data-i18n="settings.custom.add">Add Custom Section</span>
                     </button>
                     <div id="customSectionsList"></div>
@@ -555,7 +556,7 @@
                     <!-- Tracking Code Setting -->
                     <div class="settings-field">
                         <label class="settings-field-label">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            <span class="material-icons" style="font-size:16px">bar_chart</span>
                             <span data-i18n="settings.advanced.tracking_code">Tracking Code</span>
                         </label>
                         <div class="settings-field-desc" data-i18n="settings.advanced.tracking_code_desc">
@@ -568,7 +569,7 @@
                             spellcheck="false"
                         ></textarea>
                         <div class="settings-field-hint">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="material-icons" style="font-size:12px">info</span>
                             Code is inserted before the closing &lt;/head&gt; tag. Changes are saved when you click "Save Changes".
                         </div>
                     </div>
@@ -591,7 +592,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" id="customSectionModalTitle" data-i18n="custom_section.add_title">Add Custom Section</h3>
                 <button class="modal-close" onclick="closeCustomSectionModal()">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="modal-body" id="customSectionModalBody"></div>
@@ -613,7 +614,7 @@
             <div class="modal-header">
                 <h3 class="modal-title" id="customItemModalTitle" data-i18n="custom_item.add_title">Add Item</h3>
                 <button class="modal-close" onclick="closeCustomItemModal()">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="modal-body" id="customItemModalBody"></div>

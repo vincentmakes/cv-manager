@@ -69,6 +69,7 @@
 .icon-btn:hover { background: var(--primary); color: var(--white); }
 .icon-btn.active { background: var(--primary); color: var(--white); }
 .icon-btn svg { width: 16px; height: 16px; }
+.icon-btn .material-icons { font-size: 16px; }
 
 /* Item Actions */
 .item-actions {
@@ -105,6 +106,7 @@
 .item-btn.delete:hover { background: var(--danger); }
 .item-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
 .item-btn svg { width: 14px; height: 14px; }
+.item-btn .material-icons { font-size: 14px; }
 
 /* Drag Handle for Items */
 .drag-handle {
@@ -503,7 +505,7 @@
     font-size: 13px;
     color: var(--gray-700);
 }
-.update-banner-content svg { flex-shrink: 0; color: var(--primary); }
+.update-banner-content svg, .update-banner-content .material-icons { flex-shrink: 0; color: var(--primary); }
 .update-banner-link {
     color: var(--primary);
     font-weight: 500;
@@ -543,7 +545,7 @@
     font-size: 13px;
     color: var(--gray-700);
 }
-.active-dataset-banner-content svg { flex-shrink: 0; color: var(--primary); }
+.active-dataset-banner-content svg, .active-dataset-banner-content .material-icons { flex-shrink: 0; color: var(--primary); }
 .active-dataset-label { color: var(--gray-500); font-weight: 400; }
 .active-dataset-name { font-weight: 600; color: var(--primary-dark); }
 .active-dataset-default-badge {
@@ -1013,6 +1015,7 @@
 }
 
 .settings-section-btn svg { width: 14px; height: 14px; }
+.settings-section-btn .material-icons { font-size: 14px; }
 
 .settings-info {
     font-size: 12px;
@@ -1053,6 +1056,7 @@
 }
 
 .project-link svg { width: 14px; height: 14px; }
+.project-link .material-icons { font-size: 14px; }
 
 /* ===========================
    Settings Modal Tabs & Custom Sections
@@ -1184,6 +1188,9 @@
 .layout-type-icon svg {
     width: 24px;
     height: 24px;
+}
+.layout-type-icon .material-icons {
+    font-size: 24px;
 }
 
 .layout-type-name {
@@ -1331,7 +1338,7 @@
     margin-bottom: 6px;
 }
 
-.settings-field-label svg {
+.settings-field-label svg, .settings-field-label .material-icons {
     color: var(--primary);
 }
 
@@ -1351,7 +1358,7 @@
     margin-top: 8px;
 }
 
-.settings-field-hint svg {
+.settings-field-hint svg, .settings-field-hint .material-icons {
     flex-shrink: 0;
 }
 
@@ -1541,12 +1548,13 @@
 @media (max-width: 1080px) {
     .toolbar { padding: 0 12px; gap: 8px; }
     .toolbar-actions { gap: 4px; }
-    .toolbar-actions > .btn span,
-    .toolbar-actions > .color-picker-wrapper .btn span,
-    .toolbar-actions > .language-picker-wrapper .btn span,
-    .toolbar-actions > a.btn span { display: none; }
+    .toolbar-actions > .btn span:not(.material-icons),
+    .toolbar-actions > .color-picker-wrapper .btn span:not(.material-icons),
+    .toolbar-actions > .language-picker-wrapper .btn span:not(.material-icons),
+    .toolbar-actions > a.btn span:not(.material-icons) { display: none; }
     .toolbar-actions .btn { padding: 8px 10px; }
     .toolbar-actions .btn svg { width: 18px; height: 18px; }
+    .toolbar-actions .btn .material-icons { font-size: 18px; }
     .toolbar-title { font-size: 15px; }
 }
 

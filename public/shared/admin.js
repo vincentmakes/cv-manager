@@ -20,8 +20,8 @@ function toggleMobileMenu(e) {
     actions.classList.toggle('mobile-open', mobileMenuOpen);
     // Swap hamburger icon to X when open
     hamburger.innerHTML = mobileMenuOpen
-        ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
-        : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+        ? '<span class="material-icons">close</span>'
+        : '<span class="material-icons">menu</span>';
 }
 
 function closeMobileMenu() {
@@ -30,7 +30,7 @@ function closeMobileMenu() {
     const actions = document.getElementById('toolbarActions');
     const hamburger = document.getElementById('toolbarHamburger');
     if (actions) actions.classList.remove('mobile-open');
-    if (hamburger) hamburger.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+    if (hamburger) hamburger.innerHTML = '<span class="material-icons">menu</span>';
 }
 
 // Close mobile menu when clicking outside
@@ -498,7 +498,7 @@ function renderCustomSection(section) {
                 <h2 class="section-title">${escapeHtml(section.name)}</h2>
                 <div class="section-actions no-print">
                     <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="Toggle Visibility" id="toggle-${section.section_key}">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons">visibility</span>
                     </button>
                 </div>
             </div>
@@ -506,7 +506,7 @@ function renderCustomSection(section) {
                 ${contentHtml}
             </div>
             <button class="add-btn no-print" onclick="manageCustomSectionItems(${section.id})">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="material-icons">add</span>
                 Manage Items
             </button>
         </section>
@@ -995,11 +995,11 @@ function profileForm(d) {
                     </div>
                     <input type="file" id="f-picture" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfilePicture(this)">
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-picture').click()">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="material-icons" style="font-size:14px">image</span>
                         ${t('form.choose_image')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="removeProfilePicture()">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span class="material-icons" style="font-size:14px">delete</span>
                         ${t('form.remove')}
                     </button>
                 </div>
@@ -1064,14 +1064,14 @@ function logoUploadHtml(filename) {
                 <div class="logo-upload-preview" id="logoUploadPreview">
                     ${filename
                         ? `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="logoPreviewImg">`
-                        : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
+                        : `<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><span class="material-icons" style="font-size:20px">image</span></div>`
                     }
                 </div>
                 <div class="logo-upload-actions">
                     <input type="file" id="f-logo" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewLogo(this)">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ${t('form.choose_image')}</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="showLogoPicker()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> ${t('form.use_existing')}</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${t('form.remove')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-logo').click()"><span class="material-icons" style="font-size:14px">image</span> ${t('form.choose_image')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="showLogoPicker()"><span class="material-icons" style="font-size:14px">inventory_2</span> ${t('form.use_existing')}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="removeLogo()" style="color: var(--gray-500)"><span class="material-icons" style="font-size:14px">delete</span> ${t('form.remove')}</button>
                 </div>
                 <div class="logo-picker-grid" id="logoPickerGrid" style="display:none;"></div>
             </div>
@@ -1596,7 +1596,7 @@ function previewLogo(input) {
 function removeLogo() {
     pendingLogo = 'remove';
     const preview = document.getElementById('logoUploadPreview');
-    preview.innerHTML = '<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+    preview.innerHTML = '<div class="logo-preview-placeholder" id="logoPreviewPlaceholder"><span class="material-icons" style="font-size:20px">image</span></div>';
     const fileInput = document.getElementById('f-logo');
     if (fileInput) fileInput.value = '';
     updateLogoApplyGlobal();
@@ -1756,19 +1756,19 @@ function toast(msg, type = 'success') {
 
 // Icons
 function visibilityIcon(visible) {
-    return visible 
-        ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
-        : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>';
+    return visible
+        ? '<span class="material-icons" style="font-size:14px">visibility</span>'
+        : '<span class="material-icons" style="font-size:14px">visibility_off</span>';
 }
 
 function printerIcon(printVisible) {
     return printVisible
-        ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>'
-        : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4l16 16"/></svg>';
+        ? '<span class="material-icons" style="font-size:14px">print</span>'
+        : '<span class="material-icons" style="font-size:14px">print_disabled</span>';
 }
 
 function dragHandleIcon() {
-    return '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="2" r="1.5"/><circle cx="10" cy="2" r="1.5"/><circle cx="4" cy="7" r="1.5"/><circle cx="10" cy="7" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="10" cy="12" r="1.5"/></svg>';
+    return '<span class="material-icons" style="font-size:14px">drag_indicator</span>';
 }
 
 // ===========================
@@ -1931,23 +1931,23 @@ async function saveItemOrder(type, container) {
 }
 
 function editIcon() {
-    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>';
+    return '<span class="material-icons" style="font-size:14px">edit</span>';
 }
 
 function deleteIcon() {
-    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+    return '<span class="material-icons" style="font-size:14px">delete</span>';
 }
 
 function linkIcon() {
-    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+    return '<span class="material-icons" style="font-size:14px">open_in_new</span>';
 }
 
 function moveUpIcon() {
-    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
+    return '<span class="material-icons" style="font-size:14px">expand_less</span>';
 }
 
 function moveDownIcon() {
-    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+    return '<span class="material-icons" style="font-size:14px">expand_more</span>';
 }
 
 async function moveExperience(id, direction) {
@@ -2151,9 +2151,7 @@ function renderSettingsSections() {
         return `
         <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
             <div class="settings-section-drag">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
-                </svg>
+                <span class="material-icons" style="font-size:16px">drag_handle</span>
             </div>
             <div class="settings-section-name-wrap">
                 <input type="text" class="settings-section-name-input"
@@ -2164,7 +2162,7 @@ function renderSettingsSections() {
                     title="${t('settings.sections.click_to_edit')}"
                 />
                 ${isCustomName ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="${t('settings.sections.reset_default')}: ${escapeHtml(translatedDefault)}">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                    <span class="material-icons" style="font-size:12px">sync</span>
                 </button>` : ''}
             </div>
             <div class="settings-section-actions">
@@ -2175,10 +2173,10 @@ function renderSettingsSections() {
                     ${printerIcon(section.print_visible !== false)}
                 </button>
                 <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', -1)" title="Move Up" ${index === 0 ? 'disabled' : ''}>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                    <span class="material-icons" style="font-size:14px">expand_less</span>
                 </button>
                 <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', 1)" title="Move Down" ${index === settingsSectionOrder.length - 1 ? 'disabled' : ''}>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <span class="material-icons" style="font-size:14px">expand_more</span>
                 </button>
             </div>
         </div>
@@ -2450,7 +2448,7 @@ async function loadDatasetsList() {
                 ${showSlugUrl ? `<div class="dataset-url">
                     <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
                     <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                        <span class="material-icons" style="font-size:12px">content_copy</span>
                     </button>
                     ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
                 </div>` : ''}
@@ -2467,7 +2465,7 @@ async function loadDatasetsList() {
                     </div>` : ''}
                 ${ds.slug && !isDefault ? `
                     <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="material-icons" style="font-size:14px">visibility</span>
                     </button>` : ''}
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">${isActive ? 'Reload' : 'Load'}</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
@@ -2954,10 +2952,10 @@ async function loadCustomSectionsList() {
                 </div>
                 <div class="custom-section-actions">
                     <button class="btn btn-ghost btn-sm" onclick="openCustomSectionModal(${section.id})" title="Edit Section">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        <span class="material-icons" style="font-size:14px">edit</span>
                     </button>
                     <button class="btn btn-ghost btn-sm" onclick="manageCustomSectionItems(${section.id})" title="Manage Items">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <span class="material-icons" style="font-size:14px">list</span>
                     </button>
                 </div>
             </div>
@@ -3228,7 +3226,7 @@ async function manageCustomSectionItems(sectionId) {
             ` : ''}
         </div>
         <button class="add-btn" onclick="openCustomItemModal(${sectionId})" style="margin-top: 0; margin-bottom: 12px;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="material-icons">add</span>
             ${section.layout_type === 'picture-grid' ? t('custom_item.add_picture') : t('custom_item.add_item')}
         </button>
         <div class="custom-items-list" data-section-id="${sectionId}">
