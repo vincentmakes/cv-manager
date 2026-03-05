@@ -1284,8 +1284,8 @@ body.has-preview-banner .container {
         break-inside: auto;
     }
     .item-card { padding: 10px; margin-bottom: 6px; border-radius: 0; }
-    .item-card.has-logo { padding-left: 70px; }
-    .item-card.has-logo .experience-logo { left: 10px; top: 10px; }
+    .item-card.has-logo { padding-left: 46px; }
+    .experience-logo { width: 28px; height: 28px; left: 10px; top: 10px; overflow: visible; }
     .items-list { gap: 6px; }
     .item-title { font-size: 13px; }
     .item-subtitle { font-size: 12px; }
