@@ -3308,20 +3308,28 @@ function openCustomItemModal(sectionId, itemId = null) {
             </div>
         `;
     } else if (section.layout_type === 'timeline') {
-        // Timeline form - experience-like fields
+        // Timeline form - experience-like fields with full logo management
         const meta = item.metadata || {};
+        const showOnTimeline = meta.show_on_timeline !== undefined ? meta.show_on_timeline : (section.metadata?.show_on_timeline || false);
+        pendingTimelineLogo = null;
+        currentTimelineLogoFile = item.image || null;
         formHtml = `
             <div class="form-group">
-                <label class="form-label">${t('custom_item.picture')}</label>
-                <div class="picture-grid-preview" id="ci-picture-preview">
-                    ${item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="picture-grid-preview-img">` : `<div class="picture-grid-placeholder">${t('custom_item.no_image')}</div>`}
-                </div>
-                <input type="file" id="ci-picture-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewPictureGridImage(this)">
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-picture-file').click()">
-                        ${t('custom_item.choose_picture')}
-                    </button>
-                    ${item.image ? `<button type="button" class="btn btn-ghost btn-sm" onclick="removePictureGridImage()" id="ci-remove-picture-btn">${t('custom_item.remove_picture')}</button>` : ''}
+                <label class="form-label">${t('form.company_logo')}</label>
+                <div class="logo-upload-container">
+                    <div class="logo-upload-preview" id="ciLogoUploadPreview">
+                        ${item.image
+                            ? `<img src="/uploads/${encodeURIComponent(item.image)}?${Date.now()}" alt="" id="ciLogoPreviewImg">`
+                            : `<div class="logo-preview-placeholder" id="ciLogoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`
+                        }
+                    </div>
+                    <div class="logo-upload-actions">
+                        <input type="file" id="ci-logo-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewTimelineLogo(this)">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-logo-file').click()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ${t('form.choose_image')}</button>
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="showTimelineLogoPicker()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> ${t('form.use_existing')}</button>
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="removeTimelineLogo()" style="color: var(--gray-500)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${t('form.remove')}</button>
+                    </div>
+                    <div class="logo-picker-grid" id="ciLogoPickerGrid" style="display:none;"></div>
                 </div>
                 <div class="form-hint">${t('form.logo_hint')}</div>
             </div>
@@ -3329,21 +3337,25 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <label class="form-label">${t('form.job_title')}</label>
                 <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
             </div>
-            <div class="form-group">
-                <label class="form-label">${t('form.company')}</label>
-                <input type="text" class="form-input" id="ci-subtitle" value="${escapeHtml(item.subtitle || '')}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">${t('form.company')}</label>
+                    <input type="text" class="form-input" id="ci-subtitle" value="${escapeHtml(item.subtitle || '')}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${t('form.country_code')}</label>
+                    <input type="text" class="form-input" id="ci-country-code" value="${escapeHtml(meta.country_code || '')}" maxlength="2" placeholder="${t('form.country_code_placeholder')}">
+                </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">${t('form.country_code')}</label>
-                <input type="text" class="form-input" id="ci-country-code" value="${escapeHtml(meta.country_code || '')}" placeholder="${t('form.country_code_placeholder')}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">${t('form.start_date')}</label>
-                <input type="text" class="form-input" id="ci-start-date" value="${escapeHtml(meta.start_date || '')}" placeholder="${t('form.start_date_placeholder')}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">${t('form.end_date')}</label>
-                <input type="text" class="form-input" id="ci-end-date" value="${escapeHtml(meta.end_date || '')}" placeholder="${t('form.end_date_placeholder')}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">${t('form.start_date')}</label>
+                    <input type="text" class="form-input" id="ci-start-date" value="${escapeHtml(meta.start_date || '')}" placeholder="${t('form.start_date_placeholder')}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${t('form.end_date')}</label>
+                    <input type="text" class="form-input" id="ci-end-date" value="${escapeHtml(meta.end_date || '')}" placeholder="${t('form.end_date_placeholder')}">
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">${t('form.location')}</label>
@@ -3352,6 +3364,13 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="ci-show-on-timeline" ${showOnTimeline ? 'checked' : ''} style="width: 16px; height: 16px;">
+                    <span>${t('custom_item.show_on_timeline')}</span>
+                </label>
+                <div class="form-hint">${t('custom_item.show_on_timeline_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {
@@ -3483,11 +3502,75 @@ function removePictureGridImage() {
     if (removeBtn) removeBtn.remove();
 }
 
+// Timeline logo helpers (reuses experience logo picker)
+let pendingTimelineLogo = null;
+let currentTimelineLogoFile = null;
+
+function previewTimelineLogo(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            toast(t('toast.image_too_large'), 'error');
+            input.value = '';
+            return;
+        }
+        pendingTimelineLogo = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('ciLogoUploadPreview');
+            if (preview) preview.innerHTML = `<img src="${e.target.result}" alt="" id="ciLogoPreviewImg">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeTimelineLogo() {
+    pendingTimelineLogo = 'remove';
+    const preview = document.getElementById('ciLogoUploadPreview');
+    if (preview) preview.innerHTML = '<div class="logo-preview-placeholder" id="ciLogoPreviewPlaceholder"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+    const fileInput = document.getElementById('ci-logo-file');
+    if (fileInput) fileInput.value = '';
+}
+
+async function showTimelineLogoPicker() {
+    const grid = document.getElementById('ciLogoPickerGrid');
+    if (!grid) return;
+    if (grid.style.display !== 'none') { grid.style.display = 'none'; return; }
+    try {
+        const logos = await api('/api/logos');
+        if (!logos.length) { toast(t('toast.no_existing_logos'), 'info'); return; }
+        grid.innerHTML = logos.map(l => {
+            const label = l.company ? `<span class="logo-picker-label">${escapeHtml(l.company)}</span>` : '';
+            return `<div class="logo-picker-item" title="${escapeHtml(l.company || '')}">
+                <div class="logo-picker-img" onclick="selectTimelineLogo('${escapeHtml(l.filename)}')">
+                    <img src="/uploads/${encodeURIComponent(l.filename)}?${Date.now()}" alt="${escapeHtml(l.company || '')}">
+                </div>
+                ${label}
+            </div>`;
+        }).join('');
+        grid.style.display = 'flex';
+    } catch (err) {
+        toast(t('toast.logo_upload_failed'), 'error');
+    }
+}
+
+function selectTimelineLogo(filename) {
+    pendingTimelineLogo = { reuse: filename };
+    const preview = document.getElementById('ciLogoUploadPreview');
+    if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(filename)}?${Date.now()}" alt="" id="ciLogoPreviewImg">`;
+    const grid = document.getElementById('ciLogoPickerGrid');
+    if (grid) grid.style.display = 'none';
+    const fileInput = document.getElementById('ci-logo-file');
+    if (fileInput) fileInput.value = '';
+}
+
 function closeCustomItemModal() {
     document.getElementById('customItemModalOverlay').classList.remove('active');
     currentCustomItem.itemId = null;
     pendingPictureGridFile = null;
     pictureGridRemoved = false;
+    pendingTimelineLogo = null;
+    currentTimelineLogoFile = null;
 }
 
 async function saveCustomItem() {
@@ -3515,7 +3598,8 @@ async function saveCustomItem() {
             start_date: startResult.value,
             end_date: endResult.value,
             location: document.getElementById('ci-location')?.value?.trim() || '',
-            country_code: document.getElementById('ci-country-code')?.value?.trim() || ''
+            country_code: document.getElementById('ci-country-code')?.value?.trim() || '',
+            show_on_timeline: document.getElementById('ci-show-on-timeline')?.checked || false
         };
     } else {
         const hideTitle = document.getElementById('ci-hide-title')?.checked || false;
@@ -3543,11 +3627,16 @@ async function saveCustomItem() {
     try {
         let itemId = currentCustomItem.itemId;
 
-        // For picture-grid/timeline edits, preserve existing image unless being changed
+        // For picture-grid edits, preserve existing image unless being changed
         let image;
-        if ((section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && itemId) {
+        if (section.layout_type === 'picture-grid' && itemId) {
             const existingItem = section.items.find(i => i.id === itemId);
             image = pictureGridRemoved ? '' : (existingItem?.image || '');
+        }
+        // For timeline edits, image is handled separately via logo system
+        if (section.layout_type === 'timeline' && itemId && !pendingTimelineLogo) {
+            const existingItem = section.items.find(i => i.id === itemId);
+            image = existingItem?.image || '';
         }
 
         if (itemId) {
@@ -3565,12 +3654,29 @@ async function saveCustomItem() {
             toast(t('toast.item_added'));
         }
 
-        // Handle picture upload for picture-grid and timeline
-        if ((section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && itemId && pendingPictureGridFile) {
+        // Handle picture upload for picture-grid
+        if (section.layout_type === 'picture-grid' && itemId && pendingPictureGridFile) {
             const formData = new FormData();
             formData.append('picture', pendingPictureGridFile);
             const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
             if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
+        }
+
+        // Handle logo for timeline items
+        if (section.layout_type === 'timeline' && itemId && pendingTimelineLogo) {
+            if (pendingTimelineLogo === 'remove') {
+                await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'DELETE' });
+            } else if (pendingTimelineLogo.reuse) {
+                await api(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, {
+                    method: 'PUT',
+                    body: { filename: pendingTimelineLogo.reuse }
+                });
+            } else if (pendingTimelineLogo instanceof File) {
+                const formData = new FormData();
+                formData.append('picture', pendingTimelineLogo);
+                const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
+                if (!uploadRes.ok) { toast(t('toast.upload_failed'), 'error'); }
+            }
         }
 
         closeCustomItemModal();

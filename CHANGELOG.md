@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.0] - 2026-03-05
+
+### Changed
+- Renamed "Timeline" layout type to "Additional Experiences" in Custom Section settings
+- Revamped Additional Experiences item modal to match the Work Experience modal: full logo management with Choose Image, Use Existing, and Remove buttons
+- Moved "Show on Career Timeline" toggle from section-level to per-item level, allowing individual items to be shown or hidden on the timeline
+- Added backend endpoints for reusing and removing logos on custom section items (PUT/DELETE)
+- Full i18n support for new per-item timeline toggle across all 8 languages
+
 ## [1.16.0] - 2026-03-05
 
 ### Added

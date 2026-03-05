@@ -262,6 +262,8 @@
     "custom_item.caption_placeholder": "ex. Description de la photo",
     "custom_item.add_picture": "Ajouter une image",
     "custom_item.add_item": "Ajouter un élément",
+    "custom_item.show_on_timeline": "Afficher sur la chronologie",
+    "custom_item.show_on_timeline_hint": "Afficher cet élément sur la chronologie de carrière avec les expériences professionnelles",
 
     "toast.saved": "Enregistré avec succès",
     "toast.deleted": "Supprimé",
