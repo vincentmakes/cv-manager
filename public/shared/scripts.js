@@ -1082,14 +1082,6 @@ function scrollToExperience(timelineItem) {
 // Sorted by start_date DESC (newest first)
 async function loadExperiencesReadOnly() {
     const experiences = await api('/api/experiences');
-    
-    // Sort by start_date descending (newest first)
-    experiences.sort((a, b) => {
-        const dateA = parseDateForSort(a.start_date);
-        const dateB = parseDateForSort(b.start_date);
-        return dateB - dateA; // DESC: higher dates first
-    });
-    
     const container = document.getElementById('experienceList');
     
     container.innerHTML = experiences.map(exp => `

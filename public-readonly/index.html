@@ -342,13 +342,6 @@
             if (!experiences) return;
             const visible = experiences.filter(e => e.visible !== false);
 
-            // Sort by start_date descending (newest first)
-            visible.sort((a, b) => {
-                const dateA = parseDateForSortLocal(a.start_date);
-                const dateB = parseDateForSortLocal(b.start_date);
-                return dateB - dateA;
-            });
-
             document.getElementById('experienceList').innerHTML = visible.map(exp =>
                 renderExperienceCard({
                     id: exp.id || '',
