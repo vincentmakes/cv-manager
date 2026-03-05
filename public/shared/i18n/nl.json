@@ -45,6 +45,8 @@
     "action.add_education": "Opleiding toevoegen",
     "action.add_skill": "Vaardigheidscategorie toevoegen",
     "action.add_project": "Project toevoegen",
+    "action.move_up": "Omhoog",
+    "action.move_down": "Omlaag",
     "btn.save": "Opslaan",
     "btn.cancel": "Annuleren",
     "btn.delete": "Verwijderen",

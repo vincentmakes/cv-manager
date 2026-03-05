@@ -103,6 +103,7 @@
 
 .item-btn:hover { background: var(--primary); color: var(--white); }
 .item-btn.delete:hover { background: var(--danger); }
+.item-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
 .item-btn svg { width: 14px; height: 14px; }
 
 /* Drag Handle for Items */

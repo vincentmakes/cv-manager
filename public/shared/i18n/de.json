@@ -49,6 +49,8 @@
     "action.add_education": "Ausbildung hinzufügen",
     "action.add_skill": "Fähigkeitskategorie hinzufügen",
     "action.add_project": "Projekt hinzufügen",
+    "action.move_up": "Nach oben",
+    "action.move_down": "Nach unten",
 
     "btn.save": "Speichern",
     "btn.cancel": "Abbrechen",

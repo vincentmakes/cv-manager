@@ -698,21 +698,21 @@ async function loadSectionsAdmin() {
 }
 
 // Load Experiences (admin version with edit controls)
-// Sorted by start_date DESC (newest first)
+// Sorted by sort_order ASC (user-defined order, falling back to start_date DESC)
 async function loadExperiences() {
     const experiences = await api('/api/experiences');
-    
-    // Sort by start_date descending (newest first)
-    experiences.sort((a, b) => {
-        const dateA = parseDateForSort(a.start_date);
-        const dateB = parseDateForSort(b.start_date);
-        return dateB - dateA; // DESC: higher dates first
-    });
-    
+
     const container = document.getElementById('experienceList');
-    
-    container.innerHTML = experiences.map(exp => {
+    const total = experiences.length;
+
+    container.innerHTML = experiences.map((exp, index) => {
         const actionsHtml = `<div class="item-actions">
+            <button class="item-btn move-btn" onclick="moveExperience(${exp.id}, 'up')" title="${t('action.move_up')}"${index === 0 ? ' disabled' : ''}>
+                ${moveUpIcon()}
+            </button>
+            <button class="item-btn move-btn" onclick="moveExperience(${exp.id}, 'down')" title="${t('action.move_down')}"${index === total - 1 ? ' disabled' : ''}>
+                ${moveDownIcon()}
+            </button>
             <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
                 ${visibilityIcon(exp.visible)}
             </button>
@@ -1940,6 +1940,49 @@ function deleteIcon() {
 
 function linkIcon() {
     return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+}
+
+function moveUpIcon() {
+    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
+}
+
+function moveDownIcon() {
+    return '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+}
+
+async function moveExperience(id, direction) {
+    const container = document.getElementById('experienceList');
+    const cards = Array.from(container.querySelectorAll('.item-card'));
+    const index = cards.findIndex(c => c.dataset.id === String(id));
+    if (index === -1) return;
+
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= cards.length) return;
+
+    // Swap in DOM
+    if (direction === 'up') {
+        cards[swapIndex].before(cards[index]);
+    } else {
+        cards[swapIndex].after(cards[index]);
+    }
+
+    // Save new order
+    const updatedCards = Array.from(container.querySelectorAll('.item-card'));
+    const orderData = updatedCards.map((card, i) => ({
+        id: parseInt(card.dataset.id),
+        sort_order: i
+    }));
+
+    try {
+        await api('/api/reorder/experiences', {
+            method: 'PUT',
+            body: { items: orderData }
+        });
+        toast(t('toast.order_saved'));
+        autoSaveActiveDataset();
+    } catch (err) {
+        toast(t('toast.order_failed'), 'error');
+    }
 }
 
 // ===========================

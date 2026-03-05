@@ -45,6 +45,8 @@
     "action.add_education": "添加教育经历",
     "action.add_skill": "添加技能分类",
     "action.add_project": "添加项目",
+    "action.move_up": "上移",
+    "action.move_down": "下移",
     "btn.save": "保存",
     "btn.cancel": "取消",
     "btn.delete": "删除",

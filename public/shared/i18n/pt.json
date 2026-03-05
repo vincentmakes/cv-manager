@@ -45,6 +45,8 @@
     "action.add_education": "Adicionar Formação",
     "action.add_skill": "Adicionar Categoria de Competências",
     "action.add_project": "Adicionar Projeto",
+    "action.move_up": "Mover para cima",
+    "action.move_down": "Mover para baixo",
     "btn.save": "Guardar",
     "btn.cancel": "Cancelar",
     "btn.delete": "Eliminar",
