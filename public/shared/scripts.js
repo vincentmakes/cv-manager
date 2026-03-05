@@ -1036,16 +1036,21 @@ function scrollToExperience(timelineItem) {
     const role = timelineItem.dataset.role;
     
     let targetCard = null;
-    
-    // Try to find by ID first (scoped to experience section)
-    if (expId) {
+
+    // Try to find by ID first
+    if (expId && expId.toString().startsWith('cs_')) {
+        // Custom section timeline item - search in custom section containers
+        targetCard = document.querySelector(`.custom-section .item-card[data-id="${expId}"]`);
+    } else if (expId) {
+        // Standard experience - search in experience section
         targetCard = document.querySelector(`#experienceList .item-card[data-id="${expId}"]`);
     }
-    
-    // Fall back to matching by company and role (public mode)
+
+    // Fall back to matching by company and role
     if (!targetCard && company && role) {
-        const expCards = document.querySelectorAll('#experienceList .item-card');
-        for (const card of expCards) {
+        // Search both experience and custom section containers
+        const allCards = document.querySelectorAll('.item-card');
+        for (const card of allCards) {
             const cardCompany = card.querySelector('.item-subtitle span')?.textContent || '';
             const cardRole = card.querySelector('.item-title')?.textContent || '';
             if (cardCompany === company && cardRole === role) {
@@ -1363,6 +1368,9 @@ function renderCustomSectionPublic(section, layoutTypes, socialPlatforms) {
         case 'picture-grid':
             contentHtml = renderPictureGridPublic(items, section.metadata?.columns || 3);
             break;
+        case 'timeline':
+            contentHtml = renderTimelineLayoutPublic(items);
+            break;
         default:
             contentHtml = renderGridPublic(items, 3);
     }
@@ -1519,6 +1527,39 @@ function renderFreeTextPublic(items) {
 }
 
 // Picture grid layout for public view
+function renderTimelineLayoutPublic(items) {
+    if (items.length === 0) return '';
+
+    const visibleItems = items.filter(item => item.visible !== false);
+    if (visibleItems.length === 0) return '';
+
+    // Sort by start_date DESC (newest first)
+    visibleItems.sort((a, b) => {
+        const dateA = parseDateForSort(a.metadata?.start_date || '');
+        const dateB = parseDateForSort(b.metadata?.start_date || '');
+        return dateB - dateA;
+    });
+
+    return visibleItems.map(item => {
+        const meta = item.metadata || {};
+        const highlights = item.description ? item.description.split('\n').filter(h => h.trim()) : [];
+        return `
+        <article class="item-card" data-id="cs_${item.id}">
+            <div class="item-header">
+                <div>
+                    <h3 class="item-title">${escapeHtml(item.title || '')}</h3>
+                    <div class="item-subtitle"><span>${escapeHtml(item.subtitle || '')}</span></div>
+                </div>
+                <span class="item-date">
+                    ${formatDate(meta.start_date)} - ${meta.end_date ? formatDate(meta.end_date) : t('present')}
+                </span>
+            </div>
+            ${meta.location ? `<div class="item-location">${escapeHtml(meta.location)}</div>` : ''}
+            ${highlights.length ? `<ul class="item-highlights">${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
+        </article>`;
+    }).join('');
+}
+
 function renderPictureGridPublic(items, columns = 3) {
     if (items.length === 0) return '';
 

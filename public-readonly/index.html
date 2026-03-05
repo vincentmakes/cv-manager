@@ -191,7 +191,7 @@
                 
                 // Render from dataset data
                 renderProfileFromData(datasetData.profile);
-                renderTimelineFromData(datasetData.experiences);
+                renderTimelineFromData(datasetData.experiences, datasetData.customSections);
                 renderExperiencesFromData(datasetData.experiences);
                 renderCertificationsFromData(datasetData.certifications);
                 renderEducationFromData(datasetData.education);
@@ -306,12 +306,9 @@
             return 0;
         }
         
-        function renderTimelineFromData(experiences) {
+        function renderTimelineFromData(experiences, customSections) {
             if (!experiences) return;
             const visible = experiences.filter(e => e.visible !== false);
-
-            // Sort and normalize dataset fields to shared format
-            visible.sort((a, b) => parseDateForSortLocal(a.start_date) - parseDateForSortLocal(b.start_date));
 
             const normalized = visible.map(exp => ({
                 id: exp.id,
@@ -323,6 +320,19 @@
                 end_date: exp.end_date,
                 visible: exp.visible
             }));
+
+            // Merge timeline-layout custom section items
+            if (customSections) {
+                customSections.filter(s => s.layout_type === 'timeline' && s.visible !== false && s.metadata?.show_on_timeline).forEach(section => {
+                    (section.items || []).filter(i => i.visible !== false).forEach(item => {
+                        const meta = item.metadata || {};
+                        normalized.push({ id: `cs_${item.id}`, company: item.subtitle || '', role: item.title || '', countryCode: meta.country_code || '', logo: item.image || null, start_date: meta.start_date || '', end_date: meta.end_date || '', visible: true });
+                    });
+                });
+            }
+
+            // Sort by start_date ASC for timeline
+            normalized.sort((a, b) => parseDateForSortLocal(a.start_date) - parseDateForSortLocal(b.start_date));
 
             renderTimelineItems(normalized);
         }

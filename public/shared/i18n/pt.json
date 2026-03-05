@@ -212,6 +212,8 @@
     "custom_section.items_suffix": "- Itens",
     "custom_section.items_count": "{{count}} itens",
     "custom_section.grid_columns": "Colunas da grelha",
+    "custom_section.show_on_timeline": "Mostrar itens na linha do tempo profissional",
+    "custom_section.show_on_timeline_hint": "Os itens aparecerão junto às experiências padrão na linha do tempo",
     "custom_item.edit_title": "Editar Item",
     "custom_item.add_title": "Adicionar Item",
     "custom_item.platform": "Plataforma",

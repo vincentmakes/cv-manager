@@ -212,6 +212,8 @@
     "custom_section.items_suffix": "- Elementos",
     "custom_section.items_count": "{{count}} elementos",
     "custom_section.grid_columns": "Columnas de cuadrícula",
+    "custom_section.show_on_timeline": "Mostrar elementos en la línea de tiempo profesional",
+    "custom_section.show_on_timeline_hint": "Los elementos aparecerán junto a las experiencias estándar en la línea de tiempo",
     "custom_item.edit_title": "Editar elemento",
     "custom_item.add_title": "Añadir elemento",
     "custom_item.platform": "Plataforma",

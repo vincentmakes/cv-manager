@@ -485,6 +485,9 @@ function renderCustomSection(section) {
         case 'picture-grid':
             contentHtml = renderPictureGridLayout(items, section.metadata?.columns || 3);
             break;
+        case 'timeline':
+            contentHtml = renderTimelineLayout(items);
+            break;
         default:
             contentHtml = renderGridLayout(items, 3);
     }
@@ -648,6 +651,38 @@ function renderPictureGridLayout(items, columns = 3) {
     const emptyCells = remainder === 0 ? '' : Array(columns - remainder).fill('<div class="custom-picture-empty-cell no-print"></div>').join('');
 
     return `<div class="custom-picture-grid custom-picture-grid-${columns}">${itemsHtml}${emptyCells}</div>`;
+}
+
+function renderTimelineLayout(items) {
+    if (items.length === 0) return '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>';
+
+    // Sort by start_date DESC (newest first)
+    const sorted = [...items].sort((a, b) => {
+        const dateA = parseDateForSort(a.metadata?.start_date || '');
+        const dateB = parseDateForSort(b.metadata?.start_date || '');
+        return dateB - dateA;
+    });
+
+    return sorted.map(item => {
+        const meta = item.metadata || {};
+        const visible = item.visible !== false;
+        const highlights = item.description ? item.description.split('\n').filter(h => h.trim()) : [];
+        return `
+        <article class="item-card ${visible ? '' : 'hidden-print'}" data-id="cs_${item.id}">
+            <div class="item-header">
+                ${item.image ? `<img src="/uploads/${encodeURIComponent(item.image)}" class="experience-logo" alt="${escapeHtml(item.subtitle || '')}" onerror="this.style.display='none'">` : ''}
+                <div>
+                    <h3 class="item-title">${escapeHtml(item.title || '')}</h3>
+                    <div class="item-subtitle"><span>${escapeHtml(item.subtitle || '')}</span></div>
+                </div>
+                <span class="item-date">
+                    ${formatDate(meta.start_date)} - ${meta.end_date ? formatDate(meta.end_date) : t('present')}
+                </span>
+            </div>
+            ${meta.location ? `<div class="item-location">${escapeHtml(meta.location)}</div>` : ''}
+            ${highlights.length ? `<ul class="item-highlights">${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
+        </article>`;
+    }).join('');
 }
 
 // Load Sections with visibility toggle (admin version)
@@ -2943,6 +2978,13 @@ async function openCustomSectionModal(id = null) {
             </div>
             <input type="hidden" id="cs-layout" value="${section.layout_type || 'grid-3'}">
         </div>
+        <div class="form-group" id="cs-timeline-toggle-group" style="display: ${section.layout_type === 'timeline' ? '' : 'none'}">
+            <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="cs-show-on-timeline" ${section.metadata?.show_on_timeline ? 'checked' : ''} style="width: 16px; height: 16px;">
+                <span>${t('custom_section.show_on_timeline')}</span>
+            </label>
+            <div class="form-hint">${t('custom_section.show_on_timeline_hint')}</div>
+        </div>
         <div class="form-group" id="cs-columns-group" style="display: ${(section.layout_type === 'picture-grid') ? '' : 'none'}">
             <label class="form-label">${t('custom_section.grid_columns')}</label>
             <div class="columns-selector">
@@ -2975,6 +3017,8 @@ function selectLayoutType(layoutId) {
     document.getElementById('cs-layout').value = layoutId;
     const colGroup = document.getElementById('cs-columns-group');
     if (colGroup) colGroup.style.display = layoutId === 'picture-grid' ? '' : 'none';
+    const timelineToggle = document.getElementById('cs-timeline-toggle-group');
+    if (timelineToggle) timelineToggle.style.display = layoutId === 'timeline' ? '' : 'none';
 }
 
 function selectPictureGridColumns(n) {
@@ -3046,6 +3090,9 @@ async function saveCustomSection() {
     if (layout_type === 'picture-grid') {
         const columns = parseInt(document.getElementById('cs-columns')?.value) || 3;
         metadata = { columns };
+    } else if (layout_type === 'timeline') {
+        const show_on_timeline = document.getElementById('cs-show-on-timeline')?.checked || false;
+        metadata = { show_on_timeline };
     }
 
     if (!name) {
@@ -3152,10 +3199,10 @@ async function manageCustomSectionItems(sectionId) {
             ${items.length === 0 ? '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>' : items.map(item => `
                 <div class="custom-item-row" data-id="${item.id}" draggable="true">
                     <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
-                    ${section.layout_type === 'picture-grid' && item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="custom-item-thumb">` : ''}
+                    ${(section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="custom-item-thumb">` : ''}
                     <div class="custom-item-info">
                         <div class="custom-item-title">${escapeHtml(item.title || (section.layout_type === 'picture-grid' ? t('custom_item.picture') : 'Untitled'))}</div>
-                        ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
+                        ${section.layout_type === 'timeline' ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle || '')}${item.metadata?.start_date ? ` | ${escapeHtml(item.metadata.start_date)} - ${item.metadata.end_date ? escapeHtml(item.metadata.end_date) : t('present')}` : ''}</div>` : (item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : '')}
                     </div>
                     <div class="custom-item-actions">
                         <button class="item-btn" onclick="openCustomItemModal(${sectionId}, ${item.id})" title="Edit">
@@ -3258,6 +3305,53 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <label class="form-label">${t('custom_item.text_content')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="10" placeholder="${t('custom_item.text_content_placeholder')}">${escapeHtml(item.description || '')}</textarea>
                 <div class="form-hint">${t('custom_item.text_content_hint')}</div>
+            </div>
+        `;
+    } else if (section.layout_type === 'timeline') {
+        // Timeline form - experience-like fields
+        const meta = item.metadata || {};
+        formHtml = `
+            <div class="form-group">
+                <label class="form-label">${t('custom_item.picture')}</label>
+                <div class="picture-grid-preview" id="ci-picture-preview">
+                    ${item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="picture-grid-preview-img">` : `<div class="picture-grid-placeholder">${t('custom_item.no_image')}</div>`}
+                </div>
+                <input type="file" id="ci-picture-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewPictureGridImage(this)">
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-picture-file').click()">
+                        ${t('custom_item.choose_picture')}
+                    </button>
+                    ${item.image ? `<button type="button" class="btn btn-ghost btn-sm" onclick="removePictureGridImage()" id="ci-remove-picture-btn">${t('custom_item.remove_picture')}</button>` : ''}
+                </div>
+                <div class="form-hint">${t('form.logo_hint')}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.job_title')}</label>
+                <input type="text" class="form-input" id="ci-title" value="${escapeHtml(item.title || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.company')}</label>
+                <input type="text" class="form-input" id="ci-subtitle" value="${escapeHtml(item.subtitle || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.country_code')}</label>
+                <input type="text" class="form-input" id="ci-country-code" value="${escapeHtml(meta.country_code || '')}" placeholder="${t('form.country_code_placeholder')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.start_date')}</label>
+                <input type="text" class="form-input" id="ci-start-date" value="${escapeHtml(meta.start_date || '')}" placeholder="${t('form.start_date_placeholder')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.end_date')}</label>
+                <input type="text" class="form-input" id="ci-end-date" value="${escapeHtml(meta.end_date || '')}" placeholder="${t('form.end_date_placeholder')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.location')}</label>
+                <input type="text" class="form-input" id="ci-location" value="${escapeHtml(meta.location || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.highlights')}</label>
+                <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {
@@ -3410,13 +3504,26 @@ async function saveCustomItem() {
         const platform = document.getElementById('ci-platform')?.value || 'custom';
         const platformData = socialPlatforms.find(p => p.id === platform);
         metadata = { platform, icon: platformData?.icon, color: platformData?.color };
+    } else if (section.layout_type === 'timeline') {
+        const startRaw = document.getElementById('ci-start-date')?.value?.trim() || '';
+        const endRaw = document.getElementById('ci-end-date')?.value?.trim() || '';
+        const startResult = startRaw ? normalizeDate(startRaw) : { value: '' };
+        if (startResult.error) { toast(startResult.error, 'error'); return; }
+        const endResult = endRaw ? normalizeDate(endRaw) : { value: '' };
+        if (endResult.error) { toast(endResult.error, 'error'); return; }
+        metadata = {
+            start_date: startResult.value,
+            end_date: endResult.value,
+            location: document.getElementById('ci-location')?.value?.trim() || '',
+            country_code: document.getElementById('ci-country-code')?.value?.trim() || ''
+        };
     } else {
         const hideTitle = document.getElementById('ci-hide-title')?.checked || false;
         metadata = { hideTitle };
     }
-    
-    // Validation - title not required for bullet-list, free-text, picture-grid, or when hideTitle is checked
-    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && section.layout_type !== 'picture-grid' && !metadata.hideTitle && !title) {
+
+    // Validation - title not required for bullet-list, free-text, picture-grid, timeline, or when hideTitle is checked
+    if (section.layout_type !== 'bullet-list' && section.layout_type !== 'free-text' && section.layout_type !== 'picture-grid' && section.layout_type !== 'timeline' && !metadata.hideTitle && !title) {
         toast(t('toast.enter_title'), 'error');
         return;
     }
@@ -3436,9 +3543,9 @@ async function saveCustomItem() {
     try {
         let itemId = currentCustomItem.itemId;
 
-        // For picture-grid edits, preserve existing image unless being changed
+        // For picture-grid/timeline edits, preserve existing image unless being changed
         let image;
-        if (section.layout_type === 'picture-grid' && itemId) {
+        if ((section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && itemId) {
             const existingItem = section.items.find(i => i.id === itemId);
             image = pictureGridRemoved ? '' : (existingItem?.image || '');
         }
@@ -3458,8 +3565,8 @@ async function saveCustomItem() {
             toast(t('toast.item_added'));
         }
 
-        // Handle picture upload for picture-grid
-        if (section.layout_type === 'picture-grid' && itemId && pendingPictureGridFile) {
+        // Handle picture upload for picture-grid and timeline
+        if ((section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && itemId && pendingPictureGridFile) {
             const formData = new FormData();
             formData.append('picture', pendingPictureGridFile);
             const uploadRes = await fetch(`/api/custom-sections/${currentCustomItem.sectionId}/items/${itemId}/picture`, { method: 'POST', body: formData });
@@ -3469,6 +3576,11 @@ async function saveCustomItem() {
         closeCustomItemModal();
         await loadCustomSectionsData();
         manageCustomSectionItems(currentCustomItem.sectionId);
+        // Refresh timeline if this is a timeline-layout section
+        if (section.layout_type === 'timeline') {
+            await loadCustomSections();
+            if (typeof loadTimeline === 'function') loadTimeline();
+        }
         autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.item_save_failed'), 'error');
@@ -3482,7 +3594,13 @@ async function confirmDeleteCustomItem(sectionId, itemId) {
         await api(`/api/custom-sections/${sectionId}/items/${itemId}`, { method: 'DELETE' });
         toast(t('toast.item_deleted'));
         await loadCustomSectionsData();
+        const section = customSections.find(s => s.id === sectionId);
         manageCustomSectionItems(sectionId);
+        // Refresh timeline if this is a timeline-layout section
+        if (section && section.layout_type === 'timeline') {
+            await loadCustomSections();
+            if (typeof loadTimeline === 'function') loadTimeline();
+        }
         autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.item_delete_failed'), 'error');

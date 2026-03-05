@@ -212,6 +212,8 @@
     "custom_section.items_suffix": "- Elementi",
     "custom_section.items_count": "{{count}} elementi",
     "custom_section.grid_columns": "Colonne della griglia",
+    "custom_section.show_on_timeline": "Mostra elementi nella cronologia della carriera",
+    "custom_section.show_on_timeline_hint": "Gli elementi appariranno insieme alle esperienze standard nella cronologia",
     "custom_item.edit_title": "Modifica elemento",
     "custom_item.add_title": "Aggiungi elemento",
     "custom_item.platform": "Piattaforma",

@@ -212,6 +212,8 @@
     "custom_section.items_suffix": "- Items",
     "custom_section.items_count": "{{count}} items",
     "custom_section.grid_columns": "Rasterkolommen",
+    "custom_section.show_on_timeline": "Items tonen op de carrière-tijdlijn",
+    "custom_section.show_on_timeline_hint": "Items verschijnen samen met standaard ervaringen op de tijdlijn",
     "custom_item.edit_title": "Item bewerken",
     "custom_item.add_title": "Item toevoegen",
     "custom_item.platform": "Platform",

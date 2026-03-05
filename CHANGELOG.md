@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.16.0] - 2026-03-05
+
+### Added
+- Timeline layout type for custom sections: create experience-like entries (job title, company, dates, location, highlights, logo) in custom sections
+- "Show on Career Timeline" toggle: when enabled, timeline custom section items appear on the Career Timeline alongside standard work experiences, including branching support
+- Full i18n support for the new timeline layout across all 8 languages
+
 ## [1.15.0] - 2026-03-05
 
 ### Added
