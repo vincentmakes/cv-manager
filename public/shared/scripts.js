@@ -591,7 +591,7 @@ async function loadTimeline() {
 
 // Shared timeline rendering used by both admin and public views.
 // Items must have: { company, role, countryCode, logo, visible, id, start_date, end_date }
-// Options: interactive (adds click handlers for admin)
+// Options: interactive (adds click handlers to scroll to experience cards)
 function renderTimelineItems(items, options) {
     const interactive = options && options.interactive;
     const container = document.getElementById('timelineItems');

@@ -335,7 +335,7 @@
             // Sort by start_date ASC for timeline
             normalized.sort((a, b) => parseDateForSortLocal(a.start_date) - parseDateForSortLocal(b.start_date));
 
-            renderTimelineItems(normalized);
+            renderTimelineItems(normalized, { interactive: true });
         }
         
         // Dynamically resize timeline container based on content height
