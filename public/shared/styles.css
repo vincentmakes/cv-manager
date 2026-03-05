@@ -407,7 +407,12 @@ body {
     object-position: center;
     border-radius: var(--radius-sm);
     flex-shrink: 0;
-    background: var(--white);
+}
+
+/* Align location & highlights with title when logo is present */
+.item-card.has-logo > .item-location,
+.item-card.has-logo > .item-highlights {
+    margin-left: 60px; /* 48px logo + 12px gap */
 }
 
 .item-date {

@@ -681,7 +681,7 @@ async function loadExperiences() {
     const container = document.getElementById('experienceList');
     
     container.innerHTML = experiences.map(exp => `
-        <article class="item-card ${exp.visible ? '' : 'hidden-print'}" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
+        <article class="item-card ${exp.visible ? '' : 'hidden-print'} ${showExperienceLogos && exp.logo_filename ? 'has-logo' : ''}" data-id="${exp.id}" itemscope itemtype="https://schema.org/OrganizationRole">
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
                     ${visibilityIcon(exp.visible)}
