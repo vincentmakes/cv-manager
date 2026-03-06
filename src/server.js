@@ -1885,8 +1885,9 @@ if (PUBLIC_ONLY) {
                         const company = exp.company_name ? `  at  ${exp.company_name}` : '';
                         const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : 'Present'}`;
 
-                        // Title + date on same conceptual line
+                        // Title + date on same line
                         ensureSpace(sz(10) * 1.3 + 4);
+                        const titleStartY = y;
                         const h3 = doc.struct('H3');
                         docStruct.add(h3);
                         h3.add(doc.struct('Span', {}, () => {
@@ -1894,15 +1895,16 @@ if (PUBLIC_ONLY) {
                             doc.text(title + company, margin, y, { width: contentW - 120, continued: false });
                         }));
                         h3.end();
+                        const titleH = doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(title + company, { width: contentW - 120 });
+                        advanceY(titleH + 2);
 
-                        // Date right-aligned on same line
+                        // Date right-aligned on same line as title
                         const dateW = doc.fontSize(sz(9)).font('Helvetica').widthOfString(dateStr);
-                        const dateY = y - doc.heightOfString(title + company, { width: contentW - 120, fontSize: sz(10) }) - 2;
                         const datePara = doc.struct('P');
                         docStruct.add(datePara);
                         datePara.add(doc.struct('Span', {}, () => {
                             doc.fontSize(sz(9)).font('Helvetica').fillColor('#666');
-                            doc.text(dateStr, pageW - margin - dateW, dateY > margin ? dateY : y - sz(10) * 1.3, { width: dateW + 2 });
+                            doc.text(dateStr, pageW - margin - dateW, titleStartY, { width: dateW + 2 });
                         }));
                         datePara.end();
 
@@ -1927,6 +1929,7 @@ if (PUBLIC_ONLY) {
                         const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : 'Present'}`;
 
                         ensureSpace(sz(10) * 1.3 + 4);
+                        const eduTitleStartY = y;
                         const h3 = doc.struct('H3');
                         docStruct.add(h3);
                         h3.add(doc.struct('Span', {}, () => {
@@ -1934,14 +1937,15 @@ if (PUBLIC_ONLY) {
                             doc.text(title + inst, margin, y, { width: contentW - 120, continued: false });
                         }));
                         h3.end();
+                        const eduTitleH = doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(title + inst, { width: contentW - 120 });
+                        advanceY(eduTitleH + 2);
 
                         const dateW = doc.fontSize(sz(9)).font('Helvetica').widthOfString(dateStr);
-                        const dateY = y - doc.heightOfString(title + inst, { width: contentW - 120, fontSize: sz(10) }) - 2;
                         const datePara = doc.struct('P');
                         docStruct.add(datePara);
                         datePara.add(doc.struct('Span', {}, () => {
                             doc.fontSize(sz(9)).font('Helvetica').fillColor('#666');
-                            doc.text(dateStr, pageW - margin - dateW, dateY > margin ? dateY : y - sz(10) * 1.3, { width: dateW + 2 });
+                            doc.text(dateStr, pageW - margin - dateW, eduTitleStartY, { width: dateW + 2 });
                         }));
                         datePara.end();
 
