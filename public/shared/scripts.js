@@ -2,7 +2,7 @@
 
 // Material Icon helper function
 function materialIcon(name, size = 16) {
-    return `<span class="material-symbols-outlined" style="font-size:${size}px">${name}</span>`;
+    return `<span class="material-symbols-outlined" aria-hidden="true" style="font-size:${size}px">${name}</span>`;
 }
 
 // Icons for contact badges and skill categories
@@ -10,7 +10,7 @@ const icons = {
     email: materialIcon('email', 14),
     phone: materialIcon('phone', 14),
     location: materialIcon('location_on', 14),
-    linkedin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
+    linkedin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
     languages: materialIcon('language', 14),
     link: materialIcon('open_in_new', 14),
     // Skill category icons
