@@ -4,20 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.23.2] - 2026-03-06
-
-### Fixed
-- ATS Document button now visible in mobile hamburger menu
-
-## [1.23.1] - 2026-03-06
-
-### Fixed
-- Overlapping text in ATS PDF export for experience and education sections (job title, date, and location no longer render on top of each other)
-
 ## [1.23.0] - 2026-03-06
 
 ### Added
 - ATS-friendly PDF document generator: generate clean, structured, tagged PDFs (with StructTreeRoot) optimized for Applicant Tracking Systems using pdfkit (no Chromium required)
+- ATS Document button visible in mobile hamburger menu
 - PDF export modal with live preview, adjustable scale (50%–150%), and paper size selection (A4/Letter)
 - New "ATS Document" button in the admin toolbar for quick access
 - Translations for ATS export feature in all 8 supported languages
