@@ -23,7 +23,7 @@ Seções personalizadas permitem que você adicione qualquer conteúdo que não 
 | **Marcadores** | Listas com marcadores agrupados, similar aos destaques de experiência — ótimo para conquistas-chave ou competências |
 | **Texto Livre** | Bloco de texto simples com quebras de linha preservadas — similar à seção Sobre, útil para cartas de apresentação, declarações pessoais ou qualquer conteúdo de formato livre |
 | **Grade de Imagens** | Galeria de imagens com legendas opcionais — ótimo para portfólios, certificados ou amostras de trabalho visual |
-| **Experiências Adicionais** | Entradas de tipo experiência (cargo, empresa, datas, destaques, logotipo) — estende seu histórico profissional sem misturar com a seção principal de Experiência |
+| **Experiências Adicionais** | Entradas de tipo experiência (cargo, empresa, datas, destaques, logotipo) — estende seu histórico profissional sem se misturar com a seção principal de Experiência |
 
 ## Grade de Imagens
 
