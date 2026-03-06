@@ -1761,6 +1761,7 @@
         border-top: 1px solid rgba(255,255,255,0.1);
     }
     .toolbar-actions.mobile-open { display: flex; }
+    .toolbar-actions.mobile-open .toolbar-print-inline { display: flex; }
     .toolbar-actions .btn {
         justify-content: flex-start;
         width: 100%;
@@ -1895,4 +1896,134 @@
     .items-list { page-break-inside: auto; }
     .hidden-print { display: none !important; }
     .section.hidden-print, .item-card.hidden-print, .cert-card.hidden-print, .skill-category.hidden-print, .project-card.hidden-print { display: none !important; }
+}
+
+/* ===========================
+   ATS PDF Export Modal
+   =========================== */
+.ats-pdf-modal .ats-pdf-modal-content {
+    width: 90vw;
+    max-width: 900px;
+    height: 85vh;
+    max-height: 85vh;
+    background: var(--white);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.ats-pdf-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.ats-pdf-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+.ats-pdf-help-link {
+    font-size: 13px;
+    color: var(--primary);
+    text-decoration: none;
+    margin-right: auto;
+    opacity: 0.8;
+}
+.ats-pdf-help-link:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+.ats-pdf-modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.ats-pdf-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+.ats-pdf-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ats-pdf-control-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.ats-pdf-scale-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ats-pdf-scale-row input[type="range"] {
+    width: 140px;
+    accent-color: var(--primary);
+}
+.ats-pdf-scale-row span {
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 40px;
+    text-align: center;
+}
+.ats-pdf-controls select {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--white);
+}
+.ats-pdf-actions {
+    margin-left: auto;
+}
+.ats-pdf-preview-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #e5e5e5;
+}
+.ats-pdf-preview {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+.ats-pdf-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    font-size: 14px;
+    z-index: 2;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; }
+
+@media (max-width: 640px) {
+    .ats-pdf-modal .ats-pdf-modal-content {
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    .ats-pdf-controls {
+        gap: 12px;
+        padding: 10px 14px;
+    }
+    .ats-pdf-scale-row input[type="range"] { width: 100px; }
 }

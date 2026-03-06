@@ -328,6 +328,16 @@
     "duration.years": "{{count}}年",
     "duration.months": "{{count}}个月",
     "duration.years_months": "{{years}}年{{months}}个月",
+    "toolbar.ats_export": "ATS 文档",
+
+    "ats.title": "ATS 友好文档",
+    "ats.scale": "缩放",
+    "ats.paper_size": "纸张大小",
+    "ats.download": "下载 PDF",
+    "ats.generate_failed": "生成 ATS 文档失败",
+    "ats.downloaded": "ATS 文档已下载",
+    "ats.what_is": "什么是 ATS 导出？",
+
     "present": "至今",
     "loading": "加载中...",
     "items": "条目",

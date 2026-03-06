@@ -329,6 +329,16 @@
     "duration.months": "{{count}} meses",
     "duration.years_months": "{{years}} anos {{months}} meses",
 
+    "toolbar.ats_export": "Documento ATS",
+
+    "ats.title": "Documento compatível com ATS",
+    "ats.scale": "Escala",
+    "ats.paper_size": "Tamanho do papel",
+    "ats.download": "Baixar PDF",
+    "ats.generate_failed": "Falha ao gerar documento ATS",
+    "ats.downloaded": "Documento ATS baixado",
+    "ats.what_is": "O que é a exportação ATS?",
+
     "present": "Presente",
     "loading": "A carregar...",
     "items": "itens",

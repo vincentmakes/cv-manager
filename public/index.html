@@ -86,6 +86,10 @@
             <a href="https://docs-cv-manager.verdet.me/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" data-i18n-title="toolbar.help" title="Help">
                 <span class="material-symbols-outlined">help_outline</span>
             </a>
+            <button class="btn btn-secondary toolbar-print-inline" onclick="openAtsPdfModal()" data-i18n-title="toolbar.ats_export" title="ATS Document">
+                <span class="material-symbols-outlined">description</span>
+                <span data-i18n="toolbar.ats_export">ATS Document</span>
+            </button>
             <button class="btn btn-primary toolbar-print-inline" onclick="window.print()">
                 <span class="material-symbols-outlined">print</span>
                 <span data-i18n="toolbar.print">Print / PDF</span>
@@ -632,6 +636,50 @@
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
+
+    <!-- ATS PDF Export Modal -->
+    <div class="modal-overlay ats-pdf-modal" id="atsPdfModalOverlay">
+        <div class="ats-pdf-modal-content">
+            <div class="ats-pdf-modal-header">
+                <h2 data-i18n="ats.title">ATS-Friendly Document</h2>
+                <a href="https://docs-cv-manager.verdet.me/advanced/ats/" target="_blank" rel="noopener noreferrer" class="ats-pdf-help-link" data-i18n="ats.what_is">What is ATS Export?</a>
+                <button class="modal-close-btn" onclick="closeAtsPdfModal()" data-i18n-title="btn.close" title="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="ats-pdf-modal-body">
+                <div class="ats-pdf-controls">
+                    <div class="ats-pdf-control-group">
+                        <label data-i18n="ats.scale">Scale</label>
+                        <div class="ats-pdf-scale-row">
+                            <input type="range" id="atsPdfScale" min="50" max="150" value="100" step="5" oninput="updateAtsPdfPreview()">
+                            <span id="atsPdfScaleLabel">100%</span>
+                        </div>
+                    </div>
+                    <div class="ats-pdf-control-group">
+                        <label data-i18n="ats.paper_size">Paper Size</label>
+                        <select id="atsPdfPaperSize" onchange="updateAtsPdfPreview()">
+                            <option value="A4">A4</option>
+                            <option value="LETTER">Letter</option>
+                        </select>
+                    </div>
+                    <div class="ats-pdf-actions">
+                        <button class="btn btn-primary" onclick="downloadAtsPdf()" id="atsPdfDownloadBtn">
+                            <span class="material-symbols-outlined">download</span>
+                            <span data-i18n="ats.download">Download PDF</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="ats-pdf-preview-container">
+                    <div class="ats-pdf-loading" id="atsPdfLoading">
+                        <span class="material-symbols-outlined spinning">progress_activity</span>
+                        <span data-i18n="loading">Loading...</span>
+                    </div>
+                    <iframe id="atsPdfPreview" class="ats-pdf-preview"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="/shared/i18n.js"></script>
     <script src="/shared/scripts.js"></script>
