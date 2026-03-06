@@ -4,6 +4,22 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const pdfmake = require('pdfmake');
+
+// Initialize pdfmake fonts
+const pdfFontDir = path.join(path.dirname(require.resolve('pdfmake')), '..', 'build/fonts/Roboto');
+pdfmake.virtualfs.storage['Roboto-Regular.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-Regular.ttf'));
+pdfmake.virtualfs.storage['Roboto-Medium.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-Medium.ttf'));
+pdfmake.virtualfs.storage['Roboto-Italic.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-Italic.ttf'));
+pdfmake.virtualfs.storage['Roboto-MediumItalic.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-MediumItalic.ttf'));
+pdfmake.fonts = {
+    Roboto: {
+        normal: 'Roboto-Regular.ttf',
+        bold: 'Roboto-Medium.ttf',
+        italics: 'Roboto-Italic.ttf',
+        bolditalics: 'Roboto-MediumItalic.ttf'
+    }
+};
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1709,6 +1725,250 @@ if (PUBLIC_ONLY) {
     app.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all(); const customItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all(); const customSectionsData = customSections.map(s => ({ ...s, visible: !!s.visible, metadata: s.metadata ? JSON.parse(s.metadata) : null, items: customItems.filter(i => i.section_id === s.id).map(i => ({ ...i, visible: !!i.visible, metadata: i.metadata ? JSON.parse(i.metadata) : null })) })); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData, customSections: customSectionsData }); });
 
     app.post('/api/import', (req, res) => { const data = req.body; const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } }); try { importData(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+
+    // ATS-friendly PDF export (admin only)
+    app.post('/api/export/ats-pdf', async (req, res) => {
+        try {
+            const { scale = 1, paperSize = 'A4' } = req.body || {};
+            const s = Math.max(0.5, Math.min(1.5, parseFloat(scale) || 1));
+
+            // Gather CV data
+            const cvData = gatherCvData();
+            const p = cvData.profile || {};
+            const sectionOrder = cvData.sectionOrder || [];
+            const sectionVis = cvData.sectionVisibility || {};
+
+            // Helper: format date for PDF
+            function fmtDate(dateStr) {
+                if (!dateStr) return '';
+                if (/^\d{4}$/.test(dateStr)) return dateStr;
+                if (/^\d{4}-\d{2}$/.test(dateStr)) {
+                    const [y, m] = dateStr.split('-');
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    return `${months[parseInt(m) - 1]} ${y}`;
+                }
+                return dateStr;
+            }
+
+            // Scaled sizes
+            const sz = (base) => Math.round(base * s * 10) / 10;
+
+            // Build document content
+            const content = [];
+            const accentColor = '#2563eb';
+
+            // --- Header ---
+            content.push({ text: p.name || 'Name', fontSize: sz(22), bold: true, margin: [0, 0, 0, 2] });
+            if (p.title) content.push({ text: p.title, fontSize: sz(12), color: '#444', margin: [0, 0, 0, 4] });
+            if (p.subtitle) content.push({ text: p.subtitle, fontSize: sz(10), color: '#666', margin: [0, 0, 0, 4] });
+
+            // Contact info line
+            const contactParts = [];
+            if (p.email) contactParts.push(p.email);
+            if (p.phone) contactParts.push(p.phone);
+            if (p.location) contactParts.push(p.location);
+            if (p.linkedin) contactParts.push(p.linkedin);
+            if (p.languages) contactParts.push(p.languages);
+            if (contactParts.length > 0) {
+                content.push({ text: contactParts.join('  |  '), fontSize: sz(9), color: '#555', margin: [0, 0, 0, 8] });
+            }
+
+            // Separator line
+            content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: paperSize === 'LETTER' ? 535 : 515, y2: 0, lineWidth: 1, lineColor: '#ddd' }], margin: [0, 4, 0, 8] });
+
+            // --- Sections in order ---
+            const sectionRenderers = {
+                about: () => {
+                    if (!p.bio) return null;
+                    const sectionContent = [];
+                    sectionContent.push({ text: getSectionName('about'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 4] });
+                    sectionContent.push({ text: p.bio.replace(/\n+/g, ' ').trim(), fontSize: sz(9.5), lineHeight: 1.4, margin: [0, 0, 0, 8] });
+                    return sectionContent;
+                },
+                experience: () => {
+                    const items = (cvData.experiences || []).filter(e => e.visible !== false && e.visible !== 0);
+                    if (items.length === 0) return null;
+                    const sectionContent = [];
+                    sectionContent.push({ text: getSectionName('experience'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    items.forEach((exp, idx) => {
+                        const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : 'Present'}`;
+                        sectionContent.push({
+                            columns: [
+                                { text: [{ text: exp.job_title || '', bold: true, fontSize: sz(10) }, { text: exp.company_name ? `  at  ${exp.company_name}` : '', fontSize: sz(10) }], width: '*' },
+                                { text: dateStr, fontSize: sz(9), color: '#666', alignment: 'right', width: 'auto' }
+                            ],
+                            margin: [0, idx > 0 ? 6 : 0, 0, 1]
+                        });
+                        if (exp.location) {
+                            sectionContent.push({ text: exp.location, fontSize: sz(8.5), color: '#777', margin: [0, 0, 0, 2] });
+                        }
+                        if (exp.highlights && exp.highlights.length > 0) {
+                            const bullets = exp.highlights.filter(h => h && h.trim());
+                            if (bullets.length > 0) {
+                                sectionContent.push({ ul: bullets, fontSize: sz(9), margin: [8, 2, 0, 2], lineHeight: 1.3 });
+                            }
+                        }
+                    });
+                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
+                    return sectionContent;
+                },
+                education: () => {
+                    const items = (cvData.education || []).filter(e => e.visible !== false && e.visible !== 0);
+                    if (items.length === 0) return null;
+                    const sectionContent = [];
+                    sectionContent.push({ text: getSectionName('education'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    items.forEach((edu, idx) => {
+                        const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : 'Present'}`;
+                        sectionContent.push({
+                            columns: [
+                                { text: [{ text: edu.degree_title || '', bold: true, fontSize: sz(10) }, { text: edu.institution_name ? `  at  ${edu.institution_name}` : '', fontSize: sz(10) }], width: '*' },
+                                { text: dateStr, fontSize: sz(9), color: '#666', alignment: 'right', width: 'auto' }
+                            ],
+                            margin: [0, idx > 0 ? 4 : 0, 0, 1]
+                        });
+                        if (edu.description) {
+                            sectionContent.push({ text: edu.description, fontSize: sz(9), color: '#555', margin: [0, 1, 0, 2] });
+                        }
+                    });
+                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
+                    return sectionContent;
+                },
+                skills: () => {
+                    const cats = (cvData.skills || []).filter(c => c.visible !== false && c.visible !== 0);
+                    if (cats.length === 0) return null;
+                    const sectionContent = [];
+                    sectionContent.push({ text: getSectionName('skills'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    cats.forEach(cat => {
+                        if (cat.skills && cat.skills.length > 0) {
+                            sectionContent.push({
+                                text: [{ text: `${cat.name}: `, bold: true, fontSize: sz(9.5) }, { text: cat.skills.join(', '), fontSize: sz(9.5) }],
+                                margin: [0, 1, 0, 2], lineHeight: 1.3
+                            });
+                        }
+                    });
+                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
+                    return sectionContent;
+                },
+                certifications: () => {
+                    const items = (cvData.certifications || []).filter(c => c.visible !== false && c.visible !== 0);
+                    if (items.length === 0) return null;
+                    const sectionContent = [];
+                    sectionContent.push({ text: getSectionName('certifications'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    items.forEach(cert => {
+                        let line = cert.name || '';
+                        if (cert.provider) line += ` – ${cert.provider}`;
+                        if (cert.issue_date) line += ` (${fmtDate(cert.issue_date)})`;
+                        sectionContent.push({ text: line, fontSize: sz(9.5), margin: [0, 1, 0, 2] });
+                    });
+                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
+                    return sectionContent;
+                },
+                projects: () => {
+                    const items = (cvData.projects || []).filter(p => p.visible !== false && p.visible !== 0);
+                    if (items.length === 0) return null;
+                    const sectionContent = [];
+                    sectionContent.push({ text: getSectionName('projects'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    items.forEach((proj, idx) => {
+                        const titleParts = [{ text: proj.title || '', bold: true, fontSize: sz(10) }];
+                        if (proj.link) titleParts.push({ text: `  ${proj.link}`, fontSize: sz(8), color: accentColor, link: proj.link });
+                        sectionContent.push({ text: titleParts, margin: [0, idx > 0 ? 4 : 0, 0, 1] });
+                        if (proj.description) {
+                            sectionContent.push({ text: proj.description, fontSize: sz(9), margin: [0, 0, 0, 1] });
+                        }
+                        if (proj.technologies && proj.technologies.length > 0) {
+                            sectionContent.push({ text: `Technologies: ${proj.technologies.join(', ')}`, fontSize: sz(8.5), color: '#666', italics: true, margin: [0, 0, 0, 2] });
+                        }
+                    });
+                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
+                    return sectionContent;
+                }
+            };
+
+            // Helper to get section display name
+            function getSectionName(key) {
+                const orderEntry = sectionOrder.find(s => s.key === key);
+                if (orderEntry && orderEntry.display_name) return orderEntry.display_name;
+                return SECTION_DISPLAY_NAMES[key] || key;
+            }
+
+            // Render custom section
+            function renderCustomSection(sectionKey) {
+                const cs = (cvData.customSections || []).find(s => s.section_key === sectionKey && s.visible);
+                if (!cs || !cs.items || cs.items.length === 0) return null;
+                const visibleItems = cs.items.filter(i => i.visible !== false && i.visible !== 0);
+                if (visibleItems.length === 0) return null;
+
+                const sectionContent = [];
+                const displayName = getSectionName(sectionKey) || cs.name;
+                sectionContent.push({ text: displayName, fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+
+                visibleItems.forEach(item => {
+                    if (item.title) {
+                        sectionContent.push({ text: item.title, bold: true, fontSize: sz(10), margin: [0, 2, 0, 1] });
+                    }
+                    if (item.subtitle) {
+                        sectionContent.push({ text: item.subtitle, fontSize: sz(9), color: '#666', margin: [0, 0, 0, 1] });
+                    }
+                    if (item.description) {
+                        sectionContent.push({ text: item.description, fontSize: sz(9), margin: [0, 0, 0, 2] });
+                    }
+                    if (item.link) {
+                        sectionContent.push({ text: item.link, fontSize: sz(8), color: accentColor, link: item.link, margin: [0, 0, 0, 2] });
+                    }
+                });
+                sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
+                return sectionContent;
+            }
+
+            // Render sections in configured order
+            const sortedSections = [...sectionOrder].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+            for (const section of sortedSections) {
+                if (!section.visible) continue;
+                // Skip timeline — not suitable for ATS PDF
+                if (section.key === 'timeline') continue;
+
+                if (sectionRenderers[section.key]) {
+                    const rendered = sectionRenderers[section.key]();
+                    if (rendered) content.push(...rendered);
+                } else if (section.key.startsWith('custom_')) {
+                    const rendered = renderCustomSection(section.key);
+                    if (rendered) content.push(...rendered);
+                }
+            }
+
+            // Build pdfmake document definition
+            const pageWidth = paperSize === 'LETTER' ? 612 : 595.28;
+            const pageHeight = paperSize === 'LETTER' ? 792 : 841.89;
+            const docDefinition = {
+                pageSize: { width: pageWidth, height: pageHeight },
+                pageMargins: [40, 40, 40, 40],
+                content,
+                defaultStyle: {
+                    font: 'Roboto',
+                    fontSize: sz(10),
+                    lineHeight: 1.2
+                },
+                info: {
+                    title: `${p.name || 'CV'} - Resume`,
+                    author: p.name || '',
+                    subject: 'Resume / CV',
+                    keywords: (cvData.skills || []).flatMap(c => c.skills || []).join(', ')
+                }
+            };
+
+            const pdf = pdfmake.createPdf(docDefinition);
+            const buffer = await pdf.getBuffer();
+            const filename = `${(p.name || 'cv').replace(/[^a-zA-Z0-9]/g, '_')}_ATS_Resume.pdf`;
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Content-Length', buffer.length);
+            res.end(Buffer.from(buffer));
+        } catch (err) {
+            console.error('ATS PDF export error:', err);
+            res.status(500).json({ error: 'Failed to generate PDF' });
+        }
+    });
 
     app.get('*', (req, res) => { res.sendFile(path.join(__dirname, '../public/index.html')); });
 

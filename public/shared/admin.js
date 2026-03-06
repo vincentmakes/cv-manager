@@ -2992,6 +2992,7 @@ document.addEventListener('keydown', (e) => {
         closeModal();
         closeDatasetsModal();
         closeSettingsModal();
+        closeAtsPdfModal();
         closeCustomSectionModal();
         closeCustomItemModal();
         const langDropdown = document.getElementById('languagePickerDropdown');
@@ -3807,4 +3808,100 @@ async function deleteCustomItem() {
     if (!currentCustomItem.sectionId || !currentCustomItem.itemId) return;
     await confirmDeleteCustomItem(currentCustomItem.sectionId, currentCustomItem.itemId);
     closeCustomItemModal();
+}
+
+// ===========================
+// ATS PDF Export
+// ===========================
+
+let atsPdfPreviewUrl = null;
+let atsPdfDebounceTimer = null;
+
+function openAtsPdfModal() {
+    document.getElementById('atsPdfModalOverlay').classList.add('active');
+    document.getElementById('atsPdfScale').value = 100;
+    document.getElementById('atsPdfScaleLabel').textContent = '100%';
+    updateAtsPdfPreview();
+}
+
+function closeAtsPdfModal() {
+    document.getElementById('atsPdfModalOverlay').classList.remove('active');
+    if (atsPdfPreviewUrl) {
+        URL.revokeObjectURL(atsPdfPreviewUrl);
+        atsPdfPreviewUrl = null;
+    }
+    document.getElementById('atsPdfPreview').src = 'about:blank';
+}
+
+function updateAtsPdfPreview() {
+    const scaleInput = document.getElementById('atsPdfScale');
+    document.getElementById('atsPdfScaleLabel').textContent = scaleInput.value + '%';
+
+    clearTimeout(atsPdfDebounceTimer);
+    atsPdfDebounceTimer = setTimeout(() => fetchAtsPdfPreview(), 300);
+}
+
+async function fetchAtsPdfPreview() {
+    const loading = document.getElementById('atsPdfLoading');
+    const iframe = document.getElementById('atsPdfPreview');
+    loading.style.display = 'flex';
+    iframe.style.opacity = '0.3';
+
+    try {
+        const scale = parseInt(document.getElementById('atsPdfScale').value) / 100;
+        const paperSize = document.getElementById('atsPdfPaperSize').value;
+
+        const res = await fetch('/api/export/ats-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scale, paperSize })
+        });
+
+        if (!res.ok) throw new Error('Failed to generate PDF');
+
+        const blob = await res.blob();
+        if (atsPdfPreviewUrl) URL.revokeObjectURL(atsPdfPreviewUrl);
+        atsPdfPreviewUrl = URL.createObjectURL(blob);
+        iframe.src = atsPdfPreviewUrl;
+    } catch (err) {
+        toast(t('ats.generate_failed'), 'error');
+    } finally {
+        loading.style.display = 'none';
+        iframe.style.opacity = '1';
+    }
+}
+
+async function downloadAtsPdf() {
+    const btn = document.getElementById('atsPdfDownloadBtn');
+    btn.disabled = true;
+
+    try {
+        const scale = parseInt(document.getElementById('atsPdfScale').value) / 100;
+        const paperSize = document.getElementById('atsPdfPaperSize').value;
+
+        const res = await fetch('/api/export/ats-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scale, paperSize })
+        });
+
+        if (!res.ok) throw new Error('Failed to generate PDF');
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const disposition = res.headers.get('Content-Disposition') || '';
+        const filenameMatch = disposition.match(/filename="(.+?)"/);
+        a.href = url;
+        a.download = filenameMatch ? filenameMatch[1] : 'ATS_Resume.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast(t('ats.downloaded'), 'success');
+    } catch (err) {
+        toast(t('ats.generate_failed'), 'error');
+    } finally {
+        btn.disabled = false;
+    }
 }

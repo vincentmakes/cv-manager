@@ -348,6 +348,15 @@
     "duration.months": "{{count}} mos",
     "duration.years_months": "{{years}} yrs {{months}} mos",
 
+    "toolbar.ats_export": "ATS Document",
+
+    "ats.title": "ATS-Friendly Document",
+    "ats.scale": "Scale",
+    "ats.paper_size": "Paper Size",
+    "ats.download": "Download PDF",
+    "ats.generate_failed": "Failed to generate ATS document",
+    "ats.downloaded": "ATS document downloaded",
+
     "present": "Present",
     "loading": "Loading...",
     "items": "items",
