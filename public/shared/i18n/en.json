@@ -356,6 +356,7 @@
     "ats.download": "Download PDF",
     "ats.generate_failed": "Failed to generate ATS document",
     "ats.downloaded": "ATS document downloaded",
+    "ats.what_is": "What is ATS Export?",
 
     "present": "Present",
     "loading": "Loading...",

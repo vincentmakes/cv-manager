@@ -1888,7 +1888,12 @@ if (PUBLIC_ONLY) {
             function getSectionName(key) {
                 const orderEntry = sectionOrder.find(s => s.key === key);
                 if (orderEntry && orderEntry.display_name) return orderEntry.display_name;
-                return SECTION_DISPLAY_NAMES[key] || key;
+                if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
+                // For custom sections, look up the name from custom sections data
+                if (orderEntry && orderEntry.name) return orderEntry.name;
+                const cs = (cvData.customSections || []).find(s => s.section_key === key);
+                if (cs && cs.name) return cs.name;
+                return key;
             }
 
             // Render custom section

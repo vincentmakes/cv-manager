@@ -337,6 +337,7 @@
     "ats.download": "PDF downloaden",
     "ats.generate_failed": "ATS-document kon niet worden gegenereerd",
     "ats.downloaded": "ATS-document gedownload",
+    "ats.what_is": "Wat is ATS-export?",
 
     "present": "Heden",
     "loading": "Laden...",

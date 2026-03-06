@@ -1914,7 +1914,7 @@
 .ats-pdf-modal-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 12px;
     padding: 16px 20px;
     border-bottom: 1px solid var(--border);
 }
@@ -1922,6 +1922,17 @@
     margin: 0;
     font-size: 18px;
     font-weight: 600;
+}
+.ats-pdf-help-link {
+    font-size: 13px;
+    color: var(--primary);
+    text-decoration: none;
+    margin-right: auto;
+    opacity: 0.8;
+}
+.ats-pdf-help-link:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
 .ats-pdf-modal-body {
     flex: 1;
