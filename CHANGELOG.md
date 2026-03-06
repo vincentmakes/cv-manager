@@ -7,7 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 ## [1.23.0] - 2026-03-06
 
 ### Added
-- ATS-friendly PDF document generator: generate clean, structured PDFs optimized for Applicant Tracking Systems using pdfmake (no Chromium required)
+- ATS-friendly PDF document generator: generate clean, structured, tagged PDFs (with StructTreeRoot) optimized for Applicant Tracking Systems using pdfkit (no Chromium required)
 - PDF export modal with live preview, adjustable scale (50%–150%), and paper size selection (A4/Letter)
 - New "ATS Document" button in the admin toolbar for quick access
 - Translations for ATS export feature in all 8 supported languages

@@ -4,22 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const pdfmake = require('pdfmake');
-
-// Initialize pdfmake fonts
-const pdfFontDir = path.join(path.dirname(require.resolve('pdfmake')), '..', 'build/fonts/Roboto');
-pdfmake.virtualfs.storage['Roboto-Regular.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-Regular.ttf'));
-pdfmake.virtualfs.storage['Roboto-Medium.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-Medium.ttf'));
-pdfmake.virtualfs.storage['Roboto-Italic.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-Italic.ttf'));
-pdfmake.virtualfs.storage['Roboto-MediumItalic.ttf'] = fs.readFileSync(path.join(pdfFontDir, 'Roboto-MediumItalic.ttf'));
-pdfmake.fonts = {
-    Roboto: {
-        normal: 'Roboto-Regular.ttf',
-        bold: 'Roboto-Medium.ttf',
-        italics: 'Roboto-Italic.ttf',
-        bolditalics: 'Roboto-MediumItalic.ttf'
-    }
-};
+const PDFDocument = require('pdfkit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1726,19 +1711,17 @@ if (PUBLIC_ONLY) {
 
     app.post('/api/import', (req, res) => { const data = req.body; const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } }); try { importData(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
-    // ATS-friendly PDF export (admin only)
+    // ATS-friendly tagged PDF export (admin only)
+    // Uses pdfkit directly for StructTreeRoot / tagged PDF support
     app.post('/api/export/ats-pdf', async (req, res) => {
         try {
             const { scale = 1, paperSize = 'A4' } = req.body || {};
             const s = Math.max(0.5, Math.min(1.5, parseFloat(scale) || 1));
 
-            // Gather CV data
             const cvData = gatherCvData();
             const p = cvData.profile || {};
             const sectionOrder = cvData.sectionOrder || [];
-            const sectionVis = cvData.sectionVisibility || {};
 
-            // Helper: format date for PDF
             function fmtDate(dateStr) {
                 if (!dateStr) return '';
                 if (/^\d{4}$/.test(dateStr)) return dateStr;
@@ -1750,19 +1733,125 @@ if (PUBLIC_ONLY) {
                 return dateStr;
             }
 
-            // Scaled sizes
-            const sz = (base) => Math.round(base * s * 10) / 10;
+            function getSectionName(key) {
+                const orderEntry = sectionOrder.find(s => s.key === key);
+                if (orderEntry && orderEntry.display_name) return orderEntry.display_name;
+                if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
+                if (orderEntry && orderEntry.name) return orderEntry.name;
+                const cs = (cvData.customSections || []).find(s => s.section_key === key);
+                if (cs && cs.name) return cs.name;
+                return key;
+            }
 
-            // Build document content
-            const content = [];
+            const sz = (base) => Math.round(base * s * 10) / 10;
+            const pageW = paperSize === 'LETTER' ? 612 : 595.28;
+            const pageH = paperSize === 'LETTER' ? 792 : 841.89;
+            const margin = 40;
+            const contentW = pageW - margin * 2;
             const accentColor = '#2563eb';
 
-            // --- Header ---
-            content.push({ text: p.name || 'Name', fontSize: sz(22), bold: true, margin: [0, 0, 0, 2] });
-            if (p.title) content.push({ text: p.title, fontSize: sz(12), color: '#444', margin: [0, 0, 0, 4] });
-            if (p.subtitle) content.push({ text: p.subtitle, fontSize: sz(10), color: '#666', margin: [0, 0, 0, 4] });
+            const doc = new PDFDocument({
+                tagged: true,
+                displayTitle: true,
+                size: [pageW, pageH],
+                margins: { top: margin, bottom: margin, left: margin, right: margin },
+                info: {
+                    Title: `${p.name || 'CV'} - Resume`,
+                    Author: p.name || '',
+                    Subject: 'Resume / CV',
+                    Keywords: (cvData.skills || []).flatMap(c => c.skills || []).join(', ')
+                },
+                lang: 'en',
+                font: 'Helvetica'
+            });
 
-            // Contact info line
+            // Collect PDF into buffer
+            const chunks = [];
+            doc.on('data', c => chunks.push(c));
+            const pdfReady = new Promise((resolve, reject) => {
+                doc.on('end', () => resolve(Buffer.concat(chunks)));
+                doc.on('error', reject);
+            });
+
+            // Structure tree
+            const docStruct = doc.struct('Document');
+            doc.addStructure(docStruct);
+
+            // Track Y position for page breaks
+            let y = margin;
+            function ensureSpace(needed) {
+                if (y + needed > pageH - margin) {
+                    doc.addPage();
+                    y = margin;
+                }
+            }
+            function advanceY(amount) { y += amount; }
+
+            // --- Tagged helper functions ---
+            function addHeading(tag, text, fontSize, options = {}) {
+                const { color = '#000', bold = true } = options;
+                const lineH = fontSize * 1.3;
+                ensureSpace(lineH + 4);
+                const heading = doc.struct(tag);
+                docStruct.add(heading);
+                heading.add(doc.struct('Span', {}, () => {
+                    doc.fontSize(fontSize).font(bold ? 'Helvetica-Bold' : 'Helvetica').fillColor(color);
+                    doc.text(text, margin, y, { width: contentW });
+                }));
+                heading.end();
+                advanceY(doc.heightOfString(text, { width: contentW, fontSize }) + 4);
+            }
+
+            function addParagraph(text, fontSize, options = {}) {
+                const { color = '#000', font = 'Helvetica', indent = 0 } = options;
+                const w = contentW - indent;
+                const h = doc.fontSize(fontSize).font(font).heightOfString(text, { width: w });
+                ensureSpace(h + 2);
+                const para = doc.struct('P');
+                docStruct.add(para);
+                para.add(doc.struct('Span', {}, () => {
+                    doc.fontSize(fontSize).font(font).fillColor(color);
+                    doc.text(text, margin + indent, y, { width: w });
+                }));
+                para.end();
+                advanceY(h + 2);
+            }
+
+            function addSectionHeading(text) {
+                ensureSpace(sz(13) * 1.3 + 8);
+                advanceY(4);
+                addHeading('H2', text, sz(13), { color: accentColor });
+            }
+
+            function addBulletList(items, fontSize) {
+                const listStruct = doc.struct('L');
+                docStruct.add(listStruct);
+                items.forEach(item => {
+                    if (!item || !item.trim()) return;
+                    const w = contentW - 20;
+                    const h = doc.fontSize(fontSize).font('Helvetica').heightOfString(item, { width: w });
+                    ensureSpace(h + 2);
+                    const li = doc.struct('LI');
+                    listStruct.add(li);
+                    li.add(doc.struct('Lbl', {}, () => {
+                        doc.fontSize(fontSize).font('Helvetica').fillColor('#000');
+                        doc.text('•', margin + 8, y, { continued: false, width: 12 });
+                    }));
+                    li.add(doc.struct('LBody', {}, () => {
+                        doc.fontSize(fontSize).font('Helvetica').fillColor('#000');
+                        doc.text(item, margin + 20, y, { width: w });
+                    }));
+                    li.end();
+                    advanceY(h + 2);
+                });
+                listStruct.end();
+            }
+
+            // --- Header ---
+            addHeading('H1', p.name || 'Name', sz(22));
+            if (p.title) addParagraph(p.title, sz(12), { color: '#444' });
+            if (p.subtitle) addParagraph(p.subtitle, sz(10), { color: '#666' });
+
             const contactParts = [];
             if (p.email) contactParts.push(p.email);
             if (p.phone) contactParts.push(p.phone);
@@ -1770,205 +1859,207 @@ if (PUBLIC_ONLY) {
             if (p.linkedin) contactParts.push(p.linkedin);
             if (p.languages) contactParts.push(p.languages);
             if (contactParts.length > 0) {
-                content.push({ text: contactParts.join('  |  '), fontSize: sz(9), color: '#555', margin: [0, 0, 0, 8] });
+                addParagraph(contactParts.join('  |  '), sz(9), { color: '#555' });
             }
 
-            // Separator line
-            content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: paperSize === 'LETTER' ? 535 : 515, y2: 0, lineWidth: 1, lineColor: '#ddd' }], margin: [0, 4, 0, 8] });
+            // Separator
+            ensureSpace(8);
+            doc.moveTo(margin, y).lineTo(margin + contentW, y).lineWidth(0.5).strokeColor('#ddd').stroke();
+            advanceY(8);
 
-            // --- Sections in order ---
+            // --- Section renderers ---
             const sectionRenderers = {
                 about: () => {
-                    if (!p.bio) return null;
-                    const sectionContent = [];
-                    sectionContent.push({ text: getSectionName('about'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 4] });
-                    sectionContent.push({ text: p.bio.replace(/\n+/g, ' ').trim(), fontSize: sz(9.5), lineHeight: 1.4, margin: [0, 0, 0, 8] });
-                    return sectionContent;
+                    if (!p.bio) return;
+                    addSectionHeading(getSectionName('about'));
+                    addParagraph(p.bio.replace(/\n+/g, ' ').trim(), sz(9.5));
+                    advanceY(4);
                 },
                 experience: () => {
                     const items = (cvData.experiences || []).filter(e => e.visible !== false && e.visible !== 0);
-                    if (items.length === 0) return null;
-                    const sectionContent = [];
-                    sectionContent.push({ text: getSectionName('experience'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    if (items.length === 0) return;
+                    addSectionHeading(getSectionName('experience'));
                     items.forEach((exp, idx) => {
+                        if (idx > 0) advanceY(4);
+                        const title = exp.job_title || '';
+                        const company = exp.company_name ? `  at  ${exp.company_name}` : '';
                         const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : 'Present'}`;
-                        sectionContent.push({
-                            columns: [
-                                { text: [{ text: exp.job_title || '', bold: true, fontSize: sz(10) }, { text: exp.company_name ? `  at  ${exp.company_name}` : '', fontSize: sz(10) }], width: '*' },
-                                { text: dateStr, fontSize: sz(9), color: '#666', alignment: 'right', width: 'auto' }
-                            ],
-                            margin: [0, idx > 0 ? 6 : 0, 0, 1]
-                        });
+
+                        // Title + date on same conceptual line
+                        ensureSpace(sz(10) * 1.3 + 4);
+                        const h3 = doc.struct('H3');
+                        docStruct.add(h3);
+                        h3.add(doc.struct('Span', {}, () => {
+                            doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
+                            doc.text(title + company, margin, y, { width: contentW - 120, continued: false });
+                        }));
+                        h3.end();
+
+                        // Date right-aligned on same line
+                        const dateW = doc.fontSize(sz(9)).font('Helvetica').widthOfString(dateStr);
+                        const dateY = y - doc.heightOfString(title + company, { width: contentW - 120, fontSize: sz(10) }) - 2;
+                        const datePara = doc.struct('P');
+                        docStruct.add(datePara);
+                        datePara.add(doc.struct('Span', {}, () => {
+                            doc.fontSize(sz(9)).font('Helvetica').fillColor('#666');
+                            doc.text(dateStr, pageW - margin - dateW, dateY > margin ? dateY : y - sz(10) * 1.3, { width: dateW + 2 });
+                        }));
+                        datePara.end();
+
                         if (exp.location) {
-                            sectionContent.push({ text: exp.location, fontSize: sz(8.5), color: '#777', margin: [0, 0, 0, 2] });
+                            addParagraph(exp.location, sz(8.5), { color: '#777' });
                         }
                         if (exp.highlights && exp.highlights.length > 0) {
                             const bullets = exp.highlights.filter(h => h && h.trim());
-                            if (bullets.length > 0) {
-                                sectionContent.push({ ul: bullets, fontSize: sz(9), margin: [8, 2, 0, 2], lineHeight: 1.3 });
-                            }
+                            if (bullets.length > 0) addBulletList(bullets, sz(9));
                         }
                     });
-                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
-                    return sectionContent;
+                    advanceY(4);
                 },
                 education: () => {
                     const items = (cvData.education || []).filter(e => e.visible !== false && e.visible !== 0);
-                    if (items.length === 0) return null;
-                    const sectionContent = [];
-                    sectionContent.push({ text: getSectionName('education'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    if (items.length === 0) return;
+                    addSectionHeading(getSectionName('education'));
                     items.forEach((edu, idx) => {
+                        if (idx > 0) advanceY(3);
+                        const title = edu.degree_title || '';
+                        const inst = edu.institution_name ? `  at  ${edu.institution_name}` : '';
                         const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : 'Present'}`;
-                        sectionContent.push({
-                            columns: [
-                                { text: [{ text: edu.degree_title || '', bold: true, fontSize: sz(10) }, { text: edu.institution_name ? `  at  ${edu.institution_name}` : '', fontSize: sz(10) }], width: '*' },
-                                { text: dateStr, fontSize: sz(9), color: '#666', alignment: 'right', width: 'auto' }
-                            ],
-                            margin: [0, idx > 0 ? 4 : 0, 0, 1]
-                        });
-                        if (edu.description) {
-                            sectionContent.push({ text: edu.description, fontSize: sz(9), color: '#555', margin: [0, 1, 0, 2] });
-                        }
+
+                        ensureSpace(sz(10) * 1.3 + 4);
+                        const h3 = doc.struct('H3');
+                        docStruct.add(h3);
+                        h3.add(doc.struct('Span', {}, () => {
+                            doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
+                            doc.text(title + inst, margin, y, { width: contentW - 120, continued: false });
+                        }));
+                        h3.end();
+
+                        const dateW = doc.fontSize(sz(9)).font('Helvetica').widthOfString(dateStr);
+                        const dateY = y - doc.heightOfString(title + inst, { width: contentW - 120, fontSize: sz(10) }) - 2;
+                        const datePara = doc.struct('P');
+                        docStruct.add(datePara);
+                        datePara.add(doc.struct('Span', {}, () => {
+                            doc.fontSize(sz(9)).font('Helvetica').fillColor('#666');
+                            doc.text(dateStr, pageW - margin - dateW, dateY > margin ? dateY : y - sz(10) * 1.3, { width: dateW + 2 });
+                        }));
+                        datePara.end();
+
+                        if (edu.description) addParagraph(edu.description, sz(9), { color: '#555' });
                     });
-                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
-                    return sectionContent;
+                    advanceY(4);
                 },
                 skills: () => {
                     const cats = (cvData.skills || []).filter(c => c.visible !== false && c.visible !== 0);
-                    if (cats.length === 0) return null;
-                    const sectionContent = [];
-                    sectionContent.push({ text: getSectionName('skills'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    if (cats.length === 0) return;
+                    addSectionHeading(getSectionName('skills'));
                     cats.forEach(cat => {
                         if (cat.skills && cat.skills.length > 0) {
-                            sectionContent.push({
-                                text: [{ text: `${cat.name}: `, bold: true, fontSize: sz(9.5) }, { text: cat.skills.join(', '), fontSize: sz(9.5) }],
-                                margin: [0, 1, 0, 2], lineHeight: 1.3
-                            });
+                            const text = `${cat.name}: ${cat.skills.join(', ')}`;
+                            const w = contentW;
+                            const h = doc.fontSize(sz(9.5)).font('Helvetica').heightOfString(text, { width: w });
+                            ensureSpace(h + 2);
+                            const para = doc.struct('P');
+                            docStruct.add(para);
+                            para.add(doc.struct('Span', {}, () => {
+                                doc.fontSize(sz(9.5)).font('Helvetica-Bold').fillColor('#000');
+                                doc.text(`${cat.name}: `, margin, y, { continued: true, width: w });
+                                doc.font('Helvetica').text(cat.skills.join(', '), { continued: false });
+                            }));
+                            para.end();
+                            advanceY(h + 2);
                         }
                     });
-                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
-                    return sectionContent;
+                    advanceY(4);
                 },
                 certifications: () => {
                     const items = (cvData.certifications || []).filter(c => c.visible !== false && c.visible !== 0);
-                    if (items.length === 0) return null;
-                    const sectionContent = [];
-                    sectionContent.push({ text: getSectionName('certifications'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    if (items.length === 0) return;
+                    addSectionHeading(getSectionName('certifications'));
                     items.forEach(cert => {
                         let line = cert.name || '';
                         if (cert.provider) line += ` – ${cert.provider}`;
                         if (cert.issue_date) line += ` (${fmtDate(cert.issue_date)})`;
-                        sectionContent.push({ text: line, fontSize: sz(9.5), margin: [0, 1, 0, 2] });
+                        addParagraph(line, sz(9.5));
                     });
-                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
-                    return sectionContent;
+                    advanceY(4);
                 },
                 projects: () => {
-                    const items = (cvData.projects || []).filter(p => p.visible !== false && p.visible !== 0);
-                    if (items.length === 0) return null;
-                    const sectionContent = [];
-                    sectionContent.push({ text: getSectionName('projects'), fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
+                    const items = (cvData.projects || []).filter(pr => pr.visible !== false && pr.visible !== 0);
+                    if (items.length === 0) return;
+                    addSectionHeading(getSectionName('projects'));
                     items.forEach((proj, idx) => {
-                        const titleParts = [{ text: proj.title || '', bold: true, fontSize: sz(10) }];
-                        if (proj.link) titleParts.push({ text: `  ${proj.link}`, fontSize: sz(8), color: accentColor, link: proj.link });
-                        sectionContent.push({ text: titleParts, margin: [0, idx > 0 ? 4 : 0, 0, 1] });
-                        if (proj.description) {
-                            sectionContent.push({ text: proj.description, fontSize: sz(9), margin: [0, 0, 0, 1] });
-                        }
+                        if (idx > 0) advanceY(3);
+                        const titleText = proj.title || '';
+                        ensureSpace(sz(10) * 1.3 + 4);
+                        const h3 = doc.struct('H3');
+                        docStruct.add(h3);
+                        h3.add(doc.struct('Span', {}, () => {
+                            doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
+                            doc.text(titleText, margin, y, { width: contentW, continued: false });
+                        }));
+                        h3.end();
+                        advanceY(doc.heightOfString(titleText, { width: contentW, fontSize: sz(10) }) + 2);
+
+                        if (proj.description) addParagraph(proj.description, sz(9));
                         if (proj.technologies && proj.technologies.length > 0) {
-                            sectionContent.push({ text: `Technologies: ${proj.technologies.join(', ')}`, fontSize: sz(8.5), color: '#666', italics: true, margin: [0, 0, 0, 2] });
+                            addParagraph(`Technologies: ${proj.technologies.join(', ')}`, sz(8.5), { color: '#666', font: 'Helvetica-Oblique' });
                         }
+                        if (proj.link) addParagraph(proj.link, sz(8), { color: accentColor });
                     });
-                    sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
-                    return sectionContent;
+                    advanceY(4);
                 }
             };
 
-            // Helper to get section display name
-            function getSectionName(key) {
-                const orderEntry = sectionOrder.find(s => s.key === key);
-                if (orderEntry && orderEntry.display_name) return orderEntry.display_name;
-                if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
-                // For custom sections, look up the name from custom sections data
-                if (orderEntry && orderEntry.name) return orderEntry.name;
-                const cs = (cvData.customSections || []).find(s => s.section_key === key);
-                if (cs && cs.name) return cs.name;
-                return key;
-            }
-
-            // Render custom section
+            // Custom section renderer
             function renderCustomSection(sectionKey) {
                 const cs = (cvData.customSections || []).find(s => s.section_key === sectionKey && s.visible);
-                if (!cs || !cs.items || cs.items.length === 0) return null;
+                if (!cs || !cs.items || cs.items.length === 0) return;
                 const visibleItems = cs.items.filter(i => i.visible !== false && i.visible !== 0);
-                if (visibleItems.length === 0) return null;
+                if (visibleItems.length === 0) return;
 
-                const sectionContent = [];
-                const displayName = getSectionName(sectionKey) || cs.name;
-                sectionContent.push({ text: displayName, fontSize: sz(13), bold: true, color: accentColor, margin: [0, 0, 0, 6] });
-
+                addSectionHeading(getSectionName(sectionKey) || cs.name);
                 visibleItems.forEach(item => {
                     if (item.title) {
-                        sectionContent.push({ text: item.title, bold: true, fontSize: sz(10), margin: [0, 2, 0, 1] });
+                        ensureSpace(sz(10) * 1.3 + 4);
+                        const h3 = doc.struct('H3');
+                        docStruct.add(h3);
+                        h3.add(doc.struct('Span', {}, () => {
+                            doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
+                            doc.text(item.title, margin, y, { width: contentW, continued: false });
+                        }));
+                        h3.end();
+                        advanceY(doc.heightOfString(item.title, { width: contentW, fontSize: sz(10) }) + 2);
                     }
-                    if (item.subtitle) {
-                        sectionContent.push({ text: item.subtitle, fontSize: sz(9), color: '#666', margin: [0, 0, 0, 1] });
-                    }
-                    if (item.description) {
-                        sectionContent.push({ text: item.description, fontSize: sz(9), margin: [0, 0, 0, 2] });
-                    }
-                    if (item.link) {
-                        sectionContent.push({ text: item.link, fontSize: sz(8), color: accentColor, link: item.link, margin: [0, 0, 0, 2] });
-                    }
+                    if (item.subtitle) addParagraph(item.subtitle, sz(9), { color: '#666' });
+                    if (item.description) addParagraph(item.description, sz(9));
+                    if (item.link) addParagraph(item.link, sz(8), { color: accentColor });
                 });
-                sectionContent.push({ text: '', margin: [0, 0, 0, 6] });
-                return sectionContent;
+                advanceY(4);
             }
 
             // Render sections in configured order
             const sortedSections = [...sectionOrder].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
             for (const section of sortedSections) {
                 if (!section.visible) continue;
-                // Skip timeline — not suitable for ATS PDF
                 if (section.key === 'timeline') continue;
-
                 if (sectionRenderers[section.key]) {
-                    const rendered = sectionRenderers[section.key]();
-                    if (rendered) content.push(...rendered);
+                    sectionRenderers[section.key]();
                 } else if (section.key.startsWith('custom_')) {
-                    const rendered = renderCustomSection(section.key);
-                    if (rendered) content.push(...rendered);
+                    renderCustomSection(section.key);
                 }
             }
 
-            // Build pdfmake document definition
-            const pageWidth = paperSize === 'LETTER' ? 612 : 595.28;
-            const pageHeight = paperSize === 'LETTER' ? 792 : 841.89;
-            const docDefinition = {
-                pageSize: { width: pageWidth, height: pageHeight },
-                pageMargins: [40, 40, 40, 40],
-                content,
-                defaultStyle: {
-                    font: 'Roboto',
-                    fontSize: sz(10),
-                    lineHeight: 1.2
-                },
-                info: {
-                    title: `${p.name || 'CV'} - Resume`,
-                    author: p.name || '',
-                    subject: 'Resume / CV',
-                    keywords: (cvData.skills || []).flatMap(c => c.skills || []).join(', ')
-                }
-            };
+            docStruct.end();
+            doc.end();
 
-            const pdf = pdfmake.createPdf(docDefinition);
-            const buffer = await pdf.getBuffer();
+            const buffer = await pdfReady;
             const filename = `${(p.name || 'cv').replace(/[^a-zA-Z0-9]/g, '_')}_ATS_Resume.pdf`;
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
             res.setHeader('Content-Length', buffer.length);
-            res.end(Buffer.from(buffer));
+            res.end(buffer);
         } catch (err) {
             console.error('ATS PDF export error:', err);
             res.status(500).json({ error: 'Failed to generate PDF' });
