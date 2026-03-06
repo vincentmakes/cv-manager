@@ -1761,6 +1761,7 @@
         border-top: 1px solid rgba(255,255,255,0.1);
     }
     .toolbar-actions.mobile-open { display: flex; }
+    .toolbar-actions.mobile-open .toolbar-print-inline { display: flex; }
     .toolbar-actions .btn {
         justify-content: flex-start;
         width: 100%;

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.23.2] - 2026-03-06
+
+### Fixed
+- ATS Document button now visible in mobile hamburger menu
+
 ## [1.23.1] - 2026-03-06
 
 ### Fixed
