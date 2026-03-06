@@ -23,7 +23,7 @@ Mit benutzerdefinierten Abschnitten können Sie beliebige Inhalte hinzufügen, d
 | **Aufzählungspunkte** | Gruppierte Aufzählungslisten, ähnlich wie Erfahrungs-Highlights — ideal für zentrale Erfolge oder Kompetenzen |
 | **Freitext** | Einfacher Textblock mit beibehaltenen Zeilenumbrüchen — ähnlich dem Über-mich-Abschnitt, nützlich für Anschreiben, persönliche Erklärungen oder beliebige Freitext-Inhalte |
 | **Bildraster** | Bildergalerie mit optionalen Beschriftungen — ideal für Portfolios, Zertifikate oder visuelle Arbeitsproben |
-| **Zusätzliche Erfahrungen** | Erfahrungseinträge (Jobtitel, Unternehmen, Daten, Highlights, Logo) — erweitert Ihren Werdegang, ohne den Hauptabschnitt Berufserfahrung zu vermischen |
+| **Zusätzliche Erfahrungen** | Erfahrungseinträge (Jobtitel, Unternehmen, Daten, Highlights, Logo) — erweitert Ihren Werdegang, ohne sich mit dem Hauptabschnitt Berufserfahrung zu vermischen |
 
 ## Bildraster
 

@@ -23,7 +23,7 @@ Les sections personnalisées vous permettent d'ajouter tout contenu qui ne corre
 | **Puces** | Listes à puces regroupées, similaires aux points clés d'expérience — idéal pour les réalisations clés ou les compétences |
 | **Texte libre** | Bloc de texte brut avec sauts de ligne préservés — similaire à la section À propos, utile pour les lettres de motivation, déclarations personnelles ou tout contenu libre |
 | **Grille d'images** | Galerie d'images avec légendes optionnelles — idéale pour les portfolios, certificats ou échantillons de travail visuels |
-| **Expériences supplémentaires** | Entrées de type expérience (intitulé de poste, entreprise, dates, points clés, logo) — étend votre parcours professionnel sans mélanger avec la section Expérience principale |
+| **Expériences supplémentaires** | Entrées de type expérience (intitulé de poste, entreprise, dates, points clés, logo) — étend votre parcours professionnel sans se mélanger avec la section Expérience principale |
 
 ## Grille d'images
 
