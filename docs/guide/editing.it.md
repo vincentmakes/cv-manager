@@ -16,6 +16,16 @@ Fate clic sull'**icona di modifica** nella sezione intestazione. Potete impostar
 
 Nella finestra di modifica del profilo, potete caricare una foto profilo (JPEG, PNG o WebP). L'immagine sostituisce il cerchio con le iniziali. Per rimuoverla, utilizzate l'opzione di eliminazione nella stessa finestra.
 
+## Badge "Open to Work"
+
+Mostrate un badge verde "Open to Work" sul vostro CV pubblico per segnalare la vostra disponibilità ai recruiter:
+
+1. Fate clic sull'**icona di modifica** nell'intestazione per aprire l'editor del profilo
+2. Trovate l'interruttore **Open to Work**
+3. Attivatelo e salvate
+
+Il badge appare come un overlay circolare sulla vostra foto profilo (o accanto al vostro avatar se non è impostata una foto). È visibile sul sito pubblico ma **nascosto nell'esportazione stampa/PDF**.
+
 ## Esperienze lavorative
 
 Ogni voce di esperienza include:
@@ -62,6 +72,28 @@ Ogni certificazione ha un **nome**, un **ente certificatore**, una **data di ril
 ## Formazione
 
 Ogni voce ha un **titolo/laurea**, un **istituto**, **date di inizio/fine** e una **descrizione** opzionale.
+
+## Loghi degli istituti
+
+Le voci di formazione possono avere un **logo dell'istituto**, proprio come i loghi aziendali per le esperienze lavorative.
+
+### Caricamento di un logo
+
+1. Modificate una voce di formazione
+2. Nella sezione **Logo dell'istituto**, fate clic su **Scegli immagine** per caricare un file (JPEG, PNG o WebP, max 5MB)
+3. Un'immagine quadrata di piccole dimensioni funziona meglio
+
+### Riutilizzo dei loghi
+
+Fate clic su **Usa esistente** per aprire la griglia di selezione dei loghi, che mostra tutti i loghi caricati in precedenza (inclusi i loghi aziendali). Fate clic su uno per riutilizzarlo.
+
+### Propagazione globale
+
+Quando viene impostato un logo, appare un interruttore: **"Sincronizza il logo su tutte le voci di formazione di [Istituto]"**. Quando attivato, il logo viene applicato a tutte le voci di formazione con lo stesso nome di istituto — incluse quelle nei dataset salvati.
+
+### Rimozione di un logo
+
+Fate clic sul pulsante **Rimuovi** nella sezione logo per scollegare un logo da una voce di formazione.
 
 ## Competenze
 

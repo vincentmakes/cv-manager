@@ -22,6 +22,33 @@ Met aangepaste secties kunt u inhoud toevoegen die niet past bij de ingebouwde s
 | **Sociale links** | Platformspecifieke links met pictogrammen (LinkedIn, GitHub, Twitter/X, YouTube, Instagram, Dribbble, Behance, Website, E-mail, Telefoon of Aangepast) |
 | **Opsommingstekens** | Gegroepeerde opsommingslijsten, vergelijkbaar met hoogtepunten bij werkervaring — ideaal voor belangrijke prestaties of competenties |
 | **Vrije tekst** | Platte tekst met behouden regelovergangen — vergelijkbaar met de Over mij-sectie, bruikbaar voor motivatiebrieven, persoonlijke verklaringen of andere vrije inhoud |
+| **Fotoraster** | Afbeeldingengalerij met optionele bijschriften — ideaal voor portfolio's, certificaten of visuele werkvoorbeelden |
+| **Aanvullende ervaringen** | Ervaringsitems (functietitel, bedrijf, datums, hoogtepunten, logo) — breidt uw werkgeschiedenis uit zonder te mengen met de hoofdsectie Werkervaring |
+
+## Fotoraster
+
+De **Fotoraster**-lay-out toont afbeeldingen in een responsief raster met optionele bijschriften.
+
+1. Maak een aangepaste sectie aan en selecteer **Fotoraster** als lay-outtype
+2. Kies het aantal **rasterkolommen** (1, 2 of 3 — standaard is 3)
+3. Klik op **Foto toevoegen** om afbeeldingen te uploaden (JPEG, PNG of WebP, max 5MB)
+4. Voeg optioneel een **bijschrift** toe onder elke afbeelding
+
+Afbeeldingen worden gecentreerd en behouden hun beeldverhouding. In de 3-koloms modus worden afbeeldingen vierkant weergegeven voor een uniform uiterlijk.
+
+## Aanvullende ervaringen
+
+De lay-out **Aanvullende ervaringen** maakt ervaringsitems aan die identiek zijn aan de ingebouwde sectie Werkervaring. Elk item bevat:
+
+- **Functietitel** en **bedrijfs-/organisatienaam**
+- **Start- en einddatums** (met optioneel "Huidig" voor huidige functies)
+- **Locatie** en **landcode**
+- **Hoogtepunten** (belangrijke prestaties, een per regel)
+- **Optioneel logo** (dezelfde upload-/hergebruik-workflow als bedrijfslogo's)
+
+### Tonen op carrièretijdlijn
+
+Bij het beheren van items in een sectie Aanvullende ervaringen kunt u **"Items tonen op carrièretijdlijn"** inschakelen. Dit voegt de aanvullende ervaringsitems samen in de hoofdvisualisatie van de tijdlijn — ze verschijnen naast uw reguliere werkervaringen met volledige ondersteuning voor vertakkingen, logo's en duurweergave.
 
 ## Titel verbergen
 

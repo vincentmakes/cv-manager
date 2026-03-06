@@ -16,6 +16,16 @@ Klicken Sie auf das **Bearbeiten-Symbol** im Kopfbereich. Sie können Folgendes 
 
 Im Profil-Bearbeitungsdialog können Sie ein Profilbild hochladen (JPEG, PNG oder WebP). Das Bild ersetzt den Initialen-Kreis. Zum Entfernen verwenden Sie die Löschoption im selben Dialog.
 
+## „Open to Work"-Badge
+
+Zeigen Sie ein grünes „Open to Work"-Badge auf Ihrem öffentlichen Lebenslauf an, um Recruitern Ihre Verfügbarkeit zu signalisieren:
+
+1. Klicken Sie auf das **Bearbeiten-Symbol** im Kopfbereich, um den Profil-Editor zu öffnen
+2. Finden Sie den **Open to Work**-Schalter
+3. Schalten Sie ihn ein und speichern Sie
+
+Das Badge erscheint als kreisförmiges Overlay auf Ihrem Profilbild (oder neben Ihrem Avatar, wenn kein Bild gesetzt ist). Es ist auf der öffentlichen Seite sichtbar, wird aber **im Druck-/PDF-Export ausgeblendet**.
+
 ## Berufserfahrung
 
 Jeder Erfahrungseintrag umfasst:
@@ -62,6 +72,28 @@ Jede Zertifizierung hat einen **Namen**, einen **Anbieter**, ein **Ausstellungsd
 ## Ausbildung
 
 Jeder Eintrag hat einen **Abschluss/Titel**, eine **Institution**, **Start-/Enddaten** und eine optionale **Beschreibung**.
+
+## Institutionslogos
+
+Ausbildungseinträge können ein **Institutionslogo** haben, genau wie Unternehmenslogos bei Berufserfahrungen.
+
+### Ein Logo hochladen
+
+1. Bearbeiten Sie einen Ausbildungseintrag
+2. Klicken Sie im Bereich **Institutionslogo** auf **Bild auswählen**, um eine Datei hochzuladen (JPEG, PNG oder WebP, max. 5MB)
+3. Ein kleines quadratisches Bild funktioniert am besten
+
+### Logos wiederverwenden
+
+Klicken Sie auf **Vorhandenes verwenden**, um die Logo-Auswahl zu öffnen, die alle zuvor hochgeladenen Logos anzeigt (einschließlich Unternehmenslogos). Klicken Sie auf eines, um es wiederzuverwenden.
+
+### Globale Weitergabe
+
+Wenn ein Logo gesetzt wird, erscheint ein Schalter: **„Logo über alle [Institution]-Ausbildungseinträge synchronisieren"**. Wenn aktiviert, wird das Logo auf alle Ausbildungseinträge mit demselben Institutionsnamen angewendet — einschließlich derer in gespeicherten Datensätzen.
+
+### Ein Logo entfernen
+
+Klicken Sie auf die Schaltfläche **Entfernen** im Logo-Bereich, um ein Logo von einem Ausbildungseintrag zu trennen.
 
 ## Fähigkeiten
 

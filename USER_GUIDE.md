@@ -76,6 +76,16 @@ Click the **edit icon** on the header section. You can set:
 
 In the profile edit dialog, you can upload a profile picture (JPEG, PNG, or WebP). The image replaces the initials circle. To remove it, use the delete option in the same dialog.
 
+### Open to Work Badge
+
+Display a green "Open to Work" badge on your public CV to signal availability to recruiters:
+
+1. Click the **edit icon** on the header to open the profile editor
+2. Find the **Open to Work** toggle
+3. Switch it on and save
+
+The badge appears as a circular overlay on your profile picture (or next to your avatar if no picture is set). It is visible on the public site but **hidden in print/PDF output** so it won't appear on exported documents.
+
 ### Work Experience
 
 Each experience entry includes:
@@ -123,6 +133,28 @@ Each certification has a **name**, **provider**, **issue date**, and optional **
 
 Each entry has a **degree/title**, **institution**, **start/end dates**, and an optional **description**.
 
+### Institution Logos
+
+Education entries can have an **institution logo**, just like company logos on work experiences.
+
+**Uploading a logo:**
+
+1. Edit an education entry
+2. In the **Institution Logo** section, click **Choose image** to upload a file (JPEG, PNG, or WebP, max 5MB)
+3. A small square image works best
+
+**Reusing logos:**
+
+Click **Use existing** to open the logo picker grid, which shows all previously uploaded logos (including company logos from experiences). Click one to reuse it.
+
+**Global propagation:**
+
+When a logo is set, a toggle appears: **"Sync logo across all [Institution] education entries"**. When enabled, the logo is applied to all education entries with the same institution name — including those in saved datasets.
+
+**Removing a logo:**
+
+Click the **Remove** button in the logo section to unlink a logo from an education entry.
+
 ### Skills
 
 Skills are organized into **categories** (e.g., "Programming Languages", "Tools & Platforms"). Each category contains individual skill tags. Categories can have an **icon** selected from a preset list: code, server, database, cloud, settings, users, briefcase, cpu, layers, or default. If no icon is chosen, the system auto-detects one based on the category name (e.g., a category named "Programming" automatically gets the code icon).
@@ -165,6 +197,31 @@ Custom sections let you add any content that doesn't fit the built-in sections.
 | **Social Links** | Platform-specific links with icons (LinkedIn, GitHub, Twitter/X, YouTube, Instagram, Dribbble, Behance, Website, Email, Phone, or Custom) |
 | **Bullet Points** | Grouped bullet lists, similar to experience highlights — great for key achievements or competencies |
 | **Free Text** | Plain text block with preserved line breaks — similar to the About section, useful for cover letters, personal statements, or any freeform content |
+| **Picture Grid** | Image gallery with optional captions — great for portfolios, certificates, or visual work samples |
+| **Additional Experiences** | Experience-style entries (job title, company, dates, highlights, logo) — extends your work history without mixing into the main Experience section |
+
+### Picture Grid
+
+The **Picture Grid** layout displays images in a responsive grid with optional captions.
+
+1. Create a custom section and select **Picture Grid** as the layout type
+2. Choose the number of **grid columns** (1, 2, or 3 — default is 3)
+3. Click **Add Picture** to upload images (JPEG, PNG, or WebP, max 5MB)
+4. Optionally add a **caption** below each image
+
+Images are centered and maintain their aspect ratio. In 3-column mode, images display as squares for a uniform look.
+
+### Additional Experiences
+
+The **Additional Experiences** layout creates experience-style entries identical to the built-in Work Experience section. Each item includes:
+
+- **Job title** and **company/organization name**
+- **Start and end dates** (with optional "Present" for current roles)
+- **Location** and **country code**
+- **Highlights** (key achievements, one per line)
+- **Optional logo** (same upload/reuse workflow as company logos)
+
+**Show on Career Timeline:** When managing items in an Additional Experiences section, you can enable **"Show items on Career Timeline"**. This merges the additional experience entries into the main timeline visualization — they appear alongside your regular work experiences with full support for branching, logos, and duration display.
 
 ### Hide Title Option
 
@@ -527,6 +584,12 @@ Yes. Edit the section and select a different layout. Note that some fields may n
 **Q: What's the difference between "Bullet Points" and "Free Text" layouts?**
 **Bullet Points** renders each line as a bulleted list item with a group title. **Free Text** renders plain text with preserved line breaks and no title — similar to the About/Bio section.
 
+**Q: What is the "Picture Grid" layout?**
+An image gallery layout for custom sections. Upload images with optional captions, displayed in a 1, 2, or 3-column grid. Great for portfolios, certificate scans, or visual work samples.
+
+**Q: What is the "Additional Experiences" layout?**
+A layout that creates experience-style entries (job title, company, dates, highlights, logo) inside a custom section. You can optionally merge these entries into the Career Timeline by enabling **"Show items on Career Timeline"**.
+
 ### Print & PDF
 
 **Q: Why does my PDF look different from the screen?**
@@ -547,7 +610,10 @@ Make sure **Page Numbers** is enabled in Settings → Print & Export. Some brows
 The timeline has its own date setting. Go to **Settings → Advanced → Timeline: Years Only** to toggle between year-only display and the full date format.
 
 **Q: Can I add entries to the timeline directly?**
-No. The timeline is automatically generated from your work experiences. Add or edit experiences and the timeline updates accordingly.
+Not from the timeline itself, but you can create an **Additional Experiences** custom section and enable **"Show items on Career Timeline"** to merge extra entries into the timeline alongside your regular work experiences.
+
+**Q: How do I show the "Open to Work" badge?**
+Edit your profile (click the edit icon on the header) and toggle **Open to Work** on. The green badge appears on your public CV but is hidden from print/PDF output.
 
 **Q: The country flag isn't showing on the timeline?**
 Make sure the **Country Code** field on the experience is set to a valid 2-letter ISO country code (e.g., `us`, `gb`, `ch`, `de`, `fr`). Flags are loaded from an external CDN.

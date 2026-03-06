@@ -16,6 +16,16 @@ Click the **edit icon** on the header section. You can set:
 
 In the profile edit dialog, you can upload a profile picture (JPEG, PNG, or WebP). The image replaces the initials circle. To remove it, use the delete option in the same dialog.
 
+## Open to Work Badge
+
+Display a green "Open to Work" badge on your public CV to signal availability to recruiters:
+
+1. Click the **edit icon** on the header to open the profile editor
+2. Find the **Open to Work** toggle
+3. Switch it on and save
+
+The badge appears as a circular overlay on your profile picture (or next to your avatar if no picture is set). It is visible on the public site but **hidden in print/PDF output** so it won't appear on exported documents.
+
 ## Work Experience
 
 Each experience entry includes:
@@ -62,6 +72,28 @@ Each certification has a **name**, **provider**, **issue date**, and optional **
 ## Education
 
 Each entry has a **degree/title**, **institution**, **start/end dates**, and an optional **description**.
+
+## Institution Logos
+
+Education entries can have an **institution logo**, just like company logos on work experiences.
+
+### Uploading a Logo
+
+1. Edit an education entry
+2. In the **Institution Logo** section, click **Choose image** to upload a file (JPEG, PNG, or WebP, max 5MB)
+3. A small square image works best
+
+### Reusing Logos
+
+Click **Use existing** to open the logo picker grid, which shows all previously uploaded logos (including company logos from experiences). Click one to reuse it.
+
+### Global Propagation
+
+When a logo is set, a toggle appears: **"Sync logo across all [Institution] education entries"**. When enabled, the logo is applied to all education entries with the same institution name — including those in saved datasets.
+
+### Removing a Logo
+
+Click the **Remove** button in the logo section to unlink a logo from an education entry.
 
 ## Skills
 

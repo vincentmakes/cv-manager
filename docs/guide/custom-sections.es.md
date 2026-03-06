@@ -22,6 +22,33 @@ Las secciones personalizadas le permiten agregar cualquier contenido que no enca
 | **Social Links** | Enlaces a plataformas con íconos específicos (LinkedIn, GitHub, Twitter/X, YouTube, Instagram, Dribbble, Behance, Website, Email, Phone o Custom) |
 | **Bullet Points** | Listas de viñetas agrupadas, similares a los logros destacados de experiencia — ideales para logros clave o competencias |
 | **Free Text** | Bloque de texto plano con saltos de línea preservados — similar a la sección Acerca de, útil para cartas de presentación, declaraciones personales o cualquier contenido de formato libre |
+| **Picture Grid** | Galería de imágenes con subtítulos opcionales — ideal para portafolios, certificados o muestras de trabajo visual |
+| **Additional Experiences** | Entradas de tipo experiencia (cargo, empresa, fechas, logros, logo) — extiende su historial laboral sin mezclarse con la sección principal de Experiencia |
+
+## Cuadrícula de imágenes
+
+El diseño **Picture Grid** muestra imágenes en una cuadrícula responsiva con subtítulos opcionales.
+
+1. Cree una sección personalizada y seleccione **Picture Grid** como tipo de diseño
+2. Elija el número de **columnas** (1, 2 o 3 — por defecto 3)
+3. Haga clic en **Add Picture** para subir imágenes (JPEG, PNG o WebP, máximo 5MB)
+4. Opcionalmente agregue un **subtítulo** debajo de cada imagen
+
+Las imágenes se centran y mantienen su proporción. En el modo de 3 columnas, las imágenes se muestran cuadradas para un aspecto uniforme.
+
+## Experiencias adicionales
+
+El diseño **Additional Experiences** crea entradas de tipo experiencia idénticas a la sección de Experiencia laboral integrada. Cada elemento incluye:
+
+- **Cargo** y **nombre de empresa/organización**
+- **Fechas de inicio y fin** (con "Present" opcional para puestos actuales)
+- **Ubicación** y **código de país**
+- **Logros destacados** (uno por línea)
+- **Logo opcional** (mismo flujo de subida/reutilización que los logotipos de empresa)
+
+### Mostrar en la línea de tiempo profesional
+
+Al gestionar elementos en una sección de Experiencias adicionales, puede activar **"Show items on Career Timeline"**. Esto fusiona las entradas de experiencia adicional en la visualización principal de la línea de tiempo — aparecen junto a sus experiencias laborales regulares con soporte completo para ramificaciones, logos y visualización de duración.
 
 ## Opción de ocultar título
 

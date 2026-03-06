@@ -16,6 +16,16 @@ Klik op het **bewerkingspictogram** bij de headersectie. U kunt het volgende ins
 
 In het profielbewerkingsvenster kunt u een profielfoto uploaden (JPEG, PNG of WebP). De afbeelding vervangt de initialencirkel. Om deze te verwijderen, gebruikt u de verwijderoptie in hetzelfde venster.
 
+## "Open to Work"-badge
+
+Toon een groene "Open to Work"-badge op uw openbare CV om uw beschikbaarheid aan recruiters te signaleren:
+
+1. Klik op het **bewerkingspictogram** bij de header om de profieleditor te openen
+2. Zoek de **Open to Work**-schakelaar
+3. Zet deze aan en sla op
+
+De badge verschijnt als een cirkelvormige overlay op uw profielfoto (of naast uw avatar als er geen foto is ingesteld). Het is zichtbaar op de openbare site maar **verborgen in afdruk/PDF-export**.
+
 ## Werkervaring
 
 Elke werkervaring bevat:
@@ -62,6 +72,28 @@ Elke certificering heeft een **naam**, **aanbieder**, **uitgiftedatum** en optio
 ## Opleiding
 
 Elk item heeft een **diploma/titel**, **instelling**, **start-/einddatums** en een optionele **beschrijving**.
+
+## Instellingslogo's
+
+Opleidingsitems kunnen een **instellingslogo** hebben, net als bedrijfslogo's bij werkervaringen.
+
+### Een logo uploaden
+
+1. Bewerk een opleidingsitem
+2. Klik in de sectie **Instellingslogo** op **Afbeelding kiezen** om een bestand te uploaden (JPEG, PNG of WebP, max 5MB)
+3. Een kleine vierkante afbeelding werkt het beste
+
+### Logo's hergebruiken
+
+Klik op **Bestaande gebruiken** om het logoraster te openen, dat alle eerder geüploade logo's toont (inclusief bedrijfslogo's). Klik op een logo om het te hergebruiken.
+
+### Globale synchronisatie
+
+Wanneer een logo is ingesteld, verschijnt er een schakelaar: **"Logo synchroniseren voor alle [Instelling]-opleidingsitems"**. Wanneer ingeschakeld, wordt het logo toegepast op alle opleidingsitems met dezelfde instellingsnaam — inclusief die in opgeslagen datasets.
+
+### Een logo verwijderen
+
+Klik op de knop **Verwijderen** in de logosectie om een logo los te koppelen van een opleidingsitem.
 
 ## Vaardigheden
 
