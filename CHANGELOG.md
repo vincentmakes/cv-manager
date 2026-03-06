@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.22.1] - 2026-03-06
+
+### Fixed
+- ATS-friendly content block now included in PDF print output (was incorrectly hidden with `display: none`)
+- Added `aria-hidden` to decorative icon elements for better screen reader and ATS parser compatibility
+
 ## [1.22.0] - 2026-03-05
 
 ### Added

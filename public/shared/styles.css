@@ -1143,20 +1143,8 @@ body.has-preview-banner .container {
     border: 0;
 }
 
-/* ATS-friendly print version - show structured text for PDF extraction */
-@media print {
-    .ats-only {
-        position: static;
-        width: auto;
-        height: auto;
-        padding: 0;
-        margin: 0;
-        overflow: visible;
-        clip: auto;
-        white-space: pre-wrap;
-        display: none; /* Hide in print since visual version is better structured now */
-    }
-}
+/* ATS-friendly print version - keep sr-only technique so text is in PDF text layer for ATS extraction */
+/* The base .ats-only rule above already uses the correct clip method. No print override needed. */
 
 /* Print Styles */
 @media print {
