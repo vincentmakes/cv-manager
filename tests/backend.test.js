@@ -266,4 +266,183 @@ describe('Backend API', () => {
             assert.ok(text.includes('<!DOCTYPE html>'));
         });
     });
+
+    describe('Security', () => {
+        it('public /api/profile does not expose email or phone', async () => {
+            // Store profile with sensitive data via admin
+            await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'Secure User',
+                    title: 'Dev',
+                    email: 'secret@example.com',
+                    phone: '+1-555-0199',
+                }),
+            });
+
+            // Fetch from public API
+            const res = await fetch(`${PUBLIC_URL}/api/profile`);
+            const data = await res.json();
+            assert.strictEqual(data.email, undefined, 'Public profile should not contain email');
+            assert.strictEqual(data.phone, undefined, 'Public profile should not contain phone');
+            assert.strictEqual(data.name, 'Secure User', 'Public profile should still contain name');
+        });
+
+        it('public /api/cv does not expose email or phone', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/cv`);
+            const data = await res.json();
+            assert.strictEqual(data.profile.email, undefined, 'Public CV profile should not contain email');
+            assert.strictEqual(data.profile.phone, undefined, 'Public CV profile should not contain phone');
+        });
+
+        it('public /api/profile does not expose database id', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/profile`);
+            const data = await res.json();
+            assert.strictEqual(data.id, undefined, 'Public profile should not expose database id');
+        });
+
+        it('survives SQL injection in profile fields', async () => {
+            const payload = "'; DROP TABLE profile; --";
+            const res = await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: payload, title: 'Dev' }),
+            });
+            assert.strictEqual(res.status, 200);
+
+            // Verify server still works and data stored correctly
+            const getRes = await fetch(`${BASE_URL}/api/profile`);
+            assert.strictEqual(getRes.status, 200);
+            const data = await getRes.json();
+            assert.strictEqual(data.name, payload, 'SQL injection string should be stored as literal text');
+        });
+
+        it('survives SQL injection in experience creation', async () => {
+            const payload = "'; DROP TABLE experiences; --";
+            const res = await fetch(`${BASE_URL}/api/experiences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    job_title: payload,
+                    company_name: 'TestCo',
+                    start_date: '2024-01',
+                    end_date: '',
+                    location: 'Remote',
+                    highlights: [payload],
+                }),
+            });
+            assert.strictEqual(res.status, 200);
+
+            // Verify the table still exists and works
+            const getRes = await fetch(`${BASE_URL}/api/experiences`);
+            assert.strictEqual(getRes.status, 200);
+            const data = await getRes.json();
+            assert.ok(Array.isArray(data), 'Experiences table should still exist after injection attempt');
+        });
+
+        it('stores XSS payloads as-is without corruption', async () => {
+            const xss = '<script>alert("xss")</script><img onerror="alert(1)" src=x>';
+            await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: xss, title: '<b onmouseover="alert(1)">title</b>' }),
+            });
+
+            // Admin API should return raw data (frontend escapes on display)
+            const adminRes = await fetch(`${BASE_URL}/api/profile`);
+            const adminData = await adminRes.json();
+            assert.strictEqual(adminData.name, xss, 'XSS payload should be stored without corruption');
+
+            // Public API should also return raw data
+            const publicRes = await fetch(`${PUBLIC_URL}/api/profile`);
+            const publicData = await publicRes.json();
+            assert.strictEqual(publicData.name, xss, 'Public API should return raw XSS payload for frontend to escape');
+        });
+
+        it('rejects PUT on public API endpoints', async () => {
+            const endpoints = ['/api/profile', '/api/experiences', '/api/certifications', '/api/education'];
+            for (const endpoint of endpoints) {
+                const res = await fetch(`${PUBLIC_URL}${endpoint}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'hack' }),
+                });
+                assert.strictEqual(res.status, 405, `PUT ${endpoint} on public API should return 405`);
+            }
+        });
+
+        it('rejects DELETE on public API endpoints', async () => {
+            const endpoints = ['/api/profile', '/api/experiences', '/api/certifications'];
+            for (const endpoint of endpoints) {
+                const res = await fetch(`${PUBLIC_URL}${endpoint}`, { method: 'DELETE' });
+                assert.strictEqual(res.status, 405, `DELETE ${endpoint} on public API should return 405`);
+            }
+        });
+
+        it('rejects PATCH on public API endpoints', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/profile`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'hack' }),
+            });
+            assert.strictEqual(res.status, 405, 'PATCH on public API should return 405');
+        });
+
+        it('handles malformed JSON body gracefully', async () => {
+            const res = await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: 'this is not json{{{',
+            });
+            // Should return 400 (bad request) not 500 (server error)
+            assert.ok(res.status >= 400 && res.status < 500, `Malformed JSON should return 4xx, got ${res.status}`);
+        });
+
+        it('security headers have correct values', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/profile`);
+            assert.strictEqual(res.headers.get('x-content-type-options'), 'nosniff');
+            assert.strictEqual(res.headers.get('x-frame-options'), 'DENY');
+        });
+
+        it('rate limits public API after threshold', async () => {
+            // Rate limit is 200 requests per minute per IP
+            // Send 210 requests rapidly to trigger the limiter
+            const requests = [];
+            for (let i = 0; i < 210; i++) {
+                requests.push(fetch(`${PUBLIC_URL}/api/profile`));
+            }
+            const responses = await Promise.all(requests);
+            const statuses = responses.map(r => r.status);
+            const has429 = statuses.some(s => s === 429);
+            assert.ok(has429, 'Should receive 429 after exceeding rate limit (200 req/min)');
+        });
+
+        it('path traversal in logo upload filename is handled safely', async () => {
+            // Create an experience to upload a logo to
+            const createRes = await fetch(`${BASE_URL}/api/experiences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    job_title: 'Path Test',
+                    company_name: 'PathCo',
+                    start_date: '2024-01',
+                    end_date: '',
+                    location: 'Remote',
+                    highlights: [],
+                }),
+            });
+            const { id } = await createRes.json();
+
+            // Attempt path traversal via logo upload
+            const formData = new FormData();
+            formData.append('logo', new Blob(['fake'], { type: 'image/jpeg' }), '../../etc/passwd');
+            const res = await fetch(`${BASE_URL}/api/experiences/${id}/logo`, {
+                method: 'POST',
+                body: formData,
+            });
+            // Should either reject (400) or accept safely (200) — not crash (500)
+            assert.ok(res.status !== 500, 'Path traversal should not cause server error');
+        });
+    });
 });
