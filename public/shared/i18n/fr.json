@@ -108,6 +108,7 @@
     "form.end_date": "Date de fin",
     "form.end_date_placeholder": "Laisser vide pour En poste",
     "form.highlights": "Points clés (un par ligne)",
+    "form.summary": "Résumé",
     "form.cert_name": "Nom de la certification",
     "form.provider": "Organisme / Émetteur",
     "form.issue_date": "Date de délivrance",

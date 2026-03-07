@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.24.0] - 2026-03-07
+
+### Added
+- Optional summary text field for work experiences — a free-text block displayed between location and bullet highlights, useful for brief role descriptions that don't fit the bullet format
+- Summary included in ATS text output, PDF generation, dataset save/load, and public CV rendering
+
 ## [1.23.0] - 2026-03-06
 
 ### Added

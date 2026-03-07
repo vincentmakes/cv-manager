@@ -1304,6 +1304,7 @@ async function generateATSContent() {
                 ats.push(`Company: ${exp.company_name}`);
                 ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : t('present')}`);
                 if (exp.location) ats.push(`Location: ${exp.location}`);
+                if (exp.summary) ats.push(`Summary: ${exp.summary}`);
                 if (exp.highlights && exp.highlights.length > 0) {
                     ats.push('Responsibilities and Achievements:');
                     exp.highlights.forEach(h => ats.push(`- ${h}`));
@@ -1378,7 +1379,7 @@ async function generateATSContent() {
 function renderExperienceCard(opts) {
     const {
         id = '', title = '', subtitle = '', startDate = '', endDate = '',
-        location = '', logo = '', highlights = [], visible = true,
+        location = '', logo = '', summary = '', highlights = [], visible = true,
         showLogo = false, showDuration = false, schemaOrg = false,
         actionsHtml = '', extraClasses = ''
     } = opts;
@@ -1414,6 +1415,10 @@ function renderExperienceCard(opts) {
         ? `<div class="item-location">${escapeHtml(location)}</div>`
         : '';
 
+    const summaryHtml = summary
+        ? `<div class="item-summary">${escapeHtml(summary)}</div>`
+        : '';
+
     let highlightsHtml = '';
     if (highlights.length) {
         const itemProp = schemaOrg ? ' itemprop="description"' : '';
@@ -1433,6 +1438,7 @@ function renderExperienceCard(opts) {
             <span class="item-date">${dateHtml}</span>
         </div>
         ${locationHtml}
+        ${summaryHtml}
         ${highlightsHtml}
     </article>`;
 }
@@ -1664,6 +1670,7 @@ function renderTimelineLayoutPublic(items) {
             endDate: meta.end_date,
             location: meta.location,
             logo: item.image,
+            summary: meta.summary,
             highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
             showLogo: showExperienceLogos && !!item.image,
             showDuration: showExperienceDuration

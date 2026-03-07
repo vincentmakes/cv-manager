@@ -101,6 +101,7 @@
     "form.end_date": "Einddatum",
     "form.end_date_placeholder": "Leeg laten voor Heden",
     "form.highlights": "Belangrijkste punten (één per regel)",
+    "form.summary": "Samenvatting",
     "form.cert_name": "Certificeringsnaam",
     "form.provider": "Aanbieder / Uitgever",
     "form.issue_date": "Uitgiftedatum",

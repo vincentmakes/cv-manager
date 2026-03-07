@@ -673,6 +673,7 @@ function renderTimelineLayout(items) {
             endDate: meta.end_date,
             location: meta.location,
             logo: item.image,
+            summary: meta.summary,
             highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
             visible: item.visible !== false,
             showLogo: showExperienceLogos && !!item.image,
@@ -731,6 +732,7 @@ async function loadExperiences() {
             endDate: exp.end_date,
             location: exp.location,
             logo: exp.logo_filename,
+            summary: exp.summary,
             highlights: exp.highlights || [],
             visible: exp.visible,
             showLogo: showExperienceLogos,
@@ -1137,6 +1139,10 @@ function experienceForm(d) {
             <input type="text" class="form-input" id="f-location" value="${escapeHtml(d.location || '')}">
         </div>
         <div class="form-group">
+            <label class="form-label">${t('form.summary')}</label>
+            <textarea class="form-textarea" id="f-summary" rows="3">${escapeHtml(d.summary || '')}</textarea>
+        </div>
+        <div class="form-group">
             <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
         </div>
@@ -1351,6 +1357,7 @@ async function saveItem() {
                 end_date: expEnd.value,
                 location: val('f-location'),
                 country_code: val('f-country_code') || '',
+                summary: val('f-summary'),
                 highlights: val('f-highlights').split('\n').filter(h => h.trim()),
                 visible: true
             };
@@ -3522,6 +3529,10 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <input type="text" class="form-input" id="ci-location" value="${escapeHtml(meta.location || '')}">
             </div>
             <div class="form-group">
+                <label class="form-label">${t('form.summary')}</label>
+                <textarea class="form-textarea" id="ci-summary" rows="3">${escapeHtml(meta.summary || '')}</textarea>
+            </div>
+            <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
             </div>
@@ -3689,7 +3700,8 @@ async function saveCustomItem() {
             start_date: startResult.value,
             end_date: endResult.value,
             location: document.getElementById('ci-location')?.value?.trim() || '',
-            country_code: document.getElementById('ci-country-code')?.value?.trim() || ''
+            country_code: document.getElementById('ci-country-code')?.value?.trim() || '',
+            summary: document.getElementById('ci-summary')?.value?.trim() || ''
         };
     } else {
         const hideTitle = document.getElementById('ci-hide-title')?.checked || false;

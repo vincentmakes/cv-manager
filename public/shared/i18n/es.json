@@ -101,6 +101,7 @@
     "form.end_date": "Fecha de fin",
     "form.end_date_placeholder": "Dejar vacío para Actualidad",
     "form.highlights": "Logros principales (uno por línea)",
+    "form.summary": "Resumen",
     "form.cert_name": "Nombre de la certificación",
     "form.provider": "Proveedor / Emisor",
     "form.issue_date": "Fecha de emisión",
