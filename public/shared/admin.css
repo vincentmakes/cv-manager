@@ -280,7 +280,7 @@
 .modal {
     background: var(--white);
     border-radius: var(--radius-lg);
-    max-width: 520px;
+    max-width: 680px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -1059,7 +1059,7 @@
    Settings Modal Styles
    =========================== */
 
-.settings-modal .modal { max-width: 640px; }
+.settings-modal .modal { max-width: 680px; }
 
 .settings-section-item {
     display: flex;

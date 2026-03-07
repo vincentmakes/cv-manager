@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.24.1] - 2026-03-07
+
+### Changed
+- Increased default modal width from 520px to 680px for a more practical editing experience
+
 ## [1.24.0] - 2026-03-07
 
 ### Added
