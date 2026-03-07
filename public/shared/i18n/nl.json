@@ -100,6 +100,7 @@
     "form.start_date_placeholder": "2020-01 of jan 2020",
     "form.end_date": "Einddatum",
     "form.end_date_placeholder": "Leeg laten voor Heden",
+    "form.summary": "Samenvatting",
     "form.highlights": "Belangrijkste punten (één per regel)",
     "form.cert_name": "Certificeringsnaam",
     "form.provider": "Aanbieder / Uitgever",

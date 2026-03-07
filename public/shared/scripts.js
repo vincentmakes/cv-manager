@@ -1145,6 +1145,7 @@ async function loadExperiencesReadOnly() {
                 </span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
+            ${exp.summary ? `<div class="item-summary">${escapeHtml(exp.summary)}</div>` : ''}
             ${exp.highlights && exp.highlights.length ? `
                 <ul class="item-highlights" itemprop="description">
                     ${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
@@ -1380,7 +1381,7 @@ function renderExperienceCard(opts) {
         id = '', title = '', subtitle = '', startDate = '', endDate = '',
         location = '', logo = '', highlights = [], visible = true,
         showLogo = false, showDuration = false, schemaOrg = false,
-        actionsHtml = '', extraClasses = ''
+        actionsHtml = '', extraClasses = '', summary = ''
     } = opts;
 
     const hasLogo = showLogo && logo;
@@ -1414,6 +1415,10 @@ function renderExperienceCard(opts) {
         ? `<div class="item-location">${escapeHtml(location)}</div>`
         : '';
 
+    const summaryHtml = summary
+        ? `<div class="item-summary">${escapeHtml(summary)}</div>`
+        : '';
+
     let highlightsHtml = '';
     if (highlights.length) {
         const itemProp = schemaOrg ? ' itemprop="description"' : '';
@@ -1433,6 +1438,7 @@ function renderExperienceCard(opts) {
             <span class="item-date">${dateHtml}</span>
         </div>
         ${locationHtml}
+        ${summaryHtml}
         ${highlightsHtml}
     </article>`;
 }

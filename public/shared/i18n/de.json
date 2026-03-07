@@ -107,6 +107,7 @@
     "form.start_date_placeholder": "2020-01 oder Jan 2020",
     "form.end_date": "Enddatum",
     "form.end_date_placeholder": "Leer lassen für Aktuell",
+    "form.summary": "Zusammenfassung",
     "form.highlights": "Wichtige Erfolge (einer pro Zeile)",
     "form.cert_name": "Zertifizierungsname",
     "form.provider": "Anbieter / Aussteller",

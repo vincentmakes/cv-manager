@@ -100,6 +100,7 @@
     "form.start_date_placeholder": "2020-01 或 2020年1月",
     "form.end_date": "结束日期",
     "form.end_date_placeholder": "留空表示至今",
+    "form.summary": "概括",
     "form.highlights": "主要亮点（每行一条）",
     "form.cert_name": "认证名称",
     "form.provider": "颁发机构",

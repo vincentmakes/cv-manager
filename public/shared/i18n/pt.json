@@ -100,6 +100,7 @@
     "form.start_date_placeholder": "2020-01 ou Jan 2020",
     "form.end_date": "Data de Fim",
     "form.end_date_placeholder": "Deixe vazio para Presente",
+    "form.summary": "Resumo",
     "form.highlights": "Destaques Principais (um por linha)",
     "form.cert_name": "Nome da Certificação",
     "form.provider": "Fornecedor / Emissor",

@@ -732,6 +732,7 @@ async function loadExperiences() {
             location: exp.location,
             logo: exp.logo_filename,
             highlights: exp.highlights || [],
+            summary: exp.summary,
             visible: exp.visible,
             showLogo: showExperienceLogos,
             showDuration: showExperienceDuration,
@@ -1136,6 +1137,10 @@ function experienceForm(d) {
             <label class="form-label">${t('form.location')}</label>
             <input type="text" class="form-input" id="f-location" value="${escapeHtml(d.location || '')}">
         </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.summary')}</label>
+                <input type="text" class="form-input" id="f-summary" value="${escapeHtml(d.summary || '')}">
+            </div>
         <div class="form-group">
             <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
@@ -1352,6 +1357,7 @@ async function saveItem() {
                 location: val('f-location'),
                 country_code: val('f-country_code') || '',
                 highlights: val('f-highlights').split('\n').filter(h => h.trim()),
+                summary: val('f-summary'),
                 visible: true
             };
             {
@@ -3520,6 +3526,10 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('form.location')}</label>
                 <input type="text" class="form-input" id="ci-location" value="${escapeHtml(meta.location || '')}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">${t('form.summary')}</label>
+                <input type="text" class="form-input" id="ci-summary" value="${escapeHtml(meta.summary || '')}">
             </div>
             <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>

@@ -100,6 +100,7 @@
     "form.start_date_placeholder": "2020-01 o Gen 2020",
     "form.end_date": "Data di fine",
     "form.end_date_placeholder": "Lascia vuoto per Presente",
+    "form.summary": "Riepilogo",
     "form.highlights": "Punti chiave (uno per riga)",
     "form.cert_name": "Nome certificazione",
     "form.provider": "Ente / Emittente",

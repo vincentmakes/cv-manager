@@ -107,6 +107,7 @@
     "form.start_date_placeholder": "2020-01 ou janv. 2020",
     "form.end_date": "Date de fin",
     "form.end_date_placeholder": "Laisser vide pour En poste",
+    "form.summary": "Résumé",
     "form.highlights": "Points clés (un par ligne)",
     "form.cert_name": "Nom de la certification",
     "form.provider": "Organisme / Émetteur",
