@@ -458,6 +458,12 @@ body {
     margin-bottom: 8px;
 }
 
+.item-summary {
+    font-size: 13px;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
 .item-highlights {
     list-style: none;
     margin-top: 10px;

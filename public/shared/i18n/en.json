@@ -108,6 +108,7 @@
     "form.end_date": "End Date",
     "form.end_date_placeholder": "Leave empty for Present",
     "form.highlights": "Key Highlights (one per line)",
+    "form.summary": "Summary",
     "form.cert_name": "Certification Name",
     "form.provider": "Provider / Issuer",
     "form.issue_date": "Issue Date",

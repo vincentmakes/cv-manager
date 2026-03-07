@@ -101,6 +101,7 @@
     "form.end_date": "Data de Fim",
     "form.end_date_placeholder": "Deixe vazio para Presente",
     "form.highlights": "Destaques Principais (um por linha)",
+    "form.summary": "Resumo",
     "form.cert_name": "Nome da Certificação",
     "form.provider": "Fornecedor / Emissor",
     "form.issue_date": "Data de Emissão",

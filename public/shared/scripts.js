@@ -1304,6 +1304,7 @@ async function generateATSContent() {
                 ats.push(`Company: ${exp.company_name}`);
                 ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : t('present')}`);
                 if (exp.location) ats.push(`Location: ${exp.location}`);
+                if (exp.summary) ats.push(`Summary: ${exp.summary}`);
                 if (exp.highlights && exp.highlights.length > 0) {
                     ats.push('Responsibilities and Achievements:');
                     exp.highlights.forEach(h => ats.push(`- ${h}`));

@@ -101,6 +101,7 @@
     "form.end_date": "Data di fine",
     "form.end_date_placeholder": "Lascia vuoto per Presente",
     "form.highlights": "Punti chiave (uno per riga)",
+    "form.summary": "Riepilogo",
     "form.cert_name": "Nome certificazione",
     "form.provider": "Ente / Emittente",
     "form.issue_date": "Data di rilascio",

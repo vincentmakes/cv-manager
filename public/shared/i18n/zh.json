@@ -101,6 +101,7 @@
     "form.end_date": "结束日期",
     "form.end_date_placeholder": "留空表示至今",
     "form.highlights": "主要亮点（每行一条）",
+    "form.summary": "概括",
     "form.cert_name": "认证名称",
     "form.provider": "颁发机构",
     "form.issue_date": "颁发日期",
