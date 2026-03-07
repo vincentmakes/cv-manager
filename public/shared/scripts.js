@@ -1670,6 +1670,7 @@ function renderTimelineLayoutPublic(items) {
             endDate: meta.end_date,
             location: meta.location,
             logo: item.image,
+            summary: meta.summary,
             highlights: item.description ? item.description.split('\n').filter(h => h.trim()) : [],
             showLogo: showExperienceLogos && !!item.image,
             showDuration: showExperienceDuration
