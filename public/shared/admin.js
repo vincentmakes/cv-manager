@@ -731,6 +731,7 @@ async function loadExperiences() {
             endDate: exp.end_date,
             location: exp.location,
             logo: exp.logo_filename,
+            summary: exp.summary,
             highlights: exp.highlights || [],
             visible: exp.visible,
             showLogo: showExperienceLogos,
@@ -1137,6 +1138,10 @@ function experienceForm(d) {
             <input type="text" class="form-input" id="f-location" value="${escapeHtml(d.location || '')}">
         </div>
         <div class="form-group">
+            <label class="form-label">${t('form.summary')}</label>
+            <textarea class="form-textarea" id="f-summary" rows="3">${escapeHtml(d.summary || '')}</textarea>
+        </div>
+        <div class="form-group">
             <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
         </div>
@@ -1351,6 +1356,7 @@ async function saveItem() {
                 end_date: expEnd.value,
                 location: val('f-location'),
                 country_code: val('f-country_code') || '',
+                summary: val('f-summary'),
                 highlights: val('f-highlights').split('\n').filter(h => h.trim()),
                 visible: true
             };

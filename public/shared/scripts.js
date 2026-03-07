@@ -1378,7 +1378,7 @@ async function generateATSContent() {
 function renderExperienceCard(opts) {
     const {
         id = '', title = '', subtitle = '', startDate = '', endDate = '',
-        location = '', logo = '', highlights = [], visible = true,
+        location = '', logo = '', summary = '', highlights = [], visible = true,
         showLogo = false, showDuration = false, schemaOrg = false,
         actionsHtml = '', extraClasses = ''
     } = opts;
@@ -1414,6 +1414,10 @@ function renderExperienceCard(opts) {
         ? `<div class="item-location">${escapeHtml(location)}</div>`
         : '';
 
+    const summaryHtml = summary
+        ? `<div class="item-summary">${escapeHtml(summary)}</div>`
+        : '';
+
     let highlightsHtml = '';
     if (highlights.length) {
         const itemProp = schemaOrg ? ' itemprop="description"' : '';
@@ -1433,6 +1437,7 @@ function renderExperienceCard(opts) {
             <span class="item-date">${dateHtml}</span>
         </div>
         ${locationHtml}
+        ${summaryHtml}
         ${highlightsHtml}
     </article>`;
 }
