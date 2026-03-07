@@ -1920,6 +1920,9 @@ if (PUBLIC_ONLY) {
                         if (exp.location) {
                             addParagraph(exp.location, sz(8.5), { color: '#777' });
                         }
+                        if (exp.summary) {
+                            addParagraph(exp.summary, sz(8.5));
+                        }
                         if (exp.highlights && exp.highlights.length > 0) {
                             const bullets = exp.highlights.filter(h => h && h.trim());
                             if (bullets.length > 0) addBulletList(bullets, sz(9));
