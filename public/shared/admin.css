@@ -280,7 +280,7 @@
 .modal {
     background: var(--white);
     border-radius: var(--radius-lg);
-    max-width: 520px;
+    max-width: 900px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -1059,7 +1059,7 @@
    Settings Modal Styles
    =========================== */
 
-.settings-modal .modal { max-width: 640px; }
+.settings-modal .modal { max-width: 900px; }
 
 .settings-section-item {
     display: flex;
@@ -1242,7 +1242,7 @@
    Settings Modal Tabs & Custom Sections
    =========================== */
 
-.modal-lg { max-width: 680px; }
+.modal-lg { max-width: 900px; }
 
 .settings-tabs {
     display: flex;
@@ -1741,6 +1741,7 @@
 /* Phone: hamburger menu */
 @media (max-width: 768px) {
     .container { margin-top: 60px; }
+    .modal { max-width: 95vw; }
     .form-row { grid-template-columns: 1fr; }
 
     /* Mobile menu */
