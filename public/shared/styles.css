@@ -1307,6 +1307,7 @@ body.has-preview-banner .container {
     .item-subtitle { font-size: 12px; }
     .item-date { font-size: 10px; padding: 2px 6px; }
     .item-location { font-size: 11px; }
+    .item-summary { font-size: 11px; }
     .item-highlights li { font-size: 11px; margin-bottom: 2px; }
     
     /* Certs - force grid layout like desktop */
