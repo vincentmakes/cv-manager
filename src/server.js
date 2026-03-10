@@ -1889,33 +1889,34 @@ if (PUBLIC_ONLY) {
                     if (items.length === 0) return;
                     addSectionHeading(getSectionName('experience'));
                     items.forEach((exp, idx) => {
-                        if (idx > 0) advanceY(4);
+                        if (idx > 0) {
+                            // Clear separator line between entries for ATS parsers
+                            ensureSpace(12);
+                            advanceY(3);
+                            doc.moveTo(margin, y).lineTo(margin + contentW, y).lineWidth(0.25).strokeColor('#e0e0e0').stroke();
+                            advanceY(6);
+                        }
                         const title = exp.job_title || '';
-                        const company = exp.company_name ? `  at  ${exp.company_name}` : '';
                         const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : 'Present'}`;
 
-                        // Title + date on same line
+                        // Job title on its own line as H3
                         ensureSpace(sz(10) * 1.3 + 4);
-                        const titleStartY = y;
                         const h3 = doc.struct('H3');
                         docStruct.add(h3);
                         h3.add(doc.struct('Span', {}, () => {
                             doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
-                            doc.text(title + company, margin, y, { width: contentW - 120, continued: false });
+                            doc.text(title, margin, y, { width: contentW, continued: false });
                         }));
                         h3.end();
-                        const titleH = doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(title + company, { width: contentW - 120 });
-                        advanceY(titleH + 2);
+                        advanceY(doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(title, { width: contentW }) + 2);
 
-                        // Date right-aligned on same line as title
-                        const dateW = doc.fontSize(sz(9)).font('Helvetica').widthOfString(dateStr);
-                        const datePara = doc.struct('P');
-                        docStruct.add(datePara);
-                        datePara.add(doc.struct('Span', {}, () => {
-                            doc.fontSize(sz(9)).font('Helvetica').fillColor('#666');
-                            doc.text(dateStr, pageW - margin - dateW, titleStartY, { width: dateW + 2 });
-                        }));
-                        datePara.end();
+                        // Company name on its own line
+                        if (exp.company_name) {
+                            addParagraph(exp.company_name, sz(9.5), { color: '#333', font: 'Helvetica-Bold' });
+                        }
+
+                        // Date on its own line
+                        addParagraph(dateStr, sz(9), { color: '#666' });
 
                         if (exp.location) {
                             addParagraph(exp.location, sz(8.5), { color: '#777' });
@@ -1935,31 +1936,33 @@ if (PUBLIC_ONLY) {
                     if (items.length === 0) return;
                     addSectionHeading(getSectionName('education'));
                     items.forEach((edu, idx) => {
-                        if (idx > 0) advanceY(3);
+                        if (idx > 0) {
+                            ensureSpace(12);
+                            advanceY(3);
+                            doc.moveTo(margin, y).lineTo(margin + contentW, y).lineWidth(0.25).strokeColor('#e0e0e0').stroke();
+                            advanceY(6);
+                        }
                         const title = edu.degree_title || '';
-                        const inst = edu.institution_name ? `  at  ${edu.institution_name}` : '';
                         const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : 'Present'}`;
 
+                        // Degree on its own line as H3
                         ensureSpace(sz(10) * 1.3 + 4);
-                        const eduTitleStartY = y;
                         const h3 = doc.struct('H3');
                         docStruct.add(h3);
                         h3.add(doc.struct('Span', {}, () => {
                             doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
-                            doc.text(title + inst, margin, y, { width: contentW - 120, continued: false });
+                            doc.text(title, margin, y, { width: contentW, continued: false });
                         }));
                         h3.end();
-                        const eduTitleH = doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(title + inst, { width: contentW - 120 });
-                        advanceY(eduTitleH + 2);
+                        advanceY(doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(title, { width: contentW }) + 2);
 
-                        const dateW = doc.fontSize(sz(9)).font('Helvetica').widthOfString(dateStr);
-                        const datePara = doc.struct('P');
-                        docStruct.add(datePara);
-                        datePara.add(doc.struct('Span', {}, () => {
-                            doc.fontSize(sz(9)).font('Helvetica').fillColor('#666');
-                            doc.text(dateStr, pageW - margin - dateW, eduTitleStartY, { width: dateW + 2 });
-                        }));
-                        datePara.end();
+                        // Institution on its own line
+                        if (edu.institution_name) {
+                            addParagraph(edu.institution_name, sz(9.5), { color: '#333', font: 'Helvetica-Bold' });
+                        }
+
+                        // Date on its own line
+                        addParagraph(dateStr, sz(9), { color: '#666' });
 
                         if (edu.description) addParagraph(edu.description, sz(9), { color: '#555' });
                     });
@@ -2005,7 +2008,12 @@ if (PUBLIC_ONLY) {
                     if (items.length === 0) return;
                     addSectionHeading(getSectionName('projects'));
                     items.forEach((proj, idx) => {
-                        if (idx > 0) advanceY(3);
+                        if (idx > 0) {
+                            ensureSpace(12);
+                            advanceY(3);
+                            doc.moveTo(margin, y).lineTo(margin + contentW, y).lineWidth(0.25).strokeColor('#e0e0e0').stroke();
+                            advanceY(6);
+                        }
                         const titleText = proj.title || '';
                         ensureSpace(sz(10) * 1.3 + 4);
                         const h3 = doc.struct('H3');

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.24.2] - 2026-03-10
+
+### Fixed
+- Improved ATS PDF export to prevent job entry merging by Workday and similar ATS parsers — job title, company name, and dates are now on separate lines instead of combined, and thin separator lines are added between entries for clear boundary detection
+
 ## [1.24.1] - 2026-03-07
 
 ### Changed
