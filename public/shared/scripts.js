@@ -1145,7 +1145,6 @@ async function loadExperiencesReadOnly() {
                 </span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
-            ${exp.summary ? `<p class="item-summary">${escapeHtml(exp.summary)}</p>` : ''}
             ${exp.highlights && exp.highlights.length ? `
                 <ul class="item-highlights" itemprop="description">
                     ${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}

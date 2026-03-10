@@ -8,7 +8,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Fixed
 - Improved ATS PDF export to prevent job entry merging by Workday and similar ATS parsers — job title, company name, and dates are now on separate lines instead of combined, and thin separator lines are added between entries for clear boundary detection
-- Display experience summary field on the public read-only CV page (was previously only shown in admin view and hidden ATS text)
 
 ## [1.24.1] - 2026-03-07
 
