@@ -1160,7 +1160,7 @@ async function loadCertificationsReadOnly() {
     const container = document.getElementById('certGrid');
     
     container.innerHTML = certs.map(cert => {
-        const hasLogo = showExperienceLogos && cert.logo_filename;
+        const hasLogo = !!cert.logo_filename;
         return `
         <article class="cert-card${hasLogo ? ' has-logo' : ''}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             ${hasLogo ? `<img src="/uploads/${encodeURIComponent(cert.logo_filename)}" class="cert-logo" alt="${escapeHtml(cert.provider || '')}" onerror="this.style.display='none'">` : ''}
