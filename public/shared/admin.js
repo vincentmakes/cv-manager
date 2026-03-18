@@ -749,7 +749,7 @@ async function loadCertifications() {
     const container = document.getElementById('certGrid');
     
     container.innerHTML = certs.map(cert => {
-        const hasLogo = showExperienceLogos && cert.logo_filename;
+        const hasLogo = !!cert.logo_filename;
         return `
         <article class="cert-card ${cert.visible ? '' : 'hidden-print'}${hasLogo ? ' has-logo' : ''}" data-id="${cert.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>

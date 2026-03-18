@@ -4,14 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.25.1] - 2026-03-18
+
+### Fixed
+- Certification and education logos now always display when uploaded, independent of the "Experience: Show Logos" setting
+- Reverted "Experience: Show Logos" setting description to its original experience-only scope
+
 ## [1.25.0] - 2026-03-18
 
 ### Added
 - Logo support for certifications — upload, reuse, and propagate logos by provider, using the same modal and features as work experience and education
 - Certification card layout updated: date now displays below the title for a cleaner compact grid layout
-
-### Changed
-- "Show Logos" setting now controls logos across experience, education, and certification sections
 
 ## [1.24.2] - 2026-03-10
 
