@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.25.0] - 2026-03-18
+
+### Added
+- Logo support for certifications — upload, reuse, and propagate logos by provider, using the same modal and features as work experience and education
+- Certification card layout updated: date now displays below the title for a cleaner compact grid layout
+
+### Changed
+- "Show Logos" setting now controls logos across experience, education, and certification sections
+
 ## [1.24.2] - 2026-03-10
 
 ### Fixed

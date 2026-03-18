@@ -506,12 +506,24 @@ body {
     transform: translateX(3px);
 }
 
-.cert-header {
+.cert-card.has-logo {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 3px;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.cert-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.cert-content {
+    flex: 1;
+    min-width: 0;
 }
 
 .cert-name {
@@ -524,6 +536,8 @@ body {
     font-size: 11px;
     color: var(--gray-500);
     white-space: nowrap;
+    display: block;
+    margin-bottom: 2px;
 }
 
 .cert-provider {
@@ -1317,6 +1331,8 @@ body.has-preview-banner .container {
         gap: 6px; 
     }
     .cert-card { padding: 8px 10px; }
+    .cert-card.has-logo { gap: 6px; }
+    .cert-logo { width: 24px; height: 24px; }
     .cert-name { font-size: 11px; }
     .cert-date { font-size: 9px; }
     .cert-provider { font-size: 10px; }
@@ -1379,7 +1395,9 @@ body.has-preview-banner .container {
     .cert-grid, .skills-grid, .projects-grid { grid-template-columns: 1fr; }
     .custom-picture-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .experience-logo { display: none; }
+    .cert-logo { display: none; }
     .item-card.has-logo { padding-left: 16px; }
+    .cert-card.has-logo { display: block; }
 }
 
 /* Mobile print - show timeline again (only if not hidden by user choice) */

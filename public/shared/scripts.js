@@ -1159,15 +1159,18 @@ async function loadCertificationsReadOnly() {
     const certs = await api('/api/certifications');
     const container = document.getElementById('certGrid');
     
-    container.innerHTML = certs.map(cert => `
-        <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
-            <div class="cert-header">
+    container.innerHTML = certs.map(cert => {
+        const hasLogo = showExperienceLogos && cert.logo_filename;
+        return `
+        <article class="cert-card${hasLogo ? ' has-logo' : ''}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+            ${hasLogo ? `<img src="/uploads/${encodeURIComponent(cert.logo_filename)}" class="cert-logo" alt="${escapeHtml(cert.provider || '')}" onerror="this.style.display='none'">` : ''}
+            <div class="cert-content">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
                 <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
+                <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
             </div>
-            <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
-        </article>
-    `).join('');
+        </article>`;
+    }).join('');
 }
 
 // Load Education (read-only version)

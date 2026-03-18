@@ -513,6 +513,24 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (education logo_propagate):', err.message); }
 
+    // Step 2m: Migration - add logo_filename column to certifications if missing
+    try {
+        const certLogoInfo = db.prepare("PRAGMA table_info(certifications)").all();
+        if (!certLogoInfo.some(col => col.name === 'logo_filename')) {
+            console.log('Migrating certifications table: adding logo_filename column');
+            db.exec('ALTER TABLE certifications ADD COLUMN logo_filename TEXT DEFAULT NULL');
+        }
+    } catch (err) { console.log('Migration check (certifications logo_filename):', err.message); }
+
+    // Step 2n: Migration - add logo_propagate column to certifications if missing
+    try {
+        const certPropInfo = db.prepare("PRAGMA table_info(certifications)").all();
+        if (!certPropInfo.some(col => col.name === 'logo_propagate')) {
+            console.log('Migrating certifications table: adding logo_propagate column');
+            db.exec('ALTER TABLE certifications ADD COLUMN logo_propagate INTEGER DEFAULT 0');
+        }
+    } catch (err) { console.log('Migration check (certifications logo_propagate):', err.message); }
+
     // Step 2h: Migration - normalize legacy date formats (e.g., "Jan 2020" → "2020-01")
     // Runs once; creates a flag in settings to avoid re-running on every startup
     try {
@@ -914,7 +932,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT id, job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
-    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
+    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
@@ -941,7 +959,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/cv', (req, res) => {
         const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get();
         const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all();
-        const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
+        const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
         const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
         const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all();
         const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
@@ -1011,7 +1029,9 @@ if (PUBLIC_ONLY) {
             .forEach(r => { if (r.logo_filename) { inUseSet.add(r.logo_filename); if (r.company_name) companyMap[r.logo_filename] = r.company_name; } });
         db.prepare('SELECT logo_filename, institution_name FROM education WHERE logo_filename IS NOT NULL').all()
             .forEach(r => { if (r.logo_filename) { inUseSet.add(r.logo_filename); if (r.institution_name && !companyMap[r.logo_filename]) companyMap[r.logo_filename] = r.institution_name; } });
-        // Also check saved datasets for both usage and company/institution names
+        db.prepare('SELECT logo_filename, provider FROM certifications WHERE logo_filename IS NOT NULL').all()
+            .forEach(r => { if (r.logo_filename) { inUseSet.add(r.logo_filename); if (r.provider && !companyMap[r.logo_filename]) companyMap[r.logo_filename] = r.provider; } });
+        // Also check saved datasets for both usage and company/institution/provider names
         try {
             const datasets = db.prepare('SELECT data FROM saved_datasets').all();
             for (const ds of datasets) {
@@ -1037,6 +1057,16 @@ if (PUBLIC_ONLY) {
                             }
                         }
                     }
+                    if (data.certifications) {
+                        for (const cert of data.certifications) {
+                            if (cert.logo_filename) {
+                                inUseSet.add(cert.logo_filename);
+                                if (cert.provider && !companyMap[cert.logo_filename]) {
+                                    companyMap[cert.logo_filename] = cert.provider;
+                                }
+                            }
+                        }
+                    }
                 } catch (e) {}
             }
         } catch (e) {}
@@ -1049,11 +1079,13 @@ if (PUBLIC_ONLY) {
         if (!filename || !filename.startsWith('logo_')) return res.status(400).json({ error: 'Invalid filename' });
         const filePath = path.join(uploadsPath, filename);
         if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
-        // Check if in use by current experiences/education or any saved dataset
+        // Check if in use by current experiences/education/certifications or any saved dataset
         const expRef = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(filename).cnt;
         if (expRef > 0) return res.status(409).json({ error: 'Logo is in use by current experiences' });
         const eduRef = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(filename).cnt;
         if (eduRef > 0) return res.status(409).json({ error: 'Logo is in use by current education entries' });
+        const certRef = db.prepare('SELECT COUNT(*) as cnt FROM certifications WHERE logo_filename = ?').get(filename).cnt;
+        if (certRef > 0) return res.status(409).json({ error: 'Logo is in use by current certifications' });
         try {
             const datasets = db.prepare('SELECT data FROM saved_datasets').all();
             for (const ds of datasets) {
@@ -1063,6 +1095,9 @@ if (PUBLIC_ONLY) {
                         return res.status(409).json({ error: 'Logo is in use by a saved dataset' });
                     }
                     if (data.education && data.education.some(e => e.logo_filename === filename)) {
+                        return res.status(409).json({ error: 'Logo is in use by a saved dataset' });
+                    }
+                    if (data.certifications && data.certifications.some(c => c.logo_filename === filename)) {
                         return res.status(409).json({ error: 'Logo is in use by a saved dataset' });
                     }
                 } catch (e) {}
@@ -1256,7 +1291,130 @@ if (PUBLIC_ONLY) {
     app.get('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT * FROM certifications WHERE id = ?').get(req.params.id); if (!cert) return res.status(404).json({ error: 'Not found' }); res.json({ ...cert, visible: !!cert.visible }); });
     app.post('/api/certifications', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM certifications').get(); const result = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(name, provider, issue_date, expiry_date, credential_id, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
     app.put('/api/certifications/:id', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM certifications WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE certifications SET name = ?, provider = ?, issue_date = ?, expiry_date = ?, credential_id = ?, visible = ?, sort_order = ? WHERE id = ?`).run(name, provider, issue_date, expiry_date, credential_id, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
-    app.delete('/api/certifications/:id', (req, res) => { db.prepare('DELETE FROM certifications WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+    app.delete('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id); if (cert && cert.logo_filename) { const refCountExp = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(cert.logo_filename).cnt; const refCountEdu = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(cert.logo_filename).cnt; const refCountCert = db.prepare('SELECT COUNT(*) as cnt FROM certifications WHERE logo_filename = ?').get(cert.logo_filename).cnt; if (refCountExp + refCountEdu + refCountCert <= 1) { const logoPath = path.join(uploadsPath, cert.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM certifications WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+
+    // Certification logo upload
+    const certLogoStorage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => { const ext = path.extname(file.originalname).toLowerCase() || '.jpg'; cb(null, `logo_cert_${req.params.id}_${Date.now()}${ext}`); } });
+    const certLogoUpload = multer({ storage: certLogoStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
+    app.post('/api/certifications/:id/logo', certLogoUpload.single('logo'), (req, res) => {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id);
+        if (!cert) return res.status(404).json({ error: 'Certification not found' });
+        db.prepare('UPDATE certifications SET logo_filename = ? WHERE id = ?').run(req.file.filename, req.params.id);
+        res.json({ success: true, filename: req.file.filename });
+    });
+    app.delete('/api/certifications/:id/logo', (req, res) => {
+        const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id);
+        if (!cert) return res.status(404).json({ error: 'Certification not found' });
+        db.prepare('UPDATE certifications SET logo_filename = NULL WHERE id = ?').run(req.params.id);
+        res.json({ success: true });
+    });
+    app.put('/api/certifications/:id/logo', express.json(), (req, res) => {
+        const { filename } = req.body;
+        if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id);
+        if (!cert) return res.status(404).json({ error: 'Certification not found' });
+        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
+        db.prepare('UPDATE certifications SET logo_filename = ? WHERE id = ?').run(filename, req.params.id);
+        res.json({ success: true, filename });
+    });
+
+    // Certification logo propagation endpoints
+    app.post('/api/cert-logos/apply-global', express.json(), (req, res) => {
+        const { provider, logo_filename } = req.body;
+        if (!provider || !logo_filename) return res.status(400).json({ error: 'provider and logo_filename are required' });
+        if (!fs.existsSync(path.join(uploadsPath, logo_filename))) return res.status(404).json({ error: 'Logo file not found' });
+        let updatedCurrent = 0; let updatedDatasets = 0;
+        const result = db.prepare('UPDATE certifications SET logo_filename = ?, logo_propagate = 1 WHERE provider = ?').run(logo_filename, provider);
+        updatedCurrent = result.changes;
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.certifications) {
+                        let changed = false;
+                        for (const cert of data.certifications) {
+                            if (cert.provider === provider) {
+                                if (cert.logo_filename !== logo_filename) { cert.logo_filename = logo_filename; changed = true; updatedDatasets++; }
+                                if (!cert.logo_propagate) { cert.logo_propagate = 1; changed = true; }
+                            }
+                        }
+                        if (changed) db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ success: true, updated_current: updatedCurrent, updated_datasets: updatedDatasets });
+    });
+    app.post('/api/cert-logos/remove-global', express.json(), (req, res) => {
+        const { provider } = req.body;
+        if (!provider) return res.status(400).json({ error: 'provider is required' });
+        let updatedCurrent = 0; let updatedDatasets = 0;
+        const result = db.prepare('UPDATE certifications SET logo_filename = NULL WHERE provider = ?').run(provider);
+        updatedCurrent = result.changes;
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.certifications) {
+                        let changed = false;
+                        for (const cert of data.certifications) {
+                            if (cert.provider === provider && cert.logo_filename) { cert.logo_filename = null; changed = true; updatedDatasets++; }
+                        }
+                        if (changed) db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ success: true, updated_current: updatedCurrent, updated_datasets: updatedDatasets });
+    });
+    app.post('/api/cert-logos/set-propagate', express.json(), (req, res) => {
+        const { provider, propagate } = req.body;
+        if (!provider) return res.status(400).json({ error: 'provider is required' });
+        const flag = propagate ? 1 : 0;
+        const result = db.prepare('UPDATE certifications SET logo_propagate = ? WHERE provider = ?').run(flag, provider);
+        try {
+            const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.certifications) {
+                        let changed = false;
+                        for (const cert of data.certifications) {
+                            if (cert.provider === provider && (cert.logo_propagate ? 1 : 0) !== flag) { cert.logo_propagate = flag; changed = true; }
+                        }
+                        if (changed) db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ success: true, updated: result.changes });
+    });
+    app.get('/api/logos/by-provider', (req, res) => {
+        const name = (req.query.name || '').trim();
+        if (!name) return res.json({ logo_filename: null });
+        const cert = db.prepare('SELECT logo_filename, logo_propagate FROM certifications WHERE provider = ? AND logo_filename IS NOT NULL LIMIT 1').get(name);
+        if (cert && cert.logo_filename && fs.existsSync(path.join(uploadsPath, cert.logo_filename))) {
+            return res.json({ logo_filename: cert.logo_filename, logo_propagate: !!cert.logo_propagate });
+        }
+        try {
+            const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.certifications) {
+                        const match = data.certifications.find(c => c.provider === name && c.logo_filename);
+                        if (match && fs.existsSync(path.join(uploadsPath, match.logo_filename))) {
+                            return res.json({ logo_filename: match.logo_filename, logo_propagate: !!match.logo_propagate });
+                        }
+                    }
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json({ logo_filename: null });
+    });
 
     app.get('/api/education', (req, res) => { res.json(db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: !!e.visible }))); });
     app.get('/api/education/:id', (req, res) => { const edu = db.prepare('SELECT * FROM education WHERE id = ?').get(req.params.id); if (!edu) return res.status(404).json({ error: 'Not found' }); res.json({ ...edu, visible: !!edu.visible }); });
@@ -2158,7 +2316,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { res.json(db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
-    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
+    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
@@ -2182,7 +2340,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
