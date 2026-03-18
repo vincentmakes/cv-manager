@@ -748,8 +748,10 @@ async function loadCertifications() {
     const certs = await api('/api/certifications');
     const container = document.getElementById('certGrid');
     
-    container.innerHTML = certs.map(cert => `
-        <article class="cert-card ${cert.visible ? '' : 'hidden-print'}" data-id="${cert.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+    container.innerHTML = certs.map(cert => {
+        const hasLogo = showExperienceLogos && cert.logo_filename;
+        return `
+        <article class="cert-card ${cert.visible ? '' : 'hidden-print'}${hasLogo ? ' has-logo' : ''}" data-id="${cert.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
             <div class="item-actions">
                 <button class="item-btn" onclick="toggleVisibility('certifications', ${cert.id}, ${!cert.visible})" title="Toggle Visibility">
@@ -762,13 +764,14 @@ async function loadCertifications() {
                     ${deleteIcon()}
                 </button>
             </div>
-            <div class="cert-header">
+            ${hasLogo ? `<img src="/uploads/${encodeURIComponent(cert.logo_filename)}" class="cert-logo" alt="${escapeHtml(cert.provider || '')}" onerror="this.style.display='none'">` : ''}
+            <div class="cert-content">
                 <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
                 <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
+                <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
             </div>
-            <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
-        </article>
-    `).join('');
+        </article>`;
+    }).join('');
     
     // Add drag-and-drop listeners
     initDragAndDrop(container, 'certifications');
@@ -945,6 +948,10 @@ async function openModal(type, id = null) {
             break;
         case 'certification':
             title = id ? t('modal.edit_certification') : t('modal.add_certification');
+            pendingLogo = null;
+            currentModal.existingLogo = data.logo_filename || null;
+            currentModal.existingPropagate = !!data.logo_propagate;
+            currentModal.logoEntityType = 'certifications';
             form = certificationForm(data);
             break;
         case 'education':
@@ -968,7 +975,7 @@ async function openModal(type, id = null) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').innerHTML = form;
     document.getElementById('modalOverlay').classList.add('active');
-    if (type === 'experience' || type === 'education') {
+    if (type === 'experience' || type === 'education' || type === 'certification') {
         updateLogoApplyGlobal();
         initLogoPropagate();
     }
@@ -1151,13 +1158,23 @@ function experienceForm(d) {
 
 function certificationForm(d) {
     return `
+        ${logoUploadHtml(d.logo_filename, 'form.certification_logo')}
+        <div class="form-group" style="margin-top: -8px;">
+            <div class="logo-propagate-toggle" id="logoApplyGlobalLabel" style="display:none;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-logo-apply-global" onchange="onLogoPropagateToggle(this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="logo-propagate-text" id="logoApplyGlobalText"></span>
+            </div>
+        </div>
         <div class="form-group">
             <label class="form-label">${t('form.cert_name')}</label>
             <input type="text" class="form-input" id="f-name" value="${escapeHtml(d.name || '')}">
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.provider')}</label>
-            <input type="text" class="form-input" id="f-provider" value="${escapeHtml(d.provider || '')}">
+            <input type="text" class="form-input" id="f-provider" value="${escapeHtml(d.provider || '')}" oninput="onProviderNameInput()">
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -1408,10 +1425,28 @@ async function saveItem() {
                 credential_id: val('f-credential_id'),
                 visible: true
             };
-            if (id) {
-                await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
-            } else {
-                await api(`/api/${endpoint}`, { method: 'POST', body: data });
+            {
+                const propagateOn = checked('f-logo-apply-global');
+                const wasPropagate = currentModal.existingPropagate;
+                let logoFilename = null;
+                let logoRemoved = (pendingLogo === 'remove');
+                if (id) {
+                    await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
+                    logoFilename = await uploadLogo(id);
+                } else {
+                    const result = await api(`/api/${endpoint}`, { method: 'POST', body: data });
+                    if (result.id) logoFilename = await uploadLogo(result.id);
+                }
+                if (!logoFilename && !logoRemoved) logoFilename = currentModal.existingLogo;
+                if (propagateOn && data.provider) {
+                    if (logoRemoved) {
+                        await api('/api/cert-logos/remove-global', { method: 'POST', body: { provider: data.provider } });
+                    } else if (logoFilename) {
+                        await api('/api/cert-logos/apply-global', { method: 'POST', body: { provider: data.provider, logo_filename: logoFilename } });
+                    }
+                } else if (!propagateOn && wasPropagate && data.provider) {
+                    await api('/api/cert-logos/set-propagate', { method: 'POST', body: { provider: data.provider, propagate: false } });
+                }
             }
             await loadCertifications();
             break;
@@ -1725,14 +1760,15 @@ function updateLogoApplyGlobal() {
     const label = document.getElementById('logoApplyGlobalLabel');
     if (!label) return;
     const isEducation = currentModal.logoEntityType === 'education';
-    const nameField = isEducation ? 'f-institution_name' : 'f-company_name';
+    const isCertification = currentModal.logoEntityType === 'certifications';
+    const nameField = isCertification ? 'f-provider' : isEducation ? 'f-institution_name' : 'f-company_name';
     const entityName = (document.getElementById(nameField)?.value || '').trim();
     const hasLogo = pendingLogo === 'remove' ? false : (pendingLogo || document.getElementById('logoPreviewImg'));
     const cb = document.getElementById('f-logo-apply-global');
     if (entityName && (hasLogo || (cb && cb.checked))) {
         label.style.display = 'flex';
-        const textKey = isEducation ? 'form.apply_logo_institution' : 'form.apply_logo_global';
-        const params = isEducation ? { institution: entityName } : { company: entityName };
+        const textKey = isCertification ? 'form.apply_logo_provider' : isEducation ? 'form.apply_logo_institution' : 'form.apply_logo_global';
+        const params = isCertification ? { provider: entityName } : isEducation ? { institution: entityName } : { company: entityName };
         document.getElementById('logoApplyGlobalText').textContent = t(textKey, params);
     } else {
         label.style.display = 'none';
@@ -1807,6 +1843,31 @@ function onInstitutionNameInput() {
     }, 400);
 }
 
+let _providerLogoLookupTimer = null;
+function onProviderNameInput() {
+    updateLogoApplyGlobal();
+    clearTimeout(_providerLogoLookupTimer);
+    if (pendingLogo || currentModal.existingLogo || document.getElementById('logoPreviewImg')) return;
+    const provider = (document.getElementById('f-provider')?.value || '').trim();
+    if (!provider) return;
+    _providerLogoLookupTimer = setTimeout(async () => {
+        if (pendingLogo || document.getElementById('logoPreviewImg')) return;
+        try {
+            const result = await api(`/api/logos/by-provider?name=${encodeURIComponent(provider)}`);
+            if (result.logo_filename) {
+                pendingLogo = { reuse: result.logo_filename };
+                const preview = document.getElementById('logoUploadPreview');
+                if (preview) preview.innerHTML = `<img src="/uploads/${encodeURIComponent(result.logo_filename)}?${Date.now()}" alt="${escapeHtml(provider)}" id="logoPreviewImg">`;
+                if (result.logo_propagate) {
+                    const cb = document.getElementById('f-logo-apply-global');
+                    if (cb) cb.checked = true;
+                }
+                updateLogoApplyGlobal();
+            }
+        } catch (e) {}
+    }, 400);
+}
+
 async function showLogoPicker() {
     const grid = document.getElementById('logoPickerGrid');
     if (!grid) return;
@@ -1860,7 +1921,7 @@ function selectExistingLogo(filename) {
 
 async function uploadLogo(entityId) {
     const entityType = currentModal.logoEntityType || 'experiences';
-    const apiBase = entityType === 'education' ? `/api/education/${entityId}/logo` : `/api/experiences/${entityId}/logo`;
+    const apiBase = entityType === 'education' ? `/api/education/${entityId}/logo` : entityType === 'certifications' ? `/api/certifications/${entityId}/logo` : `/api/experiences/${entityId}/logo`;
     if (pendingLogo === 'remove') {
         try { await fetch(apiBase, { method: 'DELETE' }); } catch (err) {}
         pendingLogo = null;
