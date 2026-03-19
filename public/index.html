@@ -439,6 +439,19 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
+
+                    <!-- Static Site Export -->
+                    <div class="settings-divider" style="margin: 16px 0; border-top: 1px solid var(--border-color);"></div>
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title" data-i18n="settings.print.static_site">Static Site Export</div>
+                            <div class="settings-option-desc" data-i18n="settings.print.static_site_desc">Download your CV as a static site (HTML, CSS, JS) for GitHub Pages, Cloudflare Pages, or any static hosting</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="exportStaticSite()" id="staticSiteExportBtn">
+                            <span class="material-symbols-outlined" style="font-size:16px">download</span>
+                            <span data-i18n="settings.print.static_site_btn">Download ZIP</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Advanced Tab -->

@@ -288,6 +288,7 @@ nav:
       - Datasets: guide/datasets.md
       - Print & PDF: guide/print-pdf.md
       - Import & Export: guide/import-export.md
+      - Static Site Export: guide/static-site.md
   - Advanced:
       - advanced/index.md
       - Settings: advanced/settings.md

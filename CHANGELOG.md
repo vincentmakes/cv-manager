@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.0] - 2026-03-19
+
+### Added
+- Static site export: download your CV as a standalone static website (HTML, CSS, JS, JSON) that can be deployed to GitHub Pages, Cloudflare Pages, Netlify, or any static hosting provider — no server required
+- New "Static Site Export" option in Settings → Print & Export with one-click ZIP download
+- Documentation with step-by-step deployment guides for GitHub Pages, Cloudflare Pages, and Netlify
+
 ## [1.25.1] - 2026-03-18
 
 ### Fixed

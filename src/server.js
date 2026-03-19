@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
+const archiver = require('archiver');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -2245,6 +2246,162 @@ if (PUBLIC_ONLY) {
         } catch (err) {
             console.error('ATS PDF export error:', err);
             res.status(500).json({ error: 'Failed to generate PDF' });
+        }
+    });
+
+    // Static site export (admin only) - generates a ZIP with HTML, CSS, JS, JSON data
+    app.get('/api/export/static-site', (req, res) => {
+        try {
+            const cvData = gatherCvData();
+
+            // Filter sensitive data from profile
+            const profile = { ...cvData.profile };
+            delete profile.email;
+            delete profile.phone;
+            delete profile.id;
+            delete profile.updated_at;
+
+            // Filter sensitive data from certifications
+            const certifications = cvData.certifications.map(c => {
+                const clean = { ...c };
+                delete clean.credential_id;
+                return clean;
+            });
+
+            // Gather all settings
+            const settingsRows = db.prepare('SELECT * FROM settings').all();
+            const settings = {};
+            settingsRows.forEach(s => { settings[s.key] = s.value; });
+
+            // Gather timeline data
+            const timelineExperiences = db.prepare('SELECT id, company_name, job_title, start_date, end_date, country_code, logo_filename FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), start_date: exp.start_date, end_date: exp.end_date, countryCode: exp.country_code || '', visible: true, logo: exp.logo_filename || null }));
+            const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all().filter(s => { const meta = s.metadata ? JSON.parse(s.metadata) : {}; return meta.show_on_timeline; });
+            const timelineCustomItems = [];
+            for (const section of timelineSections) {
+                const items = db.prepare(`SELECT * FROM custom_section_items WHERE section_id = ? AND visible = 1 ORDER BY sort_order ASC`).all(section.id);
+                for (const item of items) {
+                    const meta = item.metadata ? JSON.parse(item.metadata) : {};
+                    timelineCustomItems.push({ id: `cs_${item.id}`, company: item.subtitle || '', role: item.title || '', period: formatPeriod(meta.start_date, meta.end_date), start_date: meta.start_date || '', end_date: meta.end_date || '', countryCode: meta.country_code || '', visible: true, logo: item.image || null });
+                }
+            }
+
+            const staticData = {
+                profile,
+                experiences: cvData.experiences,
+                certifications,
+                education: cvData.education,
+                skills: cvData.skills,
+                projects: cvData.projects,
+                sectionVisibility: cvData.sectionVisibility,
+                sectionOrder: cvData.sectionOrder,
+                customSections: cvData.customSections,
+                settings,
+                layoutTypes: LAYOUT_TYPES,
+                socialPlatforms: SOCIAL_PLATFORMS,
+                timeline: [...timelineExperiences, ...timelineCustomItems]
+            };
+
+            // Prepare HTML
+            let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+
+            // Inject meta tags
+            const name = profile.name || 'CV';
+            const bio = profile.bio || 'Professional CV';
+            const description = bio.substring(0, 160).replace(/\n/g, ' ');
+            html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
+            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
+
+            // Inject OG tags
+            const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
+            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
+
+            // Inject robots meta
+            const robotsValue = settings.robotsMeta || 'index, follow';
+            html = html.replace(/<meta name="robots"[^>]*>/, `<meta name="robots" id="metaRobots" content="${robotsValue}">`);
+
+            // Inject tracking code if configured
+            const trackingCode = getTrackingCode();
+            if (trackingCode) {
+                html = html.replace('<head>', `<head>\n${trackingCode}`);
+            }
+
+            // Inject static site flag
+            html = html.replace('</head>', `<script>window.STATIC_SITE = true;</script>\n</head>`);
+
+            // Convert absolute paths to relative
+            html = html.replace(/href="\/shared\//g, 'href="./shared/');
+            html = html.replace(/src="\/shared\//g, 'src="./shared/');
+            html = html.replace(/href="\/favicon/g, 'href="./favicon');
+            html = html.replace(/href="\/apple-touch-icon/g, 'href="./apple-touch-icon');
+
+            // Fix image paths in the inline JS to use relative paths
+            html = html.replace(/src="\/uploads\//g, 'src="./uploads/');
+            html = html.replace(/fetch\('\/shared\//g, "fetch('./shared/");
+
+            // Create ZIP
+            const archive = archiver('zip', { zlib: { level: 9 } });
+
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', `attachment; filename="${(name).replace(/[^a-zA-Z0-9]/g, '_')}_static_site.zip"`);
+
+            archive.pipe(res);
+
+            // Add HTML
+            archive.append(html, { name: 'index.html' });
+
+            // Add data JSON
+            archive.append(JSON.stringify(staticData, null, 2), { name: 'data.json' });
+
+            // Add CSS (with relative path fix for background images)
+            const cssPath = path.join(__dirname, '../public/shared/styles.css');
+            if (fs.existsSync(cssPath)) {
+                let css = fs.readFileSync(cssPath, 'utf8');
+                css = css.replace(/url\('\/shared\//g, "url('./");
+                archive.append(css, { name: 'shared/styles.css' });
+            }
+
+            // Add JS
+            const jsPath = path.join(__dirname, '../public/shared/scripts.js');
+            if (fs.existsSync(jsPath)) archive.file(jsPath, { name: 'shared/scripts.js' });
+
+            // Add i18n module and translation files
+            const i18nJsPath = path.join(__dirname, '../public/shared/i18n.js');
+            if (fs.existsSync(i18nJsPath)) archive.file(i18nJsPath, { name: 'shared/i18n.js' });
+
+            const i18nDir = path.join(__dirname, '../public/shared/i18n');
+            if (fs.existsSync(i18nDir)) {
+                const i18nFiles = fs.readdirSync(i18nDir).filter(f => f.endsWith('.json'));
+                for (const file of i18nFiles) {
+                    archive.file(path.join(i18nDir, file), { name: `shared/i18n/${file}` });
+                }
+            }
+
+            // Add favicon and icons
+            const iconPath = path.join(__dirname, '../icon.png');
+            if (fs.existsSync(iconPath)) {
+                archive.file(iconPath, { name: 'favicon.png' });
+                archive.file(iconPath, { name: 'favicon.ico' });
+                archive.file(iconPath, { name: 'apple-touch-icon.png' });
+            }
+
+            // Add open-to-work overlay image
+            const otwPath = path.join(__dirname, '../public/shared/open-to-work.png');
+            if (fs.existsSync(otwPath)) archive.file(otwPath, { name: 'shared/open-to-work.png' });
+
+            // Add uploaded files (profile picture, logos)
+            if (fs.existsSync(uploadsPath)) {
+                const uploadFiles = fs.readdirSync(uploadsPath);
+                for (const file of uploadFiles) {
+                    archive.file(path.join(uploadsPath, file), { name: `uploads/${file}` });
+                }
+            }
+
+            archive.finalize();
+        } catch (err) {
+            console.error('Static site export error:', err);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Failed to generate static site' });
+            }
         }
     });
 

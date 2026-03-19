@@ -124,8 +124,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await I18n.init();
-            // Check if we're previewing a saved dataset (admin mode only)
-            if (window.DATASET_SLUG) {
+            if (window.STATIC_SITE) {
+                await loadStaticData();
+            } else if (window.DATASET_SLUG) {
                 await loadDatasetPreview();
             } else {
                 await loadLiveData();
@@ -163,6 +164,105 @@
             await generateATSContent();
         }
         
+        // Load static site data from local data.json (no API calls)
+        async function loadStaticData() {
+            try {
+                const res = await fetch('./data.json');
+                if (!res.ok) { console.error('Failed to load data.json'); return; }
+                const data = await res.json();
+
+                // Apply settings locally (no API calls)
+                const allSettings = data.settings || {};
+                await loadThemeColorPublic(allSettings);
+                await loadDateFormatSetting(allSettings);
+                await loadPublicPrintButton(allSettings);
+                await loadPaginationSettings(allSettings);
+                await loadPageSplitsSetting(allSettings);
+
+                // Layout types and social platforms from data
+                layoutTypesData = data.layoutTypes || [];
+                socialPlatformsData = data.socialPlatforms || [];
+
+                // Render profile
+                renderProfileFromData(data.profile);
+
+                // Fix image paths in rendered content to use relative paths
+                const fixImgPaths = () => {
+                    document.querySelectorAll('img[src^="/uploads/"]').forEach(img => {
+                        img.src = '.' + img.getAttribute('src');
+                    });
+                };
+
+                // Render timeline
+                if (data.timeline && data.timeline.length > 0) {
+                    renderTimelineItems(data.timeline, { interactive: true });
+                } else {
+                    renderTimelineFromData(data.experiences, data.customSections);
+                }
+
+                // Render sections
+                renderExperiencesFromData(data.experiences);
+                renderCertificationsFromData(data.certifications);
+                renderEducationFromData(data.education);
+                renderSkillsFromData(data.skills);
+                renderProjectsFromData(data.projects);
+
+                // Render custom sections
+                if (data.customSections) {
+                    customSectionsData = data.customSections.filter(s => s.visible !== false);
+                    const container = document.querySelector('.container');
+                    customSectionsData.forEach(section => {
+                        const visibleItems = (section.items || []).filter(i => i.visible !== false);
+                        const sectionWithVisibleItems = { ...section, items: visibleItems };
+                        const sectionHtml = renderCustomSectionPublic(sectionWithVisibleItems, layoutTypesData, socialPlatformsData);
+                        container.insertAdjacentHTML('beforeend', sectionHtml);
+                    });
+                }
+
+                // Handle section visibility
+                if (data.sectionVisibility) {
+                    Object.keys(data.sectionVisibility).forEach(section => {
+                        const el = document.getElementById(`section-${section}`);
+                        if (el) {
+                            if (!data.sectionVisibility[section]) {
+                                el.classList.add('hidden-print');
+                                el.style.display = 'none';
+                            } else {
+                                el.classList.remove('hidden-print');
+                                el.style.display = '';
+                            }
+                        }
+                    });
+                }
+
+                // Reorder sections
+                if (data.sectionOrder) {
+                    const csNameMap = {};
+                    if (data.customSections) {
+                        data.customSections.forEach(cs => { csNameMap[cs.section_key] = cs.name; });
+                    }
+                    sectionOrder = data.sectionOrder.filter(s => s.visible !== false).map(s => {
+                        const fallbackName = csNameMap[s.key] || s.key;
+                        return { key: s.key, visible: s.visible, name: s.display_name || s.name || fallbackName, default_name: s.default_name || s.name || fallbackName };
+                    });
+                    renderSectionsInOrder();
+                    applySectionTitles(sectionOrder);
+                }
+
+                // Fix upload paths for static site (JS-rendered images use absolute /uploads/)
+                fixImgPaths();
+                // Also fix the profile picture which is set via JS
+                const pic = document.getElementById('profilePicture');
+                if (pic && pic.src && pic.src.includes('/uploads/')) {
+                    pic.src = './uploads/picture.jpeg?' + new Date().getTime();
+                }
+
+                await generateATSContent();
+            } catch (err) {
+                console.error('Error loading static data:', err);
+            }
+        }
+
         // Load saved dataset preview (admin mode only)
         async function loadDatasetPreview() {
             try {

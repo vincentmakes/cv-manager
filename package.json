@@ -1,6 +1,6 @@
 {
   "name": "cv-manager",
-  "version": "1.25.1",
+  "version": "1.26.0",
   "description": "Professional CV Management System",
   "main": "src/server.js",
   "scripts": {
@@ -11,6 +11,7 @@
     "test:backend": "node --test tests/backend.test.js"
   },
   "dependencies": {
+    "archiver": "^7.0.1",
     "better-sqlite3": "^9.4.3",
     "cors": "^2.8.5",
     "express": "^4.18.2",
