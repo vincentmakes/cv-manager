@@ -18,26 +18,42 @@ const I18n = {
     ],
 
     async init() {
-        try {
-            const result = await fetch('/api/settings/language').then(r => r.json());
-            if (result.value && this.languages.some(l => l.code === result.value)) {
-                this.locale = result.value;
+        if (window.STATIC_SITE) {
+            // In static mode, read language from pre-loaded data or data.json
+            try {
+                const res = await fetch('./data.json');
+                if (res.ok) {
+                    const data = await res.json();
+                    const lang = data.settings?.language;
+                    if (lang && this.languages.some(l => l.code === lang)) {
+                        this.locale = lang;
+                    }
+                }
+            } catch (e) { /* Use default */ }
+        } else {
+            try {
+                const result = await fetch('/api/settings/language').then(r => r.json());
+                if (result.value && this.languages.some(l => l.code === result.value)) {
+                    this.locale = result.value;
+                }
+            } catch (e) {
+                // Use default
             }
-        } catch (e) {
-            // Use default
         }
         // Always load English as fallback
-        await this.loadTranslations('en', true);
+        const i18nBase = window.STATIC_SITE ? './shared/i18n' : '/shared/i18n';
+        await this.loadTranslations('en', true, i18nBase);
         if (this.locale !== 'en') {
-            await this.loadTranslations(this.locale);
+            await this.loadTranslations(this.locale, false, i18nBase);
         }
         this.loaded = true;
         this.refreshUI();
     },
 
-    async loadTranslations(locale, asFallback = false) {
+    async loadTranslations(locale, asFallback = false, basePath = null) {
         try {
-            const res = await fetch(`/shared/i18n/${locale}.json`);
+            const base = basePath || (window.STATIC_SITE ? './shared/i18n' : '/shared/i18n');
+            const res = await fetch(`${base}/${locale}.json`);
             if (!res.ok) return;
             const data = await res.json();
             if (asFallback) {
@@ -59,15 +75,17 @@ const I18n = {
         } else {
             await this.loadTranslations(locale);
         }
-        // Save to settings
-        try {
-            await fetch('/api/settings/language', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ value: locale })
-            });
-        } catch (e) {
-            // Ignore save errors
+        // Save to settings (skip in static mode — no server)
+        if (!window.STATIC_SITE) {
+            try {
+                await fetch('/api/settings/language', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value: locale })
+                });
+            } catch (e) {
+                // Ignore save errors
+            }
         }
         document.documentElement.lang = locale;
         this.refreshUI();

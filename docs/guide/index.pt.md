@@ -13,6 +13,7 @@ Este guia cobre tudo o que você pode fazer com a interface admin do CV Manager.
 - **[Conjuntos de Dados](datasets.md)** — Salve múltiplas versões de CV para diferentes públicos
 - **[Impressão e PDF](print-pdf.md)** — Exporte seu CV com números de página e divisão configuráveis
 - **[Importação e Exportação](import-export.md)** — Backup e restauração dos dados do seu CV
+- **[Exportação de Site Estático](static-site.md)** — Publique seu CV no GitHub Pages, Cloudflare Pages ou qualquer hospedagem estática
 
 ## Atualizações e Versão
 

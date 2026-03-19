@@ -1597,6 +1597,33 @@ async function exportData() {
     toast(t('toast.exported'));
 }
 
+async function exportStaticSite() {
+    const btn = document.getElementById('staticSiteExportBtn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `${materialIcon('hourglass_empty', 16)} ${t('settings.print.static_site_generating')}`;
+    try {
+        const res = await fetch('/api/export/static-site');
+        if (!res.ok) throw new Error('Failed to generate static site');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const disposition = res.headers.get('Content-Disposition');
+        const filenameMatch = disposition?.match(/filename="([^"]+)"/);
+        a.download = filenameMatch ? filenameMatch[1] : 'static_site.zip';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast(t('toast.static_site_exported'));
+    } catch (err) {
+        console.error('Static site export error:', err);
+        toast(t('toast.static_site_export_failed'), 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
+}
+
 async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;

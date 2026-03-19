@@ -13,6 +13,7 @@ Ce guide couvre tout ce que vous pouvez faire avec l'interface d'administration 
 - **[Jeux de données](datasets.md)** — Enregistrer plusieurs versions de CV pour différents publics
 - **[Impression et PDF](print-pdf.md)** — Exporter votre CV avec numéros de page et découpage configurables
 - **[Import et export](import-export.md)** — Sauvegarder et restaurer vos données de CV
+- **[Export site statique](static-site.md)** — Déployez votre CV sur GitHub Pages, Cloudflare Pages ou tout hébergement statique
 
 ## Mises à jour et version
 

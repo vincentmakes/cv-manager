@@ -439,6 +439,22 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
+
+                    <!-- Static Site Export -->
+                    <div class="settings-divider" style="margin: 16px 0; border-top: 1px solid var(--border-color);"></div>
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title" data-i18n="settings.print.static_site">Static Site Export</div>
+                            <div class="settings-option-desc" data-i18n="settings.print.static_site_desc">Download your CV as a standalone static website to host on GitHub Pages, Cloudflare Pages, or any static hosting provider — no server needed</div>
+                        </div>
+                        <button class="btn btn-ghost" onclick="exportStaticSite()" id="staticSiteExportBtn">
+                            <span class="material-symbols-outlined" style="font-size:16px">download</span>
+                            <span data-i18n="settings.print.static_site_btn">Download ZIP</span>
+                        </button>
+                    </div>
+                    <div class="settings-option-desc" style="margin-top: -8px; padding: 0 4px;">
+                        <a href="https://docs-cv-manager.verdet.me/guide/static-site/" target="_blank" rel="noopener noreferrer" data-i18n="settings.print.static_site_docs_link">Learn how to deploy your static site →</a>
+                    </div>
                 </div>
                 
                 <!-- Advanced Tab -->

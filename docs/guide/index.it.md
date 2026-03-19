@@ -13,6 +13,7 @@ Questa guida copre tutto ciò che potete fare con l'interfaccia admin di CV Mana
 - **[Dataset](datasets.md)** — Salvataggio di più versioni del CV per diversi destinatari
 - **[Stampa e PDF](print-pdf.md)** — Esportazione del CV con numeri di pagina e suddivisione configurabili
 - **[Importazione ed esportazione](import-export.md)** — Backup e ripristino dei dati del CV
+- **[Esportazione sito statico](static-site.md)** — Pubblica il tuo CV su GitHub Pages, Cloudflare Pages o qualsiasi hosting statico
 
 ## Aggiornamenti e versione
 
