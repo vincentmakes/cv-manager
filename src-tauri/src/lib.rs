@@ -115,7 +115,8 @@ pub fn run() {
             // Kill sidecar when the app window is closed
             if let tauri::WindowEvent::Destroyed = event {
                 let state = window.state::<SidecarState>();
-                if let Some(child) = state.child.lock().unwrap().take() {
+                let mut guard = state.child.lock().unwrap();
+                if let Some(child) = guard.take() {
                     let _ = child.kill();
                     eprintln!("[sidecar] Process killed on window close");
                 }
