@@ -286,6 +286,93 @@ PUBLIC_ONLY=true       # Force read-only mode (auto-detected if filesystem is re
 NODE_ENV=production
 ```
 
+## Documentation
+
+User-facing documentation lives in `docs/` and is built with [MkDocs Material](https://squidfund.github.io/mkdocs-material/) + the [mkdocs-static-i18n](https://github.com/ultrabug/mkdocs-static-i18n) plugin. The live site is at `https://docs-cv-manager.verdet.me/`.
+
+### Structure
+
+```
+docs/
+├── index.md                    # Home page
+├── getting-started/            # Installation & first steps
+│   ├── index.md
+│   ├── installation.md
+│   └── first-steps.md
+├── guide/                      # User guide (main content)
+│   ├── index.md                # Guide overview with topic list
+│   ├── sections.md
+│   ├── editing.md
+│   ├── custom-sections.md
+│   ├── timeline.md
+│   ├── theme.md
+│   ├── language.md
+│   ├── datasets.md
+│   ├── print-pdf.md
+│   ├── import-export.md
+│   └── static-site.md
+├── advanced/                   # Advanced topics
+│   ├── settings.md
+│   ├── security.md
+│   └── ats.md
+└── reference/                  # Reference & support
+    ├── faq.md
+    ├── keyboard-shortcuts.md
+    └── support.md
+```
+
+### Translation (suffix-based i18n)
+
+Every `.md` file has 7 translated variants using a **suffix convention**:
+
+```
+page.md          # English (default)
+page.de.md       # German
+page.fr.md       # French
+page.nl.md       # Dutch
+page.es.md       # Spanish
+page.it.md       # Italian
+page.pt.md       # Portuguese
+page.zh.md       # Chinese (Simplified)
+```
+
+The i18n plugin (`mkdocs.yml`) automatically maps suffixed files to the correct locale. Only the English filenames appear in the `nav:` section — translations are resolved by suffix.
+
+### How to Add a New Documentation Page
+
+1. **Create the English page** — e.g., `docs/guide/my-feature.md`
+2. **Add to `mkdocs.yml` nav** — under the appropriate section:
+   ```yaml
+   nav:
+     - User Guide:
+         - My Feature: guide/my-feature.md
+   ```
+3. **Add `nav_translations`** — in `mkdocs.yml`, add the nav title translation to **every locale** block:
+   ```yaml
+   - locale: de
+     nav_translations:
+       My Feature: Meine Funktion
+   - locale: fr
+     nav_translations:
+       My Feature: Ma fonctionnalité
+   # ... repeat for nl, es, it, pt, zh
+   ```
+4. **Update the section index** — add a link to the new page in both the English `index.md` and all 7 translated `index.{locale}.md` files for that section
+5. **Create all 7 translations** — create `my-feature.de.md`, `my-feature.fr.md`, etc.
+
+### Translation Guidelines for Docs
+
+- Translate all prose into natural, fluent target language
+- Keep markdown formatting, code blocks, URLs, file paths, and technical product names (GitHub Pages, Cloudflare, Docker, etc.) unchanged
+- Keep `!!! tip` / `!!! note` / `!!! warning` admonition syntax as-is
+- Keep bash code block comments in English (they're code)
+- Translate UI labels to match the app's i18n strings for that language (e.g., "Settings" → "Einstellungen" in German)
+- Use the appropriate formality level consistent with existing translations for that language (e.g., formal "Sie" in German)
+
+### Docs-Only Changes
+
+Documentation-only changes (`docs/`, `mkdocs.yml`, `requirements-docs.txt`) do **not** require a version bump — see the versioning exception above.
+
 ## Testing
 
 Tests spawn a server on a random port (13000–14000) with a temporary database. Run with:

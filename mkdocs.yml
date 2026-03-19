@@ -88,6 +88,7 @@ plugins:
             Reference: Referenz
             FAQ: FAQ
             Keyboard Shortcuts: Tastenkürzel
+            Static Site Export: Statische Webseite
             Support: Support
         - locale: fr
           name: Français
@@ -114,6 +115,7 @@ plugins:
             Reference: Référence
             FAQ: FAQ
             Keyboard Shortcuts: Raccourcis clavier
+            Static Site Export: Export site statique
             Support: Support
         - locale: nl
           name: Nederlands
@@ -140,6 +142,7 @@ plugins:
             Reference: Referentie
             FAQ: FAQ
             Keyboard Shortcuts: Sneltoetsen
+            Static Site Export: Statische site exporteren
             Support: Ondersteuning
         - locale: es
           name: Español
@@ -166,6 +169,7 @@ plugins:
             Reference: Referencia
             FAQ: FAQ
             Keyboard Shortcuts: Atajos de teclado
+            Static Site Export: Exportar sitio estático
             Support: Soporte
         - locale: it
           name: Italiano
@@ -192,6 +196,7 @@ plugins:
             Reference: Riferimenti
             FAQ: FAQ
             Keyboard Shortcuts: Scorciatoie da tastiera
+            Static Site Export: Esportazione sito statico
             Support: Supporto
         - locale: pt
           name: Português
@@ -218,6 +223,7 @@ plugins:
             Reference: Referência
             FAQ: FAQ
             Keyboard Shortcuts: Atalhos de teclado
+            Static Site Export: Exportação de site estático
             Support: Suporte
         - locale: zh
           name: 中文
@@ -244,6 +250,7 @@ plugins:
             Reference: 参考
             FAQ: 常见问题
             Keyboard Shortcuts: 键盘快捷键
+            Static Site Export: 导出静态网站
             Support: 支持
 
   - search:
