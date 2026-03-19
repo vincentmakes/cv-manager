@@ -1,0 +1,12 @@
+{
+  "name": "cv-manager-desktop-build",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build tooling for CV Manager desktop sidecar",
+  "scripts": {
+    "build:sidecar": "node build-sidecar.js"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.0.0"
+  }
+}
