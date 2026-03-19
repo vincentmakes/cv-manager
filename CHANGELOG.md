@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.1] - 2026-03-19
+
+### Fixed
+- Static site export button now uses proper contrast styling (was white on light background)
+- Improved description text explaining the feature's purpose
+- Added documentation link in the export section
+
 ## [1.26.0] - 2026-03-19
 
 ### Added

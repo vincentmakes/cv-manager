@@ -193,9 +193,10 @@
     "settings.print.item_splits": "Autoriser la coupure des éléments",
     "settings.print.item_splits_desc": "Permettre également aux éléments de se répartir sur plusieurs pages pour une compacité maximale",
     "settings.print.static_site": "Export site statique",
-    "settings.print.static_site_desc": "Téléchargez votre CV en tant que site statique (HTML, CSS, JS) pour GitHub Pages, Cloudflare Pages ou tout hébergement statique",
+    "settings.print.static_site_desc": "Téléchargez votre CV en tant que site web statique autonome pour GitHub Pages, Cloudflare Pages ou tout hébergement statique — aucun serveur requis",
     "settings.print.static_site_btn": "Télécharger ZIP",
     "settings.print.static_site_generating": "Génération...",
+    "settings.print.static_site_docs_link": "Découvrez comment déployer votre site statique →",
 
     "settings.advanced.info": "Paramètres avancés pour le formatage, le référencement, les statistiques et les intégrations personnalisées.",
     "settings.advanced.date_format": "Format de date",

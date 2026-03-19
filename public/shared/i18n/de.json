@@ -193,9 +193,10 @@
     "settings.print.item_splits": "Eintragsumbrüche erlauben",
     "settings.print.item_splits_desc": "Auch Einträge über Seiten umbrechen lassen für maximale Kompaktheit",
     "settings.print.static_site": "Statische Webseite exportieren",
-    "settings.print.static_site_desc": "Laden Sie Ihren Lebenslauf als statische Webseite (HTML, CSS, JS) für GitHub Pages, Cloudflare Pages oder andere statische Hosting-Dienste herunter",
+    "settings.print.static_site_desc": "Laden Sie Ihren Lebenslauf als eigenständige statische Webseite herunter — für GitHub Pages, Cloudflare Pages oder jeden anderen Hosting-Dienst, kein Server erforderlich",
     "settings.print.static_site_btn": "ZIP herunterladen",
     "settings.print.static_site_generating": "Wird erstellt...",
+    "settings.print.static_site_docs_link": "Erfahren Sie, wie Sie Ihre statische Seite bereitstellen →",
 
     "settings.advanced.info": "Erweiterte Einstellungen für Formatierung, SEO, Analysen und benutzerdefinierte Integrationen.",
     "settings.advanced.date_format": "Datumsformat",
