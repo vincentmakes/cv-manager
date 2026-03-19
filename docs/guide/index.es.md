@@ -13,6 +13,7 @@ Esta guía cubre todo lo que puede hacer con la interfaz de administración de C
 - **[Conjuntos de datos](datasets.md)** — Guarde múltiples versiones del CV para diferentes audiencias
 - **[Impresión y PDF](print-pdf.md)** — Exporte su CV con números de página y división configurables
 - **[Importar y exportar](import-export.md)** — Respalde y restaure los datos de su CV
+- **[Exportar sitio estático](static-site.md)** — Despliegue su CV en GitHub Pages, Cloudflare Pages o cualquier hosting estático
 
 ## Actualizaciones y versión
 

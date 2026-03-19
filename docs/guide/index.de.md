@@ -13,6 +13,7 @@ Dieses Handbuch behandelt alles, was Sie mit der Admin-Oberfläche von CV Manage
 - **[Datensätze](datasets.md)** — Mehrere Lebenslauf-Versionen für verschiedene Zielgruppen speichern
 - **[Drucken & PDF](print-pdf.md)** — Ihren Lebenslauf mit konfigurierbaren Seitenzahlen und Seitenumbrüchen exportieren
 - **[Import & Export](import-export.md)** — Lebenslauf-Daten sichern und wiederherstellen
+- **[Statische Webseite](static-site.md)** — Lebenslauf auf GitHub Pages, Cloudflare Pages oder jedem statischen Hosting bereitstellen
 
 ## Aktualisierungen & Version
 

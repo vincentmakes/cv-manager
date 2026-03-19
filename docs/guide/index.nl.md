@@ -13,6 +13,7 @@ Deze handleiding behandelt alles wat u kunt doen met de admin-interface van CV M
 - **[Datasets](datasets.nl.md)** — Bewaar meerdere CV-versies voor verschillende doelgroepen
 - **[Afdrukken & PDF](print-pdf.nl.md)** — Exporteer uw CV met configureerbare paginanummers en paginascheiding
 - **[Importeren & Exporteren](import-export.nl.md)** — Maak een back-up van uw CV-gegevens en herstel deze
+- **[Statische site exporteren](static-site.nl.md)** — Publiceer uw CV op GitHub Pages, Cloudflare Pages of elke statische hosting
 
 ## Updates & Versie
 

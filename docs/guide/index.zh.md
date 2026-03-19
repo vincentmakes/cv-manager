@@ -13,6 +13,7 @@
 - **[数据集](datasets.md)** — 为不同受众保存多个简历版本
 - **[打印与 PDF](print-pdf.md)** — 导出简历，可配置页码和分页方式
 - **[导入与导出](import-export.md)** — 备份和恢复您的简历数据
+- **[导出静态网站](static-site.md)** — 将简历部署到 GitHub Pages、Cloudflare Pages 或任何静态托管服务
 
 ## 更新与版本
 
