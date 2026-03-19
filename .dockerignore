@@ -1,0 +1,20 @@
+# Desktop app (Tauri) — not needed in Docker
+src-tauri/
+desktop/
+
+# CI/CD
+.github/
+
+# Development files
+.git/
+*.md
+LICENSE
+.dockerignore
+
+# Test files
+tests/
+
+# Documentation
+docs/
+mkdocs.yml
+requirements-docs.txt
