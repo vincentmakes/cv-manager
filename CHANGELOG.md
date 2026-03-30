@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.2] - 2026-03-30
+
+### Fixed
+- Security: updated path-to-regexp to 0.1.13 (CVE-2026-4867, ReDoS via multiple route parameters)
+- Security: updated brace-expansion to fix process hang vulnerability (GHSA-f886-m6hf-6m8v)
+
 ## [1.26.1] - 2026-03-19
 
 ### Fixed
