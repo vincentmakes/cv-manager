@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Fixed
 - Certification badge logos disappearing on admin page refresh due to missing logo_filename and logo_propagate fields when loading datasets
+- Security: updated lodash to 4.18.1 (GHSA-r5fr-rjxr-66jc code injection, GHSA-f23m-r3pf-42rh prototype pollution)
 
 ## [1.26.2] - 2026-03-30
 
