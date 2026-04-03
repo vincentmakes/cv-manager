@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.3] - 2026-04-03
+
+### Fixed
+- Certification badge logos disappearing on admin page refresh due to missing logo_filename and logo_propagate fields when loading datasets
+
 ## [1.26.2] - 2026-03-30
 
 ### Fixed
