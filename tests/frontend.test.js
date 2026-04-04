@@ -355,6 +355,225 @@ describe('Frontend files', () => {
         });
     });
 
+    describe('Pure function unit tests (scripts.js)', () => {
+        // Extract pure functions from scripts.js for unit testing in Node.js
+        // We parse and eval the function definitions to test them without a browser
+
+        let normalizeDate, formatDate, formatDateATS, parseDateForSort, materialIcon, getSkillIcon;
+
+        it('can extract and load pure functions from scripts.js', () => {
+            const scriptsContent = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
+
+            // Extract normalizeDate function
+            const normalizeDateMatch = scriptsContent.match(/function normalizeDate\(dateStr\)\s*\{[\s\S]*?^}/m);
+            assert.ok(normalizeDateMatch, 'Should find normalizeDate function');
+            normalizeDate = new Function('dateStr', normalizeDateMatch[0].replace(/^function normalizeDate\(dateStr\)\s*\{/, '').replace(/\}$/, ''));
+
+            // Extract formatDate function (needs dateFormatSetting global)
+            const formatDateMatch = scriptsContent.match(/function formatDate\(dateStr\)\s*\{[\s\S]*?^}/m);
+            assert.ok(formatDateMatch, 'Should find formatDate function');
+
+            // Extract formatDateATS function
+            const formatDateATSMatch = scriptsContent.match(/function formatDateATS\(dateStr\)\s*\{[\s\S]*?^}/m);
+            assert.ok(formatDateATSMatch, 'Should find formatDateATS function');
+            formatDateATS = new Function('dateStr', formatDateATSMatch[0].replace(/^function formatDateATS\(dateStr\)\s*\{/, '').replace(/\}$/, ''));
+
+            // Extract parseDateForSort function
+            const parseDateForSortMatch = scriptsContent.match(/function parseDateForSort\(dateStr\)\s*\{[\s\S]*?^}/m);
+            assert.ok(parseDateForSortMatch, 'Should find parseDateForSort function');
+            parseDateForSort = new Function('dateStr', parseDateForSortMatch[0].replace(/^function parseDateForSort\(dateStr\)\s*\{/, '').replace(/\}$/, ''));
+
+            // Extract materialIcon function
+            const materialIconMatch = scriptsContent.match(/function materialIcon\(name, size = 16\)\s*\{[\s\S]*?\n\}/);
+            assert.ok(materialIconMatch, 'Should find materialIcon function');
+            materialIcon = new Function('name', 'size', `size = size || 16; ${materialIconMatch[0].replace(/^function materialIcon\(name, size = 16\)\s*\{/, '').replace(/\}$/, '')}`);
+
+            // For formatDate, create a closure with dateFormatSetting
+            const createFormatDate = (setting) => {
+                const body = formatDateMatch[0].replace(/^function formatDate\(dateStr\)\s*\{/, '').replace(/\}$/, '');
+                return new Function('dateStr', `const dateFormatSetting = ${JSON.stringify(setting)}; ${body}`);
+            };
+            formatDate = createFormatDate; // Store factory function
+
+            // Extract getSkillIcon (needs icons object)
+            const getSkillIconMatch = scriptsContent.match(/function getSkillIcon\(iconHint, categoryName\)\s*\{[\s\S]*?^}/m);
+            assert.ok(getSkillIconMatch, 'Should find getSkillIcon function');
+        });
+
+        // --- normalizeDate tests ---
+        it('normalizeDate: returns empty value for empty/null/undefined input', () => {
+            assert.deepStrictEqual(normalizeDate(''), { value: '' });
+            assert.deepStrictEqual(normalizeDate(null), { value: '' });
+            assert.deepStrictEqual(normalizeDate(undefined), { value: '' });
+            assert.deepStrictEqual(normalizeDate('   '), { value: '' });
+        });
+
+        it('normalizeDate: passes through valid ISO YYYY-MM format', () => {
+            assert.deepStrictEqual(normalizeDate('2024-01'), { value: '2024-01' });
+            assert.deepStrictEqual(normalizeDate('2020-12'), { value: '2020-12' });
+        });
+
+        it('normalizeDate: passes through year-only format', () => {
+            assert.deepStrictEqual(normalizeDate('2024'), { value: '2024' });
+            assert.deepStrictEqual(normalizeDate('1999'), { value: '1999' });
+        });
+
+        it('normalizeDate: parses short month name + year (MMM YYYY)', () => {
+            assert.deepStrictEqual(normalizeDate('Jan 2020'), { value: '2020-01' });
+            assert.deepStrictEqual(normalizeDate('Dec 2024'), { value: '2024-12' });
+            assert.deepStrictEqual(normalizeDate('Mar 2019'), { value: '2019-03' });
+        });
+
+        it('normalizeDate: parses full month name + year (MMMM YYYY)', () => {
+            assert.deepStrictEqual(normalizeDate('January 2020'), { value: '2020-01' });
+            assert.deepStrictEqual(normalizeDate('December 2024'), { value: '2024-12' });
+            assert.deepStrictEqual(normalizeDate('September 2019'), { value: '2019-09' });
+        });
+
+        it('normalizeDate: parses MM/YYYY format', () => {
+            assert.deepStrictEqual(normalizeDate('01/2020'), { value: '2020-01' });
+            assert.deepStrictEqual(normalizeDate('12/2024'), { value: '2024-12' });
+        });
+
+        it('normalizeDate: parses MM.YYYY and MM-YYYY formats', () => {
+            assert.deepStrictEqual(normalizeDate('01.2020'), { value: '2020-01' });
+            assert.deepStrictEqual(normalizeDate('06-2023'), { value: '2023-06' });
+        });
+
+        it('normalizeDate: parses YYYY/MM and YYYY.MM formats', () => {
+            assert.deepStrictEqual(normalizeDate('2020/01'), { value: '2020-01' });
+            assert.deepStrictEqual(normalizeDate('2023.06'), { value: '2023-06' });
+        });
+
+        it('normalizeDate: returns error for invalid month in ISO format', () => {
+            const result = normalizeDate('2024-13');
+            assert.ok(result.error, 'Should return error for month 13');
+        });
+
+        it('normalizeDate: returns error for invalid month number', () => {
+            const result = normalizeDate('13/2024');
+            assert.ok(result.error, 'Should return error for month 13');
+        });
+
+        it('normalizeDate: returns error for unrecognized format', () => {
+            const result = normalizeDate('not-a-date');
+            assert.ok(result.error, 'Should return error for unrecognized format');
+        });
+
+        it('normalizeDate: returns error for unrecognized month name', () => {
+            const result = normalizeDate('Xyz 2024');
+            assert.ok(result.error, 'Should return error for fake month name');
+        });
+
+        // --- formatDate tests ---
+        it('formatDate: returns empty string for empty input', () => {
+            const fn = formatDate('MMM YYYY');
+            assert.strictEqual(fn(''), '');
+            assert.strictEqual(fn(null), '');
+            assert.strictEqual(fn(undefined), '');
+        });
+
+        it('formatDate: returns year-only input as-is', () => {
+            const fn = formatDate('MMM YYYY');
+            assert.strictEqual(fn('2024'), '2024');
+        });
+
+        it('formatDate: formats YYYY-MM as MMM YYYY (default)', () => {
+            const fn = formatDate('MMM YYYY');
+            assert.strictEqual(fn('2024-01'), 'Jan 2024');
+            assert.strictEqual(fn('2020-12'), 'Dec 2020');
+        });
+
+        it('formatDate: formats YYYY-MM as MMMM YYYY', () => {
+            const fn = formatDate('MMMM YYYY');
+            assert.strictEqual(fn('2024-01'), 'January 2024');
+        });
+
+        it('formatDate: formats YYYY-MM as MM/YYYY', () => {
+            const fn = formatDate('MM/YYYY');
+            assert.strictEqual(fn('2024-01'), '01/2024');
+        });
+
+        it('formatDate: formats YYYY-MM as MMM YY', () => {
+            const fn = formatDate('MMM YY');
+            assert.strictEqual(fn('2024-01'), 'Jan 24');
+        });
+
+        it('formatDate: formats YYYY-MM as YYYY-MM', () => {
+            const fn = formatDate('YYYY-MM');
+            assert.strictEqual(fn('2024-01'), '2024-01');
+        });
+
+        it('formatDate: formats YYYY-MM as YYYY (year only)', () => {
+            const fn = formatDate('YYYY');
+            assert.strictEqual(fn('2024-01'), '2024');
+        });
+
+        // --- formatDateATS tests ---
+        it('formatDateATS: returns empty string for empty input', () => {
+            assert.strictEqual(formatDateATS(''), '');
+            assert.strictEqual(formatDateATS(null), '');
+        });
+
+        it('formatDateATS: returns year-only as-is', () => {
+            assert.strictEqual(formatDateATS('2024'), '2024');
+        });
+
+        it('formatDateATS: formats YYYY-MM as Month YYYY', () => {
+            assert.strictEqual(formatDateATS('2024-01'), 'January 2024');
+            assert.strictEqual(formatDateATS('2020-06'), 'June 2020');
+        });
+
+        it('formatDateATS: returns unrecognized formats as-is', () => {
+            assert.strictEqual(formatDateATS('Present'), 'Present');
+        });
+
+        // --- parseDateForSort tests ---
+        it('parseDateForSort: returns 0 for empty/null/undefined', () => {
+            assert.strictEqual(parseDateForSort(''), 0);
+            assert.strictEqual(parseDateForSort(null), 0);
+            assert.strictEqual(parseDateForSort(undefined), 0);
+        });
+
+        it('parseDateForSort: handles year-only format', () => {
+            assert.strictEqual(parseDateForSort('2020'), 202000);
+            assert.strictEqual(parseDateForSort('2024'), 202400);
+        });
+
+        it('parseDateForSort: handles YYYY-MM format', () => {
+            assert.strictEqual(parseDateForSort('2020-03'), 202003);
+            assert.strictEqual(parseDateForSort('2024-12'), 202412);
+        });
+
+        it('parseDateForSort: handles Mon YYYY format', () => {
+            assert.strictEqual(parseDateForSort('Jan 2020'), 202001);
+            assert.strictEqual(parseDateForSort('Dec 2024'), 202412);
+        });
+
+        it('parseDateForSort: extracts year from unrecognized format', () => {
+            assert.strictEqual(parseDateForSort('Q1 2020'), 202000);
+        });
+
+        // --- materialIcon tests ---
+        it('materialIcon: generates correct HTML with default size', () => {
+            const result = materialIcon('edit');
+            assert.ok(result.includes('material-symbols-outlined'), 'Should contain class');
+            assert.ok(result.includes('edit'), 'Should contain icon name');
+            assert.ok(result.includes('font-size:16px'), 'Should use default 16px size');
+        });
+
+        it('materialIcon: generates correct HTML with custom size', () => {
+            const result = materialIcon('delete', 24);
+            assert.ok(result.includes('font-size:24px'), 'Should use custom 24px size');
+            assert.ok(result.includes('delete'), 'Should contain icon name');
+        });
+
+        it('materialIcon: includes aria-hidden for accessibility', () => {
+            const result = materialIcon('check');
+            assert.ok(result.includes('aria-hidden="true"'), 'Should include aria-hidden');
+        });
+    });
+
     describe('Code quality', () => {
         it('no console.log in frontend JavaScript files (except error handling)', () => {
             const files = [
