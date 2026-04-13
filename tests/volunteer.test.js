@@ -147,4 +147,18 @@ describe('Volunteer Work Feature', () => {
         assert.ok(data.volunteer_work.length > 0);
         assert.strictEqual(data.volunteer_work[0].organization, 'Rotary International');
     });
+
+    it('Public API /api/timeline includes volunteer roles for the career timeline', async () => {
+        const res = await fetch(`${PUBLIC_URL}/api/timeline`);
+        assert.strictEqual(res.status, 200);
+        const data = await res.json();
+        assert.ok(Array.isArray(data));
+
+        const volItems = data.filter(item => item.id && String(item.id).startsWith('vol_'));
+        assert.ok(volItems.length >= 2, 'Public timeline should expose volunteer roles as separate items');
+
+        const presidentRole = volItems.find(item => item.role === 'President');
+        assert.ok(presidentRole, 'Public timeline should include the President volunteer role');
+        assert.strictEqual(presidentRole.company, 'Rotary International');
+    });
 });

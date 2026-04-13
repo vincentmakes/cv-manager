@@ -5,6 +5,26 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 
+function extractFunction(source, signature) {
+    const start = source.indexOf(signature);
+    assert.ok(start >= 0, `Should find function signature: ${signature}`);
+
+    const bodyStart = source.indexOf('{', start);
+    assert.ok(bodyStart >= 0, `Should find function body for: ${signature}`);
+
+    let depth = 0;
+    for (let i = bodyStart; i < source.length; i++) {
+        const ch = source[i];
+        if (ch === '{') depth++;
+        if (ch === '}') depth--;
+        if (depth === 0) {
+            return source.slice(start, i + 1);
+        }
+    }
+
+    assert.fail(`Failed to extract function body for: ${signature}`);
+}
+
 describe('Frontend files', () => {
     describe('Admin interface', () => {
         it('index.html exists and is valid HTML', () => {
@@ -79,6 +99,62 @@ describe('Frontend files', () => {
         it('sitemap.xml exists', () => {
             const file = path.join(ROOT, 'public-readonly', 'sitemap.xml');
             assert.ok(fs.existsSync(file), 'public-readonly/sitemap.xml should exist');
+        });
+
+        it('dataset timeline fallback includes volunteer roles in the public career timeline', () => {
+            const file = path.join(ROOT, 'public-readonly', 'index.html');
+            const content = fs.readFileSync(file, 'utf8');
+
+            const parseDateForSortLocalSrc = extractFunction(content, 'function parseDateForSortLocal(dateStr)');
+            const renderTimelineFromDataSrc = extractFunction(content, 'function renderTimelineFromData(experiences, volunteer, customSections, sectionVisibility)');
+
+            const parseDateForSortLocal = new Function(
+                `${parseDateForSortLocalSrc}; return parseDateForSortLocal;`
+            )();
+
+            let capturedTimeline = null;
+            const renderTimelineItems = (items) => {
+                capturedTimeline = items;
+            };
+
+            const renderTimelineFromData = new Function(
+                'parseDateForSortLocal',
+                'renderTimelineItems',
+                `${renderTimelineFromDataSrc}; return renderTimelineFromData;`
+            )(parseDateForSortLocal, renderTimelineItems);
+
+            renderTimelineFromData(
+                [
+                    {
+                        id: 1,
+                        company_name: 'Main Job',
+                        job_title: 'Engineer',
+                        country_code: 'de',
+                        logo_filename: null,
+                        start_date: '2020-01',
+                        end_date: ''
+                    }
+                ],
+                [
+                    {
+                        id: 7,
+                        organization: 'Foodsharing',
+                        visible: true,
+                        roles: [
+                            { title: 'Member 2', start_date: '2021-02', end_date: '2024-02' },
+                            { title: 'Member 1', start_date: '2024-02', end_date: '' }
+                        ]
+                    }
+                ],
+                [],
+                { experience: true, volunteer: true }
+            );
+
+            assert.ok(Array.isArray(capturedTimeline), 'renderTimelineFromData should pass timeline items to renderTimelineItems');
+            const volunteerItems = capturedTimeline.filter(item => String(item.id).startsWith('vol_'));
+            assert.strictEqual(volunteerItems.length, 2, 'Volunteer roles should be included in dataset timeline fallback');
+            assert.ok(volunteerItems.some(item => item.role === 'Member 2'), 'Volunteer role titles should be preserved');
+            assert.ok(capturedTimeline[0].start_date <= capturedTimeline[1].start_date, 'Timeline fallback should stay chronologically sorted');
         });
     });
 
