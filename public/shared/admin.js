@@ -390,6 +390,7 @@ function reorderSectionElements() {
         'about': document.getElementById('section-about'),
         'timeline': document.getElementById('section-timeline'),
         'experience': document.getElementById('section-experience'),
+        'volunteer': document.getElementById('section-volunteer'),
         'certifications': document.getElementById('section-certifications'),
         'education': document.getElementById('section-education'),
         'skills': document.getElementById('section-skills'),
@@ -422,6 +423,7 @@ async function renderSectionsInOrder() {
     // Load all section data
     await loadTimeline();
     await loadExperiences();
+    await loadVolunteer();
     await loadCertifications();
     await loadEducation();
     await loadSkills();
@@ -698,6 +700,56 @@ async function loadSectionsAdmin() {
     return sections;
 }
 
+// Load Volunteer Work (admin version with edit controls)
+async function loadVolunteer() {
+    const volunteer = await api('/api/volunteer');
+    const container = document.getElementById('volunteerList');
+    if (!container) return;
+    const total = volunteer.length;
+
+    container.innerHTML = volunteer.map((vol, index) => {
+        const rolesHtml = (vol.roles || []).map(role => `
+            <div class="volunteer-role">
+                <span class="role-date">${formatDate(role.start_date)} - ${role.end_date ? formatDate(role.end_date) : t('present')}</span>
+                <span class="role-title">: ${escapeHtml(role.title)}</span>
+            </div>
+        `).join('');
+
+        const actionsHtml = `<div class="item-actions">
+            <button class="item-btn move-btn" onclick="moveVolunteer(${vol.id}, 'up')" title="${t('action.move_up')}"${index === 0 ? ' disabled' : ''}>
+                ${moveUpIcon()}
+            </button>
+            <button class="item-btn move-btn" onclick="moveVolunteer(${vol.id}, 'down')" title="${t('action.move_down')}"${index === total - 1 ? ' disabled' : ''}>
+                ${moveDownIcon()}
+            </button>
+            <button class="item-btn" onclick="toggleVisibility('volunteer', ${vol.id}, ${!vol.visible})" title="Toggle Visibility">
+                ${visibilityIcon(vol.visible)}
+            </button>
+            <button class="item-btn" onclick="openModal('volunteer', ${vol.id})" title="Edit">
+                ${editIcon()}
+            </button>
+            <button class="item-btn delete" onclick="confirmDelete('volunteer', ${vol.id})" title="Delete">
+                ${deleteIcon()}
+            </button>
+        </div>`;
+
+        return `
+            <article class="item-card ${vol.visible ? '' : 'hidden-print'}" data-id="${vol.id}">
+                ${actionsHtml}
+                <div class="item-header">
+                    <div>
+                        <h3 class="item-title">${escapeHtml(vol.organization)}</h3>
+                    </div>
+                </div>
+                ${vol.description ? `<div class="item-summary">${escapeHtml(vol.description)}</div>` : ''}
+                <div class="volunteer-roles">
+                    ${rolesHtml}
+                </div>
+            </article>
+        `;
+    }).join('');
+}
+
 // Load Experiences (admin version with edit controls)
 // Sorted by sort_order ASC (user-defined order, falling back to start_date DESC)
 async function loadExperiences() {
@@ -969,6 +1021,10 @@ async function openModal(type, id = null) {
         case 'project':
             title = id ? t('modal.edit_project') : t('modal.add_project');
             form = projectForm(data);
+            break;
+        case 'volunteer':
+            title = id ? t('modal.edit_volunteer') : t('modal.add_volunteer');
+            form = volunteerForm(data);
             break;
     }
 
@@ -1332,6 +1388,81 @@ function projectForm(d) {
     `;
 }
 
+function volunteerForm(d) {
+    const roles = d.roles || [{ title: '', start_date: '', end_date: '' }];
+    return `
+        <div class="form-group">
+            <label class="form-label">${t('form.organization') || 'Organization'}</label>
+            <input type="text" class="form-input" id="f-organization" value="${escapeHtml(d.organization || '')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">${t('form.description_optional')}</label>
+            <textarea class="form-textarea" id="f-description" rows="3">${escapeHtml(d.description || '')}</textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">${t('form.roles_periods') || 'Roles & Periods'}</label>
+            <div id="volunteer-roles-container">
+                ${roles.map((r, i) => `
+                    <div class="volunteer-role-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:flex-start;">
+                        <div style="flex:1">
+                            <input type="text" class="form-input role-title" placeholder="${t('form.role_title') || 'Role Title'}" value="${escapeHtml(r.title || '')}">
+                        </div>
+                        <div style="width:100px">
+                            <input type="text" class="form-input role-start" placeholder="YYYY-MM" value="${escapeHtml(r.start_date || '')}">
+                        </div>
+                        <div style="width:100px">
+                            <input type="text" class="form-input role-end" placeholder="Present" value="${escapeHtml(r.end_date || '')}">
+                        </div>
+                        <button class="btn btn-ghost btn-icon-only" onclick="removeVolunteerRole(this)" style="padding:4px; min-width:auto; height:36px;">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="addVolunteerRoleRow()" style="margin-top:4px">
+                <span class="material-symbols-outlined" style="font-size:14px">add</span>
+                ${t('btn.add_role') || 'Add Role'}
+            </button>
+        </div>
+    `;
+}
+
+function addVolunteerRoleRow() {
+    const container = document.getElementById('volunteer-roles-container');
+    const row = document.createElement('div');
+    row.className = 'volunteer-role-row';
+    row.style.display = 'flex';
+    row.style.gap = '8px';
+    row.style.marginBottom = '8px';
+    row.style.alignItems = 'flex-start';
+    row.innerHTML = `
+        <div style="flex:1">
+            <input type="text" class="form-input role-title" placeholder="${t('form.role_title') || 'Role Title'}" value="">
+        </div>
+        <div style="width:100px">
+            <input type="text" class="form-input role-start" placeholder="YYYY-MM" value="">
+        </div>
+        <div style="width:100px">
+            <input type="text" class="form-input role-end" placeholder="Present" value="">
+        </div>
+        <button class="btn btn-ghost btn-icon-only" onclick="removeVolunteerRole(this)" style="padding:4px; min-width:auto; height:36px;">
+            <span class="material-symbols-outlined">delete</span>
+        </button>
+    `;
+    container.appendChild(row);
+}
+
+function removeVolunteerRole(btn) {
+    const container = document.getElementById('volunteer-roles-container');
+    if (container.children.length > 1) {
+        btn.closest('.volunteer-role-row').remove();
+    } else {
+        // Clear inputs if it's the last one
+        const row = btn.closest('.volunteer-role-row');
+        row.querySelectorAll('input').forEach(i => i.value = '');
+    }
+}
+
 // Save Item
 async function saveItem() {
     const { type, id } = currentModal;
@@ -1522,6 +1653,39 @@ async function saveItem() {
             }
             await loadProjects();
             break;
+
+        case 'volunteer':
+            const roleRows = document.querySelectorAll('.volunteer-role-row');
+            const volunteerRoles = [];
+            for (const row of roleRows) {
+                const title = row.querySelector('.role-title').value.trim();
+                const startRaw = row.querySelector('.role-start').value.trim();
+                const endRaw = row.querySelector('.role-end').value.trim();
+                if (!title && !startRaw && !endRaw) continue;
+
+                const startRes = normalizeDate(startRaw);
+                if (startRes.error) { toast(startRes.error, 'error'); return; }
+                const endRes = normalizeDate(endRaw);
+                if (endRes.error) { toast(endRes.error, 'error'); return; }
+
+                volunteerRoles.push({ title, start_date: startRes.value, end_date: endRes.value });
+            }
+
+            data = {
+                organization: val('f-organization'),
+                description: val('f-description'),
+                roles: volunteerRoles,
+                visible: true
+            };
+
+            if (id) {
+                await api(`/api/${endpoint}/${id}`, { method: 'PUT', body: data });
+            } else {
+                await api(`/api/${endpoint}`, { method: 'POST', body: data });
+            }
+            await loadVolunteer();
+            await loadTimeline();
+            break;
     }
 
     closeModal();
@@ -1565,6 +1729,9 @@ async function showAllItems() {
     
     for (const exp of cv.experiences) {
         await api(`/api/experiences/${exp.id}`, { method: 'PUT', body: { ...exp, visible: true } });
+    }
+    for (const vol of cv.volunteer_work || []) {
+        await api(`/api/volunteer/${vol.id}`, { method: 'PUT', body: { ...vol, visible: true } });
     }
     for (const cert of cv.certifications) {
         await api(`/api/certifications/${cert.id}`, { method: 'PUT', body: { ...cert, visible: true } });
@@ -1664,6 +1831,7 @@ function getEndpoint(type) {
 async function reloadSection(endpoint) {
     switch (endpoint) {
         case 'experiences': await loadExperiences(); break;
+        case 'volunteer': await loadVolunteer(); break;
         case 'certifications': await loadCertifications(); break;
         case 'education': await loadEducation(); break;
         case 'skills': await loadSkills(); break;
@@ -2186,6 +2354,39 @@ function moveUpIcon() {
 
 function moveDownIcon() {
     return '<span class="material-symbols-outlined" style="font-size:14px">expand_more</span>';
+}
+
+async function moveVolunteer(id, direction) {
+    const container = document.getElementById('volunteerList');
+    const cards = Array.from(container.querySelectorAll('.item-card'));
+    const index = cards.findIndex(c => c.dataset.id === String(id));
+    if (index === -1) return;
+
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= cards.length) return;
+
+    if (direction === 'up') {
+        cards[swapIndex].before(cards[index]);
+    } else {
+        cards[swapIndex].after(cards[index]);
+    }
+
+    const updatedCards = Array.from(container.querySelectorAll('.item-card'));
+    const orderData = updatedCards.map((card, i) => ({
+        id: parseInt(card.dataset.id),
+        sort_order: i
+    }));
+
+    try {
+        await api('/api/reorder/volunteer', {
+            method: 'PUT',
+            body: { items: orderData }
+        });
+        toast(t('toast.order_saved'));
+        autoSaveActiveDataset();
+    } catch (err) {
+        toast(t('toast.order_failed'), 'error');
+    }
 }
 
 async function moveExperience(id, direction) {
