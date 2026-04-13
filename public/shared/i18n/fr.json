@@ -36,8 +36,10 @@
 
     "section.about": "Résumé professionnel",
     "section.timeline": "Parcours professionnel",
-    "section.experience": "Expérience professionnelle",
+    "section.experience": "Expérience Professionnelle",
+    "section.volunteer": "Bénévolat",
     "section.certifications": "Certifications",
+
     "section.education": "Formation",
     "section.skills": "Compétences et expertise",
     "section.projects": "Projets en vedette",
