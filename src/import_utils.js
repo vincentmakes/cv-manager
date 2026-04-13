@@ -49,10 +49,19 @@ function performImport(db, data) {
             const stmt = db.prepare(`INSERT INTO volunteer_work (
                 organization, description, roles, sort_order, visible
             ) VALUES (?, ?, ?, ?, ?)`);
+            const stripHtml = s => s && typeof s === 'string' ? s.replace(/<[^>]*>/g, '').trim() : '';
+            const sanitizeRoles = roles => (roles || []).slice(0, 20).map(r => ({
+                title: stripHtml(r.title || '').slice(0, 100),
+                start_date: r.start_date || '',
+                end_date: r.end_date || ''
+            }));
             data.volunteer_work.forEach((v, idx) => {
                 stmt.run(
-                    v.organization || '', v.description || null, JSON.stringify(v.roles || []), 
-                    v.sort_order !== undefined ? v.sort_order : idx, v.visible != false ? 1 : 0
+                    stripHtml(v.organization || '').slice(0, 200),
+                    v.description ? stripHtml(v.description).slice(0, 2000) : null,
+                    JSON.stringify(sanitizeRoles(v.roles)),
+                    v.sort_order !== undefined ? v.sort_order : idx,
+                    v.visible != false ? 1 : 0
                 );
             });
         }
@@ -169,4 +178,4 @@ function performImport(db, data) {
     })();
 }
 
-module.exports = { performImport };
+module.exports = { performImport, JSON_SAFE_PARSE };

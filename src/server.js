@@ -1,6 +1,6 @@
 const express = require('express');
 const Database = require('better-sqlite3');
-const { performImport } = require('./import_utils');
+const { performImport, JSON_SAFE_PARSE } = require('./import_utils');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -19,6 +19,29 @@ const CURRENT_VERSION = require(path.join(__dirname, '..', 'package.json')).vers
 let versionCache = { latest: null, checkedAt: null, changelog: null };
 const VERSION_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 const VERSION_URL = 'https://raw.githubusercontent.com/vincentmakes/cv-manager/main/version.json';
+
+// Helpers for input sanitization
+function stripHtml(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.replace(/<[^>]*>/g, '').trim();
+}
+
+function escapeJsString(str) {
+    return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/'/g, "\\'")
+        .replace(/</g, '\\u003C')
+        .replace(/>/g, '\\u003E')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
+
+// Input validation limits for volunteer work
+const MAX_ORGANIZATION_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_ROLE_TITLE_LENGTH = 100;
+const MAX_ROLES_COUNT = 20;
 
 async function checkLatestVersion() {
     // Return cached if fresh enough
@@ -133,7 +156,11 @@ app.use('/uploads', express.static(uploadsPath));
 function getTrackingCode() {
     try {
         const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode');
-        return (setting?.value && setting.value.trim()) ? setting.value.trim() : '';
+        const raw = (setting?.value && setting.value.trim()) ? setting.value.trim() : '';
+        if (!raw) return '';
+        // Defensive: reject any value containing script tags (should never pass allowlist)
+        if (/<\/?script/i.test(raw)) return '';
+        return raw;
     } catch (e) { return ''; }
 }
 
@@ -170,7 +197,7 @@ function servePublicIndex(req, res) {
             }
             
             // Inject default dataset slug (no DATASET_PREVIEW = no preview banner)
-            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}";</script>`;
+            const datasetScript = `<script>window.DATASET_SLUG = "${escapeJsString(defaultDataset.slug)}";</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
             
             return res.type('html').send(html);
@@ -223,7 +250,7 @@ function serveDatasetPage(req, res) {
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
         
         // Inject slug only (no DATASET_PREVIEW = public view, no preview banner)
-        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}";</script>`;
+        const datasetScript = `<script>window.DATASET_SLUG = "${escapeJsString(dataset.slug)}";</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
         
         // Apply noindex if slugsIndex setting is not enabled
@@ -646,7 +673,33 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (date normalization):', err.message); }
 
-    // Step 3: Insert default data (after migration ensures sort_order exists)
+    // Step 3-indexes: Create performance indexes for (visible, sort_order) query patterns
+    try {
+        db.exec(`
+            CREATE INDEX IF NOT EXISTS idx_volunteer_work_visible_sort ON volunteer_work(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_experiences_visible_sort ON experiences(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_certifications_visible_sort ON certifications(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_education_visible_sort ON education(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_skill_categories_visible_sort ON skill_categories(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_projects_visible_sort ON projects(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_custom_sections_visible_sort ON custom_sections(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_custom_section_items_visible_sort ON custom_section_items(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_section_visibility_visible_sort ON section_visibility(visible, sort_order);
+            CREATE INDEX IF NOT EXISTS idx_skills_sort ON skills(sort_order);
+        `);
+        console.log('Migration: Created visibility/sort indexes');
+    } catch (err) { console.log('Migration check (indexes):', err.message); }
+
+    // Step 3-country-code: Add country_code to volunteer_work if missing
+    try {
+        const volInfo = db.prepare("PRAGMA table_info(volunteer_work)").all();
+        if (!volInfo.some(col => col.name === 'country_code')) {
+            db.exec("ALTER TABLE volunteer_work ADD COLUMN country_code TEXT DEFAULT ''");
+            console.log('Migration: Added country_code to volunteer_work');
+        }
+    } catch (err) { console.log('Migration check (volunteer_work country_code):', err.message); }
+
+    // Step 4: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
     DEFAULT_SECTION_ORDER.forEach((section, index) => {
         db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, 1, ?)').run(section, index);
@@ -757,7 +810,7 @@ function gatherCvData() {
     return {
         profile,
         experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible })),
-        volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: !!v.visible })),
+        volunteer_work: volunteer_work.map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles), visible: !!v.visible })),
         certifications: certifications.map(c => ({ ...c, visible: !!c.visible })),
         education: education.map(e => ({ ...e, visible: !!e.visible })),
         skills: skillCategories.map(cat => ({ ...cat, visible: !!cat.visible, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })),
@@ -817,7 +870,7 @@ function buildTimelineItems({ publicView = false, sectionVisibility = null } = {
                 : 'SELECT id, organization, roles, visible FROM volunteer_work ORDER BY sort_order ASC'
         ).all();
         volunteerRaw.forEach(v => {
-            const roles = v.roles ? JSON.parse(v.roles) : [];
+            const roles = JSON_SAFE_PARSE(v.roles);
             roles.forEach((role, ridx) => {
                 volunteer.push({
                     id: `vol_${v.id}_${ridx}`,
@@ -1034,7 +1087,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT id, job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
-    publicApp.get('/api/volunteer', (req, res) => { res.json(db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all().map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: true }))); });
+    publicApp.get('/api/volunteer', (req, res) => { res.json(db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all().map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles), visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
@@ -1057,7 +1110,7 @@ if (PUBLIC_ONLY) {
         const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
         const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all();
         const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all();
-        res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) });
+        res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles) })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) });
     });
 
     // Public versioned CV routes
@@ -1100,10 +1153,18 @@ if (PUBLIC_ONLY) {
     app.put('/api/experiences/:id/logo', express.json(), (req, res) => {
         const { filename } = req.body;
         if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        // Strict filename validation: only alphanumeric, underscore, hyphen, dot — prevents path traversal
+        if (!/^[a-zA-Z0-9_\-.]{1,100}$/.test(filename)) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
         const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id);
         if (!exp) return res.status(404).json({ error: 'Experience not found' });
-        // Verify the file actually exists in uploads
-        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
+        const filePath = path.join(uploadsPath, filename);
+        // Resolve and verify the file is within uploads directory
+        if (!filePath.startsWith(path.resolve(uploadsPath))) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Logo file not found' });
         db.prepare('UPDATE experiences SET logo_filename = ? WHERE id = ?').run(filename, req.params.id);
         res.json({ success: true, filename });
     });
@@ -1335,7 +1396,26 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     app.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
-    app.put('/api/settings/:key', (req, res) => { db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(req.params.key, req.body.value); res.json({ success: true }); });
+    app.put('/api/settings/:key', (req, res) => {
+        const { key } = req.params;
+        let { value } = req.body;
+        // Validate trackingCode against allowlist at save time
+        if (key === 'trackingCode') {
+            if (value && typeof value === 'string') {
+                value = value.trim();
+                // Reject if it looks like a script injection attempt
+                if (value.length > 1000 || /<\/?script/i.test(value)) {
+                    return res.status(400).json({ error: 'Invalid tracking code' });
+                }
+                // Accept only GA4/GTM-compatible script tags
+                if (value && !/^<script[^>]*>([\s\S]*)?<\/script>$/i.test(value)) {
+                    return res.status(400).json({ error: 'Invalid tracking code format' });
+                }
+            }
+        }
+        db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value);
+        res.json({ success: true });
+    });
 
     // Version check endpoint (admin only)
     app.get('/api/version', async (req, res) => {
@@ -1379,11 +1459,53 @@ if (PUBLIC_ONLY) {
     app.put('/api/experiences/:id', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM experiences WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE experiences SET job_title = ?, company_name = ?, start_date = ?, end_date = ?, location = ?, country_code = ?, highlights = ?, summary = ?, visible = ?, sort_order = ? WHERE id = ?`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id); if (exp && exp.logo_filename) { const refCount = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(exp.logo_filename).cnt; if (refCount <= 1) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM experiences WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
-    app.get('/api/volunteer', (req, res) => { const volunteer = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all(); res.json(volunteer.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: !!v.visible }))); });
-    app.get('/api/volunteer/:id', (req, res) => { const vol = db.prepare('SELECT * FROM volunteer_work WHERE id = ?').get(req.params.id); if (!vol) return res.status(404).json({ error: 'Not found' }); res.json({ ...vol, roles: vol.roles ? JSON.parse(vol.roles) : [], visible: !!vol.visible }); });
-    app.post('/api/volunteer', (req, res) => { const { organization, description, roles } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM volunteer_work').get(); const result = db.prepare(`INSERT INTO volunteer_work (organization, description, roles, sort_order) VALUES (?, ?, ?, ?)`).run(organization, description || null, JSON.stringify(roles || []), (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
-    app.put('/api/volunteer/:id', (req, res) => { const { organization, description, roles, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM volunteer_work WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE volunteer_work SET organization = ?, description = ?, roles = ?, visible = ?, sort_order = ? WHERE id = ?`).run(organization, description || null, JSON.stringify(roles || []), newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
-    app.delete('/api/volunteer/:id', (req, res) => { db.prepare('DELETE FROM volunteer_work WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+    app.get('/api/volunteer', (req, res) => { const volunteer = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all(); res.json(volunteer.map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles), visible: !!v.visible }))); });
+    app.get('/api/volunteer/:id', (req, res) => { const vol = db.prepare('SELECT * FROM volunteer_work WHERE id = ?').get(req.params.id); if (!vol) return res.status(404).json({ error: 'Not found' }); res.json({ ...vol, roles: JSON_SAFE_PARSE(vol.roles), visible: !!vol.visible }); });
+    app.post('/api/volunteer', (req, res) => {
+        const { organization, description, roles } = req.body;
+        if (!organization || typeof organization !== 'string' || organization.length > MAX_ORGANIZATION_LENGTH) {
+            return res.status(400).json({ error: 'Invalid organization' });
+        }
+        if (description && description.length > MAX_DESCRIPTION_LENGTH) {
+            return res.status(400).json({ error: 'Description too long' });
+        }
+        const sanitizedRoles = (roles || []).slice(0, MAX_ROLES_COUNT).map(r => ({
+            title: stripHtml(r.title || '').slice(0, MAX_ROLE_TITLE_LENGTH),
+            start_date: r.start_date || '',
+            end_date: r.end_date || ''
+        }));
+        const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM volunteer_work').get();
+        const result = db.prepare(`INSERT INTO volunteer_work (organization, description, roles, sort_order) VALUES (?, ?, ?, ?)`)
+            .run(stripHtml(organization), description ? stripHtml(description) : null, JSON.stringify(sanitizedRoles), (maxOrder.max || 0) + 1);
+        res.json({ id: result.lastInsertRowid });
+    });
+    app.put('/api/volunteer/:id', (req, res) => {
+        const { organization, description, roles, visible, sort_order } = req.body;
+        const existing = db.prepare('SELECT sort_order, visible FROM volunteer_work WHERE id = ?').get(req.params.id);
+        if (!existing) return res.status(404).json({ error: 'Not found' });
+        if (organization && organization.length > MAX_ORGANIZATION_LENGTH) {
+            return res.status(400).json({ error: 'Organization too long' });
+        }
+        if (description && description.length > MAX_DESCRIPTION_LENGTH) {
+            return res.status(400).json({ error: 'Description too long' });
+        }
+        const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0);
+        const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1);
+        const sanitizedRoles = (roles || []).slice(0, MAX_ROLES_COUNT).map(r => ({
+            title: stripHtml(r.title || '').slice(0, MAX_ROLE_TITLE_LENGTH),
+            start_date: r.start_date || '',
+            end_date: r.end_date || ''
+        }));
+        db.prepare(`UPDATE volunteer_work SET organization = ?, description = ?, roles = ?, visible = ?, sort_order = ? WHERE id = ?`)
+            .run(stripHtml(organization), description ? stripHtml(description) : null, JSON.stringify(sanitizedRoles), newVisible, newSortOrder, req.params.id);
+        res.json({ success: true });
+    });
+    app.delete('/api/volunteer/:id', (req, res) => {
+        const vol = db.prepare('SELECT id FROM volunteer_work WHERE id = ?').get(req.params.id);
+        if (!vol) return res.status(404).json({ error: 'Not found' });
+        db.prepare('DELETE FROM volunteer_work WHERE id = ?').run(req.params.id);
+        res.json({ success: true });
+    });
 
     app.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: !!c.visible }))); });
     app.get('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT * FROM certifications WHERE id = ?').get(req.params.id); if (!cert) return res.status(404).json({ error: 'Not found' }); res.json({ ...cert, visible: !!cert.visible }); });
@@ -1410,9 +1532,16 @@ if (PUBLIC_ONLY) {
     app.put('/api/certifications/:id/logo', express.json(), (req, res) => {
         const { filename } = req.body;
         if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        if (!/^[a-zA-Z0-9_\-.]{1,100}$/.test(filename)) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
         const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id);
         if (!cert) return res.status(404).json({ error: 'Certification not found' });
-        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
+        const filePath = path.join(uploadsPath, filename);
+        if (!filePath.startsWith(path.resolve(uploadsPath))) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Logo file not found' });
         db.prepare('UPDATE certifications SET logo_filename = ? WHERE id = ?').run(filename, req.params.id);
         res.json({ success: true, filename });
     });
@@ -1539,9 +1668,16 @@ if (PUBLIC_ONLY) {
     app.put('/api/education/:id/logo', express.json(), (req, res) => {
         const { filename } = req.body;
         if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        if (!/^[a-zA-Z0-9_\-.]{1,100}$/.test(filename)) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
         const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id);
         if (!edu) return res.status(404).json({ error: 'Education not found' });
-        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
+        const filePath = path.join(uploadsPath, filename);
+        if (!filePath.startsWith(path.resolve(uploadsPath))) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Logo file not found' });
         db.prepare('UPDATE education SET logo_filename = ? WHERE id = ?').run(filename, req.params.id);
         res.json({ success: true, filename });
     });
@@ -1788,7 +1924,7 @@ if (PUBLIC_ONLY) {
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
             
             // Inject script to load dataset data instead of live data (admin preview mode)
-            const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_PREVIEW = true;</script>`;
+            const datasetScript = `<script>window.DATASET_SLUG = "${escapeJsString(dataset.slug)}"; window.DATASET_PREVIEW = true;</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
             
             res.type('html').send(html);
@@ -1962,7 +2098,7 @@ if (PUBLIC_ONLY) {
         res.json(buildTimelineItems({ publicView: false }));
     });
 
-    app.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); const volunteer_work = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all(); const customItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all(); const customSectionsData = customSections.map(s => ({ ...s, visible: !!s.visible, metadata: s.metadata ? JSON.parse(s.metadata) : null, items: customItems.filter(i => i.section_id === s.id).map(i => ({ ...i, visible: !!i.visible, metadata: i.metadata ? JSON.parse(i.metadata) : null })) })); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData, customSections: customSectionsData }); });
+    app.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); const volunteer_work = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all(); const customItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all(); const customSectionsData = customSections.map(s => ({ ...s, visible: !!s.visible, metadata: s.metadata ? JSON.parse(s.metadata) : null, items: customItems.filter(i => i.section_id === s.id).map(i => ({ ...i, visible: !!i.visible, metadata: i.metadata ? JSON.parse(i.metadata) : null })) })); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles) })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData, customSections: customSectionsData }); });
 
     app.post("/api/import", (req, res) => { try { performImport(db, req.body); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
@@ -2206,8 +2342,8 @@ if (PUBLIC_ONLY) {
                             addParagraph(vol.description, sz(9), { color: '#333' });
                         }
 
-                        // Render each role
-                        const roles = vol.roles || [];
+                        // Render each role (skip entries with no meaningful title)
+                        const roles = (vol.roles || []).filter(r => r.title && r.title.trim());
                         roles.forEach(role => {
                             const dateStr = `${fmtDate(role.start_date)} – ${role.end_date ? fmtDate(role.end_date) : 'Present'}`;
                             const roleLine = `${dateStr}: ${role.title || ''}`;
@@ -2402,7 +2538,7 @@ if (PUBLIC_ONLY) {
             const staticData = {
                 profile,
                 experiences: cvData.experiences,
-                volunteer: cvData.volunteer_work,
+                volunteer_work: cvData.volunteer_work,
                 certifications,
                 education: cvData.education,
                 skills: cvData.skills,
@@ -2588,7 +2724,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { res.json(db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
-    publicApp.get('/api/volunteer', (req, res) => { res.json(db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all().map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: true }))); });
+    publicApp.get('/api/volunteer', (req, res) => { res.json(db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all().map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles), visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
@@ -2601,7 +2737,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get("/api/cv", (req, res) => { const profile = db.prepare("SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1").get(); const experiences = db.prepare("SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC").all(); const volunteer_work = db.prepare("SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC").all(); const certifications = db.prepare("SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC").all(); const education = db.prepare("SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC").all(); const skillCategories = db.prepare("SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC").all(); const skills = db.prepare("SELECT * FROM skills ORDER BY sort_order ASC").all(); const projects = db.prepare("SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC").all(); const sectionOrder = db.prepare("SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC").all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get("/api/cv", (req, res) => { const profile = db.prepare("SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1").get(); const experiences = db.prepare("SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC").all(); const volunteer_work = db.prepare("SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC").all(); const certifications = db.prepare("SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC").all(); const education = db.prepare("SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC").all(); const skillCategories = db.prepare("SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC").all(); const skills = db.prepare("SELECT * FROM skills ORDER BY sort_order ASC").all(); const projects = db.prepare("SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC").all(); const sectionOrder = db.prepare("SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC").all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: JSON_SAFE_PARSE(v.roles) })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
