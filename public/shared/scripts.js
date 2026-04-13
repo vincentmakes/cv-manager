@@ -551,7 +551,8 @@ function computeTimelineBranches(items) {
 }
 
 // Compute time-scale positions for timeline items
-// Each item's dot is placed at the midpoint of its duration
+// Each item's dot is placed at the start of its duration so long-running entries
+// keep their chronological ordering against later, shorter entries.
 // Returns an array of { leftPct, widthPct, startPct, endPct } for each segment
 function computeTimePositions(segments) {
     if (!segments.length) return [];
@@ -569,9 +570,8 @@ function computeTimePositions(segments) {
     return segments.map(seg => {
         const startPct = pad + ((seg.startNum - minTime) / span) * usable;
         const endPct = pad + ((seg.endNum - minTime) / span) * usable;
-        const midPct = (startPct + endPct) / 2;
         return {
-            leftPct: midPct,
+            leftPct: startPct,
             widthPct: itemWidthPct,
             startPct,
             endPct
@@ -583,20 +583,6 @@ function computeTimePositions(segments) {
 // Sorted by start_date ASC (oldest first - left to right)
 async function loadTimeline() {
     const timeline = await api('/api/timeline');
-
-    // Sort by start_date ascending (oldest first for timeline)
-    timeline.sort((a, b) => {
-        const getStartFromPeriod = (item) => {
-            if (item.start_date) return parseDateForSort(item.start_date);
-            if (item.period) {
-                const startPart = item.period.split(' - ')[0];
-                return parseDateForSort(startPart);
-            }
-            return 0;
-        };
-        return getStartFromPeriod(a) - getStartFromPeriod(b);
-    });
-
     renderTimelineItems(timeline, { interactive: true });
 }
 
@@ -607,9 +593,34 @@ function renderTimelineItems(items, options) {
     const interactive = options && options.interactive;
     const container = document.getElementById('timelineItems');
     const timelineContainer = container.closest('.timeline-container');
+    const getSortStart = (item) => {
+        if (item.start_date) return parseDateForSort(item.start_date);
+        if (item.period) {
+            const startPart = item.period.split(' - ')[0];
+            return parseDateForSort(startPart);
+        }
+        return 0;
+    };
+    const getSortEnd = (item) => {
+        if (item.end_date) return parseDateForSort(item.end_date);
+        if (item.period) {
+            const parts = item.period.split(' - ');
+            if (parts.length > 1) return parseDateForSort(parts[1]);
+        }
+        return 0;
+    };
+    const sortedItems = [...items].sort((a, b) => {
+        const startDiff = getSortStart(a) - getSortStart(b);
+        if (startDiff !== 0) return startDiff;
+
+        const endDiff = getSortEnd(a) - getSortEnd(b);
+        if (endDiff !== 0) return endDiff;
+
+        return String(a.id || '').localeCompare(String(b.id || ''));
+    });
 
     // Filter out hidden experiences so the timeline is regenerated dynamically
-    const visibleItems = items.filter(item => item.visible !== false);
+    const visibleItems = sortedItems.filter(item => item.visible !== false);
 
     let { branches, segments } = timelineBranching
         ? computeTimelineBranches(visibleItems)

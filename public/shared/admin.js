@@ -949,6 +949,9 @@ async function toggleSection(section) {
             customSection.visible = newValue;
         }
     }
+    if (section === 'experience' || section === 'volunteer' || section === 'timeline' || section.startsWith('custom_')) {
+        await loadTimeline();
+    }
     toast('Section visibility updated');
     autoSaveActiveDataset();
 }
