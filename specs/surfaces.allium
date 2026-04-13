@@ -50,6 +50,7 @@ surface PublicCV {
         dataset.education where visible = true
         dataset.skills where visible = true
         dataset.projects where visible = true
+        dataset.volunteer_work where visible = true
         dataset.custom_sections where visible = true
         
     -- No state-changing provides here, purely read-only

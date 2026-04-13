@@ -9,7 +9,8 @@ given {
     active_skills: List<cv/SkillCategory>
     active_projects: List<cv/Project>
     active_custom_sections: List<cv/CustomSection>
-    
+    active_volunteer_work: List<cv/VolunteerWork>
+
     active_dataset: cv/Dataset -- current dataset being edited
 }
 
@@ -25,6 +26,7 @@ rule SaveDataset {
         is_public: false,
         profile: active_profile,
         experiences: active_experiences,
+        volunteer_work: active_volunteer_work,
         certifications: active_certifications,
         education: active_education,
         skills: active_skills,
@@ -39,6 +41,7 @@ rule LoadDataset {
         active_dataset = dataset
         active_profile = dataset.profile
         active_experiences = dataset.experiences
+        active_volunteer_work = dataset.volunteer_work
         active_certifications = dataset.certifications
         active_education = dataset.education
         active_skills = dataset.skills
@@ -106,6 +109,7 @@ rule DatasetAutoSave {
     ensures:
         active_dataset.profile = active_profile
         active_dataset.experiences = active_experiences
+        active_dataset.volunteer_work = active_volunteer_work
         active_dataset.certifications = active_certifications
         active_dataset.education = active_education
         active_dataset.skills = active_skills
