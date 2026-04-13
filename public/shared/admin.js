@@ -962,7 +962,7 @@ async function toggleVisibility(endpoint, id, visible) {
     });
     await reloadSection(endpoint);
     // Regenerate timeline when experience visibility changes
-    if (endpoint === 'experiences') {
+    if (endpoint === 'experiences' || endpoint === 'volunteer') {
         await loadTimeline();
     }
     toast(t('toast.visibility_updated'));
@@ -1703,7 +1703,7 @@ async function deleteItem() {
         await api(`/api/${endpoint}/${id}`, { method: 'DELETE' });
         closeModal();
         await reloadSection(endpoint);
-        if (endpoint === 'experiences') await loadTimeline();
+        if (endpoint === 'experiences' || endpoint === 'volunteer') await loadTimeline();
         toast(t('toast.deleted'));
         autoSaveActiveDataset();
     }
@@ -1713,7 +1713,7 @@ async function confirmDelete(endpoint, id) {
     if (confirm(t('confirm.delete_item'))) {
         await api(`/api/${endpoint}/${id}`, { method: 'DELETE' });
         await reloadSection(endpoint);
-        if (endpoint === 'experiences') await loadTimeline();
+        if (endpoint === 'experiences' || endpoint === 'volunteer') await loadTimeline();
         toast(t('toast.deleted'));
         autoSaveActiveDataset();
     }
@@ -1820,6 +1820,7 @@ async function importData(event) {
 function getEndpoint(type) {
     const map = {
         'experience': 'experiences',
+        'volunteer': 'volunteer',
         'certification': 'certifications',
         'education': 'education',
         'skill': 'skills',

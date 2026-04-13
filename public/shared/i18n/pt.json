@@ -339,9 +339,7 @@
     "duration.years": "{{count}} ano",
     "duration.months": "{{count}} meses",
     "duration.years_months": "{{years}} anos {{months}} meses",
-
     "toolbar.ats_export": "Documento ATS",
-
     "ats.title": "Documento compatível com ATS",
     "ats.scale": "Escala",
     "ats.paper_size": "Tamanho do papel",
@@ -349,11 +347,17 @@
     "ats.generate_failed": "Falha ao gerar documento ATS",
     "ats.downloaded": "Documento ATS baixado",
     "ats.what_is": "O que é a exportação ATS?",
-
     "present": "Presente",
     "loading": "A carregar...",
     "items": "itens",
     "view_link": "Ver →",
     "learn_more": "Saiba mais →",
-    "view_project": "Ver projeto"
+    "view_project": "Ver projeto",
+    "action.add_volunteer": "Trabalho Voluntário",
+    "btn.add_role": "Adicionar Função",
+    "form.organization": "Organização",
+    "form.role_title": "Título da Função",
+    "form.roles_periods": "Funções e Períodos",
+    "modal.add_volunteer": "Adicionar Trabalho Voluntário",
+    "modal.edit_volunteer": "Editar Trabalho Voluntário"
 }

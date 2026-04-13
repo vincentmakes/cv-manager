@@ -339,9 +339,7 @@
     "duration.years": "{{count}} jr",
     "duration.months": "{{count}} mnd",
     "duration.years_months": "{{years}} jr {{months}} mnd",
-
     "toolbar.ats_export": "ATS-document",
-
     "ats.title": "ATS-vriendelijk document",
     "ats.scale": "Schaal",
     "ats.paper_size": "Papierformaat",
@@ -349,11 +347,17 @@
     "ats.generate_failed": "ATS-document kon niet worden gegenereerd",
     "ats.downloaded": "ATS-document gedownload",
     "ats.what_is": "Wat is ATS-export?",
-
     "present": "Heden",
     "loading": "Laden...",
     "items": "items",
     "view_link": "Bekijken →",
     "learn_more": "Meer informatie →",
-    "view_project": "Project bekijken"
+    "view_project": "Project bekijken",
+    "action.add_volunteer": "Vrijwilligerswerk",
+    "btn.add_role": "Rol toevoegen",
+    "form.organization": "Organisatie",
+    "form.role_title": "Roltitel",
+    "form.roles_periods": "Rollen & Periodes",
+    "modal.add_volunteer": "Vrijwilligerswerk toevoegen",
+    "modal.edit_volunteer": "Vrijwilligerswerk bewerken"
 }

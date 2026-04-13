@@ -36,7 +36,6 @@
     "section.experience": "Experiencia Laboral",
     "section.volunteer": "Voluntariado",
     "section.certifications": "Certificaciones",
-
     "section.education": "Educación",
     "section.skills": "Habilidades y competencias",
     "section.projects": "Proyectos destacados",
@@ -340,9 +339,7 @@
     "duration.years": "{{count}} año",
     "duration.months": "{{count}} meses",
     "duration.years_months": "{{years}} años {{months}} meses",
-
     "toolbar.ats_export": "Documento ATS",
-
     "ats.title": "Documento compatible con ATS",
     "ats.scale": "Escala",
     "ats.paper_size": "Tamaño de papel",
@@ -350,11 +347,17 @@
     "ats.generate_failed": "Error al generar el documento ATS",
     "ats.downloaded": "Documento ATS descargado",
     "ats.what_is": "¿Qué es la exportación ATS?",
-
     "present": "Actualidad",
     "loading": "Cargando...",
     "items": "elementos",
     "view_link": "Ver →",
     "learn_more": "Más información →",
-    "view_project": "Ver proyecto"
+    "view_project": "Ver proyecto",
+    "action.add_volunteer": "Voluntariado",
+    "btn.add_role": "Añadir rol",
+    "form.organization": "Organización",
+    "form.role_title": "Título del rol",
+    "form.roles_periods": "Roles y periodos",
+    "modal.add_volunteer": "Añadir voluntariado",
+    "modal.edit_volunteer": "Editar voluntariado"
 }

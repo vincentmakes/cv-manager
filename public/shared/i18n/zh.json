@@ -36,7 +36,6 @@
     "section.experience": "工作经历",
     "section.volunteer": "志愿者工作",
     "section.certifications": "证书奖项",
-
     "section.education": "教育背景",
     "section.skills": "技能与专长",
     "section.projects": "精选项目",
@@ -341,7 +340,6 @@
     "duration.months": "{{count}}个月",
     "duration.years_months": "{{years}}年{{months}}个月",
     "toolbar.ats_export": "ATS 文档",
-
     "ats.title": "ATS 友好文档",
     "ats.scale": "缩放",
     "ats.paper_size": "纸张大小",
@@ -349,11 +347,17 @@
     "ats.generate_failed": "生成 ATS 文档失败",
     "ats.downloaded": "ATS 文档已下载",
     "ats.what_is": "什么是 ATS 导出？",
-
     "present": "至今",
     "loading": "加载中...",
     "items": "条目",
     "view_link": "查看 →",
     "learn_more": "了解更多 →",
-    "view_project": "查看项目"
+    "view_project": "查看项目",
+    "action.add_volunteer": "志愿者工作",
+    "btn.add_role": "添加角色",
+    "form.organization": "组织",
+    "form.role_title": "角色名称",
+    "form.roles_periods": "角色与时间段",
+    "modal.add_volunteer": "添加志愿者工作",
+    "modal.edit_volunteer": "编辑志愿者工作"
 }

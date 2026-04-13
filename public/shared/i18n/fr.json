@@ -10,7 +10,6 @@
     "toolbar.print": "Imprimer / PDF",
     "toolbar.menu": "Menu",
     "toolbar.change_theme": "Changer la couleur du thème",
-
     "theme.title": "Couleur du thème",
     "theme.brightness": "Luminosité",
     "theme.reset": "Réinitialiser",
@@ -23,7 +22,6 @@
     "theme.cyan": "Cyan",
     "theme.indigo": "Indigo",
     "theme.pink": "Rose",
-
     "banner.update": "Mise à jour disponible : v{{latest}} (vous utilisez la v{{current}})",
     "banner.whats_new": "Nouveautés",
     "banner.dismiss": "Fermer",
@@ -33,17 +31,14 @@
     "banner.saved": "✓ Enregistré",
     "banner.save_failed": "Échec de l'enregistrement",
     "badge.open_to_work": "Ouvert aux opportunités",
-
     "section.about": "Résumé professionnel",
     "section.timeline": "Parcours professionnel",
     "section.experience": "Expérience Professionnelle",
     "section.volunteer": "Bénévolat",
     "section.certifications": "Certifications",
-
     "section.education": "Formation",
     "section.skills": "Compétences et expertise",
     "section.projects": "Projets en vedette",
-
     "action.edit_profile": "Modifier le profil",
     "action.edit_about": "Modifier la présentation",
     "action.toggle_visibility": "Basculer la visibilité",
@@ -54,7 +49,6 @@
     "action.add_project": "Ajouter un projet",
     "action.move_up": "Déplacer vers le haut",
     "action.move_down": "Déplacer vers le bas",
-
     "btn.save": "Enregistrer",
     "btn.cancel": "Annuler",
     "btn.delete": "Supprimer",
@@ -63,7 +57,6 @@
     "btn.done": "Terminé",
     "btn.add_item": "Ajouter un élément",
     "btn.delete_section": "Supprimer la section",
-
     "modal.edit": "Modifier",
     "modal.edit_experience": "Modifier l'expérience",
     "modal.add_experience": "Ajouter une expérience",
@@ -75,7 +68,6 @@
     "modal.add_skill": "Ajouter une catégorie de compétences",
     "modal.edit_project": "Modifier le projet",
     "modal.add_project": "Ajouter un projet",
-
     "form.profile_picture": "Photo de profil",
     "form.show_profile_picture": "Afficher la photo de profil",
     "form.choose_image": "Choisir une image",
@@ -132,7 +124,6 @@
     "form.project_title": "Titre du projet",
     "form.technologies": "Technologies (séparées par des virgules)",
     "form.link_optional": "Lien (facultatif)",
-
     "icon.code": "Code / Programmation",
     "icon.server": "Serveur / Infrastructure",
     "icon.database": "Base de données / Données",
@@ -163,21 +154,18 @@
     "icon.eco": "Durabilité",
     "icon.finance": "Finance",
     "icon.default": "Par défaut",
-
     "settings.title": "Paramètres",
     "settings.tab.sections": "Sections et titres",
     "settings.tab.custom": "Sections personnalisées",
     "settings.tab.print": "Impression et export",
     "settings.tab.advanced": "Avancé",
     "settings.version.update_available": "Mise à jour disponible : v{{version}}",
-
     "settings.sections.info": "Faites glisser les sections pour les réorganiser, ou utilisez les boutons fléchés. Basculez la visibilité avec l'icône en forme d'œil. Cliquez sur les noms de section pour modifier les titres.",
     "settings.sections.click_to_edit": "Cliquer pour modifier le titre de la section",
     "settings.sections.reset_default": "Réinitialiser par défaut",
     "settings.custom.info": "Créez des sections personnalisées avec différentes mises en page. Les sections personnalisées apparaissent dans la liste d'ordre des sections ci-dessus.",
     "settings.custom.add": "Ajouter une section personnalisée",
     "settings.custom.no_sections": "Aucune section personnalisée pour le moment.\nCliquez sur « Ajouter une section personnalisée » pour en créer une.",
-
     "settings.print.public_button": "Bouton d'impression public",
     "settings.print.public_button_desc": "Afficher le bouton d'impression sur le site public",
     "settings.print.page_numbers": "Numéros de page",
@@ -199,7 +187,6 @@
     "settings.print.static_site_btn": "Télécharger ZIP",
     "settings.print.static_site_generating": "Génération...",
     "settings.print.static_site_docs_link": "Découvrez comment déployer votre site statique →",
-
     "settings.advanced.info": "Paramètres avancés pour le formatage, le référencement, les statistiques et les intégrations personnalisées.",
     "settings.advanced.date_format": "Format de date",
     "settings.advanced.date_format_desc": "Choisissez comment les dates sont affichées sur votre CV",
@@ -229,9 +216,7 @@
     "settings.advanced.tracking_code": "Code de suivi",
     "settings.advanced.tracking_code_desc": "Collez votre code de suivi analytique ici (Google Analytics, Matomo, etc.). Ce code sera injecté dans les pages CV publiques.",
     "settings.advanced.tracking_code_hint": "Le code est inséré avant la balise fermante </head>. Les modifications sont enregistrées lorsque vous cliquez sur « Enregistrer les modifications ».",
-
     "settings.language.info": "Choisissez la langue d'affichage de l'interface du gestionnaire de CV. Cela n'affecte pas le contenu de votre CV.",
-
     "datasets.title": "Jeux de données enregistrés",
     "datasets.legend.radio": "sélectionner le jeu de données que les visiteurs voient à votre URL racine",
     "datasets.legend.toggle": "partager d'autres jeux de données à leur propre URL /v/slug",
@@ -246,7 +231,6 @@
     "datasets.load": "Charger",
     "datasets.enter_name": "Entrez un nom pour ce jeu de données :",
     "datasets.cannot_delete_default": "Impossible de supprimer le jeu de données par défaut",
-
     "custom_section.edit_title": "Modifier la section personnalisée",
     "custom_section.add_title": "Ajouter une section personnalisée",
     "custom_section.section_name": "Nom de la section",
@@ -257,7 +241,6 @@
     "custom_section.grid_columns": "Colonnes de grille",
     "custom_section.show_on_timeline": "Afficher les éléments sur la chronologie de carrière",
     "custom_section.show_on_timeline_hint": "Les éléments apparaîtront aux côtés des expériences standard sur la chronologie",
-
     "custom_item.edit_title": "Modifier l'élément",
     "custom_item.add_title": "Ajouter un élément",
     "custom_item.platform": "Plateforme",
@@ -290,7 +273,6 @@
     "custom_item.caption_placeholder": "ex. Description de la photo",
     "custom_item.add_picture": "Ajouter une image",
     "custom_item.add_item": "Ajouter un élément",
-
     "toast.saved": "Enregistré avec succès",
     "toast.deleted": "Supprimé",
     "toast.visibility_updated": "Visibilité mise à jour",
@@ -349,19 +331,15 @@
     "toast.item_deleted": "Élément supprimé",
     "toast.item_delete_failed": "Échec de la suppression de l'élément",
     "toast.failed_save": "Échec de l'enregistrement",
-
     "confirm.delete_item": "Êtes-vous sûr de vouloir supprimer cet élément ?",
     "confirm.delete_dataset": "Supprimer le jeu de données « {{name}} » ? Cette action est irréversible.",
     "confirm.delete_section": "Supprimer cette section personnalisée et tous ses éléments ? Cette action est irréversible.",
     "confirm.delete_custom_item": "Supprimer cet élément ?",
     "confirm.delete_logo": "Supprimer ce logo inutilisé ? Cette action est irréversible.",
-
     "duration.years": "{{count}} an",
     "duration.months": "{{count}} mois",
     "duration.years_months": "{{years}} ans {{months}} mois",
-
     "toolbar.ats_export": "Document ATS",
-
     "ats.title": "Document compatible ATS",
     "ats.scale": "Échelle",
     "ats.paper_size": "Format papier",
@@ -369,12 +347,17 @@
     "ats.generate_failed": "Échec de la génération du document ATS",
     "ats.downloaded": "Document ATS téléchargé",
     "ats.what_is": "Qu'est-ce que l'export ATS ?",
-
     "present": "En poste",
     "loading": "Chargement...",
     "items": "éléments",
-
     "view_link": "Voir →",
     "learn_more": "En savoir plus →",
-    "view_project": "Voir le projet"
+    "view_project": "Voir le projet",
+    "action.add_volunteer": "Bénévolat",
+    "btn.add_role": "Ajouter un rôle",
+    "form.organization": "Organisation",
+    "form.role_title": "Titre du rôle",
+    "form.roles_periods": "Rôles et périodes",
+    "modal.add_volunteer": "Ajouter du bénévolat",
+    "modal.edit_volunteer": "Modifier le bénévolat"
 }
