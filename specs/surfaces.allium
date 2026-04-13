@@ -1,0 +1,59 @@
+use "./cv.allium" as cv
+use "./rules.allium" as rules
+
+-- Admin Surface: Full management of CV and datasets
+surface AdminDashboard {
+    facing admin: User
+    
+    -- Exposes current active state
+    exposes:
+        rules/active_profile
+        rules/active_experiences
+        rules/active_certifications
+        rules/active_education
+        rules/active_skills
+        rules/active_projects
+        rules/active_custom_sections
+        rules/active_dataset
+        
+    -- Dataset Management
+    provides:
+        SaveAsDatasetRequest(name: String)
+        LoadDatasetRequest(dataset: cv/Dataset)
+        SetDefaultRequest(dataset: cv/Dataset)
+        TogglePublicRequest(dataset: cv/Dataset, public: Boolean)
+        
+    -- Item Management (example actions)
+    provides:
+        UpdateProfileRequest(data: Map<String, Any>)
+        UpdateExperienceLogo(exp: cv/Experience, logo: String, propagate: Boolean)
+        UpdateEducationLogo(edu: cv/Education, logo: String, propagate: Boolean)
+        UpdateCertificationLogo(cert: cv/Certification, logo: String, propagate: Boolean)
+        
+    -- Import/Export
+    provides:
+        ExportJson() -- returns full cv data
+        ImportJson(data: Map<String, Any>) -- triggers full state replacement
+}
+
+-- Public Surface: Read-only access to published CVs
+surface PublicCV {
+    facing visitor: Visitor
+    
+    -- Scoped to a specific dataset (either default or public versioned)
+    context dataset: cv/Dataset where (is_default = true or is_public = true)
+    
+    exposes:
+        dataset.profile where visible = true
+        dataset.experiences where visible = true
+        dataset.certifications where visible = true
+        dataset.education where visible = true
+        dataset.skills where visible = true
+        dataset.projects where visible = true
+        dataset.custom_sections where visible = true
+        
+    -- No state-changing provides here, purely read-only
+    
+    guarantee:
+        "Sensitive contact info (email, phone) is only shown if dataset.is_public is false (or similar logic)"
+}

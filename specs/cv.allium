@@ -1,0 +1,142 @@
+-- Core CV Domain Entities
+
+entity Profile {
+    name: String
+    initials: String
+    title: String
+    subtitle: String
+    bio: String
+    location: String
+    linkedin: String
+    email: String
+    phone: String
+    languages: String
+    visible: Boolean
+    profile_picture_enabled: Boolean
+    open_to_work: Boolean
+}
+
+entity Experience {
+    job_title: String
+    company_name: String
+    start_date: String -- ISO YYYY-MM
+    end_date: String? -- null means "Present"
+    location: String
+    country_code: String -- ISO 2-letter
+    highlights: List<String>
+    summary: String?
+    logo_filename: String?
+    logo_propagate: Boolean
+    sort_order: Integer
+    visible: Boolean
+
+    -- Derived
+    is_current: end_date = null
+}
+
+entity Certification {
+    name: String
+    provider: String
+    issue_date: String
+    expiry_date: String?
+    credential_id: String?
+    logo_filename: String?
+    logo_propagate: Boolean
+    sort_order: Integer
+    visible: Boolean
+}
+
+entity Education {
+    degree_title: String
+    institution_name: String
+    start_date: String
+    end_date: String
+    description: String?
+    logo_filename: String?
+    logo_propagate: Boolean
+    sort_order: Integer
+    visible: Boolean
+}
+
+entity SkillCategory {
+    name: String
+    icon: String -- code | server | database | cloud | settings | users | briefcase | cpu | layers | default
+    sort_order: Integer
+    visible: Boolean
+    skills: List<String>
+}
+
+entity Project {
+    title: String
+    description: String
+    technologies: List<String>
+    link: String?
+    sort_order: Integer
+    visible: Boolean
+}
+
+entity VolunteerWork {
+    organization: String
+    description: String?
+    roles: List<VolunteerRole>
+    sort_order: Integer
+    visible: Boolean
+}
+
+entity VolunteerRole {
+    title: String
+    start_date: String
+    end_date: String?
+}
+
+entity CustomSection {
+    name: String
+    section_key: String
+    layout_type: social-links | grid-2 | grid-3 | list | cards | bullet-list | free-text | picture-grid | timeline
+    icon: String
+    sort_order: Integer
+    visible: Boolean
+    metadata: Map<String, Any>?
+    items: List<CustomSectionItem> with section = this
+}
+
+entity CustomSectionItem {
+    section: CustomSection
+    title: String?
+    subtitle: String?
+    description: String?
+    link: String?
+    icon: String?
+    image: String?
+    metadata: Map<String, Any>?
+    sort_order: Integer
+    visible: Boolean
+}
+
+entity Setting {
+    key: String
+    value: String
+}
+
+entity Dataset {
+    name: String
+    slug: String
+    is_default: Boolean
+    is_public: Boolean
+    
+    -- Snapshot data
+    profile: Profile
+    experiences: List<Experience>
+    volunteer_work: List<VolunteerWork>
+    certifications: List<Certification>
+    education: List<Education>
+    skills: List<SkillCategory>
+    projects: List<Project>
+    custom_sections: List<CustomSection>
+    
+    -- Projections
+    timeline_items: experiences + volunteer_work + (custom_sections where layout_type = timeline).items
+    
+    -- Derived
+    url: is_default ? "/" : "/v/" + slug
+}

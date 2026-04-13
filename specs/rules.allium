@@ -1,0 +1,114 @@
+use "./cv.allium" as cv
+
+-- Active state for the admin mode
+given {
+    active_profile: cv/Profile
+    active_experiences: List<cv/Experience>
+    active_certifications: List<cv/Certification>
+    active_education: List<cv/Education>
+    active_skills: List<cv/SkillCategory>
+    active_projects: List<cv/Project>
+    active_custom_sections: List<cv/CustomSection>
+    
+    active_dataset: cv/Dataset -- current dataset being edited
+}
+
+-- Dataset Management
+
+rule SaveDataset {
+    when: SaveAsDatasetRequest(name: String)
+    let slug = name.to_slug() -- pseudo-function
+    ensures: cv/Dataset.created(
+        name: name,
+        slug: slug,
+        is_default: false,
+        is_public: false,
+        profile: active_profile,
+        experiences: active_experiences,
+        certifications: active_certifications,
+        education: active_education,
+        skills: active_skills,
+        projects: active_projects,
+        custom_sections: active_custom_sections
+    )
+}
+
+rule LoadDataset {
+    when: LoadDatasetRequest(dataset: cv/Dataset)
+    ensures:
+        active_dataset = dataset
+        active_profile = dataset.profile
+        active_experiences = dataset.experiences
+        active_certifications = dataset.certifications
+        active_education = dataset.education
+        active_skills = dataset.skills
+        active_projects = dataset.projects
+        active_custom_sections = dataset.custom_sections
+}
+
+rule SetDefaultDataset {
+    when: SetDefaultRequest(dataset: cv/Dataset)
+    let previous_default = cv/Dataset where is_default = true
+    ensures:
+        for d in previous_default: d.is_default = false
+        dataset.is_default = true
+}
+
+rule ToggleDatasetPublic {
+    when: TogglePublicRequest(dataset: cv/Dataset, public: Boolean)
+    ensures: dataset.is_public = public
+}
+
+-- Logo Propagation
+
+rule PropagateExperienceLogo {
+    when: UpdateExperienceLogo(exp: cv/Experience, logo: String, propagate: Boolean)
+    ensures: exp.logo_filename = logo
+    ensures: exp.logo_propagate = propagate
+    
+    if propagate:
+        for e in active_experiences where company_name = exp.company_name:
+            ensures: e.logo_filename = logo
+            ensures: e.logo_propagate = true
+}
+
+rule PropagateEducationLogo {
+    when: UpdateEducationLogo(edu: cv/Education, logo: String, propagate: Boolean)
+    ensures: edu.logo_filename = logo
+    ensures: edu.logo_propagate = propagate
+    
+    if propagate:
+        for e in active_education where institution_name = edu.institution_name:
+            ensures: e.logo_filename = logo
+            ensures: e.logo_propagate = true
+}
+
+rule PropagateCertificationLogo {
+    when: UpdateCertificationLogo(cert: cv/Certification, logo: String, propagate: Boolean)
+    ensures: cert.logo_filename = logo
+    ensures: cert.logo_propagate = propagate
+    
+    if propagate:
+        for c in active_certifications where provider = cert.provider:
+            ensures: c.logo_filename = logo
+            ensures: c.logo_propagate = true
+}
+
+-- Auto-Save (simplified as rule updates)
+rule UpdateProfile {
+    when: UpdateProfileRequest(data: Map<String, Any>)
+    ensures: active_profile.patch(data) -- simplified
+    ensures: DatasetAutoSave()
+}
+
+rule DatasetAutoSave {
+    when: DatasetAutoSave()
+    ensures:
+        active_dataset.profile = active_profile
+        active_dataset.experiences = active_experiences
+        active_dataset.certifications = active_certifications
+        active_dataset.education = active_education
+        active_dataset.skills = active_skills
+        active_dataset.projects = active_projects
+        active_dataset.custom_sections = active_custom_sections
+}
