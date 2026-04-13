@@ -1,5 +1,6 @@
 const express = require('express');
 const Database = require('better-sqlite3');
+const { performImport } = require('./import_utils');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -64,13 +65,14 @@ const SECTION_DISPLAY_NAMES = {
     'about': 'Professional Summary',
     'timeline': 'Career Timeline',
     'experience': 'Work Experience',
+    'volunteer': 'Volunteer Work',
     'certifications': 'Certifications',
     'education': 'Education',
     'skills': 'Skills & Expertise',
     'projects': 'Featured Projects'
 };
 
-const DEFAULT_SECTION_ORDER = ['about', 'timeline', 'experience', 'certifications', 'education', 'skills', 'projects'];
+const DEFAULT_SECTION_ORDER = ['about', 'timeline', 'experience', 'volunteer', 'certifications', 'education', 'skills', 'projects'];
 
 function checkFilesystemAccess(dir) {
     const testFile = path.join(dir, '.write-test-' + process.pid);
@@ -318,6 +320,7 @@ if (!PUBLIC_ONLY) {
         CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, profile_picture_enabled INTEGER DEFAULT 1, open_to_work INTEGER DEFAULT 0, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
         CREATE TABLE IF NOT EXISTS experiences (id INTEGER PRIMARY KEY AUTOINCREMENT, job_title TEXT NOT NULL, company_name TEXT NOT NULL, start_date TEXT, end_date TEXT, location TEXT, country_code TEXT DEFAULT '', highlights TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS volunteer_work (id INTEGER PRIMARY KEY AUTOINCREMENT, organization TEXT NOT NULL, description TEXT, roles TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS certifications (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, provider TEXT, issue_date TEXT, expiry_date TEXT, credential_id TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS education (id INTEGER PRIMARY KEY AUTOINCREMENT, degree_title TEXT NOT NULL, institution_name TEXT NOT NULL, start_date TEXT, end_date TEXT, description TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS skill_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, icon TEXT DEFAULT 'default', sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
@@ -717,6 +720,7 @@ function formatDateShort(dateStr) {
 function gatherCvData() {
     const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get();
     const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all();
+    const volunteer_work = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all();
     const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all();
     const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all();
     const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all();
@@ -753,6 +757,7 @@ function gatherCvData() {
     return {
         profile,
         experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible })),
+        volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: !!v.visible })),
         certifications: certifications.map(c => ({ ...c, visible: !!c.visible })),
         education: education.map(e => ({ ...e, visible: !!e.visible })),
         skills: skillCategories.map(cat => ({ ...cat, visible: !!cat.visible, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })),
@@ -933,12 +938,21 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT id, job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
+    publicApp.get('/api/volunteer', (req, res) => { res.json(db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all().map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
     publicApp.get('/api/timeline', (req, res) => {
         const experiences = db.prepare('SELECT id, company_name, job_title, start_date, end_date, country_code, logo_filename FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), start_date: exp.start_date, end_date: exp.end_date, countryCode: exp.country_code || '', visible: true, logo: exp.logo_filename || null }));
+        const volunteerRaw = db.prepare('SELECT id, organization, roles FROM volunteer_work WHERE visible = 1').all();
+        const volunteer = [];
+        volunteerRaw.forEach(v => {
+            const roles = v.roles ? JSON.parse(v.roles) : [];
+            roles.forEach((role, ridx) => {
+                volunteer.push({ id: `vol_${v.id}_${ridx}`, company: v.organization, role: role.title || '', period: formatPeriod(role.start_date, role.end_date), start_date: role.start_date, end_date: role.end_date, countryCode: '', visible: true, logo: null });
+            });
+        });
         const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all().filter(s => { const meta = s.metadata ? JSON.parse(s.metadata) : {}; return meta.show_on_timeline; });
         const customItems = [];
         for (const section of timelineSections) {
@@ -960,13 +974,14 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/cv', (req, res) => {
         const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get();
         const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all();
+        const volunteer_work = db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all();
         const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
         const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
         const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all();
         const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
         const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all();
         const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all();
-        res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) });
+        res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) });
     });
 
     // Public versioned CV routes
@@ -1287,6 +1302,12 @@ if (PUBLIC_ONLY) {
     app.post('/api/experiences', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM experiences').get(); const result = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
     app.put('/api/experiences/:id', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM experiences WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE experiences SET job_title = ?, company_name = ?, start_date = ?, end_date = ?, location = ?, country_code = ?, highlights = ?, summary = ?, visible = ?, sort_order = ? WHERE id = ?`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id); if (exp && exp.logo_filename) { const refCount = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(exp.logo_filename).cnt; if (refCount <= 1) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM experiences WHERE id = ?').run(req.params.id); res.json({ success: true }); });
+
+    app.get('/api/volunteer', (req, res) => { const volunteer = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all(); res.json(volunteer.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: !!v.visible }))); });
+    app.get('/api/volunteer/:id', (req, res) => { const vol = db.prepare('SELECT * FROM volunteer_work WHERE id = ?').get(req.params.id); if (!vol) return res.status(404).json({ error: 'Not found' }); res.json({ ...vol, roles: vol.roles ? JSON.parse(vol.roles) : [], visible: !!vol.visible }); });
+    app.post('/api/volunteer', (req, res) => { const { organization, description, roles } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM volunteer_work').get(); const result = db.prepare(`INSERT INTO volunteer_work (organization, description, roles, sort_order) VALUES (?, ?, ?, ?)`).run(organization, description || null, JSON.stringify(roles || []), (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
+    app.put('/api/volunteer/:id', (req, res) => { const { organization, description, roles, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM volunteer_work WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE volunteer_work SET organization = ?, description = ?, roles = ?, visible = ?, sort_order = ? WHERE id = ?`).run(organization, description || null, JSON.stringify(roles || []), newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
+    app.delete('/api/volunteer/:id', (req, res) => { db.prepare('DELETE FROM volunteer_work WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     app.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: !!c.visible }))); });
     app.get('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT * FROM certifications WHERE id = ?').get(req.params.id); if (!cert) return res.status(404).json({ error: 'Not found' }); res.json({ ...cert, visible: !!cert.visible }); });
@@ -1637,7 +1658,7 @@ if (PUBLIC_ONLY) {
             res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post("/api/datasets/:id/load", (req, res) => { const dataset = db.prepare("SELECT * FROM saved_datasets WHERE id = ?").get(req.params.id); if (!dataset) return res.status(404).json({ error: "Dataset not found" }); try { const data = JSON.parse(dataset.data); performImport(db, data); res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default }); } catch (err) { console.error("RESTORE ERROR:", err); res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
@@ -1863,6 +1884,14 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/timeline', (req, res) => {
         const experiences = db.prepare(`SELECT id, company_name, job_title, start_date, end_date, country_code, visible, logo_filename FROM experiences ORDER BY start_date ASC`).all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), start_date: exp.start_date, end_date: exp.end_date, countryCode: exp.country_code || '', visible: !!exp.visible, logo: exp.logo_filename || null }));
+        const volunteerRaw = db.prepare('SELECT id, organization, roles FROM volunteer_work').all();
+        const volunteer = [];
+        volunteerRaw.forEach(v => {
+            const roles = v.roles ? JSON.parse(v.roles) : [];
+            roles.forEach((role, ridx) => {
+                volunteer.push({ id: `vol_${v.id}_${ridx}`, company: v.organization, role: role.title || '', period: formatPeriod(role.start_date, role.end_date), start_date: role.start_date, end_date: role.end_date, countryCode: '', visible: true, logo: null });
+            });
+        });
         const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all().filter(s => { const meta = s.metadata ? JSON.parse(s.metadata) : {}; return meta.show_on_timeline; });
         const customItems = [];
         for (const section of timelineSections) {
@@ -1872,12 +1901,12 @@ if (PUBLIC_ONLY) {
                 customItems.push({ id: `cs_${item.id}`, company: item.subtitle || '', role: item.title || '', period: formatPeriod(meta.start_date, meta.end_date), start_date: meta.start_date || '', end_date: meta.end_date || '', countryCode: meta.country_code || '', visible: !!item.visible, logo: item.image || null });
             }
         }
-        res.json([...experiences, ...customItems]);
+        res.json([...experiences, ...volunteer, ...customItems]);
     });
 
-    app.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all(); const customItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all(); const customSectionsData = customSections.map(s => ({ ...s, visible: !!s.visible, metadata: s.metadata ? JSON.parse(s.metadata) : null, items: customItems.filter(i => i.section_id === s.id).map(i => ({ ...i, visible: !!i.visible, metadata: i.metadata ? JSON.parse(i.metadata) : null })) })); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData, customSections: customSectionsData }); });
+    app.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); const volunteer_work = db.prepare('SELECT * FROM volunteer_work ORDER BY sort_order ASC').all(); const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all(); const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all(); const sectionVisibility = {}; const sectionOrderData = []; sections.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null }); }); const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all(); const customItems = db.prepare('SELECT * FROM custom_section_items ORDER BY sort_order ASC').all(); const customSectionsData = customSections.map(s => ({ ...s, visible: !!s.visible, metadata: s.metadata ? JSON.parse(s.metadata) : null, items: customItems.filter(i => i.section_id === s.id).map(i => ({ ...i, visible: !!i.visible, metadata: i.metadata ? JSON.parse(i.metadata) : null })) })); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionVisibility, sectionOrder: sectionOrderData, customSections: customSectionsData }); });
 
-    app.post('/api/import', (req, res) => { const data = req.body; const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } }); try { importData(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post("/api/import", (req, res) => { try { performImport(db, req.body); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
     // ATS-friendly tagged PDF export (admin only)
     // Uses pdfkit directly for StructTreeRoot / tagged PDF support
@@ -2090,6 +2119,45 @@ if (PUBLIC_ONLY) {
                     });
                     advanceY(4);
                 },
+                volunteer: () => {
+                    const items = (cvData.volunteer_work || []).filter(v => v.visible !== false && v.visible !== 0);
+                    if (items.length === 0) return;
+                    addSectionHeading(getSectionName('volunteer'));
+                    items.forEach((vol, idx) => {
+                        if (idx > 0) {
+                            ensureSpace(12);
+                            advanceY(3);
+                            doc.moveTo(margin, y).lineTo(margin + contentW, y).lineWidth(0.25).strokeColor('#e0e0e0').stroke();
+                            advanceY(6);
+                        }
+                        
+                        // Organization name as H3
+                        if (vol.organization) {
+                            ensureSpace(sz(10) * 1.3 + 4);
+                            const h3 = doc.struct('H3');
+                            docStruct.add(h3);
+                            h3.add(doc.struct('Span', {}, () => {
+                                doc.fontSize(sz(10)).font('Helvetica-Bold').fillColor('#000');
+                                doc.text(vol.organization, margin, y, { width: contentW, continued: false });
+                            }));
+                            h3.end();
+                            advanceY(doc.fontSize(sz(10)).font('Helvetica-Bold').heightOfString(vol.organization, { width: contentW }) + 2);
+                        }
+
+                        if (vol.description) {
+                            addParagraph(vol.description, sz(9), { color: '#333' });
+                        }
+
+                        // Render each role
+                        const roles = vol.roles || [];
+                        roles.forEach(role => {
+                            const dateStr = `${fmtDate(role.start_date)} – ${role.end_date ? fmtDate(role.end_date) : 'Present'}`;
+                            const roleLine = `${dateStr}: ${role.title || ''}`;
+                            addParagraph(roleLine, sz(9), { color: '#555' });
+                        });
+                    });
+                    advanceY(4);
+                },
                 education: () => {
                     const items = (cvData.education || []).filter(e => e.visible !== false && e.visible !== 0);
                     if (items.length === 0) return;
@@ -2275,6 +2343,14 @@ if (PUBLIC_ONLY) {
 
             // Gather timeline data
             const timelineExperiences = db.prepare('SELECT id, company_name, job_title, start_date, end_date, country_code, logo_filename FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), start_date: exp.start_date, end_date: exp.end_date, countryCode: exp.country_code || '', visible: true, logo: exp.logo_filename || null }));
+            const volunteerRaw = db.prepare('SELECT id, organization, roles FROM volunteer_work WHERE visible = 1').all();
+            const volunteerTimeline = [];
+            volunteerRaw.forEach(v => {
+                const roles = v.roles ? JSON.parse(v.roles) : [];
+                roles.forEach((role, ridx) => {
+                    volunteerTimeline.push({ id: `vol_${v.id}_${ridx}`, company: v.organization, role: role.title || '', period: formatPeriod(role.start_date, role.end_date), start_date: role.start_date, end_date: role.end_date, countryCode: '', visible: true, logo: null });
+                });
+            });
             const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all().filter(s => { const meta = s.metadata ? JSON.parse(s.metadata) : {}; return meta.show_on_timeline; });
             const timelineCustomItems = [];
             for (const section of timelineSections) {
@@ -2288,6 +2364,7 @@ if (PUBLIC_ONLY) {
             const staticData = {
                 profile,
                 experiences: cvData.experiences,
+                volunteer: cvData.volunteer_work,
                 certifications,
                 education: cvData.education,
                 skills: cvData.skills,
@@ -2298,7 +2375,7 @@ if (PUBLIC_ONLY) {
                 settings,
                 layoutTypes: LAYOUT_TYPES,
                 socialPlatforms: SOCIAL_PLATFORMS,
-                timeline: [...timelineExperiences, ...timelineCustomItems]
+                timeline: [...timelineExperiences, ...volunteerTimeline, ...timelineCustomItems]
             };
 
             // Prepare HTML
@@ -2473,12 +2550,21 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { res.json(db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
+    publicApp.get('/api/volunteer', (req, res) => { res.json(db.prepare('SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC').all().map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [], visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
     publicApp.get('/api/timeline', (req, res) => {
         const experiences = db.prepare('SELECT id, company_name, job_title, start_date, end_date, country_code, logo_filename FROM experiences WHERE visible = 1 ORDER BY start_date ASC').all().map(exp => ({ id: exp.id, company: exp.company_name, role: exp.job_title, period: formatPeriod(exp.start_date, exp.end_date), start_date: exp.start_date, end_date: exp.end_date, countryCode: exp.country_code || '', visible: true, logo: exp.logo_filename || null }));
+        const volunteerRaw = db.prepare('SELECT id, organization, roles FROM volunteer_work WHERE visible = 1').all();
+        const volunteer = [];
+        volunteerRaw.forEach(v => {
+            const roles = v.roles ? JSON.parse(v.roles) : [];
+            roles.forEach((role, ridx) => {
+                volunteer.push({ id: `vol_${v.id}_${ridx}`, company: v.organization, role: role.title || '', period: formatPeriod(role.start_date, role.end_date), start_date: role.start_date, end_date: role.end_date, countryCode: '', visible: true, logo: null });
+            });
+        });
         const timelineSections = db.prepare(`SELECT id, metadata FROM custom_sections WHERE layout_type = 'timeline' AND visible = 1`).all().filter(s => { const meta = s.metadata ? JSON.parse(s.metadata) : {}; return meta.show_on_timeline; });
         const customItems = [];
         for (const section of timelineSections) {
@@ -2497,7 +2583,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get("/api/cv", (req, res) => { const profile = db.prepare("SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1").get(); const experiences = db.prepare("SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC").all(); const volunteer_work = db.prepare("SELECT organization, description, roles FROM volunteer_work WHERE visible = 1 ORDER BY sort_order ASC").all(); const certifications = db.prepare("SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC").all(); const education = db.prepare("SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC").all(); const skillCategories = db.prepare("SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC").all(); const skills = db.prepare("SELECT * FROM skills ORDER BY sort_order ASC").all(); const projects = db.prepare("SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC").all(); const sectionOrder = db.prepare("SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC").all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), volunteer_work: volunteer_work.map(v => ({ ...v, roles: v.roles ? JSON.parse(v.roles) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
