@@ -5,3 +5,5 @@ docker-compose.unraid.yml
 docker-compose.yml
 /node_modules
 /site
+/.full-review/
+/.full-stack-feature/
