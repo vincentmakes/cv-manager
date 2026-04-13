@@ -79,6 +79,14 @@
             <div class="items-list" id="experienceList"></div>
         </section>
 
+        <!-- Volunteer Work Section -->
+        <section class="section" id="section-volunteer">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="section.volunteer">Volunteer Work</h2>
+            </div>
+            <div class="items-list" id="volunteerList"></div>
+        </section>
+
         <!-- Certifications Section -->
         <section class="section" id="section-certifications">
             <div class="section-header">
@@ -154,6 +162,7 @@
             await loadProfile(false); // false = don't include email/phone
             await loadTimeline();
             await loadExperiencesReadOnly();
+            await loadVolunteerReadOnly();
             await loadCertificationsReadOnly();
             await loadEducationReadOnly();
             await loadSkillsReadOnly();
@@ -202,6 +211,7 @@
 
                 // Render sections
                 renderExperiencesFromData(data.experiences);
+                renderVolunteerFromData(data.volunteer);
                 renderCertificationsFromData(data.certifications);
                 renderEducationFromData(data.education);
                 renderSkillsFromData(data.skills);
@@ -294,6 +304,7 @@
                 renderProfileFromData(datasetData.profile);
                 renderTimelineFromData(datasetData.experiences, datasetData.customSections);
                 renderExperiencesFromData(datasetData.experiences);
+                renderVolunteerFromData(datasetData.volunteer_work);
                 renderCertificationsFromData(datasetData.certifications);
                 renderEducationFromData(datasetData.education);
                 renderSkillsFromData(datasetData.skills);
@@ -793,6 +804,7 @@
                 'about': document.getElementById('section-about'),
                 'timeline': document.getElementById('section-timeline'),
                 'experience': document.getElementById('section-experience'),
+                'volunteer': document.getElementById('section-volunteer'),
                 'certifications': document.getElementById('section-certifications'),
                 'education': document.getElementById('section-education'),
                 'skills': document.getElementById('section-skills'),

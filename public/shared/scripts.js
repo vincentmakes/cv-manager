@@ -1124,6 +1124,42 @@ function scrollToExperience(timelineItem) {
     }
 }
 
+// Load Volunteer Work (read-only version)
+async function loadVolunteerReadOnly() {
+    const volunteer = await api('/api/volunteer');
+    renderVolunteerFromData(volunteer);
+}
+
+function renderVolunteerFromData(volunteer) {
+    if (!volunteer) return;
+    const visible = volunteer.filter(v => v.visible !== false);
+    const container = document.getElementById('volunteerList');
+    if (!container) return;
+
+    container.innerHTML = visible.map(vol => {
+        const rolesHtml = (vol.roles || []).map(role => `
+            <div class="volunteer-role">
+                <span class="role-date">${formatDate(role.start_date)} - ${role.end_date ? formatDate(role.end_date) : t('present')}</span>
+                <span class="role-title">: ${escapeHtml(role.title)}</span>
+            </div>
+        `).join('');
+
+        return `
+            <article class="item-card" data-id="${vol.id}">
+                <div class="item-header">
+                    <div>
+                        <h3 class="item-title">${escapeHtml(vol.organization)}</h3>
+                    </div>
+                </div>
+                ${vol.description ? `<div class="item-summary">${escapeHtml(vol.description)}</div>` : ''}
+                <div class="volunteer-roles">
+                    ${rolesHtml}
+                </div>
+            </article>
+        `;
+    }).join('');
+}
+
 // Load Experiences (read-only version)
 // Sorted by start_date DESC (newest first)
 async function loadExperiencesReadOnly() {
@@ -1311,6 +1347,24 @@ async function generateATSContent() {
                 if (exp.highlights && exp.highlights.length > 0) {
                     ats.push('Responsibilities and Achievements:');
                     exp.highlights.forEach(h => ats.push(`- ${h}`));
+                }
+            });
+        ats.push('');
+    }
+    
+    // Volunteer Work - structured format for ATS
+    if (cv.volunteer_work && cv.volunteer_work.length > 0) {
+        ats.push('=== VOLUNTEER WORK ===');
+        cv.volunteer_work
+            .filter(vol => vol.visible !== false)
+            .forEach(vol => {
+                ats.push('');
+                ats.push(`Organization: ${vol.organization}`);
+                if (vol.description) ats.push(`Description: ${vol.description}`);
+                if (vol.roles && vol.roles.length > 0) {
+                    vol.roles.forEach(role => {
+                        ats.push(`- ${formatDateATS(role.start_date)} - ${role.end_date ? formatDateATS(role.end_date) : t('present')}: ${role.title}`);
+                    });
                 }
             });
         ats.push('');
