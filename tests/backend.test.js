@@ -233,7 +233,39 @@ describe('Backend API', () => {
                     provider: 'Amazon',
                     issue_date: '2024-01',
                     expiry_date: '2027-01',
-                    credential_id: 'AWS-123',
+                    credential_id: 'https://aws.amazon.com/verification/AWS-123',
+                }),
+            });
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(data.id);
+        });
+
+        it('POST /api/certifications rejects a non-URL credential_id', async () => {
+            const res = await fetch(`${BASE_URL}/api/certifications`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'BadCert',
+                    provider: 'X',
+                    issue_date: '2024-01',
+                    credential_id: 'not-a-url',
+                }),
+            });
+            assert.strictEqual(res.status, 400);
+            const data = await res.json();
+            assert.match(data.error, /URL/i);
+        });
+
+        it('POST /api/certifications accepts empty credential_id', async () => {
+            const res = await fetch(`${BASE_URL}/api/certifications`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'NoCredCert',
+                    provider: 'X',
+                    issue_date: '2024-01',
+                    credential_id: '',
                 }),
             });
             assert.strictEqual(res.status, 200);
@@ -268,7 +300,7 @@ describe('Backend API', () => {
             const res = await fetch(`${BASE_URL}/api/certifications/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: 'UpdatedCert', provider: 'NewProvider', issue_date: '2024-06', expiry_date: '2027-06', credential_id: 'NEW-456' }),
+                body: JSON.stringify({ name: 'UpdatedCert', provider: 'NewProvider', issue_date: '2024-06', expiry_date: '2027-06', credential_id: 'https://aws.amazon.com/verification/NEW-456' }),
             });
             assert.strictEqual(res.status, 200);
 
@@ -854,6 +886,30 @@ describe('Backend API', () => {
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.ok(Array.isArray(data));
+        });
+
+        it('GET /api/certifications exposes credential_id as URL', async () => {
+            // Create a cert via admin API with a credential URL
+            const credUrl = 'https://www.credly.com/badges/example/public-api-test';
+            const createRes = await fetch(`${BASE_URL}/api/certifications`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'PublicApiCert',
+                    provider: 'TestProv',
+                    issue_date: '2024-01',
+                    credential_id: credUrl,
+                }),
+            });
+            assert.strictEqual(createRes.status, 200);
+
+            const res = await fetch(`${PUBLIC_URL}/api/certifications`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(Array.isArray(data));
+            const cert = data.find(c => c.name === 'PublicApiCert');
+            assert.ok(cert, 'Created cert should appear in public API');
+            assert.strictEqual(cert.credential_id, credUrl, 'Public API should expose credential_id');
         });
 
         it('GET /api/cv returns full CV object', async () => {

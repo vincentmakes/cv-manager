@@ -750,6 +750,7 @@ async function loadCertifications() {
     
     container.innerHTML = certs.map(cert => {
         const hasLogo = !!cert.logo_filename;
+        const hasLink = isValidUrl(cert.credential_id);
         return `
         <article class="cert-card ${cert.visible ? '' : 'hidden-print'}${hasLogo ? ' has-logo' : ''}" data-id="${cert.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
@@ -766,7 +767,10 @@ async function loadCertifications() {
             </div>
             ${hasLogo ? `<img src="/uploads/${encodeURIComponent(cert.logo_filename)}" class="cert-logo" alt="${escapeHtml(cert.provider || '')}" onerror="this.style.display='none'">` : ''}
             <div class="cert-content">
-                <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                <div class="cert-header">
+                    <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                    ${hasLink ? `<a href="${escapeHtml(cert.credential_id)}" class="cert-link" target="_blank" rel="noopener" title="${t('view_credential')}">${linkIcon()}</a>` : ''}
+                </div>
                 <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
                 <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
             </div>
@@ -1187,8 +1191,8 @@ function certificationForm(d) {
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">${t('form.credential_id')}</label>
-            <input type="text" class="form-input" id="f-credential_id" value="${escapeHtml(d.credential_id || '')}">
+            <label class="form-label">${t('form.credential_url')}</label>
+            <input type="url" class="form-input" id="f-credential_id" value="${escapeHtml(d.credential_id || '')}" placeholder="${t('form.credential_url_placeholder')}">
         </div>
     `;
 }
@@ -1417,12 +1421,19 @@ async function saveItem() {
             const certExpiry = normalizeDate(val('f-expiry_date'));
             if (certExpiry.error) { toast(certExpiry.error, 'error'); return; }
 
+            // Validate credential URL if provided
+            const certCredUrl = val('f-credential_id').trim();
+            if (certCredUrl && !isValidUrl(certCredUrl)) {
+                toast(t('toast.credential_url_invalid'), 'error');
+                return;
+            }
+
             data = {
                 name: val('f-name'),
                 provider: val('f-provider'),
                 issue_date: certIssue.value,
                 expiry_date: certExpiry.value,
-                credential_id: val('f-credential_id'),
+                credential_id: certCredUrl,
                 visible: true
             };
             {

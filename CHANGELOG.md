@@ -4,6 +4,19 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.4] - 2026-04-14
+
+### Fixed
+- Certifications: the credential field is now treated as a URL and renders a link icon (opens in a new tab) on both the admin and public views, matching the Projects section. Previously the value was stored but never rendered, and was stripped from the public API.
+
+### Added
+- Client- and server-side URL validation for certification credential URLs (http/https only).
+- Renamed the field label to "Credential URL" across all 8 locales and added a URL placeholder.
+- New i18n keys: `form.credential_url`, `form.credential_url_placeholder`, `toast.credential_url_invalid`, `view_credential`.
+
+### Changed
+- Demo data: sample `credential_id` values in `demo-cv-data.json` are now example verification URLs so fresh installs demonstrate the link-icon feature.
+
 ## [1.26.3] - 2026-04-03
 
 ### Fixed

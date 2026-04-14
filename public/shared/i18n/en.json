@@ -117,6 +117,8 @@
     "form.issue_date_placeholder": "Jan 2024",
     "form.expiry_date": "Expiry Date (optional)",
     "form.credential_id": "Credential ID (optional)",
+    "form.credential_url": "Credential URL (optional)",
+    "form.credential_url_placeholder": "https://example.com/verify/ABC123",
     "form.degree": "Degree / Qualification",
     "form.institution": "Institution",
     "form.start_year": "Start Year",
@@ -347,6 +349,7 @@
     "toast.item_deleted": "Item deleted",
     "toast.item_delete_failed": "Failed to delete item",
     "toast.failed_save": "Failed to save",
+    "toast.credential_url_invalid": "Credential URL must start with http:// or https://",
 
     "confirm.delete_item": "Are you sure you want to delete this item?",
     "confirm.delete_dataset": "Delete dataset \"{{name}}\"? This cannot be undone.",
@@ -373,5 +376,6 @@
     "items": "items",
     "view_link": "View →",
     "learn_more": "Learn More →",
-    "view_project": "View Project"
+    "view_project": "View Project",
+    "view_credential": "View Credential"
 }

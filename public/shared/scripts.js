@@ -108,6 +108,17 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Validate that a string is an http(s) URL. Used for optional URL fields.
+function isValidUrl(v) {
+    if (!v) return false;
+    try {
+        const u = new URL(v);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
 // Global date format setting - loaded from settings API
 let dateFormatSetting = 'MMM YYYY'; // default: "Jan 2020"
 let timelineYearOnly = true; // default: show years only in timeline
@@ -1161,11 +1172,15 @@ async function loadCertificationsReadOnly() {
     
     container.innerHTML = certs.map(cert => {
         const hasLogo = !!cert.logo_filename;
+        const hasLink = isValidUrl(cert.credential_id);
         return `
         <article class="cert-card${hasLogo ? ' has-logo' : ''}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
             ${hasLogo ? `<img src="/uploads/${encodeURIComponent(cert.logo_filename)}" class="cert-logo" alt="${escapeHtml(cert.provider || '')}" onerror="this.style.display='none'">` : ''}
             <div class="cert-content">
-                <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                <div class="cert-header">
+                    <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                    ${hasLink ? `<a href="${escapeHtml(cert.credential_id)}" class="cert-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_credential')}">${icons.link}</a>` : ''}
+                </div>
                 <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
                 <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
             </div>

@@ -526,10 +526,43 @@ body {
     min-width: 0;
 }
 
+.cert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+}
+
 .cert-name {
     font-size: 13px;
     font-weight: 600;
     color: var(--primary-dark);
+    flex: 1;
+    min-width: 0;
+}
+
+.cert-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    background: var(--light);
+    color: var(--primary);
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.cert-link:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.cert-link svg, .cert-link .material-symbols-outlined {
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
 }
 
 .cert-date {
@@ -1334,6 +1367,9 @@ body.has-preview-banner .container {
     .cert-card.has-logo { gap: 6px; }
     .cert-logo { width: 24px; height: 24px; }
     .cert-name { font-size: 11px; }
+    .cert-link { width: 16px; height: 16px; }
+    .cert-link svg { width: 9px; height: 9px; }
+    .cert-link .material-symbols-outlined { font-size: 9px; }
     .cert-date { font-size: 9px; }
     .cert-provider { font-size: 10px; }
     

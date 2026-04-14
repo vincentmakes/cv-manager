@@ -110,6 +110,8 @@
     "form.issue_date_placeholder": "2024年1月",
     "form.expiry_date": "到期日期（可选）",
     "form.credential_id": "证书编号（可选）",
+    "form.credential_url": "证书链接（可选）",
+    "form.credential_url_placeholder": "https://example.com/verify/ABC123",
     "form.degree": "学位 / 学历",
     "form.institution": "院校",
     "form.start_year": "入学年份",
@@ -330,6 +332,7 @@
     "toast.item_deleted": "条目已删除",
     "toast.item_delete_failed": "删除条目失败",
     "toast.failed_save": "保存失败",
+    "toast.credential_url_invalid": "证书链接必须以 http:// 或 https:// 开头",
     "confirm.delete_item": "确定要删除此条目吗？",
     "confirm.delete_dataset": "删除数据集「{{name}}」？此操作无法撤销。",
     "confirm.delete_section": "删除此自定义板块及其所有条目？此操作无法撤销。",
@@ -353,5 +356,6 @@
     "items": "条目",
     "view_link": "查看 →",
     "learn_more": "了解更多 →",
-    "view_project": "查看项目"
+    "view_project": "查看项目",
+    "view_credential": "查看证书"
 }

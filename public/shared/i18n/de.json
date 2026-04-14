@@ -117,6 +117,8 @@
     "form.issue_date_placeholder": "Jan 2024",
     "form.expiry_date": "Ablaufdatum (optional)",
     "form.credential_id": "Nachweis-ID (optional)",
+    "form.credential_url": "Nachweis-URL (optional)",
+    "form.credential_url_placeholder": "https://example.com/verify/ABC123",
     "form.degree": "Abschluss / Qualifikation",
     "form.institution": "Bildungseinrichtung",
     "form.start_year": "Startjahr",
@@ -347,6 +349,7 @@
     "toast.item_deleted": "Eintrag gelöscht",
     "toast.item_delete_failed": "Eintrag konnte nicht gelöscht werden",
     "toast.failed_save": "Speichern fehlgeschlagen",
+    "toast.credential_url_invalid": "Nachweis-URL muss mit http:// oder https:// beginnen",
 
     "confirm.delete_item": "Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?",
     "confirm.delete_dataset": "Datensatz \"{{name}}\" löschen? Dies kann nicht rückgängig gemacht werden.",
@@ -374,5 +377,6 @@
 
     "view_link": "Ansehen →",
     "learn_more": "Mehr erfahren →",
-    "view_project": "Projekt ansehen"
+    "view_project": "Projekt ansehen",
+    "view_credential": "Nachweis ansehen"
 }

@@ -52,6 +52,17 @@ function compareVersions(a, b) {
     return 0;
 }
 
+// Validate that a string is an http(s) URL. Empty/null values pass (optional fields).
+function isValidHttpUrl(v) {
+    if (v === null || v === undefined || v === '') return true;
+    try {
+        const u = new URL(v);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
 const DB_PATH = process.env.DB_PATH 
     ? path.resolve(process.env.DB_PATH)
     : path.join(__dirname, '..', 'data', 'cv.db');
@@ -933,7 +944,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT id, job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
-    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
+    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
@@ -960,7 +971,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/cv', (req, res) => {
         const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get();
         const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all();
-        const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
+        const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
         const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
         const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all();
         const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
@@ -1290,8 +1301,8 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: !!c.visible }))); });
     app.get('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT * FROM certifications WHERE id = ?').get(req.params.id); if (!cert) return res.status(404).json({ error: 'Not found' }); res.json({ ...cert, visible: !!cert.visible }); });
-    app.post('/api/certifications', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM certifications').get(); const result = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(name, provider, issue_date, expiry_date, credential_id, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
-    app.put('/api/certifications/:id', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM certifications WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE certifications SET name = ?, provider = ?, issue_date = ?, expiry_date = ?, credential_id = ?, visible = ?, sort_order = ? WHERE id = ?`).run(name, provider, issue_date, expiry_date, credential_id, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
+    app.post('/api/certifications', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id } = req.body; if (!isValidHttpUrl(credential_id)) return res.status(400).json({ error: 'credential_id must be a valid http(s) URL' }); const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM certifications').get(); const result = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(name, provider, issue_date, expiry_date, credential_id, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
+    app.put('/api/certifications/:id', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id, visible, sort_order } = req.body; if (!isValidHttpUrl(credential_id)) return res.status(400).json({ error: 'credential_id must be a valid http(s) URL' }); const existing = db.prepare('SELECT sort_order, visible FROM certifications WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE certifications SET name = ?, provider = ?, issue_date = ?, expiry_date = ?, credential_id = ?, visible = ?, sort_order = ? WHERE id = ?`).run(name, provider, issue_date, expiry_date, credential_id, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id); if (cert && cert.logo_filename) { const refCountExp = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(cert.logo_filename).cnt; const refCountEdu = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(cert.logo_filename).cnt; const refCountCert = db.prepare('SELECT COUNT(*) as cnt FROM certifications WHERE logo_filename = ?').get(cert.logo_filename).cnt; if (refCountExp + refCountEdu + refCountCert <= 1) { const logoPath = path.join(uploadsPath, cert.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM certifications WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     // Certification logo upload
@@ -2261,12 +2272,8 @@ if (PUBLIC_ONLY) {
             delete profile.id;
             delete profile.updated_at;
 
-            // Filter sensitive data from certifications
-            const certifications = cvData.certifications.map(c => {
-                const clean = { ...c };
-                delete clean.credential_id;
-                return clean;
-            });
+            // Certifications: credential_id is a public verification URL, no filtering needed
+            const certifications = cvData.certifications;
 
             // Gather all settings
             const settingsRows = db.prepare('SELECT * FROM settings').all();
@@ -2473,7 +2480,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { res.json(db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
-    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
+    publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
     publicApp.get('/api/education', (req, res) => { res.json(db.prepare('SELECT degree_title, institution_name, start_date, end_date, description FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: true }))); });
     publicApp.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: true, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     publicApp.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: true }))); });
@@ -2497,7 +2504,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
