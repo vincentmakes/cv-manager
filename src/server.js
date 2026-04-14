@@ -275,8 +275,8 @@ function serveDatasetPage(req, res) {
 // Serve dataset data as JSON for public slug API
 function serveDatasetData(req, res) {
     try {
-        // Allow access if dataset is public OR is the default (default = served at /)
-        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND (is_public = 1 OR is_default = 1)').get(req.params.slug);
+        // Only serve explicitly public datasets at /v/:slug — default datasets are served at / only
+        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND is_public = 1').get(req.params.slug);
         if (!dataset) return res.status(404).json({ error: 'Not found' });
         const data = JSON.parse(dataset.data);
         res.json({ name: dataset.name, slug: dataset.slug, ...data });
@@ -829,6 +829,10 @@ function sortTimelineItems(items) {
         const endDiff = (a.end_date || '').localeCompare(b.end_date || '');
         if (endDiff !== 0) return endDiff;
 
+        // Use sort_order as tiebreaker (experiences have sort_order=0 so this is a no-op for them)
+        const sortDiff = (a.sort_order || 0) - (b.sort_order || 0);
+        if (sortDiff !== 0) return sortDiff;
+
         return String(a.id || '').localeCompare(String(b.id || ''));
     });
 }
@@ -881,7 +885,8 @@ function buildTimelineItems({ publicView = false, sectionVisibility = null } = {
                     end_date: role.end_date,
                     countryCode: '',
                     visible: publicView ? true : !!v.visible,
-                    logo: null
+                    logo: null,
+                    sort_order: (v.sort_order || 0) * 100 + ridx
                 });
             });
         });

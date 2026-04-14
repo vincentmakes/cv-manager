@@ -1156,13 +1156,13 @@ function renderVolunteerFromData(volunteer) {
         `).join('');
 
         return `
-            <article class="item-card" data-id="${vol.id}">
+            <article class="item-card" data-id="${vol.id}" itemscope itemtype="https://schema.org/OrganizationRole">
                 <div class="item-header">
                     <div>
-                        <h3 class="item-title">${escapeHtml(vol.organization)}</h3>
+                        <h3 class="item-title" itemprop="organization">${escapeHtml(vol.organization)}</h3>
                     </div>
                 </div>
-                ${vol.description ? `<div class="item-summary">${escapeHtml(vol.description)}</div>` : ''}
+                ${vol.description ? `<div class="item-summary" itemprop="description">${escapeHtml(vol.description)}</div>` : ''}
                 <div class="volunteer-roles">
                     ${rolesHtml}
                 </div>
