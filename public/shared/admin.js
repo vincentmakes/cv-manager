@@ -1414,7 +1414,7 @@ function volunteerForm(d) {
                             <input type="text" class="form-input role-start" placeholder="YYYY-MM" value="${escapeHtml(r.start_date || '')}">
                         </div>
                         <div style="width:100px">
-                            <input type="text" class="form-input role-end" placeholder="Present" value="${escapeHtml(r.end_date || '')}">
+                            <input type="text" class="form-input role-end" placeholder="${t('present')}" value="${escapeHtml(r.end_date || '')}">
                         </div>
                         <button class="btn btn-ghost btn-icon-only" onclick="removeVolunteerRole(this)" style="padding:4px; min-width:auto; height:36px;">
                             <span class="material-symbols-outlined">delete</span>
@@ -1446,7 +1446,7 @@ function addVolunteerRoleRow() {
             <input type="text" class="form-input role-start" placeholder="YYYY-MM" value="">
         </div>
         <div style="width:100px">
-            <input type="text" class="form-input role-end" placeholder="Present" value="">
+            <input type="text" class="form-input role-end" placeholder="${t('present')}" value="">
         </div>
         <button class="btn btn-ghost btn-icon-only" onclick="removeVolunteerRole(this)" style="padding:4px; min-width:auto; height:36px;">
             <span class="material-symbols-outlined">delete</span>
