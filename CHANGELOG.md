@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.4] - 2026-04-14
+
+### Fixed
+- Security (defense-in-depth): escape `DATASET_SLUG` values interpolated into `<script>` tags on the public, preview, and versioned CV pages so any future ingress path that bypasses `generateSlug()` cannot become a stored-XSS sink
+- Security (defense-in-depth): validate `filename` / `logo_filename` inputs on the `PUT /api/{experiences,certifications,education}/:id/logo` and `POST /api/{logos,cert-logos,edu-logos}/apply-global` endpoints against a conservative character class and resolved-path check to prevent path traversal values from being persisted
+- Security (defense-in-depth): apply per-field length caps to POST/PUT validators on `/api/profile`, `/api/experiences`, `/api/certifications`, `/api/education`, `/api/skills`, and `/api/projects`, plus array-length caps on `highlights`, `technologies`, and skill lists, to bound unbounded-input abuse
+
 ## [1.26.3] - 2026-04-03
 
 ### Fixed
