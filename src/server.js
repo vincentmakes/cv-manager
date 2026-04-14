@@ -138,6 +138,97 @@ const uploadsPath = path.join(dataDir, 'uploads');
 if (!PUBLIC_ONLY && !fs.existsSync(uploadsPath)) { fs.mkdirSync(uploadsPath, { recursive: true }); }
 app.use('/uploads', express.static(uploadsPath));
 
+// Escape a string for safe interpolation inside a JS string literal in an HTML <script> tag.
+// Defense-in-depth: current callers pass values that are already sanitised at write time
+// (e.g. generateSlug restricts slugs to [a-z0-9-]+), but any future ingress path that
+// bypasses those sanitisers must not become a stored-XSS sink.
+function escapeJsString(str) {
+    return String(str == null ? '' : str)
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/'/g, "\\'")
+        .replace(/</g, '\\u003C')
+        .replace(/>/g, '\\u003E')
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
+
+// Input length limits applied to POST/PUT validators. These are generous for realistic
+// CV content; their purpose is to cap unbounded-input abuse, not to enforce UX rules.
+const MAX_SHORT_TEXT = 200;    // names, titles, short labels
+const MAX_DATE = 20;           // YYYY-MM / YYYY-MM-DD / free-form legacy dates
+const MAX_LONG_TEXT = 5000;    // bios, descriptions, summaries
+const MAX_URL = 2048;          // links
+const MAX_ARRAY_ITEMS = 100;   // highlights entries, technologies list
+const MAX_ICON_KEY = 50;
+const MAX_PHONE = 50;
+const MAX_INITIALS = 20;
+
+// Per-entity string-field length maps consumed by validateBody.
+const LIMITS = {
+    profile: {
+        name: MAX_SHORT_TEXT, initials: MAX_INITIALS, title: MAX_SHORT_TEXT,
+        subtitle: MAX_SHORT_TEXT, bio: MAX_LONG_TEXT, location: MAX_SHORT_TEXT,
+        linkedin: MAX_URL, email: MAX_SHORT_TEXT, phone: MAX_PHONE,
+        languages: MAX_SHORT_TEXT * 2
+    },
+    experience: {
+        job_title: MAX_SHORT_TEXT, company_name: MAX_SHORT_TEXT,
+        start_date: MAX_DATE, end_date: MAX_DATE,
+        location: MAX_SHORT_TEXT, country_code: 10, summary: MAX_LONG_TEXT
+    },
+    certification: {
+        name: MAX_SHORT_TEXT, provider: MAX_SHORT_TEXT,
+        issue_date: MAX_DATE, expiry_date: MAX_DATE, credential_id: MAX_SHORT_TEXT
+    },
+    education: {
+        degree_title: MAX_SHORT_TEXT, institution_name: MAX_SHORT_TEXT,
+        start_date: MAX_DATE, end_date: MAX_DATE, description: MAX_LONG_TEXT
+    },
+    skill: { name: MAX_SHORT_TEXT, icon: MAX_ICON_KEY },
+    project: { title: MAX_SHORT_TEXT, description: MAX_LONG_TEXT, link: MAX_URL }
+};
+
+// Validate string-typed fields in a body against a field→max-length map.
+// Non-string and missing values are skipped; callers handle required-field checks separately.
+// Returns null on success, or an error string suitable for a 400 response.
+function validateBody(body, limits) {
+    if (!body || typeof body !== 'object') return 'Invalid body';
+    for (const [key, max] of Object.entries(limits)) {
+        const v = body[key];
+        if (v != null && typeof v === 'string' && v.length > max) {
+            return `${key} exceeds ${max} characters`;
+        }
+    }
+    return null;
+}
+
+// Validate a string[] field for array length and per-element length.
+function validateStringArray(arr, fieldName, maxItems = MAX_ARRAY_ITEMS, maxLen = MAX_LONG_TEXT) {
+    if (arr == null) return null;
+    if (!Array.isArray(arr)) return `${fieldName} must be an array`;
+    if (arr.length > maxItems) return `${fieldName} exceeds ${maxItems} items`;
+    for (const item of arr) {
+        if (typeof item === 'string' && item.length > maxLen) {
+            return `${fieldName} item exceeds ${maxLen} characters`;
+        }
+    }
+    return null;
+}
+
+// Validate that a filename is safe to use inside uploadsPath. Allows only a conservative
+// character class and rejects anything that would resolve outside the uploads directory.
+function isSafeUploadFilename(filename) {
+    if (typeof filename !== 'string') return false;
+    if (!/^[a-zA-Z0-9_\-.]{1,100}$/.test(filename)) return false;
+    if (filename === '.' || filename === '..') return false;
+    const resolved = path.resolve(uploadsPath, filename);
+    const base = path.resolve(uploadsPath);
+    return resolved === path.join(base, filename) && resolved.startsWith(base + path.sep);
+}
+
 // Get tracking code from settings for server-side injection
 function getTrackingCode() {
     try {
@@ -179,7 +270,7 @@ function servePublicIndex(req, res) {
             }
             
             // Inject default dataset slug (no DATASET_PREVIEW = no preview banner)
-            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}";</script>`;
+            const datasetScript = `<script>window.DATASET_SLUG = "${escapeJsString(defaultDataset.slug)}";</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
             
             return res.type('html').send(html);
@@ -232,7 +323,7 @@ function serveDatasetPage(req, res) {
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
         
         // Inject slug only (no DATASET_PREVIEW = public view, no preview banner)
-        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}";</script>`;
+        const datasetScript = `<script>window.DATASET_SLUG = "${escapeJsString(dataset.slug)}";</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
         
         // Apply noindex if slugsIndex setting is not enabled
@@ -990,7 +1081,7 @@ if (PUBLIC_ONLY) {
 } else {
     // ADMIN Mode
     app.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT * FROM profile WHERE id = 1').get()); });
-    app.put('/api/profile', (req, res) => { const { name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible, profile_picture_enabled, open_to_work } = req.body; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, visible = ?, profile_picture_enabled = ?, open_to_work = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`).run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0, profile_picture_enabled ? 1 : 0, open_to_work ? 1 : 0); res.json({ success: true }); });
+    app.put('/api/profile', (req, res) => { const err = validateBody(req.body, LIMITS.profile); if (err) return res.status(400).json({ error: err }); const { name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible, profile_picture_enabled, open_to_work } = req.body; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, visible = ?, profile_picture_enabled = ?, open_to_work = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`).run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0, profile_picture_enabled ? 1 : 0, open_to_work ? 1 : 0); res.json({ success: true }); });
 
     const storage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => cb(null, 'picture.jpeg') });
     const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
@@ -1020,6 +1111,7 @@ if (PUBLIC_ONLY) {
     app.put('/api/experiences/:id/logo', express.json(), (req, res) => {
         const { filename } = req.body;
         if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        if (!isSafeUploadFilename(filename)) return res.status(400).json({ error: 'Invalid filename' });
         const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id);
         if (!exp) return res.status(404).json({ error: 'Experience not found' });
         // Verify the file actually exists in uploads
@@ -1124,6 +1216,7 @@ if (PUBLIC_ONLY) {
     app.post('/api/logos/apply-global', express.json(), (req, res) => {
         const { company_name, logo_filename } = req.body;
         if (!company_name || !logo_filename) return res.status(400).json({ error: 'company_name and logo_filename are required' });
+        if (!isSafeUploadFilename(logo_filename)) return res.status(400).json({ error: 'Invalid logo_filename' });
         if (!fs.existsSync(path.join(uploadsPath, logo_filename))) return res.status(404).json({ error: 'Logo file not found' });
         let updatedCurrent = 0;
         let updatedDatasets = 0;
@@ -1295,14 +1388,14 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible }))); });
     app.get('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT * FROM experiences WHERE id = ?').get(req.params.id); if (!exp) return res.status(404).json({ error: 'Not found' }); res.json({ ...exp, highlights: exp.highlights ? JSON.parse(exp.highlights) : [], visible: !!exp.visible }); });
-    app.post('/api/experiences', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM experiences').get(); const result = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
-    app.put('/api/experiences/:id', (req, res) => { const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM experiences WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE experiences SET job_title = ?, company_name = ?, start_date = ?, end_date = ?, location = ?, country_code = ?, highlights = ?, summary = ?, visible = ?, sort_order = ? WHERE id = ?`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
+    app.post('/api/experiences', (req, res) => { const err = validateBody(req.body, LIMITS.experience) || validateStringArray(req.body.highlights, 'highlights'); if (err) return res.status(400).json({ error: err }); const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM experiences').get(); const result = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
+    app.put('/api/experiences/:id', (req, res) => { const err = validateBody(req.body, LIMITS.experience) || validateStringArray(req.body.highlights, 'highlights'); if (err) return res.status(400).json({ error: err }); const { job_title, company_name, start_date, end_date, location, country_code, highlights, summary, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM experiences WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE experiences SET job_title = ?, company_name = ?, start_date = ?, end_date = ?, location = ?, country_code = ?, highlights = ?, summary = ?, visible = ?, sort_order = ? WHERE id = ?`).run(job_title, company_name, start_date, end_date, location, country_code || '', JSON.stringify(highlights || []), summary || null, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT logo_filename FROM experiences WHERE id = ?').get(req.params.id); if (exp && exp.logo_filename) { const refCount = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(exp.logo_filename).cnt; if (refCount <= 1) { const logoPath = path.join(uploadsPath, exp.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM experiences WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     app.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: !!c.visible }))); });
     app.get('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT * FROM certifications WHERE id = ?').get(req.params.id); if (!cert) return res.status(404).json({ error: 'Not found' }); res.json({ ...cert, visible: !!cert.visible }); });
-    app.post('/api/certifications', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id } = req.body; if (!isValidHttpUrl(credential_id)) return res.status(400).json({ error: 'credential_id must be a valid http(s) URL' }); const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM certifications').get(); const result = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(name, provider, issue_date, expiry_date, credential_id, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
-    app.put('/api/certifications/:id', (req, res) => { const { name, provider, issue_date, expiry_date, credential_id, visible, sort_order } = req.body; if (!isValidHttpUrl(credential_id)) return res.status(400).json({ error: 'credential_id must be a valid http(s) URL' }); const existing = db.prepare('SELECT sort_order, visible FROM certifications WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE certifications SET name = ?, provider = ?, issue_date = ?, expiry_date = ?, credential_id = ?, visible = ?, sort_order = ? WHERE id = ?`).run(name, provider, issue_date, expiry_date, credential_id, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
+    app.post('/api/certifications', (req, res) => { const err = validateBody(req.body, LIMITS.certification); if (err) return res.status(400).json({ error: err }); const { name, provider, issue_date, expiry_date, credential_id } = req.body; if (!isValidHttpUrl(credential_id)) return res.status(400).json({ error: 'credential_id must be a valid http(s) URL' }); const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM certifications').get(); const result = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(name, provider, issue_date, expiry_date, credential_id, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
+    app.put('/api/certifications/:id', (req, res) => { const err = validateBody(req.body, LIMITS.certification); if (err) return res.status(400).json({ error: err }); const { name, provider, issue_date, expiry_date, credential_id, visible, sort_order } = req.body; if (!isValidHttpUrl(credential_id)) return res.status(400).json({ error: 'credential_id must be a valid http(s) URL' }); const existing = db.prepare('SELECT sort_order, visible FROM certifications WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE certifications SET name = ?, provider = ?, issue_date = ?, expiry_date = ?, credential_id = ?, visible = ?, sort_order = ? WHERE id = ?`).run(name, provider, issue_date, expiry_date, credential_id, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/certifications/:id', (req, res) => { const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id); if (cert && cert.logo_filename) { const refCountExp = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(cert.logo_filename).cnt; const refCountEdu = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(cert.logo_filename).cnt; const refCountCert = db.prepare('SELECT COUNT(*) as cnt FROM certifications WHERE logo_filename = ?').get(cert.logo_filename).cnt; if (refCountExp + refCountEdu + refCountCert <= 1) { const logoPath = path.join(uploadsPath, cert.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM certifications WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     // Certification logo upload
@@ -1324,6 +1417,7 @@ if (PUBLIC_ONLY) {
     app.put('/api/certifications/:id/logo', express.json(), (req, res) => {
         const { filename } = req.body;
         if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        if (!isSafeUploadFilename(filename)) return res.status(400).json({ error: 'Invalid filename' });
         const cert = db.prepare('SELECT logo_filename FROM certifications WHERE id = ?').get(req.params.id);
         if (!cert) return res.status(404).json({ error: 'Certification not found' });
         if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
@@ -1335,6 +1429,7 @@ if (PUBLIC_ONLY) {
     app.post('/api/cert-logos/apply-global', express.json(), (req, res) => {
         const { provider, logo_filename } = req.body;
         if (!provider || !logo_filename) return res.status(400).json({ error: 'provider and logo_filename are required' });
+        if (!isSafeUploadFilename(logo_filename)) return res.status(400).json({ error: 'Invalid logo_filename' });
         if (!fs.existsSync(path.join(uploadsPath, logo_filename))) return res.status(404).json({ error: 'Logo file not found' });
         let updatedCurrent = 0; let updatedDatasets = 0;
         const result = db.prepare('UPDATE certifications SET logo_filename = ?, logo_propagate = 1 WHERE provider = ?').run(logo_filename, provider);
@@ -1430,8 +1525,8 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/education', (req, res) => { res.json(db.prepare('SELECT * FROM education ORDER BY sort_order ASC, end_date DESC').all().map(e => ({ ...e, visible: !!e.visible }))); });
     app.get('/api/education/:id', (req, res) => { const edu = db.prepare('SELECT * FROM education WHERE id = ?').get(req.params.id); if (!edu) return res.status(404).json({ error: 'Not found' }); res.json({ ...edu, visible: !!edu.visible }); });
-    app.post('/api/education', (req, res) => { const { degree_title, institution_name, start_date, end_date, description } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM education').get(); const result = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(degree_title, institution_name, start_date, end_date, description, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
-    app.put('/api/education/:id', (req, res) => { const { degree_title, institution_name, start_date, end_date, description, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM education WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE education SET degree_title = ?, institution_name = ?, start_date = ?, end_date = ?, description = ?, visible = ?, sort_order = ? WHERE id = ?`).run(degree_title, institution_name, start_date, end_date, description, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
+    app.post('/api/education', (req, res) => { const err = validateBody(req.body, LIMITS.education); if (err) return res.status(400).json({ error: err }); const { degree_title, institution_name, start_date, end_date, description } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM education').get(); const result = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)`).run(degree_title, institution_name, start_date, end_date, description, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
+    app.put('/api/education/:id', (req, res) => { const err = validateBody(req.body, LIMITS.education); if (err) return res.status(400).json({ error: err }); const { degree_title, institution_name, start_date, end_date, description, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM education WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE education SET degree_title = ?, institution_name = ?, start_date = ?, end_date = ?, description = ?, visible = ?, sort_order = ? WHERE id = ?`).run(degree_title, institution_name, start_date, end_date, description, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/education/:id', (req, res) => { const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id); if (edu && edu.logo_filename) { const refCountExp = db.prepare('SELECT COUNT(*) as cnt FROM experiences WHERE logo_filename = ?').get(edu.logo_filename).cnt; const refCountEdu = db.prepare('SELECT COUNT(*) as cnt FROM education WHERE logo_filename = ?').get(edu.logo_filename).cnt; if (refCountExp + refCountEdu <= 1) { const logoPath = path.join(uploadsPath, edu.logo_filename); try { if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath); } catch (e) {} } } db.prepare('DELETE FROM education WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     // Education logo upload
@@ -1453,6 +1548,7 @@ if (PUBLIC_ONLY) {
     app.put('/api/education/:id/logo', express.json(), (req, res) => {
         const { filename } = req.body;
         if (!filename) return res.status(400).json({ error: 'Filename is required' });
+        if (!isSafeUploadFilename(filename)) return res.status(400).json({ error: 'Invalid filename' });
         const edu = db.prepare('SELECT logo_filename FROM education WHERE id = ?').get(req.params.id);
         if (!edu) return res.status(404).json({ error: 'Education not found' });
         if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Logo file not found' });
@@ -1464,6 +1560,7 @@ if (PUBLIC_ONLY) {
     app.post('/api/edu-logos/apply-global', express.json(), (req, res) => {
         const { institution_name, logo_filename } = req.body;
         if (!institution_name || !logo_filename) return res.status(400).json({ error: 'institution_name and logo_filename are required' });
+        if (!isSafeUploadFilename(logo_filename)) return res.status(400).json({ error: 'Invalid logo_filename' });
         if (!fs.existsSync(path.join(uploadsPath, logo_filename))) return res.status(404).json({ error: 'Logo file not found' });
         let updatedCurrent = 0; let updatedDatasets = 0;
         const result = db.prepare('UPDATE education SET logo_filename = ?, logo_propagate = 1 WHERE institution_name = ?').run(logo_filename, institution_name);
@@ -1559,14 +1656,14 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/skills', (req, res) => { const categories = db.prepare('SELECT * FROM skill_categories ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); res.json(categories.map(cat => ({ ...cat, visible: !!cat.visible, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) }))); });
     app.get('/api/skills/:id', (req, res) => { const cat = db.prepare('SELECT * FROM skill_categories WHERE id = ?').get(req.params.id); if (!cat) return res.status(404).json({ error: 'Not found' }); const skills = db.prepare('SELECT name FROM skills WHERE category_id = ? ORDER BY sort_order ASC').all(req.params.id); res.json({ ...cat, visible: !!cat.visible, skills: skills.map(s => s.name) }); });
-    app.post('/api/skills', (req, res) => { const { name, icon, skills } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM skill_categories').get(); const result = db.prepare('INSERT INTO skill_categories (name, icon, sort_order) VALUES (?, ?, ?)').run(name, icon || 'default', (maxOrder.max || 0) + 1); const categoryId = result.lastInsertRowid; if (skills && skills.length > 0) { const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); skills.forEach((skill, idx) => { skillStmt.run(categoryId, skill, idx); }); } res.json({ id: categoryId }); });
-    app.put('/api/skills/:id', (req, res) => { const { name, icon, skills, visible, sort_order } = req.body; const categoryId = req.params.id; const existing = db.prepare('SELECT sort_order, visible FROM skill_categories WHERE id = ?').get(categoryId); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare('UPDATE skill_categories SET name = ?, icon = ?, visible = ?, sort_order = ? WHERE id = ?').run(name, icon || 'default', newVisible, newSortOrder, categoryId); db.prepare('DELETE FROM skills WHERE category_id = ?').run(categoryId); if (skills && skills.length > 0) { const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); skills.forEach((skill, idx) => { skillStmt.run(categoryId, skill, idx); }); } res.json({ success: true }); });
+    app.post('/api/skills', (req, res) => { const err = validateBody(req.body, LIMITS.skill) || validateStringArray(req.body.skills, 'skills', MAX_ARRAY_ITEMS, MAX_SHORT_TEXT); if (err) return res.status(400).json({ error: err }); const { name, icon, skills } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM skill_categories').get(); const result = db.prepare('INSERT INTO skill_categories (name, icon, sort_order) VALUES (?, ?, ?)').run(name, icon || 'default', (maxOrder.max || 0) + 1); const categoryId = result.lastInsertRowid; if (skills && skills.length > 0) { const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); skills.forEach((skill, idx) => { skillStmt.run(categoryId, skill, idx); }); } res.json({ id: categoryId }); });
+    app.put('/api/skills/:id', (req, res) => { const err = validateBody(req.body, LIMITS.skill) || validateStringArray(req.body.skills, 'skills', MAX_ARRAY_ITEMS, MAX_SHORT_TEXT); if (err) return res.status(400).json({ error: err }); const { name, icon, skills, visible, sort_order } = req.body; const categoryId = req.params.id; const existing = db.prepare('SELECT sort_order, visible FROM skill_categories WHERE id = ?').get(categoryId); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare('UPDATE skill_categories SET name = ?, icon = ?, visible = ?, sort_order = ? WHERE id = ?').run(name, icon || 'default', newVisible, newSortOrder, categoryId); db.prepare('DELETE FROM skills WHERE category_id = ?').run(categoryId); if (skills && skills.length > 0) { const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); skills.forEach((skill, idx) => { skillStmt.run(categoryId, skill, idx); }); } res.json({ success: true }); });
     app.delete('/api/skills/:id', (req, res) => { db.prepare('DELETE FROM skills WHERE category_id = ?').run(req.params.id); db.prepare('DELETE FROM skill_categories WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     app.get('/api/projects', (req, res) => { res.json(db.prepare('SELECT * FROM projects ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: !!p.visible }))); });
     app.get('/api/projects/:id', (req, res) => { const proj = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id); if (!proj) return res.status(404).json({ error: 'Not found' }); res.json({ ...proj, technologies: proj.technologies ? JSON.parse(proj.technologies) : [], visible: !!proj.visible }); });
-    app.post('/api/projects', (req, res) => { const { title, description, technologies, link } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM projects').get(); const result = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order) VALUES (?, ?, ?, ?, ?)`).run(title, description, JSON.stringify(technologies || []), link, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
-    app.put('/api/projects/:id', (req, res) => { const { title, description, technologies, link, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM projects WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE projects SET title = ?, description = ?, technologies = ?, link = ?, visible = ?, sort_order = ? WHERE id = ?`).run(title, description, JSON.stringify(technologies || []), link, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
+    app.post('/api/projects', (req, res) => { const err = validateBody(req.body, LIMITS.project) || validateStringArray(req.body.technologies, 'technologies', MAX_ARRAY_ITEMS, MAX_SHORT_TEXT); if (err) return res.status(400).json({ error: err }); const { title, description, technologies, link } = req.body; const maxOrder = db.prepare('SELECT MAX(sort_order) as max FROM projects').get(); const result = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order) VALUES (?, ?, ?, ?, ?)`).run(title, description, JSON.stringify(technologies || []), link, (maxOrder.max || 0) + 1); res.json({ id: result.lastInsertRowid }); });
+    app.put('/api/projects/:id', (req, res) => { const err = validateBody(req.body, LIMITS.project) || validateStringArray(req.body.technologies, 'technologies', MAX_ARRAY_ITEMS, MAX_SHORT_TEXT); if (err) return res.status(400).json({ error: err }); const { title, description, technologies, link, visible, sort_order } = req.body; const existing = db.prepare('SELECT sort_order, visible FROM projects WHERE id = ?').get(req.params.id); const newSortOrder = sort_order !== undefined ? sort_order : (existing?.sort_order || 0); const newVisible = visible !== undefined ? (visible ? 1 : 0) : (existing?.visible ?? 1); db.prepare(`UPDATE projects SET title = ?, description = ?, technologies = ?, link = ?, visible = ?, sort_order = ? WHERE id = ?`).run(title, description, JSON.stringify(technologies || []), link, newVisible, newSortOrder, req.params.id); res.json({ success: true }); });
     app.delete('/api/projects/:id', (req, res) => { db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id); res.json({ success: true }); });
 
     // Generic reorder endpoint for items within sections
@@ -1702,7 +1799,7 @@ if (PUBLIC_ONLY) {
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
             
             // Inject script to load dataset data instead of live data (admin preview mode)
-            const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_PREVIEW = true;</script>`;
+            const datasetScript = `<script>window.DATASET_SLUG = "${escapeJsString(dataset.slug)}"; window.DATASET_PREVIEW = true;</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
             
             res.type('html').send(html);
