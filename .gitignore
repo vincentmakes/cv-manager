@@ -7,3 +7,6 @@ docker-compose.yml
 /site
 /.full-review/
 /.full-stack-feature/
+/.full-review-archive/
+/.full-stack-feature-archive/
+/.codex
