@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.5] - 2026-04-14
+
+### Fixed
+- Certification link icon no longer shows an underline on hover/focus
+- Certification link icon is hidden in print output (previously it printed as a small rendered box)
+- Dataset view (`/v/:slug`) now also renders the certification credential URL as a link icon (only the live `/` public view did before)
+
 ## [1.26.4] - 2026-04-14
 
 ### Fixed

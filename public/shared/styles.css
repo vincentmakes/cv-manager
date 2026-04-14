@@ -550,6 +550,7 @@ body {
     border-radius: var(--radius-sm);
     background: var(--light);
     color: var(--primary);
+    text-decoration: none;
     transition: all 0.15s ease;
     flex-shrink: 0;
 }
@@ -1367,9 +1368,7 @@ body.has-preview-banner .container {
     .cert-card.has-logo { gap: 6px; }
     .cert-logo { width: 24px; height: 24px; }
     .cert-name { font-size: 11px; }
-    .cert-link { width: 16px; height: 16px; }
-    .cert-link svg { width: 9px; height: 9px; }
-    .cert-link .material-symbols-outlined { font-size: 9px; }
+    .cert-link { display: none; }
     .cert-date { font-size: 9px; }
     .cert-provider { font-size: 10px; }
     
