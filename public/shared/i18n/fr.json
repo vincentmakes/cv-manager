@@ -117,6 +117,8 @@
     "form.issue_date_placeholder": "Janv. 2024",
     "form.expiry_date": "Date d'expiration (facultatif)",
     "form.credential_id": "Identifiant du certificat (facultatif)",
+    "form.credential_url": "URL du certificat (facultatif)",
+    "form.credential_url_placeholder": "https://example.com/verify/ABC123",
     "form.degree": "Diplôme / Qualification",
     "form.institution": "Établissement",
     "form.start_year": "Année de début",
@@ -347,6 +349,7 @@
     "toast.item_deleted": "Élément supprimé",
     "toast.item_delete_failed": "Échec de la suppression de l'élément",
     "toast.failed_save": "Échec de l'enregistrement",
+    "toast.credential_url_invalid": "L'URL du certificat doit commencer par http:// ou https://",
 
     "confirm.delete_item": "Êtes-vous sûr de vouloir supprimer cet élément ?",
     "confirm.delete_dataset": "Supprimer le jeu de données « {{name}} » ? Cette action est irréversible.",
@@ -374,5 +377,6 @@
 
     "view_link": "Voir →",
     "learn_more": "En savoir plus →",
-    "view_project": "Voir le projet"
+    "view_project": "Voir le projet",
+    "view_credential": "Voir le certificat"
 }

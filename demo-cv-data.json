@@ -96,7 +96,7 @@
       "provider": "Amazon Web Services",
       "issue_date": "2023-06",
       "expiry_date": "2026-06",
-      "credential_id": "AWS-SAP-12345",
+      "credential_id": "https://www.credly.com/badges/example/aws-sap-12345",
       "visible": true
     },
     {
@@ -104,7 +104,7 @@
       "provider": "Microsoft",
       "issue_date": "2023-01",
       "expiry_date": "2025-01",
-      "credential_id": "MS-AZ305-67890",
+      "credential_id": "https://learn.microsoft.com/api/credentials/share/example/AZ-305/67890",
       "visible": true
     },
     {
@@ -112,7 +112,7 @@
       "provider": "CNCF",
       "issue_date": "2022-08",
       "expiry_date": "2025-08",
-      "credential_id": "CKA-2022-MC",
+      "credential_id": "https://www.credly.com/badges/example/cka-2022-mc",
       "visible": true
     },
     {
@@ -120,7 +120,7 @@
       "provider": "HashiCorp",
       "issue_date": "2022-03",
       "expiry_date": "2024-03",
-      "credential_id": "HC-TFA-11111",
+      "credential_id": "https://www.credly.com/badges/example/hashicorp-terraform-associate",
       "visible": true
     },
     {
@@ -128,7 +128,7 @@
       "provider": "Google",
       "issue_date": "2021-11",
       "expiry_date": "2023-11",
-      "credential_id": "GCP-PCA-22222",
+      "credential_id": "https://www.credential.net/example/gcp-pca-22222",
       "visible": true
     },
     {
@@ -136,7 +136,7 @@
       "provider": "The Open Group",
       "issue_date": "2020-05",
       "expiry_date": null,
-      "credential_id": "TOGAF-33333",
+      "credential_id": "https://www.opengroup.org/certifications/verify/example/TOGAF-33333",
       "visible": true
     }
   ],

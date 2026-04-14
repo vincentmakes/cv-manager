@@ -477,11 +477,15 @@
             const visible = certs.filter(c => c.visible !== false);
             document.getElementById('certGrid').innerHTML = visible.map(cert => {
                 const hasLogo = !!cert.logo_filename;
+                const hasLink = isValidUrl(cert.credential_id);
                 return `
                 <article class="cert-card${hasLogo ? ' has-logo' : ''}" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
                     ${hasLogo ? `<img src="/uploads/${encodeURIComponent(cert.logo_filename)}" class="cert-logo" alt="${escapeHtml(cert.provider || '')}" onerror="this.style.display='none'">` : ''}
                     <div class="cert-content">
-                        <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                        <div class="cert-header">
+                            <div class="cert-name" itemprop="name">${escapeHtml(cert.name)}</div>
+                            ${hasLink ? `<a href="${escapeHtml(cert.credential_id)}" class="cert-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_credential')}">${icons.link}</a>` : ''}
+                        </div>
                         <time class="cert-date" itemprop="dateCreated">${formatDate(cert.issue_date) || escapeHtml(cert.issue_date || '')}</time>
                         <div class="cert-provider" itemprop="issuedBy">${escapeHtml(cert.provider || '')}</div>
                     </div>

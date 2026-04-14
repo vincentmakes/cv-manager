@@ -110,6 +110,8 @@
     "form.issue_date_placeholder": "Jan 2024",
     "form.expiry_date": "Data de Validade (opcional)",
     "form.credential_id": "ID da Credencial (opcional)",
+    "form.credential_url": "URL da Credencial (opcional)",
+    "form.credential_url_placeholder": "https://example.com/verify/ABC123",
     "form.degree": "Grau / Qualificação",
     "form.institution": "Instituição",
     "form.start_year": "Ano de Início",
@@ -330,6 +332,7 @@
     "toast.item_deleted": "Item eliminado",
     "toast.item_delete_failed": "Falha ao eliminar o item",
     "toast.failed_save": "Falha ao guardar",
+    "toast.credential_url_invalid": "O URL da credencial deve começar com http:// ou https://",
     "confirm.delete_item": "Tem a certeza de que deseja eliminar este item?",
     "confirm.delete_dataset": "Eliminar o conjunto de dados \"{{name}}\"? Esta ação não pode ser revertida.",
     "confirm.delete_section": "Eliminar esta secção personalizada e todos os seus itens? Esta ação não pode ser revertida.",
@@ -354,5 +357,6 @@
     "items": "itens",
     "view_link": "Ver →",
     "learn_more": "Saiba mais →",
-    "view_project": "Ver projeto"
+    "view_project": "Ver projeto",
+    "view_credential": "Ver credencial"
 }
