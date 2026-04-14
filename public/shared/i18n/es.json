@@ -348,6 +348,7 @@
     "ats.downloaded": "Documento ATS descargado",
     "ats.what_is": "¿Qué es la exportación ATS?",
     "present": "Actualidad",
+    "form.description_optional": "Descripción (opcional)",
     "loading": "Cargando...",
     "items": "elementos",
     "view_link": "Ver →",

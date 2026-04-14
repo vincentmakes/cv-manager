@@ -376,6 +376,7 @@
     "ats.downloaded": "ATS document downloaded",
     "ats.what_is": "What is ATS Export?",
 
+    "form.description_optional": "Description (optional)",
     "present": "Present",
     "loading": "Loading...",
     "items": "items",

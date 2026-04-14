@@ -348,6 +348,7 @@
     "ats.downloaded": "ATS-document gedownload",
     "ats.what_is": "Wat is ATS-export?",
     "present": "Heden",
+    "form.description_optional": "Beschrijving (optioneel)",
     "loading": "Laden...",
     "items": "items",
     "view_link": "Bekijken →",

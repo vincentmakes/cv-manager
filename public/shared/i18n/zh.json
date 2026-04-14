@@ -348,6 +348,7 @@
     "ats.downloaded": "ATS 文档已下载",
     "ats.what_is": "什么是 ATS 导出？",
     "present": "至今",
+    "form.description_optional": "描述（可选）",
     "loading": "加载中...",
     "items": "条目",
     "view_link": "查看 →",

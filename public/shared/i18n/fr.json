@@ -348,6 +348,7 @@
     "ats.downloaded": "Document ATS téléchargé",
     "ats.what_is": "Qu'est-ce que l'export ATS ?",
     "present": "En poste",
+    "form.description_optional": "Description (facultatif)",
     "loading": "Chargement...",
     "items": "éléments",
     "view_link": "Voir →",
