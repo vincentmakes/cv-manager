@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.27.0] - 2026-04-15
+
+### Changed
+- "Save As…" now opens a rich modal instead of a browser prompt. Existing CVs are shown grouped by base name so sibling versions (`My CV`, `My CV v2`, `My CV v3`) appear visually attached under a shared parent. Clicking a CV in the list pre-fills the name input so overwriting is explicit, and the primary button flips between "Save as new" and "Overwrite" (with a warning color) as you type. Every group has a "+ New version" shortcut that auto-suggests the next free `vN` name. Overwriting an existing CV now requires confirming a dialog.
+
+### Added
+- New `datasets.save_as_title`, `datasets.name_label`, `datasets.name_placeholder`, `datasets.save_as_hint`, `datasets.existing_datasets`, `datasets.no_existing`, `datasets.new_version`, `datasets.versions_count`, `datasets.save_new`, `datasets.save_new_empty`, `datasets.overwrite`, and `confirm.overwrite_dataset` i18n keys in all 8 locale files (`en`, `de`, `fr`, `nl`, `es`, `it`, `pt`, `zh`).
+
 ## [1.26.7] - 2026-04-15
 
 ### Fixed

@@ -329,6 +329,36 @@
         </div>
     </div>
 
+    <!-- Save As Modal -->
+    <div class="modal-overlay" id="saveAsModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="datasets.save_as_title">Save CV As</h3>
+                <button class="modal-close" onclick="closeSaveAsModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="save-as-name-field">
+                    <label for="saveAsNameInput" class="save-as-name-label" data-i18n="datasets.name_label">Name</label>
+                    <input type="text" id="saveAsNameInput" class="save-as-name-input" autocomplete="off" data-i18n-placeholder="datasets.name_placeholder" placeholder="Enter a name for this CV">
+                    <div class="save-as-hint" data-i18n="datasets.save_as_hint">Click an existing CV below to overwrite it, or type a new name.</div>
+                </div>
+                <div class="save-as-existing">
+                    <h4 class="save-as-existing-title" data-i18n="datasets.existing_datasets">Existing CVs</h4>
+                    <div id="saveAsExistingList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left"></div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeSaveAsModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" id="saveAsSubmitBtn" onclick="submitSaveAs()" disabled data-i18n="datasets.save_new_empty">Save as new</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div class="modal-overlay settings-modal" id="settingsModalOverlay">
         <div class="modal modal-lg">

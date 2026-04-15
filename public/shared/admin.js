@@ -2634,18 +2634,192 @@ async function saveSettingsSectionOrder() {
 // Dataset Management
 // ===========================
 
+// ===========================
+// Save As Modal (rich picker with version grouping)
+// ===========================
+
+let saveAsDatasetsCache = [];
+
+// Parse a name like "My CV v2" into { base: "My CV", version: 2 }.
+// Names without an explicit " vN" suffix are treated as version 1.
+function parseDatasetVersion(name) {
+    const m = /^(.+?)\s+v(\d+)$/i.exec((name || '').trim());
+    if (m) return { base: m[1].trim(), version: parseInt(m[2], 10) };
+    return { base: (name || '').trim(), version: 1 };
+}
+
+// Group an array of datasets by their parsed base name.
+// Returns [{ base, items: [...] }] sorted by most-recently-updated group desc.
+function groupDatasetsByBase(datasets) {
+    const map = new Map();
+    for (const ds of datasets) {
+        const { base, version } = parseDatasetVersion(ds.name);
+        if (!map.has(base)) map.set(base, []);
+        map.get(base).push({ ...ds, _version: version, _base: base });
+    }
+    const groups = Array.from(map.entries()).map(([base, items]) => {
+        items.sort((a, b) => a._version - b._version);
+        const latest = items.reduce((max, it) => {
+            const t = new Date(it.updated_at).getTime();
+            return t > max ? t : max;
+        }, 0);
+        return { base, items, latestUpdated: latest };
+    });
+    groups.sort((a, b) => b.latestUpdated - a.latestUpdated);
+    return groups;
+}
+
+// Given a base name and the current dataset list, return the next free "Base vN".
+function suggestNextVersion(baseName, datasets) {
+    let max = 0;
+    for (const ds of datasets) {
+        const parsed = parseDatasetVersion(ds.name);
+        if (parsed.base === baseName && parsed.version > max) max = parsed.version;
+    }
+    const next = Math.max(max + 1, 2);
+    return `${baseName} v${next}`;
+}
+
 async function saveAsDataset() {
-    const name = prompt(t('datasets.enter_name'));
-    if (!name || !name.trim()) return;
-    
     try {
-        const result = await api('/api/datasets', { method: 'POST', body: { name: name.trim() } });
+        saveAsDatasetsCache = await api('/api/datasets') || [];
+    } catch (err) {
+        saveAsDatasetsCache = [];
+    }
+    renderSaveAsList(saveAsDatasetsCache);
+    const input = document.getElementById('saveAsNameInput');
+    input.value = activeDatasetName || '';
+    updateSaveAsSubmitState();
+    document.getElementById('saveAsModalOverlay').classList.add('active');
+    setTimeout(() => { input.focus(); input.select(); }, 30);
+}
+
+function closeSaveAsModal() {
+    const overlay = document.getElementById('saveAsModalOverlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+function renderSaveAsList(datasets) {
+    const container = document.getElementById('saveAsExistingList');
+    if (!container) return;
+    if (!datasets || datasets.length === 0) {
+        container.innerHTML = `<p class="save-as-empty">${escapeHtml(t('datasets.no_existing'))}</p>`;
+        return;
+    }
+    const groups = groupDatasetsByBase(datasets);
+    const newVersionLabel = escapeHtml(t('datasets.new_version'));
+    const lastUpdatedLabel = escapeHtml(t('datasets.last_updated'));
+
+    container.innerHTML = groups.map(group => {
+        const escBase = escapeHtml(group.base);
+        if (group.items.length === 1) {
+            const ds = group.items[0];
+            const escName = escapeHtml(ds.name);
+            return `
+                <div class="save-as-item save-as-standalone">
+                    <button type="button" class="save-as-row" data-action="fill-name" data-name="${escName}">
+                        <div class="save-as-row-info">
+                            <span class="save-as-row-name">${escName}</span>
+                            <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
+                        </div>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
+                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
+                        <span>${newVersionLabel}</span>
+                    </button>
+                </div>
+            `;
+        }
+        const children = group.items.map(ds => {
+            const escName = escapeHtml(ds.name);
+            return `
+                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}">
+                    <span class="dataset-version-badge">v${ds._version}</span>
+                    <span class="save-as-row-name">${escName}</span>
+                    <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
+                </button>
+            `;
+        }).join('');
+        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
+        return `
+            <div class="save-as-item save-as-group">
+                <div class="save-as-group-header">
+                    <span class="save-as-group-base">${escBase}</span>
+                    <span class="save-as-group-count">${countLabel}</span>
+                </div>
+                <div class="save-as-group-children">${children}</div>
+                <div class="save-as-group-footer">
+                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
+                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
+                        <span>${newVersionLabel}</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function saveAsOnListClick(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    const input = document.getElementById('saveAsNameInput');
+    if (!input) return;
+    if (action === 'fill-name') {
+        input.value = btn.getAttribute('data-name') || '';
+    } else if (action === 'new-version') {
+        const base = btn.getAttribute('data-base') || '';
+        input.value = suggestNextVersion(base, saveAsDatasetsCache);
+    }
+    updateSaveAsSubmitState();
+    input.focus();
+}
+
+function updateSaveAsSubmitState() {
+    const input = document.getElementById('saveAsNameInput');
+    const btn = document.getElementById('saveAsSubmitBtn');
+    if (!input || !btn) return;
+    const name = (input.value || '').trim();
+    const match = saveAsDatasetsCache.find(d => d.name === name);
+    btn.classList.remove('btn-primary', 'btn-warning');
+    if (!name) {
+        btn.disabled = true;
+        btn.textContent = t('datasets.save_new_empty');
+        btn.classList.add('btn-primary');
+    } else if (match) {
+        btn.disabled = false;
+        btn.textContent = t('datasets.overwrite', { name });
+        btn.classList.add('btn-warning');
+    } else {
+        btn.disabled = false;
+        btn.textContent = t('datasets.save_new', { name });
+        btn.classList.add('btn-primary');
+    }
+    // Highlight the matching row (if any) so users see which CV will be overwritten
+    document.querySelectorAll('#saveAsExistingList [data-action="fill-name"]').forEach(el => {
+        if (name && el.getAttribute('data-name') === name) {
+            el.classList.add('save-as-row-selected');
+        } else {
+            el.classList.remove('save-as-row-selected');
+        }
+    });
+}
+
+async function submitSaveAs() {
+    const input = document.getElementById('saveAsNameInput');
+    if (!input) return;
+    const name = (input.value || '').trim();
+    if (!name) return;
+    const match = saveAsDatasetsCache.find(d => d.name === name);
+    if (match && !confirm(t('confirm.overwrite_dataset', { name }))) return;
+    try {
+        const result = await api('/api/datasets', { method: 'POST', body: { name } });
         if (result.success) {
-            // Set the newly saved dataset as active
             activeDatasetId = result.id;
-            activeDatasetName = name.trim();
+            activeDatasetName = name;
             activeDatasetIsDefault = !!result.is_default;
             showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
+            closeSaveAsModal();
             toast(result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
         } else {
             toast(result.error || t('toast.failed_save'), 'error');
@@ -2654,6 +2828,33 @@ async function saveAsDataset() {
         toast(t('toast.dataset_save_failed'), 'error');
     }
 }
+
+// Wire up input + list listeners once the modal is in the DOM
+(function initSaveAsModalListeners() {
+    function setup() {
+        const list = document.getElementById('saveAsExistingList');
+        const input = document.getElementById('saveAsNameInput');
+        if (list && !list.dataset.saveAsBound) {
+            list.addEventListener('click', saveAsOnListClick);
+            list.dataset.saveAsBound = '1';
+        }
+        if (input && !input.dataset.saveAsBound) {
+            input.addEventListener('input', updateSaveAsSubmitState);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitSaveAs();
+                }
+            });
+            input.dataset.saveAsBound = '1';
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setup();
+    }
+})();
 
 async function openDatasetsModal() {
     await loadDatasetsList();
@@ -3097,6 +3298,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeModal();
         closeDatasetsModal();
+        closeSaveAsModal();
         closeSettingsModal();
         closeAtsPdfModal();
         closeCustomSectionModal();
