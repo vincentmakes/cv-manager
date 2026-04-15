@@ -535,8 +535,8 @@ describe('Frontend files', () => {
         it('formatDate: uses translated short month names from the active locale', () => {
             const fr = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'fr.json'), 'utf8'));
             const fn = formatDate('MMM YYYY', fr);
-            assert.strictEqual(fn('2024-03'), 'mars 2024');
-            assert.strictEqual(fn('2024-12'), 'déc. 2024');
+            assert.strictEqual(fn('2024-03'), 'Mars 2024');
+            assert.strictEqual(fn('2024-12'), 'Déc. 2024');
         });
 
         it('formatDate: numeric-only formats are unaffected by locale', () => {
@@ -570,7 +570,7 @@ describe('Frontend files', () => {
             const fr = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'fr.json'), 'utf8'));
             assert.strictEqual(formatDateATS.withLocale(de)('2024-01'), 'Januar 2024');
             assert.strictEqual(formatDateATS.withLocale(de)('2024-03'), 'März 2024');
-            assert.strictEqual(formatDateATS.withLocale(fr)('2020-06'), 'juin 2020');
+            assert.strictEqual(formatDateATS.withLocale(fr)('2020-06'), 'Juin 2020');
         });
 
         // --- parseDateForSort tests ---
