@@ -18,7 +18,31 @@ Chaque modification que vous apportez (ajout d'éléments, modification de conte
 
 ## Enregistrer un nouveau jeu de données
 
-Cliquez sur **Save As...** dans la barre d'outils, saisissez un nom (par exemple, « CV Technique », « Poste Marketing »), et l'état actuel de votre CV est enregistré en tant que nouvel instantané. Le nouveau jeu de données devient le jeu actif.
+Cliquez sur **Enregistrer sous...** dans la barre d'outils pour ouvrir la fenêtre d'enregistrement. Vous pouvez y créer un tout nouveau jeu de données ou écraser un jeu existant.
+
+La fenêtre comporte deux parties :
+
+- Un **champ de nom** en haut, prérempli avec le nom du jeu de données actuellement actif
+- Une liste des **CV existants** en dessous, dont les versions apparentées sont regroupées visuellement
+
+### Versions regroupées
+
+Les jeux de données qui partagent le même nom de base sont affichés ensemble. Par exemple, `Frontend Engineer`, `Frontend Engineer v2` et `Frontend Engineer v3` apparaissent dans un même bloc sous un en-tête commun — chaque version est étiquetée avec un petit badge `v1` / `v2` / `v3`. Les CV autonomes sans versions associées s'affichent sur une seule ligne.
+
+### Cliquez sur un CV pour l'écraser
+
+Cliquer sur n'importe quelle ligne remplit le champ de nom avec le nom de ce CV, et le bouton principal passe à **Écraser « … »** (orange). Un clic demande une confirmation avant de remplacer ce CV par vos données actuelles.
+
+### Créer une nouvelle version
+
+Chaque groupe dispose d'un raccourci **+ Nouvelle version** qui suggère le prochain nom `vN` disponible — si `Frontend Engineer v3` est la version la plus récente, le raccourci remplit le champ avec `Frontend Engineer v4`. Le bouton indique **Enregistrer comme nouveau « … »** et l'envoi enregistre la nouvelle version aux côtés des existantes.
+
+### Saisir un nouveau nom
+
+Si vous saisissez un nom qui ne correspond à aucun CV existant, le bouton indique **Enregistrer comme nouveau « … »** (bleu). L'envoi crée un tout nouveau jeu de données.
+
+!!! tip
+    Utilisez la convention de nommage `Base vN` (par exemple `Frontend Engineer`, `Frontend Engineer v2`) pour bénéficier du regroupement automatique des versions et des suggestions de version suivante. Les jeux de données sans suffixe `vN` sont traités comme la « v1 » de leur nom.
 
 ## La fenêtre d'ouverture
 
@@ -29,6 +53,8 @@ Cliquez sur **Open...** pour voir tous les jeux de données enregistrés. Une **
 | **Bouton radio** | Sélectionner le jeu de données servi à votre URL racine `/` (le jeu par défaut) |
 | **Interrupteur** | Partager d'autres jeux de données via leur propre URL `/v/slug` |
 | **Bouton œil** | Prévisualiser un jeu de données enregistré sans le rendre public |
+
+Les versions apparentées d'un même CV de base sont **regroupées**. Une famille telle que `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` apparaît dans un seul bloc sous un en-tête partagé — chaque version est indentée sous un connecteur arborescent et étiquetée avec un petit badge `v1` / `v2` / `v3`. Les CV autonomes sans autres versions continuent d'apparaître sur une seule ligne.
 
 Chaque ligne de jeu de données affiche :
 

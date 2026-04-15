@@ -18,7 +18,31 @@ Toda alteração que você faz (adicionar itens, editar conteúdo, reordenar, al
 
 ## Salvando um Novo Conjunto de Dados
 
-Clique em **Salvar Como...** na barra de ferramentas, digite um nome (ex.: "CV Técnico", "Vaga de Marketing") e o estado atual do seu CV é salvo como um novo snapshot. O novo conjunto de dados se torna o ativo.
+Clique em **Salvar Como...** na barra de ferramentas para abrir o modal de salvamento. A partir daqui você pode criar um conjunto de dados totalmente novo ou sobrescrever um existente.
+
+O modal tem duas partes:
+
+- Um **campo de nome** no topo, preenchido previamente com o nome do conjunto de dados atualmente ativo
+- Uma lista de **CVs existentes** abaixo, com as versões relacionadas agrupadas visualmente
+
+### Versões agrupadas
+
+Conjuntos de dados que compartilham o mesmo nome base são exibidos juntos. Por exemplo, `Frontend Engineer`, `Frontend Engineer v2` e `Frontend Engineer v3` aparecem como um único bloco sob um cabeçalho compartilhado — cada versão é marcada com um pequeno badge `v1`/`v2`/`v3`. CVs independentes sem versões relacionadas são exibidos como uma única linha.
+
+### Clique em um CV para sobrescrevê-lo
+
+Clicar em qualquer linha da lista preenche o campo de nome com o nome daquele CV, e o botão principal muda para **Substituir "…"** (laranja). Ao clicar, será solicitada uma confirmação antes de substituir aquele CV pelos seus dados atuais.
+
+### Criar uma nova versão
+
+Cada grupo tem um atalho **+ Nova versão** que sugere o próximo nome `vN` disponível — se `Frontend Engineer v3` for a versão mais recente, o atalho preenche o campo com `Frontend Engineer v4`. O botão mostra **Guardar como novo "…"** e ao enviar salva a nova versão ao lado das existentes.
+
+### Digitar um nome novo
+
+Se você digitar um nome que não corresponda a nenhum CV existente, o botão mostra **Guardar como novo "…"** (azul). Ao enviar, é criado um conjunto de dados totalmente novo.
+
+!!! tip
+    Use a convenção de nomes `Base vN` (ex.: `Frontend Engineer`, `Frontend Engineer v2`) para obter agrupamento automático de versões e sugestões da próxima versão. Conjuntos de dados sem o sufixo `vN` são tratados como a "v1" do seu nome.
 
 ## O Modal Abrir
 
@@ -29,6 +53,8 @@ Clique em **Abrir...** para ver todos os conjuntos de dados salvos. Uma **legend
 | **Botão de rádio** | Seleciona qual conjunto de dados é servido na sua URL raiz `/` (o padrão) |
 | **Toggle** | Compartilha outros conjuntos de dados em sua própria URL `/v/slug` |
 | **Botão de olho** | Visualiza um conjunto de dados salvo sem torná-lo público |
+
+As versões relacionadas de um mesmo CV base são **agrupadas**. Uma família como `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` aparece como um único bloco sob um cabeçalho compartilhado — cada versão fica recuada sob um conector de árvore e marcada com um pequeno badge `v1` / `v2` / `v3`. CVs independentes sem outras versões continuam sendo exibidos em uma única linha.
 
 Cada linha de conjunto de dados mostra:
 
