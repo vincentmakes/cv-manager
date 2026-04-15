@@ -871,6 +871,102 @@ describe('Backend API', () => {
             assert.ok(data.sectionVisibility);
             assert.ok(Array.isArray(data.sectionOrder));
         });
+
+        describe('ATS PDF export localization', () => {
+            async function exportAts(locale) {
+                const res = await fetch(`${BASE_URL}/api/export/ats-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: 1, paperSize: 'A4', locale }),
+                });
+                assert.strictEqual(res.status, 200, `ATS export for locale=${locale} should return 200`);
+                assert.strictEqual(
+                    res.headers.get('content-type'),
+                    'application/pdf',
+                    `ATS export for locale=${locale} should return application/pdf`
+                );
+                const buf = Buffer.from(await res.arrayBuffer());
+                assert.ok(buf.length > 0, `ATS export for locale=${locale} should be non-empty`);
+                assert.strictEqual(
+                    buf.slice(0, 4).toString('latin1'),
+                    '%PDF',
+                    `ATS export for locale=${locale} should start with %PDF header`
+                );
+                return buf;
+            }
+
+            function extractLangTag(buf) {
+                // PDF /Catalog dictionary is not compressed — /Lang (xx) is readable as plain bytes.
+                const m = buf.toString('latin1').match(/\/Lang\s*\(([^)]+)\)/);
+                return m ? m[1] : null;
+            }
+
+            it('returns a valid localized PDF for each supported locale', async () => {
+                // Seed at least one experience so the PDF contains section headings.
+                await fetch(`${BASE_URL}/api/experiences`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        job_title: 'ATS Test Engineer',
+                        company_name: 'LocalizationCo',
+                        start_date: '2020-01',
+                        end_date: '',
+                        location: 'Remote',
+                        highlights: ['Verified localized export'],
+                    }),
+                });
+
+                for (const locale of ['en', 'de', 'fr', 'nl', 'es', 'it', 'pt', 'zh']) {
+                    const buf = await exportAts(locale);
+                    const lang = extractLangTag(buf);
+                    assert.strictEqual(
+                        lang, locale,
+                        `PDF /Lang metadata for locale=${locale} should be "${locale}", got "${lang}"`
+                    );
+                }
+            });
+
+            it('produces different PDF content for different locales', async () => {
+                // If localization wired up correctly, the German PDF must differ from the
+                // English one (section headings, "Present", "Technologies:", PDF metadata
+                // etc. are all different strings with different lengths). A regression that
+                // drops serverT() calls would make the bodies identical except for the
+                // /Lang tag — so normalize that before comparing to avoid a false pass.
+                const enBuf = await exportAts('en');
+                const deBuf = await exportAts('de');
+                const stripLang = s => s.replace(/\/Lang\s*\([^)]+\)/, '/Lang(XX)');
+                const enNorm = stripLang(enBuf.toString('latin1'));
+                const deNorm = stripLang(deBuf.toString('latin1'));
+                assert.notStrictEqual(
+                    enNorm, deNorm,
+                    'EN and DE ATS PDFs should differ in content beyond the /Lang tag — if ' +
+                    'identical after normalization, serverT() is not being applied to PDF body text'
+                );
+                // File length should also differ because translated strings are different lengths.
+                assert.notStrictEqual(
+                    enBuf.length, deBuf.length,
+                    'EN and DE PDF byte lengths should differ — identical lengths suggest localization regressed'
+                );
+            });
+
+            it('falls back to English for an unknown locale', async () => {
+                const buf = await exportAts('xx-unknown');
+                assert.strictEqual(extractLangTag(buf), 'en');
+            });
+
+            it('accepts request without locale and still returns a valid PDF', async () => {
+                // Server should fall back to the stored language setting, then to English.
+                const res = await fetch(`${BASE_URL}/api/export/ats-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: 1, paperSize: 'A4' }),
+                });
+                assert.strictEqual(res.status, 200);
+                const buf = Buffer.from(await res.arrayBuffer());
+                assert.strictEqual(buf.slice(0, 4).toString('latin1'), '%PDF');
+                assert.ok(extractLangTag(buf), 'PDF should still carry a /Lang tag');
+            });
+        });
     });
 
     describe('Public API (port)', () => {

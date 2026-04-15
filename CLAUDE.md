@@ -187,17 +187,39 @@ Parameter interpolation uses `{{variable}}` syntax.
 
 Every PR that adds or modifies user-visible strings **must** follow this checklist:
 
+**Before you start:** enumerate every string the feature emits to the user — UI label, toast, confirmation dialog, exported file contents, PDF heading, filename fragment, email subject, document metadata. For each one, decide whether it's rendered client-side or server-side, then pick the matching mechanism below. Missing this step is the most common way localization regressions ship.
+
 1. **No hardcoded English in JS** — Use `t('key')` for every user-visible string in `admin.js` and `scripts.js`. This includes button labels, titles, placeholders, empty-state messages, toasts, and confirmation dialogs.
 
 2. **No hardcoded English in HTML** — Use `data-i18n="key"` (text), `data-i18n-title="key"` (title attribute), or `data-i18n-placeholder="key"` (placeholder) on every element with static English text.
 
-3. **Add the key to `en.json` first** — Add the new key to `public/shared/i18n/en.json` under the appropriate namespace. This is the source of truth.
+3. **No hardcoded English in server-generated user output** — Anything `src/server.js` writes into a user-facing response must go through the server-side translation helper, not be a string literal. This covers:
+   - PDF / document exports (e.g. `/api/export/ats-pdf`)
+   - Downloadable file contents (ZIP manifests, CSV headers, etc.)
+   - Document metadata written into generated files (PDF Title, Subject, `/Lang` tag)
+   - Any API response field shown to the user verbatim (error messages, labels)
 
-4. **Add the key to every other locale file** — All translation files must have the exact same set of keys. Add the translated value to each of: `de.json`, `fr.json`, `nl.json`, `es.json`, `it.json`, `pt.json`, `zh.json`. If you don't know the correct translation, use the English value as a placeholder — it will still be functional since English is the fallback.
+   Use the `serverT(key, locale)` helper and `resolveLocale(requested)` — both live near the top of `src/server.js`. The client passes `locale: I18n.locale` in the request body; the server falls back to the stored `language` setting, then English. For PDFs, set the document `lang` metadata to the resolved locale for accessibility.
 
-5. **Key parity is enforced by tests** — `npm run test:frontend` validates that every locale file has the same keys as `en.json` and no extra keys. The CI will fail if keys are missing or mismatched.
+   ```js
+   // In src/server.js — WRONG:
+   doc.text('Work Experience', ...);
 
-6. **Namespace your keys** — Follow the existing conventions (`toolbar.*`, `section.*`, `form.*`, `toast.*`, etc.). For new feature areas, create a new namespace.
+   // In src/server.js — RIGHT:
+   const locale = resolveLocale(req.body.locale);
+   const t = (key) => serverT(key, locale);
+   doc.text(t('section.experience'), ...);
+   ```
+
+4. **Add the key to `en.json` first** — Add the new key to `public/shared/i18n/en.json` under the appropriate namespace. This is the source of truth — used by both client `t()` and server `serverT()`.
+
+5. **Add the key to every other locale file** — All translation files must have the exact same set of keys. Add the translated value to each of: `de.json`, `fr.json`, `nl.json`, `es.json`, `it.json`, `pt.json`, `zh.json`. If you don't know the correct translation, use the English value as a placeholder — it will still be functional since English is the fallback.
+
+6. **Key parity is enforced by tests** — `npm run test:frontend` validates that every locale file has the same keys as `en.json` and no extra keys. The CI will fail if keys are missing or mismatched.
+
+7. **Server-side output localization is enforced by tests** — When adding a new server-rendered artifact (PDF/file export, email, etc.), add a regression test in `tests/backend.test.js` that requests the artifact in two different locales and asserts the outputs differ. See the `ATS PDF export localization` describe block for the pattern. A test that only asserts status 200 won't catch a missing `serverT()` call.
+
+8. **Namespace your keys** — Follow the existing conventions (`toolbar.*`, `section.*`, `form.*`, `toast.*`, etc.). For new feature areas, create a new namespace.
 
 **Quick example — adding a new button:**
 ```js
