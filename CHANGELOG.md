@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.6] - 2026-04-15
+
+### Fixed
+- Month names in displayed dates now follow the selected UI language (e.g. "Januar 2024" in German, "mars 2024" in French) instead of always appearing in English. Affects Experience, Education, Certification, and Timeline dates in the admin and public views.
+- ATS document export now also uses the selected UI language for month names (previously always English).
+
+### Added
+- New `month.short.*` and `month.long.*` i18n keys (24 total) in all 8 locale files (`en`, `de`, `fr`, `nl`, `es`, `it`, `pt`, `zh`).
+
 ## [1.26.5] - 2026-04-14
 
 ### Fixed
