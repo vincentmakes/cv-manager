@@ -54,6 +54,8 @@ Haga clic en **Open...** para ver todos los conjuntos de datos guardados. Una **
 | **Interruptor** | Comparta otros conjuntos de datos en su propia URL `/v/slug` |
 | **Botón de ojo** | Previsualice un conjunto de datos guardado sin hacerlo público |
 
+Las versiones hermanas de un mismo CV base se muestran **agrupadas**. Una familia como `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` aparece como un solo bloque bajo una cabecera compartida — cada versión está sangrada bajo un conector de árbol y etiquetada con una pequeña insignia `v1` / `v2` / `v3`. Los CVs independientes sin otras versiones siguen mostrándose como una sola fila.
+
 Cada fila de conjunto de datos muestra:
 
 - **Nombre** y fecha de última actualización

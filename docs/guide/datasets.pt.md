@@ -54,6 +54,8 @@ Clique em **Abrir...** para ver todos os conjuntos de dados salvos. Uma **legend
 | **Toggle** | Compartilha outros conjuntos de dados em sua própria URL `/v/slug` |
 | **Botão de olho** | Visualiza um conjunto de dados salvo sem torná-lo público |
 
+As versões relacionadas de um mesmo CV base são **agrupadas**. Uma família como `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` aparece como um único bloco sob um cabeçalho compartilhado — cada versão fica recuada sob um conector de árvore e marcada com um pequeno badge `v1` / `v2` / `v3`. CVs independentes sem outras versões continuam sendo exibidos em uma única linha.
+
 Cada linha de conjunto de dados mostra:
 
 - **Nome** e data da última atualização

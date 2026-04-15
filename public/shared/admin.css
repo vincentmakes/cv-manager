@@ -971,6 +971,78 @@
     transform: scale(0.85);
 }
 
+/* Open modal — grouped view for sibling versions */
+.dataset-open-group {
+    margin-bottom: 10px;
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--primary);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    overflow: hidden;
+}
+.dataset-open-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(0, 102, 255, 0.05);
+    border-bottom: 1px solid var(--gray-200);
+}
+.dataset-open-group-base {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dataset-open-group-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+}
+.dataset-open-group-children {
+    padding: 6px 8px 8px;
+}
+.dataset-open-group-children .dataset-item {
+    position: relative;
+    margin-bottom: 6px;
+    margin-left: 18px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.dataset-open-group-children .dataset-item:last-child { margin-bottom: 0; }
+/* Tree connector: vertical line + horizontal elbow to the left border of the child */
+.dataset-open-group-children .dataset-item-child::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--gray-300);
+}
+.dataset-open-group-children .dataset-item-child:last-child::before {
+    bottom: calc(100% - 50%);
+}
+.dataset-open-group-children .dataset-item-child::after {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background: var(--gray-300);
+}
+/* Version badge inside the Open modal rows — shares .dataset-version-badge styling */
+.dataset-name-row .dataset-version-badge {
+    margin-right: 4px;
+}
+
 /* Save As Modal */
 .btn-warning { background: #ea580c; color: var(--white); }
 .btn-warning:hover { background: #c2410c; transform: translateY(-1px); }

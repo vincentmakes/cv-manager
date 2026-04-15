@@ -54,6 +54,8 @@ Klicken Sie auf **Öffnen...**, um alle gespeicherten Datensätze anzuzeigen. Ei
 | **Schalter** | Gibt andere Datensätze unter einer eigenen `/v/slug`-URL frei |
 | **Augen-Schaltfläche** | Vorschau eines gespeicherten Datensatzes, ohne ihn öffentlich zu machen |
 
+Verwandte Versionen desselben Basis-Lebenslaufs werden **gemeinsam gruppiert**. Eine Familie wie `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` erscheint als ein Block unter einer gemeinsamen Überschrift, wobei jede Version unter einer Baumverbindung eingerückt ist und mit einem kleinen `v1`/`v2`/`v3`-Badge gekennzeichnet wird. Eigenständige Lebensläufe ohne andere Versionen werden weiterhin als einzelne Zeile dargestellt.
+
 Jede Datensatz-Zeile zeigt:
 
 - **Name** und Datum der letzten Aktualisierung

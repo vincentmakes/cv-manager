@@ -54,6 +54,8 @@ Cliccate su **Open...** per visualizzare tutti i dataset salvati. Una **legenda*
 | **Interruttore** | Condivide altri dataset al proprio URL `/v/slug` |
 | **Pulsante occhio** | Anteprima di un dataset salvato senza renderlo pubblico |
 
+Le versioni correlate di uno stesso CV di base vengono **raggruppate**. Una famiglia come `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` appare come un unico blocco sotto un'intestazione condivisa — ogni versione è rientrata sotto un connettore ad albero ed etichettata con un piccolo badge `v1` / `v2` / `v3`. I CV autonomi senza altre versioni continuano a essere visualizzati come una singola riga.
+
 Ogni riga di dataset mostra:
 
 - **Nome** e data dell'ultimo aggiornamento

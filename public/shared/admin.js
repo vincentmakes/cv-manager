@@ -2865,36 +2865,39 @@ function closeDatasetsModal() {
     document.getElementById('datasetsModalOverlay').classList.remove('active');
 }
 
-async function loadDatasetsList() {
-    const datasets = await api('/api/datasets');
-    const container = document.getElementById('datasetsList');
-    
-    if (datasets.length === 0) {
-        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No saved datasets yet.<br>Use "Save As..." to save your current CV.</p>';
-        return;
-    }
-    
-    container.innerHTML = datasets.map(ds => {
-        const isActive = ds.id === activeDatasetId;
-        const isDefault = !!ds.is_default;
-        const showSlugUrl = ds.slug && !isDefault;
-        const showPublicToggle = ds.slug && !isDefault;
-        
-        return `
-        <div class="dataset-item ${isActive ? 'dataset-item-active' : ''} ${isDefault ? 'dataset-item-is-default' : ''}" data-id="${ds.id}">
+// Render a single dataset row for the Open modal.
+// opts.isChild = true indents the row and attaches tree connectors to the version children.
+// opts.versionBadge = number renders a v{n} badge next to the name.
+function renderDatasetOpenRow(ds, opts = {}) {
+    const isActive = ds.id === activeDatasetId;
+    const isDefault = !!ds.is_default;
+    const showSlugUrl = ds.slug && !isDefault;
+    const showPublicToggle = ds.slug && !isDefault;
+    const classes = ['dataset-item'];
+    if (isActive) classes.push('dataset-item-active');
+    if (isDefault) classes.push('dataset-item-is-default');
+    if (opts.isChild) classes.push('dataset-item-child');
+    const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
+    const versionBadgeHtml = opts.versionBadge
+        ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>`
+        : '';
+
+    return `
+        <div class="${classes.join(' ')}" data-id="${ds.id}">
             <div class="dataset-default-radio">
                 <label class="radio-label" title="${isDefault ? 'This dataset is currently served at the root URL /' : 'Click to make this dataset the one served at the root URL /'}">
-                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">
+                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
                     <span class="radio-dot"></span>
                 </label>
             </div>
             <div class="dataset-info">
                 <div class="dataset-name-row">
+                    ${versionBadgeHtml}
                     <span class="dataset-name">${escapeHtml(ds.name)}</span>
                     ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
                     ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
                 </div>
-                <div class="dataset-date">Last updated: ${formatDateTime(ds.updated_at)}</div>
+                <div class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</div>
                 ${showSlugUrl ? `<div class="dataset-url">
                     <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
                     <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
@@ -2917,10 +2920,41 @@ async function loadDatasetsList() {
                     <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
                         <span class="material-symbols-outlined" style="font-size:14px">visibility</span>
                     </button>` : ''}
-                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')">${isActive ? 'Reload' : 'Load'}</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${escapeHtml(ds.name).replace(/'/g, "\\'")}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
+                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? 'Reload' : 'Load'}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${safeName}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
             </div>
         </div>`;
+}
+
+async function loadDatasetsList() {
+    const datasets = await api('/api/datasets');
+    const container = document.getElementById('datasetsList');
+
+    if (datasets.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No saved datasets yet.<br>Use "Save As..." to save your current CV.</p>';
+        return;
+    }
+
+    const groups = groupDatasetsByBase(datasets);
+    container.innerHTML = groups.map(group => {
+        if (group.items.length === 1) {
+            // Standalone dataset — render as today, no grouping chrome.
+            return renderDatasetOpenRow(group.items[0]);
+        }
+        // Multi-version group — wrap in a container with a shared header.
+        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
+        const children = group.items.map(ds =>
+            renderDatasetOpenRow(ds, { isChild: true, versionBadge: ds._version })
+        ).join('');
+        return `
+            <div class="dataset-open-group">
+                <div class="dataset-open-group-header">
+                    <span class="dataset-open-group-base">${escapeHtml(group.base)}</span>
+                    <span class="dataset-open-group-count">${countLabel}</span>
+                </div>
+                <div class="dataset-open-group-children">${children}</div>
+            </div>
+        `;
     }).join('');
 }
 

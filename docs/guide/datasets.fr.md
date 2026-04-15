@@ -54,6 +54,8 @@ Cliquez sur **Open...** pour voir tous les jeux de données enregistrés. Une **
 | **Interrupteur** | Partager d'autres jeux de données via leur propre URL `/v/slug` |
 | **Bouton œil** | Prévisualiser un jeu de données enregistré sans le rendre public |
 
+Les versions apparentées d'un même CV de base sont **regroupées**. Une famille telle que `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` apparaît dans un seul bloc sous un en-tête partagé — chaque version est indentée sous un connecteur arborescent et étiquetée avec un petit badge `v1` / `v2` / `v3`. Les CV autonomes sans autres versions continuent d'apparaître sur une seule ligne.
+
 Chaque ligne de jeu de données affiche :
 
 - Le **nom** et la date de dernière mise à jour

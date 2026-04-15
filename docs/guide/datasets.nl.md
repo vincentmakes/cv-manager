@@ -54,6 +54,8 @@ Klik op **Open...** om alle opgeslagen datasets te bekijken. Een **legenda** bov
 | **Schakelaar** | Deel andere datasets via hun eigen `/v/slug`-URL |
 | **Oog-knop** | Bekijk een voorvertoning van een opgeslagen dataset zonder deze openbaar te maken |
 
+Verwante versies van hetzelfde basis-CV worden **samen gegroepeerd**. Een familie zoals `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` verschijnt als één blok onder een gedeelde kop — elke versie is ingesprongen onder een boom-connector en gelabeld met een kleine `v1` / `v2` / `v3`-badge. Op zichzelf staande CV's zonder andere versies worden nog steeds als één rij weergegeven.
+
 Elke dataset-rij toont:
 
 - **Naam** en datum van laatste wijziging

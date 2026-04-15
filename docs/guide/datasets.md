@@ -54,9 +54,11 @@ Click **Open...** to see all saved datasets. A **legend** at the top explains th
 | **Toggle** | Share other datasets at their own `/v/slug` URL |
 | **Eye button** | Preview a saved dataset without making it public |
 
+Sibling versions of the same base CV are **grouped together**. A family like `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` appears as a single block under a shared header, with each version indented beneath a tree connector and tagged with a small `v1` / `v2` / `v3` badge. Standalone CVs with no other versions continue to render as a single row.
+
 Each dataset row shows:
 
-- **Name** and last-updated date
+- **Name** (prefixed with its version badge when part of a group) and last-updated date
 - **"Default" badge** — on the dataset selected with the radio button
 - **"Editing" badge** — on the dataset currently loaded in the admin
 - A **versioned URL** (e.g., `/v/technical-cv-1`) — hidden for the default dataset since it's served at `/`

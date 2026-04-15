@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Changed
 - "Save As…" now opens a rich modal instead of a browser prompt. Existing CVs are shown grouped by base name so sibling versions (`My CV`, `My CV v2`, `My CV v3`) appear visually attached under a shared parent. Clicking a CV in the list pre-fills the name input so overwriting is explicit, and the primary button flips between "Save as new" and "Overwrite" (with a warning color) as you type. Every group has a "+ New version" shortcut that auto-suggests the next free `vN` name. Overwriting an existing CV now requires confirming a dialog.
+- The "Open…" modal now uses the same grouped tree view: sibling versions of the same base CV are wrapped under a shared header and indented with tree connectors, each tagged with a small `v1`/`v2`/`v3` badge. All existing controls (default radio, public-share toggle, preview eye, load/reload, delete, slug URL copy) are preserved per row. Standalone CVs with no siblings continue to render as a single row.
 
 ### Added
 - New `datasets.save_as_title`, `datasets.name_label`, `datasets.name_placeholder`, `datasets.save_as_hint`, `datasets.existing_datasets`, `datasets.no_existing`, `datasets.new_version`, `datasets.versions_count`, `datasets.save_new`, `datasets.save_new_empty`, `datasets.overwrite`, and `confirm.overwrite_dataset` i18n keys in all 8 locale files (`en`, `de`, `fr`, `nl`, `es`, `it`, `pt`, `zh`).
