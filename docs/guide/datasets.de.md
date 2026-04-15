@@ -18,7 +18,31 @@ Jede Änderung, die Sie vornehmen (Einträge hinzufügen, Inhalte bearbeiten, Re
 
 ## Einen neuen Datensatz speichern
 
-Klicken Sie auf **Speichern unter...** in der Werkzeugleiste, geben Sie einen Namen ein (z. B. „Technischer Lebenslauf", „Marketing-Stelle"), und Ihr aktueller Lebenslauf-Zustand wird als neue Momentaufnahme gespeichert. Der neue Datensatz wird zum aktiven Datensatz.
+Klicken Sie auf **Speichern unter...** in der Werkzeugleiste, um das Speichern-Modal zu öffnen. Von hier aus können Sie einen völlig neuen Datensatz anlegen oder einen vorhandenen überschreiben.
+
+Das Modal besteht aus zwei Teilen:
+
+- Ein **Namensfeld** oben, das mit dem Namen des aktuell aktiven Datensatzes vorausgefüllt ist
+- Eine Liste **vorhandener Lebensläufe** darunter, in der zusammengehörige Versionen visuell gruppiert sind
+
+### Gruppierte Versionen
+
+Datensätze mit demselben Basisnamen werden gemeinsam angezeigt. Zum Beispiel erscheinen `Frontend Engineer`, `Frontend Engineer v2` und `Frontend Engineer v3` als ein Block unter einer gemeinsamen Überschrift — jede Version ist mit einem kleinen `v1`/`v2`/`v3`-Badge gekennzeichnet. Eigenständige Lebensläufe ohne Geschwister werden als einzelne Zeile dargestellt.
+
+### Klicken Sie einen Lebenslauf an, um ihn zu überschreiben
+
+Wenn Sie auf eine Zeile in der Liste klicken, wird das Namensfeld mit dem Namen dieses Lebenslaufs gefüllt, und die primäre Schaltfläche wechselt zu **„…" überschreiben** (orange). Beim Klicken werden Sie aufgefordert zu bestätigen, bevor der Lebenslauf durch Ihre aktuellen Daten ersetzt wird.
+
+### Eine neue Version erstellen
+
+Jede Gruppe hat eine **+ Neue Version**-Schaltfläche, die den nächsten freien `vN`-Namen vorschlägt — wenn `Frontend Engineer v3` die neueste Version ist, füllt die Schaltfläche das Namensfeld mit `Frontend Engineer v4`. Die Schaltfläche liest **Als neuen speichern: „…"**, und beim Absenden wird die neue Version neben den vorhandenen gespeichert.
+
+### Einen neuen Namen eingeben
+
+Wenn Sie einen Namen eingeben, der mit keinem vorhandenen Lebenslauf übereinstimmt, lautet die Schaltfläche **Als neuen speichern: „…"** (blau). Beim Absenden wird ein völlig neuer Datensatz erstellt.
+
+!!! tip
+    Verwenden Sie die `Basis vN`-Namenskonvention (z. B. `Frontend Engineer`, `Frontend Engineer v2`), um automatische Versionsgruppierung und Nächste-Version-Vorschläge zu erhalten. Datensätze ohne `vN`-Suffix werden als „v1" ihres Namens behandelt.
 
 ## Das Öffnen-Modal
 

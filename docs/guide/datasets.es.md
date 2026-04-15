@@ -18,7 +18,31 @@ Cada cambio que realice (agregar elementos, editar contenido, reordenar, alterna
 
 ## Guardar un nuevo conjunto de datos
 
-Haga clic en **Save As...** en la barra de herramientas, ingrese un nombre (por ejemplo, "Technical CV", "Marketing Role"), y el estado actual de su CV se guardará como una nueva instantánea. El nuevo conjunto de datos se convierte en el activo.
+Haz clic en **Guardar como...** en la barra de herramientas para abrir el modal de guardado. Desde aquí puedes crear un conjunto de datos nuevo o sobrescribir uno existente.
+
+El modal tiene dos partes:
+
+- Un **campo de nombre** en la parte superior, precompletado con el nombre del conjunto de datos actualmente activo
+- Una lista de **CVs existentes** debajo, con las versiones relacionadas agrupadas visualmente
+
+### Versiones agrupadas
+
+Los conjuntos de datos que comparten el mismo nombre base se muestran juntos. Por ejemplo, `Frontend Engineer`, `Frontend Engineer v2` y `Frontend Engineer v3` aparecen como un único bloque bajo una cabecera compartida — cada versión está etiquetada con una pequeña insignia `v1`/`v2`/`v3`. Los CVs independientes sin versiones hermanas se muestran en una sola fila.
+
+### Haz clic en un CV para sobrescribirlo
+
+Al hacer clic en cualquier fila de la lista, el campo de nombre se rellena con el nombre de ese CV y el botón principal cambia a **Sobrescribir "…"** (naranja). Al hacer clic, se te pedirá que confirmes antes de reemplazar ese CV con tus datos actuales.
+
+### Crear una nueva versión
+
+Cada grupo tiene un atajo **+ Nueva versión** que sugiere el siguiente nombre `vN` disponible — si `Frontend Engineer v3` es la versión más reciente, el atajo rellena el campo con `Frontend Engineer v4`. El botón muestra **Guardar como nuevo "…"** y al enviar se guarda la nueva versión junto a las existentes.
+
+### Escribir un nombre nuevo
+
+Si escribes un nombre que no coincide con ningún CV existente, el botón muestra **Guardar como nuevo "…"** (azul). Al enviar se crea un conjunto de datos completamente nuevo.
+
+!!! tip
+    Usa la convención de nombres `Base vN` (por ejemplo, `Frontend Engineer`, `Frontend Engineer v2`) para obtener agrupación automática de versiones y sugerencias de la siguiente versión. Los conjuntos de datos sin sufijo `vN` se tratan como la "v1" de su nombre.
 
 ## El modal de apertura
 

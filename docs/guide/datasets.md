@@ -18,7 +18,31 @@ Every change you make (adding items, editing content, reordering, toggling visib
 
 ## Saving a New Dataset
 
-Click **Save As...** in the toolbar, enter a name (e.g., "Technical CV", "Marketing Role"), and your current CV state is saved as a new snapshot. The new dataset becomes the active one.
+Click **Save As...** in the toolbar to open the save modal. From here you can create a brand-new dataset or overwrite an existing one.
+
+The modal has two parts:
+
+- A **name field** at the top, pre-filled with the currently-active dataset's name
+- A list of **existing CVs** below, with related versions grouped visually
+
+### Grouped versions
+
+Datasets that share the same base name are displayed together. For example, `Frontend Engineer`, `Frontend Engineer v2`, and `Frontend Engineer v3` appear as one block under a shared header — each version tagged with a small `v1` / `v2` / `v3` badge. Standalone CVs with no siblings render as a single row.
+
+### Click a CV to overwrite it
+
+Clicking any row in the list fills the name field with that CV's name, and the primary button switches to **Overwrite "…"** (orange). Clicking it asks you to confirm before replacing that CV with your current data.
+
+### Create a new version
+
+Every group has a **+ New version** shortcut that suggests the next free `vN` name — if `Frontend Engineer v3` is the most recent version, the shortcut fills the name field with `Frontend Engineer v4`. The button reads **Save as new "…"** and submitting saves the new version alongside the existing ones.
+
+### Type a fresh name
+
+If you type a name that doesn't match any existing CV, the button reads **Save as new "…"** (blue). Submitting creates a brand-new dataset.
+
+!!! tip
+    Use the `Base vN` naming convention (e.g. `Frontend Engineer`, `Frontend Engineer v2`) to get automatic version grouping and next-version suggestions. Datasets without a `vN` suffix are treated as the "v1" of their name.
 
 ## The Open Modal
 

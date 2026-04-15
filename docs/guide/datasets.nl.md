@@ -18,7 +18,31 @@ Elke wijziging die u maakt (items toevoegen, inhoud bewerken, volgorde wijzigen,
 
 ## Een nieuwe dataset opslaan
 
-Klik op **Save As...** in de werkbalk, voer een naam in (bijv. "Technisch CV", "Marketing Functie") en uw huidige CV-status wordt opgeslagen als een nieuwe momentopname. De nieuwe dataset wordt de actieve dataset.
+Klik op **Opslaan als...** in de werkbalk om het opslaan-venster te openen. Hier kun je een geheel nieuwe dataset aanmaken of een bestaande overschrijven.
+
+Het venster bestaat uit twee delen:
+
+- Een **naamveld** bovenaan, vooringevuld met de naam van de momenteel actieve dataset
+- Een lijst met **bestaande CV's** eronder, waarin verwante versies visueel gegroepeerd zijn
+
+### Gegroepeerde versies
+
+Datasets die dezelfde basisnaam delen, worden samen weergegeven. `Frontend Engineer`, `Frontend Engineer v2` en `Frontend Engineer v3` verschijnen bijvoorbeeld als één blok onder een gedeelde kop — elke versie is gelabeld met een kleine `v1`/`v2`/`v3`-badge. Op zichzelf staande CV's zonder vergelijkbare versies worden als één rij weergegeven.
+
+### Klik op een CV om deze te overschrijven
+
+Als je op een rij in de lijst klikt, wordt het naamveld gevuld met de naam van die CV en verandert de primaire knop in **"…" overschrijven** (oranje). Klikken vraagt om een bevestiging voordat die CV wordt vervangen door je huidige gegevens.
+
+### Een nieuwe versie maken
+
+Elke groep heeft een **+ Nieuwe versie**-snelkoppeling die de volgende vrije `vN`-naam voorstelt — als `Frontend Engineer v3` de meest recente versie is, vult de snelkoppeling het veld met `Frontend Engineer v4`. De knop leest **Als nieuw opslaan "…"** en indienen slaat de nieuwe versie naast de bestaande op.
+
+### Een nieuwe naam typen
+
+Als je een naam typt die niet overeenkomt met een bestaande CV, leest de knop **Als nieuw opslaan "…"** (blauw). Indienen maakt een geheel nieuwe dataset aan.
+
+!!! tip
+    Gebruik de naamgevingsconventie `Basis vN` (bijv. `Frontend Engineer`, `Frontend Engineer v2`) voor automatische versiegroepering en volgende-versie-suggesties. Datasets zonder `vN`-achtervoegsel worden behandeld als de "v1" van hun naam.
 
 ## Het open-venster
 

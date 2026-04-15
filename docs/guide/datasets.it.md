@@ -18,7 +18,31 @@ Ogni modifica apportata (aggiunta di elementi, modifica di contenuti, riordiname
 
 ## Salvare un Nuovo Dataset
 
-Cliccate su **Save As...** nella barra degli strumenti, inserite un nome (ad esempio, "CV Tecnico", "Ruolo Marketing"), e lo stato attuale del vostro CV viene salvato come nuova istantanea. Il nuovo dataset diventa quello attivo.
+Cliccate su **Salva con nome...** nella barra degli strumenti per aprire la finestra di salvataggio. Da qui potete creare un dataset completamente nuovo oppure sovrascriverne uno esistente.
+
+La finestra è composta da due parti:
+
+- Un **campo nome** in alto, precompilato con il nome del dataset attualmente attivo
+- Un elenco dei **CV esistenti** sottostante, in cui le versioni correlate sono raggruppate visivamente
+
+### Versioni raggruppate
+
+I dataset che condividono lo stesso nome di base vengono mostrati insieme. Ad esempio, `Frontend Engineer`, `Frontend Engineer v2` e `Frontend Engineer v3` compaiono come un unico blocco sotto un'intestazione condivisa — ogni versione è contrassegnata con un piccolo badge `v1`/`v2`/`v3`. I CV autonomi senza altre versioni correlate vengono mostrati come una singola riga.
+
+### Clicca un CV per sovrascriverlo
+
+Cliccando su una qualsiasi riga dell'elenco, il campo nome viene riempito con il nome di quel CV e il pulsante principale passa a **Sovrascrivi "…"** (arancione). Cliccandolo vi verrà chiesto di confermare prima di sostituire quel CV con i dati attuali.
+
+### Creare una nuova versione
+
+Ogni gruppo dispone di una scorciatoia **+ Nuova versione** che suggerisce il prossimo nome `vN` libero — se `Frontend Engineer v3` è la versione più recente, la scorciatoia riempie il campo con `Frontend Engineer v4`. Il pulsante mostra **Salva come nuovo "…"** e inviando si salva la nuova versione accanto a quelle esistenti.
+
+### Digitare un nuovo nome
+
+Se digitate un nome che non corrisponde ad alcun CV esistente, il pulsante mostra **Salva come nuovo "…"** (blu). Inviando si crea un dataset completamente nuovo.
+
+!!! tip
+    Utilizzate la convenzione di denominazione `Base vN` (ad esempio `Frontend Engineer`, `Frontend Engineer v2`) per ottenere il raggruppamento automatico delle versioni e il suggerimento della versione successiva. I dataset senza suffisso `vN` vengono trattati come la "v1" del loro nome.
 
 ## La Finestra di Apertura
 
