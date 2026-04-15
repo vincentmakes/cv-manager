@@ -395,6 +395,10 @@
     "ats.generate_failed": "Failed to generate ATS document",
     "ats.downloaded": "ATS document downloaded",
     "ats.what_is": "What is ATS Export?",
+    "ats.technologies_label": "Technologies",
+    "ats.pdf_title_suffix": "Resume",
+    "ats.pdf_subject": "Resume / CV",
+    "ats.name_fallback": "Name",
 
     "present": "Present",
     "loading": "Loading...",

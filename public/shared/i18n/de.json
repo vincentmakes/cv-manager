@@ -395,6 +395,10 @@
     "ats.generate_failed": "ATS-Dokument konnte nicht erstellt werden",
     "ats.downloaded": "ATS-Dokument heruntergeladen",
     "ats.what_is": "Was ist ATS-Export?",
+    "ats.technologies_label": "Technologien",
+    "ats.pdf_title_suffix": "Lebenslauf",
+    "ats.pdf_subject": "Lebenslauf / CV",
+    "ats.name_fallback": "Name",
 
     "present": "Aktuell",
     "loading": "Laden...",

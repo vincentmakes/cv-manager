@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.26.7] - 2026-04-15
+
+### Fixed
+- ATS PDF export is now fully localized to the selected UI language. Section headings (Work Experience, Education, Skills, etc.), the "Present" label for current roles, the "Technologies:" prefix in projects, the PDF document language tag, and PDF metadata (Title, Subject) now follow the active locale instead of always appearing in English.
+
+### Added
+- Server-side i18n loader that reads the existing `public/shared/i18n/*.json` files so server-generated output can be localized.
+- New `ats.technologies_label`, `ats.pdf_title_suffix`, `ats.pdf_subject`, and `ats.name_fallback` i18n keys in all 8 locale files (`en`, `de`, `fr`, `nl`, `es`, `it`, `pt`, `zh`).
+
 ## [1.26.6] - 2026-04-15
 
 ### Fixed
