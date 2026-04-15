@@ -376,6 +376,10 @@
     "ats.generate_failed": "ATS-document kon niet worden gegenereerd",
     "ats.downloaded": "ATS-document gedownload",
     "ats.what_is": "Wat is ATS-export?",
+    "ats.technologies_label": "Technologieën",
+    "ats.pdf_title_suffix": "CV",
+    "ats.pdf_subject": "CV / Curriculum vitae",
+    "ats.name_fallback": "Naam",
 
     "present": "Heden",
     "loading": "Laden...",

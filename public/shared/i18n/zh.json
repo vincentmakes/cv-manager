@@ -376,6 +376,10 @@
     "ats.generate_failed": "生成 ATS 文档失败",
     "ats.downloaded": "ATS 文档已下载",
     "ats.what_is": "什么是 ATS 导出？",
+    "ats.technologies_label": "技术",
+    "ats.pdf_title_suffix": "简历",
+    "ats.pdf_subject": "简历 / CV",
+    "ats.name_fallback": "姓名",
 
     "present": "至今",
     "loading": "加载中...",

@@ -3965,7 +3965,7 @@ async function fetchAtsPdfPreview() {
         const res = await fetch('/api/export/ats-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scale, paperSize })
+            body: JSON.stringify({ scale, paperSize, locale: I18n.locale })
         });
 
         if (!res.ok) throw new Error('Failed to generate PDF');
@@ -3993,7 +3993,7 @@ async function downloadAtsPdf() {
         const res = await fetch('/api/export/ats-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scale, paperSize })
+            body: JSON.stringify({ scale, paperSize, locale: I18n.locale })
         });
 
         if (!res.ok) throw new Error('Failed to generate PDF');

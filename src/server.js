@@ -83,6 +83,40 @@ const SECTION_DISPLAY_NAMES = {
 
 const DEFAULT_SECTION_ORDER = ['about', 'timeline', 'experience', 'certifications', 'education', 'skills', 'projects'];
 
+// Server-side i18n: load all translations once at startup so server-generated
+// content (e.g., ATS PDF export) can be localized to the user's active language.
+const I18N_DIR = path.join(__dirname, '../public/shared/i18n');
+const serverTranslations = {};
+try {
+    if (fs.existsSync(I18N_DIR)) {
+        for (const file of fs.readdirSync(I18N_DIR)) {
+            if (file.endsWith('.json')) {
+                const code = path.basename(file, '.json');
+                try {
+                    serverTranslations[code] = JSON.parse(fs.readFileSync(path.join(I18N_DIR, file), 'utf8'));
+                } catch (e) {
+                    console.warn(`Failed to parse translation file ${file}: ${e.message}`);
+                }
+            }
+        }
+    }
+} catch (e) { console.warn(`Failed to load server translations: ${e.message}`); }
+
+function serverT(key, locale) {
+    const loc = serverTranslations[locale] || {};
+    const en = serverTranslations['en'] || {};
+    return loc[key] || en[key] || key;
+}
+
+function resolveLocale(requested) {
+    if (requested && serverTranslations[requested]) return requested;
+    try {
+        const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('language');
+        if (row && row.value && serverTranslations[row.value]) return row.value;
+    } catch (e) { /* ignore — db may not be ready or settings table may lack the key */ }
+    return 'en';
+}
+
 function checkFilesystemAccess(dir) {
     const testFile = path.join(dir, '.write-test-' + process.pid);
     try {
@@ -1894,20 +1928,22 @@ if (PUBLIC_ONLY) {
     // Uses pdfkit directly for StructTreeRoot / tagged PDF support
     app.post('/api/export/ats-pdf', async (req, res) => {
         try {
-            const { scale = 1, paperSize = 'A4' } = req.body || {};
+            const { scale = 1, paperSize = 'A4', locale: reqLocale } = req.body || {};
             const s = Math.max(0.5, Math.min(1.5, parseFloat(scale) || 1));
+            const locale = resolveLocale(reqLocale);
+            const t = (key) => serverT(key, locale);
 
             const cvData = gatherCvData();
             const p = cvData.profile || {};
             const sectionOrder = cvData.sectionOrder || [];
 
+            const MONTH_KEYS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
             function fmtDate(dateStr) {
                 if (!dateStr) return '';
                 if (/^\d{4}$/.test(dateStr)) return dateStr;
                 if (/^\d{4}-\d{2}$/.test(dateStr)) {
                     const [y, m] = dateStr.split('-');
-                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                    return `${months[parseInt(m) - 1]} ${y}`;
+                    return `${t('month.short.' + MONTH_KEYS[parseInt(m) - 1])} ${y}`;
                 }
                 return dateStr;
             }
@@ -1915,6 +1951,9 @@ if (PUBLIC_ONLY) {
             function getSectionName(key) {
                 const orderEntry = sectionOrder.find(s => s.key === key);
                 if (orderEntry && orderEntry.display_name) return orderEntry.display_name;
+                const translationKey = 'section.' + key;
+                const translated = t(translationKey);
+                if (translated !== translationKey) return translated;
                 if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
                 if (orderEntry && orderEntry.name) return orderEntry.name;
                 const cs = (cvData.customSections || []).find(s => s.section_key === key);
@@ -1935,12 +1974,12 @@ if (PUBLIC_ONLY) {
                 size: [pageW, pageH],
                 margins: { top: margin, bottom: margin, left: margin, right: margin },
                 info: {
-                    Title: `${p.name || 'CV'} - Resume`,
+                    Title: `${p.name || 'CV'} - ${t('ats.pdf_title_suffix')}`,
                     Author: p.name || '',
-                    Subject: 'Resume / CV',
+                    Subject: t('ats.pdf_subject'),
                     Keywords: (cvData.skills || []).flatMap(c => c.skills || []).join(', ')
                 },
-                lang: 'en',
+                lang: locale,
                 font: 'Helvetica'
             });
 
@@ -2027,7 +2066,7 @@ if (PUBLIC_ONLY) {
             }
 
             // --- Header ---
-            addHeading('H1', p.name || 'Name', sz(22));
+            addHeading('H1', p.name || t('ats.name_fallback'), sz(22));
             if (p.title) addParagraph(p.title, sz(12), { color: '#444' });
             if (p.subtitle) addParagraph(p.subtitle, sz(10), { color: '#666' });
 
@@ -2067,7 +2106,7 @@ if (PUBLIC_ONLY) {
                             advanceY(6);
                         }
                         const title = exp.job_title || '';
-                        const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : 'Present'}`;
+                        const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : t('present')}`;
 
                         // Job title on its own line as H3
                         ensureSpace(sz(10) * 1.3 + 4);
@@ -2113,7 +2152,7 @@ if (PUBLIC_ONLY) {
                             advanceY(6);
                         }
                         const title = edu.degree_title || '';
-                        const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : 'Present'}`;
+                        const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : t('present')}`;
 
                         // Degree on its own line as H3
                         ensureSpace(sz(10) * 1.3 + 4);
@@ -2197,7 +2236,7 @@ if (PUBLIC_ONLY) {
 
                         if (proj.description) addParagraph(proj.description, sz(9));
                         if (proj.technologies && proj.technologies.length > 0) {
-                            addParagraph(`Technologies: ${proj.technologies.join(', ')}`, sz(8.5), { color: '#666', font: 'Helvetica-Oblique' });
+                            addParagraph(`${t('ats.technologies_label')}: ${proj.technologies.join(', ')}`, sz(8.5), { color: '#666', font: 'Helvetica-Oblique' });
                         }
                         if (proj.link) addParagraph(proj.link, sz(8), { color: accentColor });
                     });

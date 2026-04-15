@@ -376,6 +376,10 @@
     "ats.generate_failed": "Impossibile generare il documento ATS",
     "ats.downloaded": "Documento ATS scaricato",
     "ats.what_is": "Cos'è l'esportazione ATS?",
+    "ats.technologies_label": "Tecnologie",
+    "ats.pdf_title_suffix": "Curriculum",
+    "ats.pdf_subject": "Curriculum / CV",
+    "ats.name_fallback": "Nome",
 
     "present": "Presente",
     "loading": "Caricamento...",
