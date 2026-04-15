@@ -199,19 +199,22 @@ function formatDate(dateStr) {
     if (dateStr.match(/^\d{4}-\d{2}$/)) {
         const [y, m] = dateStr.split('-');
         const monthIdx = parseInt(m) - 1;
-        const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const monthsFull = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        
+        // Month name translations — keys live in public/shared/i18n/*.json under month.short.* and month.long.*
+        const shortKeys = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const longKeys  = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+        const mShort = t(`month.short.${shortKeys[monthIdx]}`);
+        const mLong  = t(`month.long.${longKeys[monthIdx]}`);
+
         switch (dateFormatSetting) {
-            case 'MMMM YYYY': return `${monthsFull[monthIdx]} ${y}`;
-            case 'MMM YY': return `${monthsShort[monthIdx]} ${y.slice(-2)}`;
+            case 'MMMM YYYY': return `${mLong} ${y}`;
+            case 'MMM YY': return `${mShort} ${y.slice(-2)}`;
             case 'MM/YYYY': return `${m}/${y}`;
             case 'MM.YYYY': return `${m}.${y}`;
             case 'MM-YYYY': return `${m}-${y}`;
             case 'YYYY-MM': return `${y}-${m}`;
             case 'YYYY': return y;
             case 'MMM YYYY':
-            default: return `${monthsShort[monthIdx]} ${y}`;
+            default: return `${mShort} ${y}`;
         }
     }
     return dateStr;

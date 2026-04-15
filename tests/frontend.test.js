@@ -388,10 +388,15 @@ describe('Frontend files', () => {
             assert.ok(materialIconMatch, 'Should find materialIcon function');
             materialIcon = new Function('name', 'size', `size = size || 16; ${materialIconMatch[0].replace(/^function materialIcon\(name, size = 16\)\s*\{/, '').replace(/\}$/, '')}`);
 
-            // For formatDate, create a closure with dateFormatSetting
-            const createFormatDate = (setting) => {
+            // For formatDate, create a closure with dateFormatSetting and an injected `t` function.
+            // formatDate() calls t('month.short.*') / t('month.long.*') — by default we load en.json so
+            // behavior matches the English UI; pass `translations` to simulate another locale.
+            const enTranslations = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'en.json'), 'utf8'));
+            const createFormatDate = (setting, translations = enTranslations) => {
                 const body = formatDateMatch[0].replace(/^function formatDate\(dateStr\)\s*\{/, '').replace(/\}$/, '');
-                return new Function('dateStr', `const dateFormatSetting = ${JSON.stringify(setting)}; ${body}`);
+                const tFn = (key) => (translations[key] !== undefined ? translations[key] : key);
+                const impl = new Function('dateStr', 't', `const dateFormatSetting = ${JSON.stringify(setting)}; ${body}`);
+                return (dateStr) => impl(dateStr, tFn);
             };
             formatDate = createFormatDate; // Store factory function
 
@@ -507,6 +512,28 @@ describe('Frontend files', () => {
         it('formatDate: formats YYYY-MM as YYYY (year only)', () => {
             const fn = formatDate('YYYY');
             assert.strictEqual(fn('2024-01'), '2024');
+        });
+
+        // --- formatDate localization tests ---
+        it('formatDate: uses translated long month names from the active locale', () => {
+            const de = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'de.json'), 'utf8'));
+            const fn = formatDate('MMMM YYYY', de);
+            assert.strictEqual(fn('2024-01'), 'Januar 2024');
+            assert.strictEqual(fn('2024-03'), 'März 2024');
+        });
+
+        it('formatDate: uses translated short month names from the active locale', () => {
+            const fr = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'fr.json'), 'utf8'));
+            const fn = formatDate('MMM YYYY', fr);
+            assert.strictEqual(fn('2024-03'), 'mars 2024');
+            assert.strictEqual(fn('2024-12'), 'déc. 2024');
+        });
+
+        it('formatDate: numeric-only formats are unaffected by locale', () => {
+            const de = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'de.json'), 'utf8'));
+            assert.strictEqual(formatDate('MM/YYYY', de)('2024-01'), '01/2024');
+            assert.strictEqual(formatDate('YYYY-MM', de)('2024-01'), '2024-01');
+            assert.strictEqual(formatDate('YYYY', de)('2024-01'), '2024');
         });
 
         // --- formatDateATS tests ---
