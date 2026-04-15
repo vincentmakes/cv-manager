@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 
 ### Fixed
 - Month names in displayed dates now follow the selected UI language (e.g. "Januar 2024" in German, "mars 2024" in French) instead of always appearing in English. Affects Experience, Education, Certification, and Timeline dates in the admin and public views.
+- ATS document export now also uses the selected UI language for month names (previously always English).
 
 ### Added
 - New `month.short.*` and `month.long.*` i18n keys (24 total) in all 8 locale files (`en`, `de`, `fr`, `nl`, `es`, `it`, `pt`, `zh`).

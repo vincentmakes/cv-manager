@@ -373,10 +373,9 @@ describe('Frontend files', () => {
             const formatDateMatch = scriptsContent.match(/function formatDate\(dateStr\)\s*\{[\s\S]*?^}/m);
             assert.ok(formatDateMatch, 'Should find formatDate function');
 
-            // Extract formatDateATS function
+            // Extract formatDateATS function (also calls t('month.long.*') for localization)
             const formatDateATSMatch = scriptsContent.match(/function formatDateATS\(dateStr\)\s*\{[\s\S]*?^}/m);
             assert.ok(formatDateATSMatch, 'Should find formatDateATS function');
-            formatDateATS = new Function('dateStr', formatDateATSMatch[0].replace(/^function formatDateATS\(dateStr\)\s*\{/, '').replace(/\}$/, ''));
 
             // Extract parseDateForSort function
             const parseDateForSortMatch = scriptsContent.match(/function parseDateForSort\(dateStr\)\s*\{[\s\S]*?^}/m);
@@ -388,9 +387,10 @@ describe('Frontend files', () => {
             assert.ok(materialIconMatch, 'Should find materialIcon function');
             materialIcon = new Function('name', 'size', `size = size || 16; ${materialIconMatch[0].replace(/^function materialIcon\(name, size = 16\)\s*\{/, '').replace(/\}$/, '')}`);
 
-            // For formatDate, create a closure with dateFormatSetting and an injected `t` function.
-            // formatDate() calls t('month.short.*') / t('month.long.*') — by default we load en.json so
-            // behavior matches the English UI; pass `translations` to simulate another locale.
+            // For formatDate / formatDateATS, create a closure with dateFormatSetting and an
+            // injected `t` function. Both call t('month.short.*') / t('month.long.*') — by default
+            // we load en.json so behavior matches the English UI; pass `translations` to simulate
+            // another locale.
             const enTranslations = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'en.json'), 'utf8'));
             const createFormatDate = (setting, translations = enTranslations) => {
                 const body = formatDateMatch[0].replace(/^function formatDate\(dateStr\)\s*\{/, '').replace(/\}$/, '');
@@ -399,6 +399,16 @@ describe('Frontend files', () => {
                 return (dateStr) => impl(dateStr, tFn);
             };
             formatDate = createFormatDate; // Store factory function
+
+            // formatDateATS: ATS export uses long month names from active locale
+            const createFormatDateATS = (translations = enTranslations) => {
+                const body = formatDateATSMatch[0].replace(/^function formatDateATS\(dateStr\)\s*\{/, '').replace(/\}$/, '');
+                const tFn = (key) => (translations[key] !== undefined ? translations[key] : key);
+                const impl = new Function('dateStr', 't', body);
+                return (dateStr) => impl(dateStr, tFn);
+            };
+            formatDateATS = createFormatDateATS(); // default English instance for existing tests
+            formatDateATS.withLocale = createFormatDateATS; // expose factory for localization tests
 
             // Extract getSkillIcon (needs icons object)
             const getSkillIconMatch = scriptsContent.match(/function getSkillIcon\(iconHint, categoryName\)\s*\{[\s\S]*?^}/m);
@@ -553,6 +563,14 @@ describe('Frontend files', () => {
 
         it('formatDateATS: returns unrecognized formats as-is', () => {
             assert.strictEqual(formatDateATS('Present'), 'Present');
+        });
+
+        it('formatDateATS: uses long month names from the active locale', () => {
+            const de = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'de.json'), 'utf8'));
+            const fr = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'shared', 'i18n', 'fr.json'), 'utf8'));
+            assert.strictEqual(formatDateATS.withLocale(de)('2024-01'), 'Januar 2024');
+            assert.strictEqual(formatDateATS.withLocale(de)('2024-03'), 'März 2024');
+            assert.strictEqual(formatDateATS.withLocale(fr)('2020-06'), 'juin 2020');
         });
 
         // --- parseDateForSort tests ---

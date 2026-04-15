@@ -220,14 +220,16 @@ function formatDate(dateStr) {
     return dateStr;
 }
 
-// Format date for ATS - consistent format: "Mon YYYY" or "YYYY"
+// Format date for ATS - consistent format: "Month YYYY" or "YYYY"
+// Uses the active locale's long month names (month.long.*) so ATS exports
+// match the user's selected UI language.
 function formatDateATS(dateStr) {
     if (!dateStr) return '';
     if (dateStr.match(/^\d{4}$/)) return dateStr;
     if (dateStr.match(/^\d{4}-\d{2}$/)) {
         const [y, m] = dateStr.split('-');
-        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        return `${months[parseInt(m)-1]} ${y}`;
+        const longKeys = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+        return `${t(`month.long.${longKeys[parseInt(m)-1]}`)} ${y}`;
     }
     return dateStr;
 }
