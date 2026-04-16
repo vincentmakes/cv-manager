@@ -2423,14 +2423,20 @@
     flex-shrink: 0;
 }
 .cvm-shared-icon {
-    color: var(--success, #10b981);
     display: inline-flex;
     align-items: center;
-    flex-shrink: 0;
+    justify-content: center;
+    min-width: 26px;
+    padding: 1px 6px;
+    color: var(--success, #10b981);
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-sm);
     margin-left: 6px;
     vertical-align: middle;
+    flex-shrink: 0;
 }
-.cvm-shared-icon .material-symbols-outlined { font-size: 18px; }
+.cvm-shared-icon .material-symbols-outlined { font-size: 14px; }
 .cvm-more-btn {
     padding: 2px !important;
     min-width: unset !important;
