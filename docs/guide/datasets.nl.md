@@ -1,94 +1,122 @@
-# Datasets (Meerdere CV-versies)
+# Datasets & Taalvarianten
 
 ## Hoe datasets werken
 
-Datasets zijn opgeslagen momentopnames van uw CV. Eén dataset is altijd de **standaard** — dit is de versie die bezoekers zien op uw hoofd-URL (`/`). U kunt extra datasets aanmaken voor verschillende doelgroepen (bijv. een technisch CV, een management-CV) en deze delen via hun eigen URL's.
+Datasets zijn opgeslagen momentopnames van uw CV. Eén dataset is altijd de **standaard** — dit is de versie die bezoekers zien op uw hoofd-URL (`/`). U kunt extra datasets aanmaken voor verschillende doelgroepen (bijv. een technisch CV, een management-CV), in verschillende talen, en deze delen via hun eigen URL's.
 
 Wanneer u CV Manager voor het eerst installeert, wordt automatisch een "Default"-dataset aangemaakt op basis van uw CV-gegevens. Alle bewerkingen die u in het beheerpaneel maakt, worden **automatisch opgeslagen** naar de actieve dataset — er is geen aparte "opslaan"-stap.
 
-## De banner van de actieve dataset
+## De CV-beheerder
 
-Een banner onder de werkbalk toont welke dataset u momenteel bewerkt. Deze toont:
+Klik op **CV-beheerder** in de werkbalk om het gecombineerde venster te openen voor alle datasetbewerkingen: opslaan, laden, versies aanmaken, talen toevoegen, standaardinstellingen wijzigen en zichtbaarheid beheren.
 
-- De **datasetnaam** (bijv. "Default", "Technisch CV")
-- Een **"Default"-badge** als deze dataset degene is die op `/` wordt getoond
-- Een **automatische opslagstatus** — toont kort "Saving…" en daarna "✓ Saved" na elke bewerking
+Het venster heeft twee zones:
 
-Elke wijziging die u maakt (items toevoegen, inhoud bewerken, volgorde wijzigen, zichtbaarheid in-/uitschakelen) wordt na een korte vertraging automatisch opgeslagen in de actieve dataset.
+- Een **opslaan-als-formulier** bovenaan — naamveld, taalkeuze en een opslaanknop
+- Een **lijst met opgeslagen CV's** eronder — gegroepeerd op basisnaam, met alle beheeracties
 
-## Een nieuwe dataset opslaan
+### Een nieuwe dataset opslaan
 
-Klik op **Opslaan als...** in de werkbalk om het opslaan-venster te openen. Hier kun je een geheel nieuwe dataset aanmaken of een bestaande overschrijven.
+Het naamveld is vooraf ingevuld met de naam van de actieve dataset. Het taalmenu staat standaard op de actieve taal.
 
-Het venster bestaat uit twee delen:
+- **Typ een nieuwe naam** en klik op de blauwe knop **Opslaan als nieuw "..."** om een geheel nieuwe dataset aan te maken
+- **Klik op een bestaande rij** in de lijst om het naamveld te vullen — de knop verandert in de oranje knop **"..." overschrijven** (met bevestiging)
 
-- Een **naamveld** bovenaan, vooringevuld met de naam van de momenteel actieve dataset
-- Een lijst met **bestaande CV's** eronder, waarin verwante versies visueel gegroepeerd zijn
+### Datasetlijst
 
-### Gegroepeerde versies
+Elk opgeslagen CV verschijnt als een **groep** met een kop die de basisnaam toont, een knop **+ Nieuwe versie** en een badge met het versie-/talaantal.
 
-Datasets die dezelfde basisnaam delen, worden samen weergegeven. `Frontend Engineer`, `Frontend Engineer v2` en `Frontend Engineer v3` verschijnen bijvoorbeeld als één blok onder een gedeelde kop — elke versie is gelabeld met een kleine `v1`/`v2`/`v3`-badge. Op zichzelf staande CV's zonder vergelijkbare versies worden als één rij weergegeven.
+Binnen elke groep is elke taalvariant een rij:
 
-### Klik op een CV om deze te overschrijven
+```
+○  NL  v2  Full Stack Developer v2     /v/full-stack-dev/nl   16/04/2026   [Laden]  ⋮
+```
 
-Als je op een rij in de lijst klikt, wordt het naamveld gevuld met de naam van die CV en verandert de primaire knop in **"…" overschrijven** (oranje). Klikken vraagt om een bevestiging voordat die CV wordt vervangen door je huidige gegevens.
+- **Keuzerondje** (○) — selecteer welke dataset bezoekers zien op `/` (de standaard)
+- **Taalbadge** (NL) — de inhoudstaal van deze variant
+- **Versiebadge** (v2) — wordt getoond wanneer de groep meerdere versies heeft
+- **Naam** — de datasetnaam
+- **URL** — het openbare URL-pad (indien gedeeld of standaard)
+- **Datum** — laatst gewijzigd
+- **Laden** — overschakelen naar het bewerken van deze dataset
+- **⋮** (overflowmenu) — aanvullende acties
 
-### Een nieuwe versie maken
+### Overflowmenu (⋮)
 
-Elke groep heeft een **+ Nieuwe versie**-snelkoppeling die de volgende vrije `vN`-naam voorstelt — als `Frontend Engineer v3` de meest recente versie is, vult de snelkoppeling het veld met `Frontend Engineer v4`. De knop leest **Als nieuw opslaan "…"** en indienen slaat de nieuwe versie naast de bestaande op.
+Het overflowmenu van elke rij bevat:
 
-### Een nieuwe naam typen
+| Actie | Beschrijving |
+|-------|-------------|
+| **Gedeeld maken / Privé maken** | Openbare zichtbaarheid in-/uitschakelen op `/v/slug` (verborgen voor standaard en diens taalverwanten) |
+| **Taal wijzigen** | De taalcode van deze dataset opnieuw toewijzen |
+| **Voorbeeld bekijken** | De opgeslagen versie openen in een nieuw tabblad |
+| **URL kopiëren** | De openbare of voorbeeld-URL naar het klembord kopiëren |
+| **Verwijderen** | Permanent verwijderen (uitgeschakeld voor de standaarddataset) |
 
-Als je een naam typt die niet overeenkomt met een bestaande CV, leest de knop **Als nieuw opslaan "…"** (blauw). Indienen maakt een geheel nieuwe dataset aan.
+## Versies
+
+Datasets die dezelfde basisnaam delen, worden samen gegroepeerd. Bijvoorbeeld: `Frontend Engineer`, `Frontend Engineer v2` en `Frontend Engineer v3` verschijnen als één blok onder een gedeelde kop.
+
+### Een nieuwe versie aanmaken
+
+Klik op **+ Nieuwe versie** in de groepskop. Het naamveld wordt automatisch ingevuld met het volgende versienummer (bijv. `Frontend Engineer v4`). Wanneer u opslaat:
+
+- Krijgt de nieuwe versie een versiebadge (v4)
+- Deelt deze dezelfde URL-slug als de verwante versies
+- Erft deze alle taalvarianten over van de vorige versie
+
+### Inklapbare oudere versies
+
+Wanneer een groep meerdere versies heeft, wordt alleen de nieuwste getoond. Een schakelaar **"N oudere versies"** laat u alle versies uitklappen. Als de dataset die u bewerkt of de standaard zich in een oudere versie bevindt, wordt deze automatisch uitgeklapt zodat u deze altijd kunt zien.
 
 !!! tip
-    Gebruik de naamgevingsconventie `Basis vN` (bijv. `Frontend Engineer`, `Frontend Engineer v2`) voor automatische versiegroepering en volgende-versie-suggesties. Datasets zonder `vN`-achtervoegsel worden behandeld als de "v1" van hun naam.
+    Gebruik de naamgevingsconventie `Basis vN` (bijv. `Frontend Engineer`, `Frontend Engineer v2`) voor automatische versiegroepering en suggesties voor de volgende versie.
 
-## Het open-venster
+## Taalvarianten
 
-Klik op **Open...** om alle opgeslagen datasets te bekijken. Een **legenda** bovenaan verklaart de drie besturingselementen:
+Elke versie van een dataset kan meerdere taalvarianten hebben — bijvoorbeeld een Engelse en een Duitse versie van hetzelfde CV, die dezelfde structuur delen maar onafhankelijke inhoud hebben.
 
-| Besturingselement | Doel |
-|-------------------|------|
-| **Keuzerondje** | Selecteer welke dataset op uw hoofd-URL `/` wordt getoond (de standaard) |
-| **Schakelaar** | Deel andere datasets via hun eigen `/v/slug`-URL |
-| **Oog-knop** | Bekijk een voorvertoning van een opgeslagen dataset zonder deze openbaar te maken |
+### Een taalvariant toevoegen
 
-Verwante versies van hetzelfde basis-CV worden **samen gegroepeerd**. Een familie zoals `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` verschijnt als één blok onder een gedeelde kop — elke versie is ingesprongen onder een boom-connector en gelabeld met een kleine `v1` / `v2` / `v3`-badge. Op zichzelf staande CV's zonder andere versies worden nog steeds als één rij weergegeven.
+1. Open **CV-beheerder**
+2. Klik op **+ Taal toevoegen** op de groepskop (of gebruik de **⋮ → Taal toevoegen**-optie vanuit het opslaan-als-formulier)
+3. Selecteer de doeltaal en sla op
 
-Elke dataset-rij toont:
+De nieuwe variant begint als een kopie van de bestaande inhoud. De admin-interface schakelt automatisch over naar de nieuwe taal, zodat u direct kunt beginnen met vertalen.
 
-- **Naam** en datum van laatste wijziging
-- **"Default"-badge** — bij de dataset die met het keuzerondje is geselecteerd
-- **"Editing"-badge** — bij de dataset die momenteel in het beheerpaneel is geladen
-- Een **versie-URL** (bijv. `/v/technical-cv-1`) — verborgen voor de standaarddataset aangezien deze op `/` wordt getoond
-- **Load**-knop — schakelt naar deze dataset (toont "Reload" als deze al actief is)
-- **Delete**-knop — verwijdert de dataset permanent (uitgeschakeld voor de huidige standaard)
+### Wisselen tussen talen
 
-## De standaarddataset instellen
+Wanneer u een dataset bewerkt die taalverwanten heeft, verschijnt een **taalwisselaar** in de banner van de actieve dataset onder de werkbalk. Klik op een taalcode om te wisselen — uw huidige werk wordt eerst automatisch opgeslagen, waarna de andere variant wordt geladen en de UI-taal mee overschakelt.
 
-De standaarddataset is de versie die bezoekers zien wanneer zij uw hoofd-URL (`/`) bezoeken. Om deze te wijzigen:
+### Structurele synchronisatie
 
-1. Open het **Open...**-venster
-2. Klik op het **keuzerondje** naast de dataset die u als uw openbare CV wilt instellen
-3. De wijziging gaat onmiddellijk in — de publieke site toont nu die dataset
+Wijzigingen aan de **structuur** — sectievolgorde, zichtbaarheid, lay-out van aangepaste secties en aantal items — worden automatisch doorgevoerd naar alle taalverwanten. **Inhoud** (tekst, titels, beschrijvingen) blijft per taal onafhankelijk, zodat u vrij kunt vertalen zonder dat de lay-out uit de pas loopt.
 
-Dit ontkoppelt uw openbare CV van uw bewerkingen. U kunt vrij inhoud bewerken in het beheerpaneel zonder dat bezoekers werk-in-uitvoering zien, totdat u er klaar voor bent.
+### De taal van een dataset wijzigen
+
+Klik op de **taalbadge** in een rij om een keuzemenu te openen en de taalcode opnieuw toe te wijzen. Dit is handig voor oudere datasets die tijdens de installatie standaard op Engels zijn ingesteld.
+
+## De standaard instellen
+
+De standaarddataset is de versie die bezoekers zien op uw hoofd-URL (`/`). Om deze te wijzigen:
+
+1. Open **CV-beheerder**
+2. Klik op het **keuzerondje** (○) naast de dataset die u als standaard wilt instellen
+3. De wijziging gaat onmiddellijk in
+
+Taalverwanten van de standaard zijn automatisch toegankelijk op `/{taal}` (bijv. `/de`, `/fr`) — ze hebben geen aparte openbare schakelaar nodig.
+
+!!! note
+    De openbare site toont de opgeslagen standaarddataset, niet uw live bewerkingen. U kunt veilig experimenteren in het beheerpaneel zonder dat dit invloed heeft op wat bezoekers zien.
 
 ## Openbare versie-URL's
 
-Elke opgeslagen dataset (behalve de standaard) krijgt een uniek URL-pad (bijv. `/v/technical-cv-1`). Standaard zijn deze **privé** — alleen toegankelijk vanuit de beheerinterface voor voorvertoningen.
+Niet-standaard datasets kunnen worden gedeeld via hun eigen URL's. Gebruik de actie **⋮ → Gedeeld maken** om een dataset openbaar te maken op `/v/slug`. Meerdere datasets kunnen tegelijkertijd openbaar zijn.
 
-Om een specifieke versie openbaar te delen:
+- **Standaarddataset**: wordt getoond op `/`
+- **Taalverwanten van de standaard**: worden getoond op `/{taal}` (bijv. `/fr`)
+- **Gedeelde datasets**: worden getoond op `/v/slug` of `/v/slug/{taal}`
+- **Privédatasets**: alleen te bekijken vanuit het beheerpaneel
 
-1. Open het **Open...**-venster
-2. Zoek de dataset die u wilt delen
-3. Schakel de **schakelaar** ernaast in — deze wordt blauw en er verschijnt een groene **Public**-badge
-4. De `/v/slug`-URL is nu toegankelijk op de **publieke site** (poort 3001)
-
-Hiermee kunt u op maat gemaakte CV-versies delen met verschillende doelgroepen. U kunt bijvoorbeeld een "Technisch CV" openbaar maken voor technische functies, terwijl u een "Management-CV" privé houdt totdat dit nodig is.
-
-**URL kopiëren**: Klik op het kopieerpictogram naast de slug om de volledige URL naar uw klembord te kopiëren. De melding geeft aan of u een openbare of alleen-voorvertoning-URL hebt gekopieerd.
-
-!!! note
-    De openbare hoofdpagina op `/` toont altijd de **standaarddataset** — niet uw live bewerkingen. Dit betekent dat u veilig kunt experimenteren in het beheerpaneel zonder dat dit invloed heeft op wat bezoekers zien.
+!!! tip "URL's kopiëren"
+    Klik op het URL-pad dat bij elke rij wordt getoond om de volledige openbare URL naar uw klembord te kopiëren.

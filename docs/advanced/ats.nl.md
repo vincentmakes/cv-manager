@@ -4,7 +4,7 @@
 
 Een **ATS** (Applicant Tracking System, sollicitatiebeheersysteem) is software die door recruiters en bedrijven wordt gebruikt om sollicitaties te beheren. Wanneer u uw CV uploadt naar een vacatureportaal of bedrijfswebsite, parseert een ATS het document om gestructureerde gegevens te extraheren — uw naam, functietitels, bedrijven, data, vaardigheden en opleiding. Deze gegevens worden vervolgens gebruikt voor trefwoordmatching, rangschikking en filtering van kandidaten.
 
-Als het ATS uw document niet correct kan verwerken, kan uw sollicitatie worden afgewezen of kunnen belangrijke informatie verloren gaan — zelfs als uw kwalificaties perfect passen.
+Als het ATS uw document niet correct kan verwerken, kan uw sollicitatie worden afgewezen of kunnen belangrijke gegevens verloren gaan — zelfs als uw kwalificaties perfect aansluiten.
 
 ## Ingebouwde ATS-optimalisatie
 
@@ -19,15 +19,22 @@ Er is geen speciale configuratie nodig — deze functies zijn altijd actief.
 
 ## ATS-document exporteren
 
-Naast de ingebouwde weboptimalisatie kan CV Manager een **speciaal ATS-vriendelijk PDF** genereren, speciaal ontworpen voor het uploaden naar vacatureportalen en ATS-systemen.
+Naast de ingebouwde weboptimalisatie kan CV Manager een **speciaal ATS-vriendelijk PDF-document** genereren, specifiek ontworpen voor het uploaden naar vacatureportalen en ATS-systemen.
 
 ### Hoe te gebruiken
 
 1. Klik op **ATS-document** in de admin-werkbalk
 2. Pas de **Schaal**-schuifregelaar aan om de inhoudsdichtheid te regelen (50%–150%)
 3. Kies uw gewenste **Papierformaat** (A4 of Letter)
-4. Bekijk het document in het modale venster
-5. Klik op **PDF downloaden** om het bestand op te slaan
+4. Als u in een niet-Engelse taal werkt, kunt u optioneel **Sectiekoppen in het Engels** aanvinken om sectiekoppen (Werkervaring, Opleiding, Vaardigheden, enz.) in het Engels weer te geven terwijl alle andere inhoud in de actieve taal blijft
+5. Bekijk het document in het modale venster
+6. Klik op **PDF downloaden** om het bestand op te slaan
+
+### Sectiekoppen in het Engels
+
+Wanneer uw CV in een niet-Engelse taal is, verwachten veel ATS-systemen nog steeds Engelse sectiekoppen om inhoud correct te categoriseren. Het selectievakje **Sectiekoppen in het Engels** (alleen zichtbaar wanneer de actieve taal niet Engels is) forceert sectiekoppen in het Engels, terwijl al het andere — datums, inhoud, vaardigheden — in de actieve taal blijft.
+
+Dit is handig wanneer u solliciteert bij internationale bedrijven of via Engelstalige vacatureportalen met een CV dat in een andere taal is geschreven.
 
 ### Verschil met Afdrukken / PDF
 
@@ -53,3 +60,6 @@ Naast de ingebouwde weboptimalisatie kan CV Manager een **speciaal ATS-vriendeli
 
 !!! tip "Schaal voor dichtheid"
     Als uw CV lang is, probeer dan de schaal te verlagen naar 70–80% om meer inhoud per pagina te plaatsen. Het voorbeeld wordt in realtime bijgewerkt, zodat u de juiste balans kunt vinden.
+
+!!! tip "Engelse koppen voor internationale sollicitaties"
+    Als uw CV-inhoud in het Frans, Duits of een andere taal is, schakel dan de schakelaar voor Engelse koppen in wanneer u solliciteert bij bedrijven die Engelstalige ATS-systemen gebruiken. De meeste ATS-parsers verwachten Engelse sectiekoppen zoals "Work Experience" en "Education".

@@ -84,25 +84,25 @@
 ## Datensätze / Mehrere Lebensläufe
 
 ??? question "Was ist der Standard-Datensatz?"
-    Der Standard-Datensatz ist die Version Ihres Lebenslaufs, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Bei der Erstinstallation erstellt CV Manager automatisch einen Standard-Datensatz aus Ihren Lebenslaufdaten. Sie können jederzeit über das Optionsfeld im Öffnen-Modal ändern, welcher Datensatz der Standard ist.
+    Der Standard-Datensatz ist die Version Ihres Lebenslaufs, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Bei der Erstinstallation erstellt CV Manager automatisch einen Standard-Datensatz aus Ihren Lebenslaufdaten. Sie können jederzeit über das Optionsfeld im Modal der CV-Verwaltung ändern, welcher Datensatz der Standard ist.
 
 ??? question "Werden meine Änderungen automatisch gespeichert?"
     Ja. Jede Änderung, die Sie im Admin-Bereich vornehmen (Hinzufügen, Bearbeiten, Löschen, Umsortieren, Sichtbarkeit umschalten), wird nach einer kurzen Verzögerung automatisch im aktiven Datensatz gespeichert. Das Banner zeigt „Speichern…" und dann „✓ Gespeichert" zur Bestätigung.
 
 ??? question "Was passiert, wenn ich einen Datensatz 'lade'?"
-    Das Laden eines Datensatzes wechselt Ihre Arbeitskopie zu diesem Datensatz. Ihre vorherigen Änderungen wurden bereits automatisch gespeichert, sodass nichts verloren geht.
+    Das Laden eines Datensatzes wechselt Ihre Arbeitskopie zu diesem Datensatz. Ihre vorherigen Änderungen wurden bereits automatisch gespeichert, sodass nichts verloren geht. Die Sprache der Admin-Oberfläche wechselt ebenfalls zur Inhaltssprache des Datensatzes.
 
 ??? question "Können Besucher meine Bearbeitungen in Echtzeit sehen?"
     Nein. Die öffentliche Seite zeigt den eingefrorenen Standard-Datensatz, nicht Ihre aktuellen Bearbeitungen. Besucher sehen Änderungen erst, nachdem die automatische Speicherung sie in den Standard-Datensatz geschrieben hat. Wenn Sie einen Nicht-Standard-Datensatz bearbeiten, sehen Besucher diese Änderungen überhaupt nicht, bis Sie ihn als Standard festlegen.
 
 ??? question "Können Besucher meine gespeicherten Datensätze sehen?"
-    Nur wenn Sie sie öffentlich machen. Jeder Datensatz hat einen Schalter im Öffnen-Modal. Wenn er auf öffentlich gesetzt ist, wird diese Version unter `/v/slug` auf der öffentlichen Seite (Port 3001) zugänglich. Private Datensätze können nur über die Admin-Oberfläche als Vorschau angezeigt werden.
+    Nur wenn Sie sie öffentlich machen. Jeder Datensatz hat eine Aktion **Freigeben** im ⋮-Overflow-Menü. Wenn er freigegeben ist, wird diese Version unter `/v/slug` auf der öffentlichen Seite (Port 3001) zugänglich. Private Datensätze können nur über die Admin-Oberfläche als Vorschau angezeigt werden.
 
 ??? question "Wie teile ich eine bestimmte Lebenslauf-Version mit jemandem?"
-    Öffnen Sie das **Öffnen...**-Modal, schalten Sie den Datensatz auf öffentlich und klicken Sie dann auf das Kopier-Symbol neben der Slug-URL. Teilen Sie diesen Link — er funktioniert auf der öffentlichen Seite, ohne Ihre Admin-Oberfläche preiszugeben.
+    Öffnen Sie die **CV-Verwaltung**, verwenden Sie das ⋮-Menü beim Datensatz → **Freigeben**, dann **URL kopieren**. Teilen Sie diesen Link — er funktioniert auf der öffentlichen Seite, ohne Ihre Admin-Oberfläche preiszugeben.
 
 ??? question "Kann ich mehrere öffentliche Versionen gleichzeitig haben?"
-    Ja. Sie können beliebig viele Datensätze öffentlich machen. Jeder erhält seine eigene URL (z. B. `/v/technical-cv-1`, `/v/marketing-cv-2`). Die Hauptseite `/` zeigt den Standard-Datensatz.
+    Ja. Sie können beliebig viele Datensätze freigeben. Jeder erhält seine eigene URL (z. B. `/v/technical-cv-1`, `/v/marketing-cv-2`). Die Hauptseite `/` zeigt den Standard-Datensatz.
 
 ??? question "Kann ich den Standard-Datensatz löschen?"
     Nein. Der aktuell als Standard ausgewählte Datensatz (über das Optionsfeld) kann nicht gelöscht werden. Legen Sie zuerst einen anderen Datensatz als Standard fest und löschen Sie dann den alten.
@@ -110,10 +110,24 @@
 ??? question "Werden Suchmaschinen meine versionierten URLs indexieren?"
     Standardmäßig nein — versionierte Seiten erhalten `noindex, nofollow`. Um die Indexierung zu erlauben, aktivieren Sie **Versionierte URLs indexieren** unter Einstellungen → Erweitert.
 
+## Sprachvarianten
+
+??? question "Wie erstelle ich einen Lebenslauf in einer anderen Sprache?"
+    Öffnen Sie die **CV-Verwaltung** und klicken Sie auf **+ Sprache hinzufügen** in der Gruppenüberschrift des Datensatzes, den Sie übersetzen möchten. Wählen Sie die Zielsprache und speichern Sie. Die neue Variante beginnt als Kopie des vorhandenen Inhalts — wechseln Sie dann zu ihr und übersetzen Sie den Text.
+
+??? question "Wie funktionieren Sprachvarianten?"
+    Sprachvarianten sind separate Datensätze, die denselben Namen und URL-Slug teilen. Sie sind über eine Sprachgruppe verknüpft — strukturelle Änderungen (Abschnittsreihenfolge, Sichtbarkeit, Layout) werden automatisch über alle Varianten synchronisiert, während Inhalte (Text, Titel, Beschreibungen) unabhängig bleiben.
+
+??? question "Können Besucher auf der öffentlichen Seite die Sprache wechseln?"
+    Ja. Wenn der Standard-Datensatz Sprachgeschwister hat, erscheint ein Sprachwechsler-Button auf der öffentlichen Seite. Besucher können zwischen `/{lang}`-URLs wechseln (z. B. `/`, `/de`, `/fr`). Für nicht standardmäßige freigegebene Datensätze befinden sich Sprachvarianten unter `/v/slug/{lang}`.
+
+??? question "Was passiert, wenn ich eine Sprachvariante als Standard festlege?"
+    Wenn Sie eine Sprachvariante als Standard festlegen, wird sie zur primären Version unter `/`. Ihre Sprachgeschwister werden automatisch unter `/{lang}` zugänglich, ohne dass sie einzeln freigegeben werden müssen — sie sind implizit öffentlich.
+
 ## Öffentliche Seite & SEO
 
 ??? question "Wie teile ich meinen Lebenslauf?"
-    Teilen Sie die URL Ihres öffentlichen Servers (Port 3001). Wenn Sie eine Domain mit Cloudflare Tunnel oder einem Reverse Proxy eingerichtet haben, teilen Sie diese Domain. Die Stamm-URL zeigt immer Ihren Standard-Datensatz. Sie können auch bestimmte Versionen über öffentliche versionierte URLs teilen (siehe [Datensätze](../guide/datasets.de.md)).
+    Teilen Sie die URL Ihres öffentlichen Servers (Port 3001). Wenn Sie eine Domain mit Cloudflare Tunnel oder einem Reverse Proxy eingerichtet haben, teilen Sie diese Domain. Die Stamm-URL zeigt immer Ihren Standard-Datensatz. Sie können auch bestimmte Versionen über öffentliche versionierte URLs teilen (siehe [Datensätze](../guide/datasets.md)).
 
 ??? question "Werden Suchmaschinen meinen Lebenslauf indexieren?"
     Standardmäßig ja — die öffentliche Hauptseite enthält korrekte Meta-Tags, eine Sitemap und robots.txt. Um die Indexierung zu verhindern, ändern Sie die Einstellung **Suchmaschinenindexierung** auf „Nicht indexieren" unter Einstellungen → Erweitert. Öffentliche versionierte URLs (`/v/slug`) werden standardmäßig **nicht indexiert**; aktivieren Sie **Versionierte URLs indexieren**, wenn Sie möchten, dass sie gecrawlt werden.

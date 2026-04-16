@@ -23,11 +23,18 @@ Zusätzlich zur integrierten Web-Optimierung kann CV Manager ein **dediziertes A
 
 ### Verwendung
 
-1. Klicken Sie auf **ATS-Dokument** in der Admin-Symbolleiste
+1. Klicken Sie auf **ATS-Dokument** in der Admin-Werkzeugleiste
 2. Passen Sie den **Skalierungs**-Regler an, um die Inhaltsdichte zu steuern (50%–150%)
 3. Wählen Sie Ihr bevorzugtes **Papierformat** (A4 oder Letter)
-4. Sehen Sie sich die Vorschau des Dokuments im Modal an
-5. Klicken Sie auf **PDF herunterladen**, um die Datei zu speichern
+4. Wenn Sie in einer nicht-englischen Sprache arbeiten, können Sie optional **Abschnittsüberschriften auf Englisch** aktivieren, um die Abschnittsüberschriften (Berufserfahrung, Ausbildung, Fähigkeiten usw.) auf Englisch darzustellen, während alle anderen Inhalte in der aktiven Sprache bleiben
+5. Sehen Sie sich die Vorschau des Dokuments im Modal an
+6. Klicken Sie auf **PDF herunterladen**, um die Datei zu speichern
+
+### Abschnittsüberschriften auf Englisch
+
+Wenn Ihr Lebenslauf in einer nicht-englischen Sprache verfasst ist, erwarten viele ATS-Systeme dennoch englische Abschnittsüberschriften, um Inhalte korrekt zu kategorisieren. Das Kontrollkästchen **Abschnittsüberschriften auf Englisch** (nur sichtbar, wenn die aktive Sprache nicht Englisch ist) erzwingt die Darstellung der Abschnittsüberschriften auf Englisch, während alles andere — Daten, Inhalte, Fähigkeiten — in der aktiven Sprache bleibt.
+
+Dies ist nützlich, wenn Sie sich bei internationalen Unternehmen oder über englischsprachige Jobportale mit einem Lebenslauf in einer anderen Sprache bewerben.
 
 ### Unterschied zu Drucken / PDF
 
@@ -53,3 +60,6 @@ Zusätzlich zur integrierten Web-Optimierung kann CV Manager ein **dediziertes A
 
 !!! tip "Skalierung für Dichte"
     Wenn Ihr Lebenslauf lang ist, versuchen Sie, die Skalierung auf 70–80% zu reduzieren, um mehr Inhalt pro Seite unterzubringen. Die Vorschau aktualisiert sich in Echtzeit, sodass Sie den optimalen Wert finden können.
+
+!!! tip "Englische Überschriften für internationale Bewerbungen"
+    Wenn Ihr Lebenslauf auf Französisch, Deutsch oder in einer anderen Sprache verfasst ist, aktivieren Sie den Schalter für englische Überschriften, wenn Sie sich bei Unternehmen bewerben, die englischsprachige ATS-Systeme verwenden. Die meisten ATS-Parser erwarten englische Abschnittsüberschriften wie „Work Experience" und „Education".

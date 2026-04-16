@@ -1,12 +1,16 @@
-# Importação e Exportação
+# Importação e exportação
 
-## Exportando Seu CV
+## Exportar o seu CV
 
-Clique em **Exportar** na barra de ferramentas para baixar seu CV completo como um arquivo JSON. Isso inclui todas as seções, itens, configurações e seções personalizadas. Use isso para backups ou para transferir seu CV para outra instância.
+Clique em **Exportar** na barra de ferramentas para descarregar o seu CV completo como ficheiro JSON. Isto inclui todas as secções, itens, configurações e secções personalizadas. Use para backups ou para transferir o seu CV para outra instância.
 
-## Importando Dados
+O ficheiro exportado é denominado `cv-data-{lang}.json` (por exemplo, `cv-data-de.json`) e inclui o idioma do conjunto de dados ativo. Isto permite-lhe acompanhar qual versão linguística exportou.
 
-Clique em **Importar** e selecione um arquivo JSON exportado anteriormente. Isso substitui os dados atuais do seu CV pelos dados importados. Seções personalizadas e todas as configurações são incluídas.
+## Importar dados
+
+Clique em **Importar** e selecione um ficheiro JSON previamente exportado. Isto substitui os dados atuais do seu CV pelos dados importados. Secções personalizadas e todas as configurações estão incluídas.
+
+Se o ficheiro importado contiver um campo `language`, a interface de administração muda automaticamente para esse idioma após a importação. Isto significa que, se importar uma exportação de um CV em alemão, a interface muda para alemão para que possa continuar a editar no idioma correto.
 
 !!! tip
-    Exporte seu CV antes de importar, para que você tenha um backup do estado atual.
+    Exporte o seu CV antes de importar, para que tenha um backup do estado atual.

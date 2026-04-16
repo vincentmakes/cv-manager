@@ -1,94 +1,122 @@
-# Conjuntos de datos (Múltiples versiones del CV)
+# Conjuntos de datos y variantes de idioma
 
 ## Cómo funcionan los conjuntos de datos
 
-Los conjuntos de datos son instantáneas guardadas de su CV. Un conjunto de datos siempre es el **predeterminado** — esta es la versión que los visitantes ven en su URL raíz (`/`). Puede crear conjuntos de datos adicionales para diferentes audiencias (por ejemplo, un CV técnico, un CV de gestión) y compartirlos en sus propias URLs.
+Los conjuntos de datos son instantáneas guardadas de su CV. Un conjunto de datos siempre es el **predeterminado** — esta es la versión que los visitantes ven en su URL raíz (`/`). Puede crear conjuntos de datos adicionales para diferentes audiencias (por ejemplo, un CV técnico, un CV de gestión), en diferentes idiomas, y compartirlos en sus propias URLs.
 
 Cuando instala CV Manager por primera vez, se crea automáticamente un conjunto de datos "Default" a partir de los datos de su CV. Todas las ediciones que realice en el panel de administración se **guardan automáticamente** en el conjunto de datos activo — no hay un paso separado de "guardar".
 
-## El banner del conjunto de datos activo
+## El Gestor de CV
 
-Un banner debajo de la barra de herramientas muestra qué conjunto de datos está editando actualmente. Muestra:
+Haga clic en **Gestor de CV** en la barra de herramientas para abrir el modal unificado para todas las operaciones de conjuntos de datos: guardar, cargar, crear versiones, agregar idiomas, establecer valores predeterminados y gestionar la visibilidad.
 
-- El **nombre del conjunto de datos** (por ejemplo, "Default", "Technical CV")
-- Una **insignia "Default"** si este conjunto de datos es el que se sirve en `/`
-- Un **estado de autoguardado** — muestra brevemente "Saving…" y luego "✓ Saved" después de cada edición
+El modal tiene dos zonas:
 
-Cada cambio que realice (agregar elementos, editar contenido, reordenar, alternar visibilidad) se guarda automáticamente en el conjunto de datos activo después de un breve retraso.
+- Un **formulario de guardar como** en la parte superior — campo de nombre, selector de idioma y un botón de guardar
+- Una **lista de CVs guardados** debajo — agrupados por nombre base, con todas las acciones de gestión
 
-## Guardar un nuevo conjunto de datos
+### Guardar un nuevo conjunto de datos
 
-Haz clic en **Guardar como...** en la barra de herramientas para abrir el modal de guardado. Desde aquí puedes crear un conjunto de datos nuevo o sobrescribir uno existente.
+El campo de nombre está prellenado con el nombre del conjunto de datos activo. El menú desplegable de idioma se establece por defecto en el idioma activo.
 
-El modal tiene dos partes:
+- **Escriba un nombre nuevo** y haga clic en el botón azul **Guardar como nuevo "..."** para crear un conjunto de datos completamente nuevo
+- **Haga clic en una fila existente** en la lista para rellenar el campo de nombre — el botón cambia al botón naranja **Sobrescribir "..."** (con confirmación)
 
-- Un **campo de nombre** en la parte superior, precompletado con el nombre del conjunto de datos actualmente activo
-- Una lista de **CVs existentes** debajo, con las versiones relacionadas agrupadas visualmente
+### Lista de conjuntos de datos
 
-### Versiones agrupadas
+Cada CV guardado aparece como un **grupo** con un encabezado que muestra el nombre base, un botón **+ Nueva versión** y una insignia con el recuento de versiones/idiomas.
 
-Los conjuntos de datos que comparten el mismo nombre base se muestran juntos. Por ejemplo, `Frontend Engineer`, `Frontend Engineer v2` y `Frontend Engineer v3` aparecen como un único bloque bajo una cabecera compartida — cada versión está etiquetada con una pequeña insignia `v1`/`v2`/`v3`. Los CVs independientes sin versiones hermanas se muestran en una sola fila.
+Dentro de cada grupo, cada variante de idioma es una fila:
 
-### Haz clic en un CV para sobrescribirlo
+```
+○  ES  v2  Full Stack Developer v2     /v/full-stack-dev/es   16/04/2026   [Cargar]  ⋮
+```
 
-Al hacer clic en cualquier fila de la lista, el campo de nombre se rellena con el nombre de ese CV y el botón principal cambia a **Sobrescribir "…"** (naranja). Al hacer clic, se te pedirá que confirmes antes de reemplazar ese CV con tus datos actuales.
+- **Botón de radio** (○) — seleccione qué conjunto de datos ven los visitantes en `/` (el predeterminado)
+- **Insignia de idioma** (ES) — el idioma del contenido de esta variante
+- **Insignia de versión** (v2) — se muestra cuando el grupo tiene múltiples versiones
+- **Nombre** — el nombre del conjunto de datos
+- **URL** — la ruta URL pública (si es compartido o predeterminado)
+- **Fecha** — última modificación
+- **Cargar** — cambiar a la edición de este conjunto de datos
+- **⋮** (menú de desbordamiento) — acciones adicionales
+
+### Menú de desbordamiento (⋮)
+
+El menú de desbordamiento de cada fila contiene:
+
+| Acción | Descripción |
+|--------|-------------|
+| **Hacer compartido / Hacer privado** | Alternar la visibilidad pública en `/v/slug` (oculto para el predeterminado y sus variantes de idioma) |
+| **Cambiar idioma** | Reasignar el código de idioma de este conjunto de datos |
+| **Vista previa** | Abrir la versión guardada en una nueva pestaña |
+| **Copiar URL** | Copiar la URL pública o de vista previa al portapapeles |
+| **Eliminar** | Eliminar permanentemente (deshabilitado para el conjunto de datos predeterminado) |
+
+## Versiones
+
+Los conjuntos de datos que comparten el mismo nombre base se agrupan juntos. Por ejemplo, `Frontend Engineer`, `Frontend Engineer v2` y `Frontend Engineer v3` aparecen como un bloque bajo un encabezado compartido.
 
 ### Crear una nueva versión
 
-Cada grupo tiene un atajo **+ Nueva versión** que sugiere el siguiente nombre `vN` disponible — si `Frontend Engineer v3` es la versión más reciente, el atajo rellena el campo con `Frontend Engineer v4`. El botón muestra **Guardar como nuevo "…"** y al enviar se guarda la nueva versión junto a las existentes.
+Haga clic en **+ Nueva versión** en el encabezado del grupo. El campo de nombre se rellena automáticamente con el siguiente número de versión (por ejemplo, `Frontend Engineer v4`). Al guardar, la nueva versión:
 
-### Escribir un nombre nuevo
+- Obtiene una insignia de versión adecuada (v4)
+- Comparte el mismo slug de URL que sus versiones hermanas
+- Hereda todas las variantes de idioma de la versión anterior
 
-Si escribes un nombre que no coincide con ningún CV existente, el botón muestra **Guardar como nuevo "…"** (azul). Al enviar se crea un conjunto de datos completamente nuevo.
+### Versiones anteriores colapsables
+
+Cuando un grupo tiene múltiples versiones, solo se muestra la más reciente. Un botón **"N versiones anteriores"** le permite expandir para ver todas las versiones. Si el conjunto de datos que está editando o el predeterminado está en una versión anterior, se expande automáticamente para que siempre pueda verlo.
 
 !!! tip
-    Usa la convención de nombres `Base vN` (por ejemplo, `Frontend Engineer`, `Frontend Engineer v2`) para obtener agrupación automática de versiones y sugerencias de la siguiente versión. Los conjuntos de datos sin sufijo `vN` se tratan como la "v1" de su nombre.
+    Use la convención de nombres `Base vN` (por ejemplo, `Frontend Engineer`, `Frontend Engineer v2`) para obtener agrupación automática de versiones y sugerencias de la siguiente versión.
 
-## El modal de apertura
+## Variantes de idioma
 
-Haga clic en **Open...** para ver todos los conjuntos de datos guardados. Una **leyenda** en la parte superior explica los tres controles:
+Cada versión de un conjunto de datos puede tener múltiples variantes de idioma — por ejemplo, una versión en inglés y una en alemán del mismo CV, compartiendo la misma estructura pero con contenido independiente.
 
-| Control | Propósito |
-|---------|-----------|
-| **Botón de radio** | Seleccione qué conjunto de datos se sirve en su URL raíz `/` (el predeterminado) |
-| **Interruptor** | Comparta otros conjuntos de datos en su propia URL `/v/slug` |
-| **Botón de ojo** | Previsualice un conjunto de datos guardado sin hacerlo público |
+### Agregar una variante de idioma
 
-Las versiones hermanas de un mismo CV base se muestran **agrupadas**. Una familia como `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` aparece como un solo bloque bajo una cabecera compartida — cada versión está sangrada bajo un conector de árbol y etiquetada con una pequeña insignia `v1` / `v2` / `v3`. Los CVs independientes sin otras versiones siguen mostrándose como una sola fila.
+1. Abra el **Gestor de CV**
+2. Haga clic en **+ Agregar idioma** en el encabezado del grupo (o use el flujo **⋮ → Agregar idioma** desde el formulario de guardar como)
+3. Seleccione el idioma de destino y guarde
 
-Cada fila de conjunto de datos muestra:
+La nueva variante comienza como una copia del contenido existente. La interfaz de administración cambia automáticamente al nuevo idioma para que pueda comenzar a traducir.
 
-- **Nombre** y fecha de última actualización
-- **Insignia "Default"** — en el conjunto de datos seleccionado con el botón de radio
-- **Insignia "Editing"** — en el conjunto de datos actualmente cargado en el panel de administración
-- Una **URL versionada** (por ejemplo, `/v/technical-cv-1`) — oculta para el conjunto de datos predeterminado ya que se sirve en `/`
-- Botón **Load** — cambia a este conjunto de datos (muestra "Reload" si ya está activo)
-- Botón **Delete** — elimina permanentemente el conjunto de datos (deshabilitado para el predeterminado actual)
+### Cambiar de idioma
 
-## Establecer el conjunto de datos predeterminado
+Cuando edita un conjunto de datos que tiene variantes de idioma, aparece un **selector de idioma** en el banner del conjunto de datos activo debajo de la barra de herramientas. Haga clic en un código de idioma para cambiar — su trabajo actual se guarda automáticamente primero, luego se carga la otra variante y la configuración regional de la interfaz cambia para coincidir.
 
-El conjunto de datos predeterminado es la versión que los visitantes ven cuando visitan su URL raíz (`/`). Para cambiarlo:
+### Sincronización estructural
 
-1. Abra el modal **Open...**
-2. Haga clic en el **botón de radio** junto al conjunto de datos que desea como su CV público
-3. El cambio surte efecto inmediatamente — el sitio público ahora sirve ese conjunto de datos
+Los cambios en la **estructura** — orden de secciones, visibilidad, diseño de secciones personalizadas y número de elementos — se propagan automáticamente a todas las variantes de idioma. El **contenido** (texto, títulos, descripciones) permanece independiente por idioma, para que pueda traducir libremente sin preocuparse por desajustes en el diseño.
 
-Esto desacopla su CV público de su edición. Puede editar contenido libremente en el panel de administración sin que los visitantes vean cambios en progreso hasta que esté listo.
+### Cambiar el idioma de un conjunto de datos
+
+Haga clic en la **insignia de idioma** en cualquier fila para abrir un selector y reasignar su código de idioma. Esto es útil para conjuntos de datos antiguos que quedaron configurados en inglés durante la instalación inicial.
+
+## Establecer el predeterminado
+
+El conjunto de datos predeterminado es la versión que los visitantes ven en su URL raíz (`/`). Para cambiarlo:
+
+1. Abra el **Gestor de CV**
+2. Haga clic en el **botón de radio** (○) junto al conjunto de datos que desea como predeterminado
+3. El cambio surte efecto inmediatamente
+
+Las variantes de idioma del predeterminado son automáticamente accesibles en `/{idioma}` (por ejemplo, `/de`, `/fr`) — no necesitan un interruptor de publicación separado.
+
+!!! note
+    El sitio público sirve el conjunto de datos predeterminado guardado, no sus ediciones en vivo. Puede experimentar con seguridad en el panel de administración sin afectar lo que ven los visitantes.
 
 ## URLs públicas versionadas
 
-Cada conjunto de datos guardado (aparte del predeterminado) obtiene una ruta URL única (por ejemplo, `/v/technical-cv-1`). Por defecto, estas son **privadas** — solo accesibles desde la interfaz de administración para previsualización.
+Los conjuntos de datos no predeterminados pueden compartirse en sus propias URLs. Use la acción **⋮ → Hacer compartido** para hacer público un conjunto de datos en `/v/slug`. Múltiples conjuntos de datos pueden ser públicos simultáneamente.
 
-Para compartir una versión específica públicamente:
+- **Conjunto de datos predeterminado**: se sirve en `/`
+- **Variantes de idioma del predeterminado**: se sirven en `/{idioma}` (por ejemplo, `/fr`)
+- **Conjuntos de datos compartidos**: se sirven en `/v/slug` o `/v/slug/{idioma}`
+- **Conjuntos de datos privados**: solo se pueden previsualizar desde el panel de administración
 
-1. Abra el modal **Open...**
-2. Encuentre el conjunto de datos que desea compartir
-3. Active el **interruptor** junto a él — se vuelve azul y aparece una insignia verde **Public**
-4. La URL `/v/slug` ahora es accesible en el **sitio público** (puerto 3001)
-
-Esto le permite compartir versiones personalizadas de su CV con diferentes audiencias. Por ejemplo, podría hacer público un "Technical CV" para roles de ingeniería mientras mantiene un "Management CV" privado hasta que lo necesite.
-
-**Copiar la URL**: Haga clic en el ícono de copiar junto al slug para copiar la URL completa a su portapapeles. El mensaje de notificación le indicará si copió una URL pública o solo de previsualización.
-
-!!! note
-    La página pública principal en `/` siempre muestra el **conjunto de datos predeterminado** — no sus ediciones en vivo. Esto significa que puede experimentar con seguridad en el panel de administración sin afectar lo que ven los visitantes.
+!!! tip "Copiar URLs"
+    Haga clic en la ruta URL mostrada en cada fila para copiar la URL pública completa a su portapapeles.

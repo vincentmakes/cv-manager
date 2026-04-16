@@ -1,94 +1,122 @@
-# Datensätze (Mehrere Lebenslauf-Versionen)
+# Datensätze & Sprachvarianten
 
 ## Wie Datensätze funktionieren
 
-Datensätze sind gespeicherte Momentaufnahmen Ihres Lebenslaufs. Ein Datensatz ist immer der **Standard** — das ist die Version, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Sie können zusätzliche Datensätze für verschiedene Zielgruppen erstellen (z. B. einen technischen Lebenslauf, einen Management-Lebenslauf) und diese über eigene URLs teilen.
+Datensätze sind gespeicherte Momentaufnahmen Ihres Lebenslaufs. Ein Datensatz ist immer der **Standard** — das ist die Version, die Besucher unter Ihrer Stamm-URL (`/`) sehen. Sie können zusätzliche Datensätze für verschiedene Zielgruppen erstellen (z. B. einen technischen Lebenslauf, einen Management-Lebenslauf), in verschiedenen Sprachen, und diese über eigene URLs teilen.
 
-Bei der Erstinstallation von CV Manager wird automatisch ein Standard-Datensatz aus Ihren Lebenslaufdaten erstellt. Alle Änderungen, die Sie im Admin-Bereich vornehmen, werden **automatisch gespeichert** — es gibt keinen separaten „Speichern"-Schritt.
+Bei der Erstinstallation von CV Manager wird automatisch ein „Standard"-Datensatz aus Ihren Lebenslaufdaten erstellt. Alle Änderungen, die Sie im Admin-Bereich vornehmen, werden **automatisch gespeichert** — es gibt keinen separaten „Speichern"-Schritt.
 
-## Das Banner des aktiven Datensatzes
+## Die CV-Verwaltung
 
-Ein Banner unterhalb der Werkzeugleiste zeigt an, welchen Datensatz Sie gerade bearbeiten. Es zeigt:
+Klicken Sie auf **CV-Verwaltung** in der Werkzeugleiste, um das zentrale Modal für alle Datensatz-Operationen zu öffnen: Speichern, Laden, Versionen erstellen, Sprachen hinzufügen, Standard festlegen und Sichtbarkeit verwalten.
 
-- Den **Datensatznamen** (z. B. „Standard", „Technischer Lebenslauf")
-- Ein **„Standard"-Badge**, wenn dieser Datensatz unter `/` angezeigt wird
-- Einen **Autospeicher-Status** — zeigt kurz „Speichern…" und dann „✓ Gespeichert" nach jeder Änderung
+Das Modal hat zwei Bereiche:
 
-Jede Änderung, die Sie vornehmen (Einträge hinzufügen, Inhalte bearbeiten, Reihenfolge ändern, Sichtbarkeit umschalten), wird nach einer kurzen Verzögerung automatisch im aktiven Datensatz gespeichert.
+- Ein **Speichern-unter-Formular** oben — Namensfeld, Sprachauswahl und eine Speichern-Schaltfläche
+- Eine **Liste gespeicherter Lebensläufe** darunter — nach Basisnamen gruppiert, mit allen Verwaltungsaktionen
 
-## Einen neuen Datensatz speichern
+### Einen neuen Datensatz speichern
 
-Klicken Sie auf **Speichern unter...** in der Werkzeugleiste, um das Speichern-Modal zu öffnen. Von hier aus können Sie einen völlig neuen Datensatz anlegen oder einen vorhandenen überschreiben.
+Das Namensfeld ist mit dem Namen des aktiven Datensatzes vorausgefüllt. Das Sprach-Dropdown zeigt standardmäßig die aktive Sprache.
 
-Das Modal besteht aus zwei Teilen:
+- **Geben Sie einen neuen Namen ein** und klicken Sie auf die blaue Schaltfläche **Speichern unter „…"**, um einen völlig neuen Datensatz zu erstellen
+- **Klicken Sie auf eine vorhandene Zeile** in der Liste, um das Namensfeld zu füllen — die Schaltfläche wechselt zur orangefarbenen **„…" überschreiben**-Schaltfläche (mit Bestätigung)
 
-- Ein **Namensfeld** oben, das mit dem Namen des aktuell aktiven Datensatzes vorausgefüllt ist
-- Eine Liste **vorhandener Lebensläufe** darunter, in der zusammengehörige Versionen visuell gruppiert sind
+### Datensatz-Liste
 
-### Gruppierte Versionen
+Jeder gespeicherte Lebenslauf erscheint als **Gruppe** mit einer Kopfzeile, die den Basisnamen zeigt, einer **+ Neue Version**-Schaltfläche und einem Versions-/Sprachanzahl-Badge.
 
-Datensätze mit demselben Basisnamen werden gemeinsam angezeigt. Zum Beispiel erscheinen `Frontend Engineer`, `Frontend Engineer v2` und `Frontend Engineer v3` als ein Block unter einer gemeinsamen Überschrift — jede Version ist mit einem kleinen `v1`/`v2`/`v3`-Badge gekennzeichnet. Eigenständige Lebensläufe ohne Geschwister werden als einzelne Zeile dargestellt.
+Innerhalb jeder Gruppe ist jede Sprachvariante eine Zeile:
 
-### Klicken Sie einen Lebenslauf an, um ihn zu überschreiben
+```
+○  DE  v2  Full Stack Developer v2     /v/full-stack-dev/de   16/04/2026   [Laden]  ⋮
+```
 
-Wenn Sie auf eine Zeile in der Liste klicken, wird das Namensfeld mit dem Namen dieses Lebenslaufs gefüllt, und die primäre Schaltfläche wechselt zu **„…" überschreiben** (orange). Beim Klicken werden Sie aufgefordert zu bestätigen, bevor der Lebenslauf durch Ihre aktuellen Daten ersetzt wird.
+- **Optionsfeld** (○) — wählt aus, welchen Datensatz Besucher unter `/` sehen (der Standard)
+- **Sprach-Badge** (DE) — die Inhaltssprache dieser Variante
+- **Versions-Badge** (v2) — wird angezeigt, wenn die Gruppe mehrere Versionen hat
+- **Name** — der Datensatzname
+- **URL** — der öffentliche URL-Pfad (wenn freigegeben oder Standard)
+- **Datum** — letzte Änderung
+- **Laden** — wechselt zur Bearbeitung dieses Datensatzes
+- **⋮** (Overflow-Menü) — weitere Aktionen
+
+### Overflow-Menü (⋮)
+
+Das Overflow-Menü jeder Zeile enthält:
+
+| Aktion | Beschreibung |
+|--------|-------------|
+| **Freigeben / Privat machen** | Öffentliche Sichtbarkeit unter `/v/slug` umschalten (beim Standard und dessen Sprachgeschwistern ausgeblendet) |
+| **Sprache ändern** | Den Sprachcode dieses Datensatzes neu zuweisen |
+| **Vorschau** | Die gespeicherte Version in einem neuen Tab öffnen |
+| **URL kopieren** | Die öffentliche oder Vorschau-URL in die Zwischenablage kopieren |
+| **Löschen** | Dauerhaft entfernen (beim Standard-Datensatz deaktiviert) |
+
+## Versionen
+
+Datensätze mit demselben Basisnamen werden gemeinsam gruppiert. Zum Beispiel erscheinen `Frontend Engineer`, `Frontend Engineer v2` und `Frontend Engineer v3` als ein Block unter einer gemeinsamen Überschrift.
 
 ### Eine neue Version erstellen
 
-Jede Gruppe hat eine **+ Neue Version**-Schaltfläche, die den nächsten freien `vN`-Namen vorschlägt — wenn `Frontend Engineer v3` die neueste Version ist, füllt die Schaltfläche das Namensfeld mit `Frontend Engineer v4`. Die Schaltfläche liest **Als neuen speichern: „…"**, und beim Absenden wird die neue Version neben den vorhandenen gespeichert.
+Klicken Sie auf **+ Neue Version** in der Gruppenüberschrift. Das Namensfeld wird automatisch mit der nächsten Versionsnummer gefüllt (z. B. `Frontend Engineer v4`). Beim Speichern erhält die neue Version:
 
-### Einen neuen Namen eingeben
+- Ein eigenes Versions-Badge (v4)
+- Denselben URL-Slug wie die Geschwister-Versionen
+- Alle Sprachvarianten der vorherigen Version
 
-Wenn Sie einen Namen eingeben, der mit keinem vorhandenen Lebenslauf übereinstimmt, lautet die Schaltfläche **Als neuen speichern: „…"** (blau). Beim Absenden wird ein völlig neuer Datensatz erstellt.
+### Einklappbare ältere Versionen
+
+Wenn eine Gruppe mehrere Versionen hat, wird nur die neueste angezeigt. Ein **„N ältere Versionen"**-Schalter ermöglicht es, alle Versionen aufzuklappen. Wenn der aktuell bearbeitete oder der Standard-Datensatz in einer älteren Version liegt, wird diese automatisch aufgeklappt, damit Sie sie immer sehen können.
 
 !!! tip
-    Verwenden Sie die `Basis vN`-Namenskonvention (z. B. `Frontend Engineer`, `Frontend Engineer v2`), um automatische Versionsgruppierung und Nächste-Version-Vorschläge zu erhalten. Datensätze ohne `vN`-Suffix werden als „v1" ihres Namens behandelt.
+    Verwenden Sie die `Basis vN`-Namenskonvention (z. B. `Frontend Engineer`, `Frontend Engineer v2`), um automatische Versionsgruppierung und Vorschläge für die nächste Version zu erhalten.
 
-## Das Öffnen-Modal
+## Sprachvarianten
 
-Klicken Sie auf **Öffnen...**, um alle gespeicherten Datensätze anzuzeigen. Eine **Legende** oben erklärt die drei Steuerelemente:
+Jede Version eines Datensatzes kann mehrere Sprachvarianten haben — zum Beispiel eine englische und eine deutsche Version desselben Lebenslaufs, die dieselbe Struktur teilen, aber unabhängige Inhalte haben.
 
-| Steuerelement | Zweck |
-|---------------|-------|
-| **Optionsfeld** | Wählt aus, welcher Datensatz unter Ihrer Stamm-URL `/` angezeigt wird (der Standard) |
-| **Schalter** | Gibt andere Datensätze unter einer eigenen `/v/slug`-URL frei |
-| **Augen-Schaltfläche** | Vorschau eines gespeicherten Datensatzes, ohne ihn öffentlich zu machen |
+### Eine Sprachvariante hinzufügen
 
-Verwandte Versionen desselben Basis-Lebenslaufs werden **gemeinsam gruppiert**. Eine Familie wie `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` erscheint als ein Block unter einer gemeinsamen Überschrift, wobei jede Version unter einer Baumverbindung eingerückt ist und mit einem kleinen `v1`/`v2`/`v3`-Badge gekennzeichnet wird. Eigenständige Lebensläufe ohne andere Versionen werden weiterhin als einzelne Zeile dargestellt.
+1. Öffnen Sie die **CV-Verwaltung**
+2. Klicken Sie auf **+ Sprache hinzufügen** in der Gruppenüberschrift (oder verwenden Sie den **⋮ → Sprache hinzufügen**-Ablauf aus dem Speichern-unter-Formular)
+3. Wählen Sie die Zielsprache und speichern Sie
 
-Jede Datensatz-Zeile zeigt:
+Die neue Variante beginnt als Kopie des vorhandenen Inhalts. Die Admin-Oberfläche wechselt automatisch zur neuen Sprache, damit Sie sofort mit dem Übersetzen beginnen können.
 
-- **Name** und Datum der letzten Aktualisierung
-- **„Standard"-Badge** — beim Datensatz, der mit dem Optionsfeld ausgewählt wurde
-- **„Bearbeitung"-Badge** — beim Datensatz, der aktuell im Admin-Bereich geladen ist
-- Eine **versionierte URL** (z. B. `/v/technical-cv-1`) — beim Standard-Datensatz ausgeblendet, da dieser unter `/` angezeigt wird
-- **Laden**-Schaltfläche — wechselt zu diesem Datensatz (zeigt „Neu laden", wenn er bereits aktiv ist)
-- **Löschen**-Schaltfläche — löscht den Datensatz dauerhaft (deaktiviert beim aktuellen Standard)
+### Sprachen wechseln
 
-## Den Standard-Datensatz festlegen
+Wenn Sie einen Datensatz bearbeiten, der Sprachgeschwister hat, erscheint ein **Sprachwechsler** im Banner des aktiven Datensatzes unterhalb der Werkzeugleiste. Klicken Sie auf einen Sprachcode, um zu wechseln — Ihre aktuelle Arbeit wird zuerst automatisch gespeichert, dann wird die andere Variante geladen und die UI-Sprache entsprechend angepasst.
 
-Der Standard-Datensatz ist die Version, die Besucher sehen, wenn sie Ihre Stamm-URL (`/`) aufrufen. So ändern Sie ihn:
+### Strukturelle Synchronisierung
 
-1. Öffnen Sie das **Öffnen...**-Modal
-2. Klicken Sie auf das **Optionsfeld** neben dem Datensatz, den Sie als öffentlichen Lebenslauf verwenden möchten
-3. Die Änderung wird sofort wirksam — die öffentliche Seite zeigt nun diesen Datensatz an
+Änderungen an der **Struktur** — Abschnittsreihenfolge, Sichtbarkeit, Layout benutzerdefinierter Abschnitte und Anzahl der Einträge — werden automatisch über alle Sprachgeschwister hinweg synchronisiert. **Inhalte** (Text, Titel, Beschreibungen) bleiben pro Sprache unabhängig, sodass Sie frei übersetzen können, ohne sich um Layout-Abweichungen sorgen zu müssen.
 
-Dies entkoppelt Ihren öffentlichen Lebenslauf von Ihrer Bearbeitung. Sie können im Admin-Bereich frei Inhalte bearbeiten, ohne dass Besucher Ihre unfertigen Änderungen sehen, bis Sie bereit sind.
+### Die Sprache eines Datensatzes ändern
+
+Klicken Sie auf das **Sprach-Badge** in einer beliebigen Zeile, um einen Picker zu öffnen und den Sprachcode neu zuzuweisen. Dies ist nützlich für ältere Datensätze, die bei der Einrichtung standardmäßig auf Englisch gesetzt wurden.
+
+## Den Standard festlegen
+
+Der Standard-Datensatz ist die Version, die Besucher unter Ihrer Stamm-URL (`/`) sehen. So ändern Sie ihn:
+
+1. Öffnen Sie die **CV-Verwaltung**
+2. Klicken Sie auf das **Optionsfeld** (○) neben dem Datensatz, den Sie als Standard festlegen möchten
+3. Die Änderung wird sofort wirksam
+
+Sprachgeschwister des Standards sind automatisch unter `/{lang}` (z. B. `/de`, `/fr`) erreichbar — sie benötigen keinen separaten Öffentlich-Schalter.
+
+!!! note
+    Die öffentliche Seite zeigt den gespeicherten Standard-Datensatz, nicht Ihre aktuellen Bearbeitungen. Sie können im Admin-Bereich bedenkenlos experimentieren, ohne zu beeinflussen, was Besucher sehen.
 
 ## Öffentliche versionierte URLs
 
-Jeder gespeicherte Datensatz (außer dem Standard) erhält einen eindeutigen URL-Pfad (z. B. `/v/technical-cv-1`). Standardmäßig sind diese **privat** — nur über die Admin-Oberfläche zur Vorschau zugänglich.
+Nicht-Standard-Datensätze können über eigene URLs freigegeben werden. Verwenden Sie die Aktion **⋮ → Freigeben**, um einen Datensatz unter `/v/slug` öffentlich zu machen. Mehrere Datensätze können gleichzeitig öffentlich sein.
 
-Um eine bestimmte Version öffentlich zu teilen:
+- **Standard-Datensatz**: wird unter `/` angezeigt
+- **Sprachgeschwister des Standards**: werden unter `/{lang}` angezeigt (z. B. `/fr`)
+- **Freigegebene Datensätze**: werden unter `/v/slug` oder `/v/slug/{lang}` angezeigt
+- **Private Datensätze**: nur aus dem Admin-Bereich als Vorschau zugänglich
 
-1. Öffnen Sie das **Öffnen...**-Modal
-2. Finden Sie den Datensatz, den Sie teilen möchten
-3. Schalten Sie den **Schalter** daneben um — er wird blau und ein grünes **Öffentlich**-Badge erscheint
-4. Die `/v/slug`-URL ist nun auf der **öffentlichen Seite** (Port 3001) zugänglich
-
-So können Sie maßgeschneiderte Lebenslauf-Versionen mit verschiedenen Zielgruppen teilen. Sie könnten beispielsweise einen „Technischen Lebenslauf" für Ingenieur-Stellen öffentlich machen, während Sie einen „Management-Lebenslauf" privat halten, bis er benötigt wird.
-
-**URL kopieren**: Klicken Sie auf das Kopier-Symbol neben dem Slug, um die vollständige URL in die Zwischenablage zu kopieren. Die Benachrichtigung zeigt Ihnen an, ob Sie eine öffentliche oder eine Vorschau-URL kopiert haben.
-
-!!! note
-    Die öffentliche Hauptseite unter `/` zeigt immer den **Standard-Datensatz** — nicht Ihre aktuellen Bearbeitungen. Das bedeutet, dass Sie im Admin-Bereich experimentieren können, ohne zu beeinflussen, was Besucher sehen.
+!!! tip "URLs kopieren"
+    Klicken Sie auf den URL-Pfad in jeder Zeile, um die vollständige öffentliche URL in Ihre Zwischenablage zu kopieren.

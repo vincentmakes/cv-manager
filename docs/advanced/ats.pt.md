@@ -26,8 +26,15 @@ Para além da otimização web integrada, o CV Manager pode gerar um **PDF dedic
 1. Clique em **Documento ATS** na barra de ferramentas de administração
 2. Ajuste o controlo de **Escala** para controlar a densidade do conteúdo (50%–150%)
 3. Escolha o **Tamanho do papel** preferido (A4 ou Letter)
-4. Pré-visualize o documento na janela modal
-5. Clique em **Baixar PDF** para guardar o ficheiro
+4. Se estiver a trabalhar num idioma que não seja inglês, pode opcionalmente marcar **Títulos das secções em inglês** para apresentar os títulos das secções (Experiência Profissional, Educação, Competências, etc.) em inglês mantendo todo o restante conteúdo no idioma ativo
+5. Pré-visualize o documento na janela modal
+6. Clique em **Descarregar PDF** para guardar o ficheiro
+
+### Títulos das secções em inglês
+
+Quando o seu CV está num idioma que não é inglês, muitos sistemas ATS esperam títulos de secção em inglês para categorizar corretamente o conteúdo. A caixa de verificação **Títulos das secções em inglês** (visível apenas quando o idioma ativo não é inglês) força os títulos das secções a serem apresentados em inglês enquanto tudo o resto — datas, conteúdo, competências — permanece no idioma ativo.
+
+Isto é útil ao candidatar-se a empresas internacionais ou através de portais de emprego em inglês com um CV escrito noutro idioma.
 
 ### Diferença em relação a Imprimir / PDF
 
@@ -53,3 +60,6 @@ Para além da otimização web integrada, o CV Manager pode gerar um **PDF dedic
 
 !!! tip "Escala para densidade"
     Se o seu CV for longo, tente reduzir a escala para 70–80% para encaixar mais conteúdo por página. A pré-visualização atualiza em tempo real para que possa encontrar o equilíbrio certo.
+
+!!! tip "Títulos em inglês para candidaturas internacionais"
+    Se o conteúdo do seu CV está em francês, alemão ou outro idioma, ative a opção de títulos em inglês ao candidatar-se a empresas que usam sistemas ATS em inglês. A maioria dos parsers ATS espera títulos de secção em inglês como "Work Experience" e "Education".

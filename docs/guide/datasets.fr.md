@@ -1,94 +1,122 @@
-# Jeux de données (Versions multiples de CV)
+# Jeux de donnees & Variantes linguistiques
 
-## Fonctionnement des jeux de données
+## Fonctionnement des jeux de donnees
 
-Les jeux de données sont des instantanés enregistrés de votre CV. Un jeu de données est toujours le jeu **par défaut** — c'est la version que les visiteurs voient à l'URL racine (`/`). Vous pouvez créer des jeux de données supplémentaires pour différents publics (par exemple, un CV technique, un CV de management) et les partager via leurs propres URL.
+Les jeux de donnees sont des instantanes enregistres de votre CV. Un jeu de donnees est toujours le jeu **par defaut** — c'est la version que les visiteurs voient a l'URL racine (`/`). Vous pouvez creer des jeux de donnees supplementaires pour differents publics (par exemple, un CV technique, un CV de management), dans differentes langues, et les partager via leurs propres URL.
 
-Lorsque vous installez CV Manager pour la première fois, un jeu de données « Default » est automatiquement créé à partir de vos données de CV. Toutes les modifications que vous effectuez dans l'interface d'administration sont **automatiquement enregistrées** dans le jeu de données actif — il n'y a pas d'étape de sauvegarde séparée.
+Lorsque vous installez CV Manager pour la premiere fois, un jeu de donnees « Par defaut » est automatiquement cree a partir de vos donnees de CV. Toutes les modifications que vous effectuez dans l'interface d'administration sont **automatiquement enregistrees** dans le jeu de donnees actif — il n'y a pas d'etape de sauvegarde separee.
 
-## La bannière du jeu de données actif
+## Le Gestionnaire CV
 
-Une bannière située sous la barre d'outils indique le jeu de données que vous êtes en train de modifier. Elle affiche :
+Cliquez sur **Gestionnaire CV** dans la barre d'outils pour ouvrir la fenetre centralisee pour toutes les operations sur les jeux de donnees : enregistrement, chargement, creation de versions, ajout de langues, definition du jeu par defaut et gestion de la visibilite.
 
-- Le **nom du jeu de données** (par exemple, « Default », « CV Technique »)
-- Un **badge « Default »** si ce jeu de données est celui servi à `/`
-- Un **statut de sauvegarde automatique** — affiche brièvement « Saving… » puis « ✓ Saved » après chaque modification
+La fenetre comporte deux zones :
 
-Chaque modification que vous apportez (ajout d'éléments, modification de contenu, réorganisation, activation/désactivation de la visibilité) est automatiquement enregistrée dans le jeu de données actif après un court délai.
+- Un **formulaire d'enregistrement** en haut — champ de nom, selecteur de langue et un bouton d'enregistrement
+- Une **liste des CV enregistres** en dessous — regroupes par nom de base, avec toutes les actions de gestion
 
-## Enregistrer un nouveau jeu de données
+### Enregistrer un nouveau jeu de donnees
 
-Cliquez sur **Enregistrer sous...** dans la barre d'outils pour ouvrir la fenêtre d'enregistrement. Vous pouvez y créer un tout nouveau jeu de données ou écraser un jeu existant.
+Le champ de nom est pre-rempli avec le nom du jeu de donnees actif. Le menu deroulant de langue affiche par defaut la langue active.
 
-La fenêtre comporte deux parties :
+- **Saisissez un nouveau nom** et cliquez sur le bouton bleu **Enregistrer sous « ... »** pour creer un tout nouveau jeu de donnees
+- **Cliquez sur une ligne existante** dans la liste pour remplir le champ de nom — le bouton devient l'orange **Ecraser « ... »** (avec confirmation)
 
-- Un **champ de nom** en haut, prérempli avec le nom du jeu de données actuellement actif
-- Une liste des **CV existants** en dessous, dont les versions apparentées sont regroupées visuellement
+### Liste des jeux de donnees
 
-### Versions regroupées
+Chaque CV enregistre apparait sous forme de **groupe** avec un en-tete affichant le nom de base, un bouton **+ Nouvelle version** et un badge indiquant le nombre de versions/langues.
 
-Les jeux de données qui partagent le même nom de base sont affichés ensemble. Par exemple, `Frontend Engineer`, `Frontend Engineer v2` et `Frontend Engineer v3` apparaissent dans un même bloc sous un en-tête commun — chaque version est étiquetée avec un petit badge `v1` / `v2` / `v3`. Les CV autonomes sans versions associées s'affichent sur une seule ligne.
+A l'interieur de chaque groupe, chaque variante linguistique est une ligne :
 
-### Cliquez sur un CV pour l'écraser
+```
+○  FR  v2  Full Stack Developer v2     /v/full-stack-dev/fr   16/04/2026   [Charger]  ⋮
+```
 
-Cliquer sur n'importe quelle ligne remplit le champ de nom avec le nom de ce CV, et le bouton principal passe à **Écraser « … »** (orange). Un clic demande une confirmation avant de remplacer ce CV par vos données actuelles.
+- **Bouton radio** (○) — selectionne le jeu de donnees que les visiteurs voient a `/` (le jeu par defaut)
+- **Badge de langue** (FR) — la langue du contenu de cette variante
+- **Badge de version** (v2) — affiche lorsque le groupe a plusieurs versions
+- **Nom** — le nom du jeu de donnees
+- **URL** — le chemin d'URL public (si partage ou par defaut)
+- **Date** — derniere modification
+- **Charger** — basculer vers l'edition de ce jeu de donnees
+- **⋮** (menu debordement) — actions supplementaires
 
-### Créer une nouvelle version
+### Menu debordement (⋮)
 
-Chaque groupe dispose d'un raccourci **+ Nouvelle version** qui suggère le prochain nom `vN` disponible — si `Frontend Engineer v3` est la version la plus récente, le raccourci remplit le champ avec `Frontend Engineer v4`. Le bouton indique **Enregistrer comme nouveau « … »** et l'envoi enregistre la nouvelle version aux côtés des existantes.
+Le menu debordement de chaque ligne contient :
 
-### Saisir un nouveau nom
+| Action | Description |
+|--------|-------------|
+| **Rendre partage / Rendre prive** | Activer/desactiver la visibilite publique a `/v/slug` (masque pour le jeu par defaut et ses variantes linguistiques) |
+| **Changer la langue** | Reassigner le code de langue de ce jeu de donnees |
+| **Apercu** | Ouvrir la version enregistree dans un nouvel onglet |
+| **Copier l'URL** | Copier l'URL publique ou d'apercu dans le presse-papiers |
+| **Supprimer** | Supprimer definitivement (desactive pour le jeu de donnees par defaut) |
 
-Si vous saisissez un nom qui ne correspond à aucun CV existant, le bouton indique **Enregistrer comme nouveau « … »** (bleu). L'envoi crée un tout nouveau jeu de données.
+## Versions
+
+Les jeux de donnees qui partagent le meme nom de base sont regroupes. Par exemple, `Frontend Engineer`, `Frontend Engineer v2` et `Frontend Engineer v3` apparaissent dans un meme bloc sous un en-tete commun.
+
+### Creer une nouvelle version
+
+Cliquez sur **+ Nouvelle version** dans l'en-tete du groupe. Le champ de nom se remplit automatiquement avec le prochain numero de version (par exemple, `Frontend Engineer v4`). Lors de l'enregistrement, la nouvelle version :
+
+- Recoit un badge de version (v4)
+- Partage le meme slug d'URL que ses versions soeurs
+- Herite de toutes les variantes linguistiques de la version precedente
+
+### Anciennes versions repliables
+
+Lorsqu'un groupe a plusieurs versions, seule la plus recente est affichee. Un bouton **« N anciennes versions »** permet de deplier pour voir toutes les versions. Si le jeu de donnees que vous editez ou le jeu par defaut se trouve dans une ancienne version, il est automatiquement deplie pour que vous puissiez toujours le voir.
 
 !!! tip
-    Utilisez la convention de nommage `Base vN` (par exemple `Frontend Engineer`, `Frontend Engineer v2`) pour bénéficier du regroupement automatique des versions et des suggestions de version suivante. Les jeux de données sans suffixe `vN` sont traités comme la « v1 » de leur nom.
+    Utilisez la convention de nommage `Base vN` (par exemple, `Frontend Engineer`, `Frontend Engineer v2`) pour beneficier du regroupement automatique des versions et des suggestions de version suivante.
 
-## La fenêtre d'ouverture
+## Variantes linguistiques
 
-Cliquez sur **Open...** pour voir tous les jeux de données enregistrés. Une **légende** en haut explique les trois contrôles :
+Chaque version d'un jeu de donnees peut avoir plusieurs variantes linguistiques — par exemple, une version anglaise et une version allemande du meme CV, partageant la meme structure mais avec un contenu independant.
 
-| Contrôle | Fonction |
-|----------|----------|
-| **Bouton radio** | Sélectionner le jeu de données servi à votre URL racine `/` (le jeu par défaut) |
-| **Interrupteur** | Partager d'autres jeux de données via leur propre URL `/v/slug` |
-| **Bouton œil** | Prévisualiser un jeu de données enregistré sans le rendre public |
+### Ajouter une variante linguistique
 
-Les versions apparentées d'un même CV de base sont **regroupées**. Une famille telle que `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` apparaît dans un seul bloc sous un en-tête partagé — chaque version est indentée sous un connecteur arborescent et étiquetée avec un petit badge `v1` / `v2` / `v3`. Les CV autonomes sans autres versions continuent d'apparaître sur une seule ligne.
+1. Ouvrez le **Gestionnaire CV**
+2. Cliquez sur **+ Ajouter une langue** dans l'en-tete du groupe (ou utilisez le flux **⋮ → Ajouter une langue** depuis le formulaire d'enregistrement)
+3. Selectionnez la langue cible et enregistrez
 
-Chaque ligne de jeu de données affiche :
+La nouvelle variante commence comme une copie du contenu existant. L'interface d'administration bascule automatiquement vers la nouvelle langue pour que vous puissiez commencer a traduire.
 
-- Le **nom** et la date de dernière mise à jour
-- Un **badge « Default »** — sur le jeu de données sélectionné avec le bouton radio
-- Un **badge « Editing »** — sur le jeu de données actuellement chargé dans l'interface d'administration
-- Une **URL versionnée** (par exemple, `/v/technical-cv-1`) — masquée pour le jeu de données par défaut puisqu'il est servi à `/`
-- Un bouton **Load** — bascule vers ce jeu de données (affiche « Reload » s'il est déjà actif)
-- Un bouton **Delete** — supprime définitivement le jeu de données (désactivé pour le jeu par défaut actuel)
+### Changer de langue
 
-## Définir le jeu de données par défaut
+Lorsque vous editez un jeu de donnees qui a des variantes linguistiques, un **selecteur de langue** apparait dans la banniere du jeu de donnees actif sous la barre d'outils. Cliquez sur un code de langue pour changer — votre travail en cours est d'abord automatiquement enregistre, puis l'autre variante est chargee et la langue de l'interface s'adapte.
 
-Le jeu de données par défaut est la version que les visiteurs voient lorsqu'ils accèdent à votre URL racine (`/`). Pour le modifier :
+### Synchronisation structurelle
 
-1. Ouvrez la fenêtre **Open...**
-2. Cliquez sur le **bouton radio** à côté du jeu de données que vous souhaitez utiliser comme CV public
-3. Le changement prend effet immédiatement — le site public sert désormais ce jeu de données
+Les modifications de **structure** — ordre des sections, visibilite, disposition des sections personnalisees et nombre d'elements — se propagent automatiquement a toutes les variantes linguistiques. Le **contenu** (texte, titres, descriptions) reste independant par langue, vous pouvez donc traduire librement sans vous soucier des decalages de mise en page.
 
-Cela permet de découpler votre CV public de votre travail d'édition. Vous pouvez modifier librement le contenu dans l'interface d'administration sans que les visiteurs voient les modifications en cours jusqu'à ce que vous soyez prêt.
+### Changer la langue d'un jeu de donnees
 
-## URL publiques versionnées
+Cliquez sur le **badge de langue** sur n'importe quelle ligne pour ouvrir un selecteur et reassigner son code de langue. C'est utile pour les anciens jeux de donnees qui etaient par defaut en anglais lors de la configuration initiale.
 
-Chaque jeu de données enregistré (autre que celui par défaut) obtient un chemin d'URL unique (par exemple, `/v/technical-cv-1`). Par défaut, ceux-ci sont **privés** — accessibles uniquement depuis l'interface d'administration pour la prévisualisation.
+## Definir le jeu par defaut
 
-Pour partager une version spécifique publiquement :
+Le jeu de donnees par defaut est la version que les visiteurs voient a votre URL racine (`/`). Pour le modifier :
 
-1. Ouvrez la fenêtre **Open...**
-2. Trouvez le jeu de données que vous souhaitez partager
-3. Activez l'**interrupteur** à côté — il devient bleu et un badge vert **Public** apparaît
-4. L'URL `/v/slug` est maintenant accessible sur le **site public** (port 3001)
+1. Ouvrez le **Gestionnaire CV**
+2. Cliquez sur le **bouton radio** (○) a cote du jeu de donnees que vous souhaitez definir par defaut
+3. Le changement prend effet immediatement
 
-Cela vous permet de partager des versions de CV adaptées à différents publics. Par exemple, vous pourriez rendre un « CV Technique » public pour les postes d'ingénierie tout en gardant un « CV Management » privé jusqu'à ce que ce soit nécessaire.
-
-**Copier l'URL** : Cliquez sur l'icône de copie à côté du slug pour copier l'URL complète dans votre presse-papiers. Le message de notification vous indiquera si vous avez copié une URL publique ou une URL de prévisualisation uniquement.
+Les variantes linguistiques du jeu par defaut sont automatiquement accessibles a `/{lang}` (par exemple, `/de`, `/fr`) — elles n'ont pas besoin d'un bouton de partage separe.
 
 !!! note
-    La page publique principale à `/` affiche toujours le **jeu de données par défaut** — et non vos modifications en cours. Cela signifie que vous pouvez expérimenter en toute sécurité dans l'interface d'administration sans affecter ce que voient les visiteurs.
+    Le site public sert le jeu de donnees par defaut enregistre, pas vos modifications en cours. Vous pouvez experimenter en toute securite dans l'interface d'administration sans affecter ce que voient les visiteurs.
+
+## URL publiques versionnees
+
+Les jeux de donnees non par defaut peuvent etre partages via leurs propres URL. Utilisez l'action **⋮ → Rendre partage** pour rendre un jeu de donnees public a `/v/slug`. Plusieurs jeux de donnees peuvent etre publics simultanement.
+
+- **Jeu de donnees par defaut** : servi a `/`
+- **Variantes linguistiques du jeu par defaut** : servies a `/{lang}` (par exemple, `/fr`)
+- **Jeux de donnees partages** : servis a `/v/slug` ou `/v/slug/{lang}`
+- **Jeux de donnees prives** : uniquement previsualisables depuis l'interface d'administration
+
+!!! tip "Copier les URL"
+    Cliquez sur le chemin d'URL affiche sur chaque ligne pour copier l'URL publique complete dans votre presse-papiers.

@@ -14,21 +14,21 @@
 ## Modifica
 
 ??? question "Come faccio a contrassegnare una posizione come 'attuale'?"
-    Lasciate vuoto il campo **End Date**. Verrà visualizzato come "Present" sul CV.
+    Lasciate vuoto il campo **Data di fine**. Verrà visualizzato come "Presente" sul CV.
 
 ??? question "Posso riordinare gli elementi all'interno di una sezione?"
     Sì. La maggior parte degli elementi supporta il riordinamento tramite trascinamento. L'ordine viene salvato automaticamente.
 
 ??? question "Come faccio ad aggiungere punti elenco a un'esperienza?"
-    Modificate l'esperienza e inserite i punti salienti nel campo **Highlights** — un punto elenco per riga.
+    Modificate l'esperienza e inserite i punti salienti nel campo **Punti salienti** — un punto elenco per riga.
 
 ??? question "Come faccio ad aggiungere il logo di un'azienda?"
-    Modificate l'esperienza, scorrete fino alla sezione **Company Logo** e cliccate su **Choose image** per caricare un'immagine. Potete anche cliccare su **Use existing** per riutilizzare un logo già caricato. Abilitate l'opzione **"Sync logo across all [Company]"** per applicare lo stesso logo a tutte le esperienze presso quell'azienda.
+    Modificate l'esperienza, scorrete fino alla sezione **Logo aziendale** e fate clic su **Scegli immagine** per caricare un'immagine. Potete anche fare clic su **Usa esistente** per riutilizzare un logo già caricato. Abilitate l'opzione **"Sincronizza logo per tutte le esperienze di [Azienda]"** per applicare lo stesso logo a tutte le esperienze presso quell'azienda.
 
 ??? question "Ho cancellato qualcosa per sbaglio. Posso annullare?"
     Non esiste una funzione di annullamento. Poiché le modifiche vengono salvate automaticamente nel dataset attivo, la modifica viene mantenuta immediatamente. Se disponete di un'esportazione precedente o di un dataset salvato separatamente, potete ripristinare da quello. È buona pratica esportare regolarmente il vostro CV come backup.
 
-## Sezioni Personalizzate
+## Sezioni personalizzate
 
 ??? question "Quante sezioni personalizzate posso creare?"
     Non esiste un limite rigido. Createne quante ne avete bisogno.
@@ -36,8 +36,8 @@
 ??? question "Posso cambiare il tipo di layout di una sezione personalizzata dopo averla creata?"
     Sì. Modificate la sezione e selezionate un layout diverso. Tenete presente che alcuni campi potrebbero non essere trasferiti tra i tipi di layout (ad esempio, passando da cards a social links).
 
-??? question "Qual è la differenza tra i layout 'Bullet Points' e 'Free Text'?"
-    **Bullet Points** visualizza ogni riga come elemento di un elenco puntato con un titolo di gruppo. **Free Text** visualizza testo semplice con interruzioni di riga preservate e senza titolo — simile alla sezione About/Bio.
+??? question "Qual è la differenza tra i layout 'Punti elenco' e 'Testo libero'?"
+    **Punti elenco** visualizza ogni riga come elemento di un elenco puntato con un titolo di gruppo. **Testo libero** visualizza testo semplice con interruzioni di riga preservate e senza titolo — simile alla sezione Informazioni personali/Bio.
 
 ## Stampa e PDF
 
@@ -45,83 +45,97 @@
     L'output di stampa utilizza stili di stampa dedicati ottimizzati per la carta. Alcuni effetti visivi (stati al passaggio del mouse, animazioni, sfumature) vengono semplificati. Gli elementi nascosti e i controlli di amministrazione vengono automaticamente rimossi.
 
 ??? question "Come faccio a far stare il mio CV in meno pagine?"
-    Provate ad abilitare **Allow Section Splits** e **Allow Item Splits** nelle impostazioni Print & Export. Potete anche nascondere elementi o sezioni meno importanti, oppure utilizzare layout di sezioni personalizzate più compatti. È inoltre possibile ridimensionare la stampa tramite la finestra di dialogo di stampa di qualsiasi browser (a volte l'opzione è un po' nascosta).
+    Provate ad abilitare **Consenti suddivisione sezioni** e **Consenti suddivisione elementi** nelle impostazioni Stampa e esportazione. Potete anche nascondere elementi o sezioni meno importanti, oppure utilizzare layout di sezioni personalizzate più compatti. È inoltre possibile ridimensionare la stampa tramite la finestra di dialogo di stampa di qualsiasi browser (a volte l'opzione è un po' nascosta).
 
 ??? question "Perché mancano alcuni elementi nel mio CV stampato?"
     Verificate se quegli elementi sono stati impostati come nascosti (icona occhio). Gli elementi nascosti vengono esclusi dall'output di stampa e dalla visualizzazione pubblica.
 
 ??? question "I numeri di pagina non vengono visualizzati?"
-    Assicuratevi che **Page Numbers** sia abilitato in Settings → Print & Export. Alcuni visualizzatori PDF dei browser potrebbero non mostrare i numeri di pagina generati via CSS — provate a scaricare il PDF e ad aprirlo in un lettore dedicato.
+    Assicuratevi che **Numeri di pagina** sia abilitato in Impostazioni → Stampa e esportazione. Alcuni visualizzatori PDF dei browser potrebbero non mostrare i numeri di pagina generati via CSS — provate a scaricare il PDF e ad aprirlo in un lettore dedicato.
 
 ## Timeline
 
 ??? question "La timeline mostra date errate / solo anni / date complete?"
-    La timeline ha una propria impostazione per le date. Andate su **Settings → Advanced → Timeline: Years Only** per alternare tra la visualizzazione solo anno e il formato data completo.
+    La timeline ha una propria impostazione per le date. Andate su **Impostazioni → Avanzate → Timeline: Solo anni** per alternare tra la visualizzazione solo anno e il formato data completo.
 
 ??? question "Posso aggiungere voci direttamente alla timeline?"
     No. La timeline viene generata automaticamente dalle vostre esperienze lavorative. Aggiungete o modificate le esperienze e la timeline si aggiorna di conseguenza.
 
 ??? question "La bandiera del paese non viene mostrata nella timeline?"
-    Assicuratevi che il campo **Country Code** dell'esperienza sia impostato su un codice paese ISO a 2 lettere valido (ad esempio, `us`, `gb`, `ch`, `de`, `fr`). Le bandiere vengono caricate da un CDN esterno.
+    Assicuratevi che il campo **Codice paese** dell'esperienza sia impostato su un codice paese ISO a 2 lettere valido (ad esempio, `us`, `gb`, `ch`, `de`, `fr`). Le bandiere vengono caricate da un CDN esterno.
 
 ??? question "Cosa succede quando ho due lavori contemporaneamente?"
     La timeline rileva automaticamente le posizioni sovrapposte e le visualizza come **tracciati paralleli**. Il lavoro concomitante appare su una linea rialzata con connettori a curva S che mostrano i punti di biforcazione e convergenza. Non è necessaria alcuna configurazione — si basa interamente sulle date di inizio/fine. Le sovrapposizioni inferiori a 1 mese vengono ignorate (comuni durante i cambi di lavoro).
 
 ??? question "Perché la timeline mostra un logo invece del nome dell'azienda?"
-    Se avete caricato un logo aziendale per quell'esperienza, la timeline mostra l'immagine del logo invece del testo. Se il file del logo manca, viene utilizzato il nome dell'azienda come fallback. Per rimuovere un logo dalla timeline, modificate l'esperienza e cliccate su **Remove** nella sezione Company Logo.
+    Se avete caricato un logo aziendale per quell'esperienza, la timeline mostra l'immagine del logo invece del testo. Se il file del logo manca, viene utilizzato il nome dell'azienda come fallback. Per rimuovere un logo dalla timeline, modificate l'esperienza e fate clic su **Rimuovi** nella sezione Logo aziendale.
 
-## Lingua e Aggiornamenti
+## Lingua e aggiornamenti
 
 ??? question "Come faccio a cambiare la lingua dell'interfaccia di amministrazione?"
-    Cliccate sull'**icona del globo** nella barra degli strumenti e selezionate una lingua dalla griglia a discesa. La modifica viene applicata immediatamente e salvata tra le sessioni.
+    Fate clic sull'**icona del globo** nella barra degli strumenti e selezionate una lingua dalla griglia a discesa. La modifica viene applicata immediatamente e salvata tra le sessioni.
 
 ??? question "Come faccio a verificare quale versione sto utilizzando?"
-    Aprite **Settings** — il numero di versione è mostrato nell'angolo in basso a sinistra della finestra (ad esempio, `v1.11.0`).
+    Aprite le **Impostazioni** — il numero di versione è mostrato nell'angolo in basso a sinistra della finestra modale (ad esempio, `v1.11.0`).
 
 ??? question "Non vedo il banner di aggiornamento anche se è disponibile una nuova versione?"
     Il controllo della versione viene memorizzato nella cache per 24 ore. Riavviate il vostro server (o il container Docker) per svuotare la cache e forzare un nuovo controllo. Il vostro server necessita inoltre di accesso a Internet in uscita per raggiungere `raw.githubusercontent.com`.
 
-## Dataset / CV Multipli
+## Dataset / CV multipli
 
 ??? question "Cos'è il dataset 'Default'?"
-    Il dataset predefinito è la versione del vostro CV che i visitatori vedono al vostro URL principale (`/`). Alla prima installazione, CV Manager crea automaticamente un dataset "Default" dai dati del vostro CV. Potete cambiare quale dataset è il predefinito in qualsiasi momento utilizzando il pulsante radio nella finestra Open.
+    Il dataset predefinito è la versione del vostro CV che i visitatori vedono al vostro URL principale (`/`). Alla prima installazione, CV Manager crea automaticamente un dataset "Default" dai dati del vostro CV. Potete cambiare quale dataset è il predefinito in qualsiasi momento utilizzando il pulsante radio nella finestra modale del Gestore CV.
 
 ??? question "Le mie modifiche vengono salvate automaticamente?"
-    Sì. Ogni modifica apportata nell'interfaccia di amministrazione (aggiunta, modifica, eliminazione, riordinamento, attivazione/disattivazione della visibilità) viene automaticamente salvata nel dataset attivo dopo un breve ritardo. Il banner mostra "Saving…" e poi "✓ Saved" come conferma.
+    Sì. Ogni modifica apportata nell'interfaccia di amministrazione (aggiunta, modifica, eliminazione, riordinamento, attivazione/disattivazione della visibilità) viene automaticamente salvata nel dataset attivo dopo un breve ritardo. Il banner mostra "Salvataggio in corso…" e poi "Salvato" come conferma.
 
 ??? question "Cosa succede quando 'carico' un dataset?"
-    Il caricamento di un dataset commuta la vostra copia di lavoro su quel dataset. Le vostre modifiche precedenti erano già state salvate automaticamente, quindi nulla viene perso.
+    Il caricamento di un dataset commuta la vostra copia di lavoro su quel dataset. Le vostre modifiche precedenti erano già state salvate automaticamente, quindi nulla viene perso. La lingua dell'interfaccia admin si adatta inoltre alla lingua del contenuto del dataset.
 
 ??? question "I visitatori possono vedere le mie modifiche in tempo reale?"
     No. Il sito pubblico serve il dataset predefinito congelato, non le vostre modifiche in tempo reale. I visitatori vedono le modifiche solo dopo che il salvataggio automatico le scrive nel dataset predefinito. Se state modificando un dataset non predefinito, i visitatori non vedranno affatto quelle modifiche fino a quando non lo imposterete come predefinito.
 
 ??? question "I visitatori possono vedere i miei dataset salvati?"
-    Solo se li rendete pubblici. Ogni dataset ha un interruttore nella finestra Open. Quando impostato su pubblico, quella versione diventa accessibile all'indirizzo `/v/slug` sul sito pubblico (porta 3001). I dataset privati sono visualizzabili in anteprima solo dall'interfaccia di amministrazione.
+    Solo se li rendete pubblici. Ogni dataset ha un'azione **Rendi condiviso** nel menu overflow ⋮. Quando condiviso, quella versione diventa accessibile all'indirizzo `/v/slug` sul sito pubblico (porta 3001). I dataset privati sono visualizzabili in anteprima solo dall'interfaccia di amministrazione.
 
 ??? question "Come faccio a condividere una specifica versione del CV con qualcuno?"
-    Aprite la finestra **Open...**, impostate il dataset su pubblico, poi cliccate sull'icona di copia accanto all'URL slug. Condividete quel link — funziona sul sito pubblico senza esporre la vostra interfaccia di amministrazione.
+    Aprite il **Gestore CV**, usate il menu ⋮ sul dataset → **Rendi condiviso**, poi **Copia URL**. Condividete quel link — funziona sul sito pubblico senza esporre la vostra interfaccia di amministrazione.
 
 ??? question "Posso avere più versioni pubbliche contemporaneamente?"
-    Sì. Potete rendere pubblici quanti dataset desiderate. Ognuno ottiene il proprio URL (ad esempio, `/v/technical-cv-1`, `/v/marketing-cv-2`). La pagina principale `/` mostra il dataset predefinito.
+    Sì. Potete condividere quanti dataset desiderate. Ognuno ottiene il proprio URL (ad esempio, `/v/technical-cv-1`, `/v/marketing-cv-2`). La pagina principale `/` mostra il dataset predefinito.
 
 ??? question "Posso eliminare il dataset predefinito?"
     No. Il dataset attualmente selezionato come predefinito (tramite il pulsante radio) non può essere eliminato. Impostate prima un dataset diverso come predefinito, poi eliminate quello vecchio.
 
 ??? question "I motori di ricerca indicizzeranno i miei URL con versione?"
-    Per impostazione predefinita, no — le pagine con versione ricevono `noindex, nofollow`. Per consentire l'indicizzazione, abilitate **Index Versioned URLs** in Settings → Advanced.
+    Per impostazione predefinita, no — le pagine con versione ricevono `noindex, nofollow`. Per consentire l'indicizzazione, abilitate **Indicizza URL con versione** in Impostazioni → Avanzate.
 
-## Sito Pubblico e SEO
+## Varianti linguistiche
+
+??? question "Come faccio a creare un CV in un'altra lingua?"
+    Aprite il **Gestore CV** e fate clic su **+ Aggiungi lingua** nell'intestazione del gruppo del dataset che desiderate tradurre. Selezionate la lingua di destinazione e salvate. La nuova variante inizia come una copia del contenuto esistente — passate poi ad essa e traducete il testo.
+
+??? question "Come funzionano le varianti linguistiche?"
+    Le varianti linguistiche sono dataset separati che condividono lo stesso nome e slug URL. Sono collegati da un gruppo linguistico — le modifiche strutturali (ordine delle sezioni, visibilità, layout) si sincronizzano automaticamente tra tutte le varianti, mentre il contenuto (testo, titoli, descrizioni) resta indipendente.
+
+??? question "I visitatori possono cambiare lingua sul sito pubblico?"
+    Sì. Quando il dataset predefinito ha fratelli linguistici, un pulsante per il cambio lingua appare sul sito pubblico. I visitatori possono passare da un URL `/{lang}` all'altro (ad esempio, `/`, `/de`, `/fr`). Per i dataset condivisi non predefiniti, le varianti linguistiche sono all'indirizzo `/v/slug/{lang}`.
+
+??? question "Cosa succede quando imposto una variante linguistica come predefinita?"
+    Impostare qualsiasi variante linguistica come predefinita la rende la versione principale all'indirizzo `/`. I suoi fratelli linguistici diventano automaticamente accessibili all'indirizzo `/{lang}` senza bisogno di impostarli come condivisi — sono implicitamente pubblici.
+
+## Sito pubblico e SEO
 
 ??? question "Come faccio a condividere il mio CV?"
-    Condividete l'URL del vostro server pubblico (porta 3001). Se avete configurato un dominio con Cloudflare Tunnel o un reverse proxy, condividete quel dominio. L'URL principale mostra sempre il vostro dataset predefinito. Potete anche condividere versioni specifiche utilizzando gli URL pubblici con versione (vedi [Dataset](../guide/datasets.it.md)).
+    Condividete l'URL del vostro server pubblico (porta 3001). Se avete configurato un dominio con Cloudflare Tunnel o un reverse proxy, condividete quel dominio. L'URL principale mostra sempre il vostro dataset predefinito. Potete anche condividere versioni specifiche utilizzando gli URL pubblici con versione (vedi [Dataset](../guide/datasets.md)).
 
 ??? question "I motori di ricerca indicizzeranno il mio CV?"
-    Per impostazione predefinita, sì — la pagina pubblica principale include meta tag appropriati, una sitemap e robots.txt. Per impedire l'indicizzazione, cambiate l'impostazione **Search Engine Indexing** su "No Index" in Settings → Advanced. Gli URL pubblici con versione (`/v/slug`) **non vengono indicizzati** per impostazione predefinita; abilitate **Index Versioned URLs** se desiderate che vengano scansionati.
+    Per impostazione predefinita, sì — la pagina pubblica principale include meta tag appropriati, una sitemap e robots.txt. Per impedire l'indicizzazione, cambiate l'impostazione **Indicizzazione motori di ricerca** su "No Index" in Impostazioni → Avanzate. Gli URL pubblici con versione (`/v/slug`) **non vengono indicizzati** per impostazione predefinita; abilitate **Indicizza URL con versione** se desiderate che vengano scansionati.
 
 ??? question "Posso aggiungere Google Analytics al mio CV?"
-    Sì. Incollate il vostro codice di tracciamento in **Settings → Advanced → Tracking Code**. Viene iniettato solo nelle pagine pubbliche.
+    Sì. Incollate il vostro codice di tracciamento in **Impostazioni → Avanzate → Codice di tracciamento**. Viene iniettato solo nelle pagine pubbliche.
 
-## Docker e Infrastruttura
+## Docker e infrastruttura
 
 ??? question "Le mie modifiche non appaiono sul sito pubblico?"
     Il sito pubblico serve il **dataset predefinito**, che viene aggiornato automaticamente quando modificate nell'interfaccia di amministrazione. Provate un aggiornamento forzato (`Ctrl+Shift+R`) sul sito pubblico. Se eseguite container separati, assicuratevi che condividano lo stesso volume dati.
@@ -130,7 +144,7 @@
     Cambiate la mappatura della porta host nella vostra configurazione Docker. Ad esempio, mappate su `3010:3000` e `3011:3001`. **Non** cambiate la variabile d'ambiente `PUBLIC_PORT` — quella è la porta interna del container.
 
 ??? question "Come faccio a eseguire il backup dei miei dati?"
-    Due opzioni: utilizzate il pulsante **Export** nella barra degli strumenti dell'amministrazione (esporta in JSON), oppure eseguite il backup della directory `data/` che contiene il database SQLite e le immagini caricate.
+    Due opzioni: utilizzate il pulsante **Esporta** nella barra degli strumenti dell'amministrazione (esporta in JSON), oppure eseguite il backup della directory `data/` che contiene il database SQLite e le immagini caricate.
 
 ??? question "L'immagine del profilo non viene mostrata?"
     Assicuratevi che l'immagine sia stata caricata tramite l'interfaccia di amministrazione. Il file viene memorizzato in `data/uploads/picture.jpeg`. Verificate i permessi del file se utilizzate Linux.
