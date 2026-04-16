@@ -194,12 +194,34 @@ function updateBannerMargins() {
     document.querySelector('.container').style.marginTop = (baseMargin + extraHeight) + 'px';
 }
 
-// Load default dataset on admin startup
+// Load default dataset on admin startup — restores last-edited dataset if available
 async function loadDefaultDatasetOnStartup() {
     try {
+        // Try to restore the last-edited dataset from sessionStorage
+        const lastId = sessionStorage.getItem('cv_active_dataset_id');
+        if (lastId) {
+            try {
+                const result = await api(`/api/datasets/${lastId}/load`, { method: 'POST' });
+                if (result.success) {
+                    activeDatasetId = result.id;
+                    activeDatasetName = result.name;
+                    activeDatasetIsDefault = !!result.is_default;
+                    activeDatasetLanguage = result.language || 'en';
+                    activeDatasetLanguageGroup = result.language_group || null;
+                    await loadActiveDatasetSiblings();
+                    // Sync UI locale to match
+                    if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
+                        await I18n.setLocale(activeDatasetLanguage);
+                    }
+                    await renderAdminUI();
+                    showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
+                    return;
+                }
+            } catch (err) { /* stored dataset may have been deleted, fall through */ }
+        }
+
         const defaultDs = await api('/api/datasets/default');
         if (defaultDs && defaultDs.exists) {
-            // Load the default dataset into the working copy
             const result = await api(`/api/datasets/${defaultDs.id}/load`, { method: 'POST' });
             if (result.success) {
                 activeDatasetId = result.id;
@@ -208,14 +230,22 @@ async function loadDefaultDatasetOnStartup() {
                 activeDatasetLanguage = result.language || 'en';
                 activeDatasetLanguageGroup = result.language_group || null;
                 await loadActiveDatasetSiblings();
-
-                // Render UI from the now-loaded data
+                persistActiveDataset();
                 await renderAdminUI();
                 showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             }
         }
     } catch (err) {
         console.log('No default dataset to load:', err.message);
+    }
+}
+
+// Persist / clear active dataset ID in sessionStorage
+function persistActiveDataset() {
+    if (activeDatasetId) {
+        sessionStorage.setItem('cv_active_dataset_id', activeDatasetId);
+    } else {
+        sessionStorage.removeItem('cv_active_dataset_id');
     }
 }
 
@@ -268,6 +298,7 @@ function hideActiveDatasetBanner() {
     activeDatasetLanguage = null;
     activeDatasetLanguageGroup = null;
     activeDatasetSiblings = [];
+    persistActiveDataset();
     updateBannerMargins();
 }
 
@@ -3058,6 +3089,7 @@ async function submitSaveAs() {
             activeDatasetLanguage = result.language || language;
             activeDatasetLanguageGroup = result.language_group || null;
             await loadActiveDatasetSiblings();
+            persistActiveDataset();
             showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             closeSaveAsModal();
             toast(result.created && languageGroup ? t('toast.language_variant_created') : result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
@@ -3382,6 +3414,7 @@ async function loadDataset(id, name) {
             activeDatasetLanguage = result.language || 'en';
             activeDatasetLanguageGroup = result.language_group || null;
             await loadActiveDatasetSiblings();
+            persistActiveDataset();
             // Sync UI locale to match dataset language
             if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
                 await I18n.setLocale(activeDatasetLanguage);

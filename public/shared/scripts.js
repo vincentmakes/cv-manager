@@ -13,7 +13,7 @@ function langFlagImg(lang, size) {
     const cc = langToCountryCode(lang);
     if (!cc) return '';
     const s = size || 20;
-    return `<img src="https://flagcdn.com/w${s * 2}/${cc}.png" alt="${(lang || '').toUpperCase()}" class="lang-flag-img" style="width:${s}px;height:${s}px;" onerror="this.style.display='none'">`;
+    return `<img src="https://flagcdn.com/w40/${cc}.png" alt="${(lang || '').toUpperCase()}" class="lang-flag-img" style="width:${s}px;height:${s}px;" onerror="this.style.display='none'">`;
 }
 
 // Material Icon helper function
