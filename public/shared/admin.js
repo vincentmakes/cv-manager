@@ -2958,6 +2958,7 @@ function renderSaveAsList(datasets) {
                         <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
                         <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
                     </button>
+                    ${addLangBtn(ver)}
                 </div>`;
         }
         return `
@@ -3003,6 +3004,10 @@ function renderSaveAsList(datasets) {
             <div class="save-as-item save-as-group">
                 <div class="save-as-group-header">
                     <span class="save-as-group-base">${escBase}</span>
+                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${group.versionGroup ? escapeHtml(group.versionGroup) : ''}">
+                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
+                        <span>${newVersionLabel}</span>
+                    </button>
                     <span class="save-as-group-count">${countLabel}</span>
                 </div>
                 <div class="save-as-group-children">
@@ -3016,12 +3021,6 @@ function renderSaveAsList(datasets) {
                             ${older.map(v => renderVersion(v, true)).join('')}
                         </div>
                     ` : ''}
-                </div>
-                <div class="save-as-group-footer">
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${group.versionGroup ? escapeHtml(group.versionGroup) : ''}">
-                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                        <span>${newVersionLabel}</span>
-                    </button>
                 </div>
             </div>`;
     }).join('');

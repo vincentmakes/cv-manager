@@ -1197,7 +1197,6 @@
 .save-as-group-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     padding: 8px 12px;
     background: rgba(0, 102, 255, 0.05);
@@ -1210,6 +1209,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
 }
 .save-as-group-count {
     font-size: 11px;
@@ -1334,11 +1335,6 @@
     text-transform: lowercase;
 }
 
-.save-as-group-footer {
-    padding: 6px 12px 10px;
-    display: flex;
-    justify-content: flex-end;
-}
 .save-as-standalone .save-as-newver-btn { flex-shrink: 0; }
 
 /* Row-selected highlight (when the name in the input matches this row) */
