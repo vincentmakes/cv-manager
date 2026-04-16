@@ -2839,7 +2839,7 @@ function groupDatasetsHierarchy(datasets) {
     }
     const groups = Array.from(vgMap.entries()).map(([vg, versionMap]) => {
         const versions = Array.from(versionMap.entries()).map(([version, langs]) => {
-            langs.sort((a, b) => (a.language || 'en').localeCompare(b.language || 'en'));
+            langs.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
             return { version, name: langs[0].name, languages: langs, language_group: langs[0].language_group };
         });
         versions.sort((a, b) => a.version - b.version);
@@ -2997,6 +2997,8 @@ function renderSaveAsList(datasets) {
         const older = group.versions.slice(0, -1);
         const olderCount = older.length;
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.versions.length }));
+        // Auto-expand if an older version contains the dataset being edited
+        const olderHasActive = older.some(v => v.languages.some(ds => ds.id === activeDatasetId));
         return `
             <div class="save-as-item save-as-group">
                 <div class="save-as-group-header">
@@ -3007,10 +3009,10 @@ function renderSaveAsList(datasets) {
                     ${renderVersion(latest, true)}
                     ${olderCount > 0 ? `
                         <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
-                            <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
+                            <span class="material-symbols-outlined" style="font-size:14px">${olderHasActive ? 'expand_less' : 'expand_more'}</span>
                             <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
                         </button>
-                        <div class="version-collapsed-group" style="display:none;">
+                        <div class="version-collapsed-group" style="${olderHasActive ? '' : 'display:none;'}">
                             ${older.map(v => renderVersion(v, true)).join('')}
                         </div>
                     ` : ''}
