@@ -226,9 +226,9 @@ function servePublicIndex(req, res) {
                 html = html.replace('<head>', `<head>\n${trackingCode}`);
             }
 
-            // Inject default dataset slug with language info (no DATASET_PREVIEW = no preview banner)
+            // Inject default dataset ID and language info (no DATASET_PREVIEW = no preview banner)
             const siblings = getDatasetSiblings(defaultDataset);
-            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_IS_DEFAULT = true;${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
+            const datasetScript = `<script>window.DATASET_ID = ${defaultDataset.id}; window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_IS_DEFAULT = true;${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
 
             return res.type('html').send(html);
@@ -282,9 +282,9 @@ function serveDatasetPage(req, res, lang) {
         const ogTags = `\n    <meta property="og:title" content="${name} - CV (${dataset.name})">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
 
-        // Inject dataset context with language info
+        // Inject dataset context with language info and exact ID
         const siblings = getDatasetSiblings(dataset);
-        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}";${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
+        const datasetScript = `<script>window.DATASET_ID = ${dataset.id}; window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}";${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
 
         // Apply noindex if slugsIndex setting is not enabled
@@ -317,6 +317,19 @@ function serveDatasetData(req, res) {
         res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
     } catch (err) {
         if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Not found' });
+        res.status(500).json({ error: err.message });
+    }
+}
+
+// Serve dataset data by ID (for default dataset on public site)
+function serveDatasetDataById(req, res) {
+    try {
+        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ? AND (is_public = 1 OR is_default = 1)').get(req.params.id);
+        if (!dataset) return res.status(404).json({ error: 'Not found' });
+        const data = JSON.parse(dataset.data);
+        const siblings = getDatasetSiblings(dataset);
+        res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
@@ -1097,7 +1110,7 @@ function serveAdminDatasetPage(req, res, lang) {
         const siblings = dataset.language_group
             ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
             : [{ id: dataset.id, language: dsLang }];
-        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_PREVIEW = true; window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};</script>`;
+        const datasetScript = `<script>window.DATASET_ID = ${dataset.id}; window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_PREVIEW = true; window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
 
         res.type('html').send(html);
@@ -1309,6 +1322,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
+    publicApp.get('/api/datasets/id/:id', (req, res) => { serveDatasetDataById(req, res); });
     // Clean language URLs for default dataset: /en, /de, /fr, etc.
     publicApp.get('/:lang([a-z]{2})', (req, res) => { req.query.lang = req.params.lang; servePublicIndex(req, res); });
 
@@ -2933,6 +2947,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
+    publicApp.get('/api/datasets/id/:id', (req, res) => { serveDatasetDataById(req, res); });
     // Clean language URLs for default dataset: /en, /de, /fr, etc.
     publicApp.get('/:lang([a-z]{2})', (req, res) => { req.query.lang = req.params.lang; servePublicIndex(req, res); });
     publicApp.get('*', (req, res) => { servePublicIndex(req, res); });

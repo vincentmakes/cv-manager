@@ -278,11 +278,18 @@
             }
         }
 
-        // Load saved dataset preview (admin mode only)
+        // Load saved dataset preview
         async function loadDatasetPreview() {
             try {
-                const langSuffix = window.DATASET_LANG ? `/${window.DATASET_LANG}` : '';
-                datasetData = await api(`/api/datasets/slug/${window.DATASET_SLUG}${langSuffix}`);
+                // Use dataset ID when available (exact match), fall back to slug+lang
+                let url;
+                if (window.DATASET_ID) {
+                    url = `/api/datasets/id/${window.DATASET_ID}`;
+                } else {
+                    const langSuffix = window.DATASET_LANG ? `/${window.DATASET_LANG}` : '';
+                    url = `/api/datasets/slug/${window.DATASET_SLUG}${langSuffix}`;
+                }
+                datasetData = await api(url);
                 if (!datasetData || datasetData.error) {
                     console.error('Failed to load dataset');
                     return;
