@@ -1765,11 +1765,13 @@ async function showAllItems() {
 // Export/Import
 async function exportData() {
     const data = await api('/api/cv');
+    const lang = activeDatasetLanguage || I18n.locale || 'en';
+    data.language = lang;
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'cv-data.json';
+    a.download = `cv-data-${lang}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast(t('toast.exported'));
@@ -1805,11 +1807,12 @@ async function exportStaticSite() {
 async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
             const data = JSON.parse(e.target.result);
+            const importedLang = data.language || null;
             const result = await api('/api/import', { method: 'POST', body: data });
             if (result.error) {
                 toast(result.error, 'error');
@@ -1817,6 +1820,12 @@ async function importData(event) {
             }
             // Clear active dataset — imported data doesn't belong to any dataset
             hideActiveDatasetBanner();
+            // Switch UI locale to match imported language
+            if (importedLang && typeof I18n !== 'undefined' && I18n.locale !== importedLang) {
+                await I18n.setLocale(importedLang);
+                renderLanguageGrid();
+            }
+            activeDatasetLanguage = importedLang;
             await initAdmin();
             toast(t('toast.imported'));
         } catch (err) {
