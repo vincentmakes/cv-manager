@@ -3247,8 +3247,8 @@ function renderDatasetOpenRow(ds, opts = {}) {
                     <span class="dataset-name">${escapeHtml(ds.name)}</span>
                     ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
                     ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
+                    <span class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</span>
                 </div>
-                <div class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</div>
                 ${urlHtml}
             </div>
             <div class="dataset-actions">
