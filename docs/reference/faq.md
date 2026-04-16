@@ -84,31 +84,45 @@
 ## Datasets / Multiple CVs
 
 ??? question "What is the 'Default' dataset?"
-    The default dataset is the version of your CV that visitors see at your root URL (`/`). On first install, CV Manager automatically creates a "Default" dataset from your CV data. You can change which dataset is the default at any time using the radio button in the Open modal.
+    The default dataset is the version of your CV that visitors see at your root URL (`/`). On first install, CV Manager automatically creates a "Default" dataset from your CV data. You can change which dataset is the default at any time using the radio button in the CV Manager modal.
 
 ??? question "Are my edits saved automatically?"
     Yes. Every change you make in the admin (adding, editing, deleting, reordering, toggling visibility) is automatically saved back to the active dataset after a short delay. The banner shows "Saving…" then "✓ Saved" to confirm.
 
 ??? question "What happens when I 'Load' a dataset?"
-    Loading a dataset switches your working copy to that dataset. Your previous edits were already auto-saved, so nothing is lost.
+    Loading a dataset switches your working copy to that dataset. Your previous edits were already auto-saved, so nothing is lost. The admin interface language also switches to match the dataset's content language.
 
 ??? question "Can visitors see my edits in real time?"
     No. The public site serves the frozen default dataset, not your live edits. Visitors only see changes after auto-save writes them to the default dataset. If you're editing a non-default dataset, visitors won't see those changes at all until you set it as the default.
 
 ??? question "Can visitors see my saved datasets?"
-    Only if you make them public. Each dataset has a toggle in the Open modal. When set to public, that version becomes accessible at `/v/slug` on the public site (port 3001). Private datasets are only previewable from the admin interface.
+    Only if you make them public. Each dataset has a **Make shared** action in the ⋮ overflow menu. When shared, that version becomes accessible at `/v/slug` on the public site (port 3001). Private datasets are only previewable from the admin interface.
 
 ??? question "How do I share a specific CV version with someone?"
-    Open the **Open...** modal, toggle the dataset to public, then click the copy icon next to the slug URL. Share that link — it works on the public site without exposing your admin interface.
+    Open **CV Manager**, use the ⋮ menu on the dataset → **Make shared**, then **Copy URL**. Share that link — it works on the public site without exposing your admin interface.
 
 ??? question "Can I have multiple public versions at the same time?"
-    Yes. You can make as many datasets public as you want. Each gets its own URL (e.g., `/v/technical-cv-1`, `/v/marketing-cv-2`). The main `/` page shows the default dataset.
+    Yes. You can share as many datasets as you want. Each gets its own URL (e.g., `/v/technical-cv-1`, `/v/marketing-cv-2`). The main `/` page shows the default dataset.
 
 ??? question "Can I delete the default dataset?"
     No. The dataset currently selected as default (via the radio button) cannot be deleted. Set a different dataset as default first, then delete the old one.
 
 ??? question "Will search engines index my versioned URLs?"
     By default, no — versioned pages get `noindex, nofollow`. To allow indexing, enable **Index Versioned URLs** in Settings → Advanced.
+
+## Language Variants
+
+??? question "How do I create a CV in another language?"
+    Open **CV Manager** and click **+ Add language** on the group header of the dataset you want to translate. Select the target language and save. The new variant starts as a copy of the existing content — then switch to it and translate the text.
+
+??? question "How do language variants work?"
+    Language variants are separate datasets that share the same name and URL slug. They are linked by a language group — structural changes (section order, visibility, layout) sync automatically across all variants, while content (text, titles, descriptions) stays independent.
+
+??? question "Can visitors switch languages on the public site?"
+    Yes. When the default dataset has language siblings, a language switcher button appears on the public site. Visitors can switch between `/{lang}` URLs (e.g., `/`, `/de`, `/fr`). For non-default shared datasets, language variants are at `/v/slug/{lang}`.
+
+??? question "What happens when I set a language variant as default?"
+    Setting any language variant as default makes it the primary version at `/`. Its language siblings become automatically accessible at `/{lang}` without needing to toggle them as shared — they're implicitly public.
 
 ## Public Site & SEO
 
