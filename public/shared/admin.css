@@ -1298,6 +1298,23 @@
 .save-as-lang-child:hover { background: var(--gray-100); }
 .save-as-lang-child.save-as-row-selected { background: rgba(0, 102, 255, 0.08); }
 
+/* Flat row for standalone single-language datasets (no tree nesting) */
+.save-as-flat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 7px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background 0.15s ease;
+}
+.save-as-flat-row:hover { background: var(--gray-100); }
+.save-as-flat-row.save-as-row-selected { background: rgba(0, 102, 255, 0.08); }
+
 .dataset-version-badge {
     display: inline-flex;
     align-items: center;
