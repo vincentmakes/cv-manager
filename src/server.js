@@ -2235,10 +2235,34 @@ if (PUBLIC_ONLY) {
     app.get('/v/:slug/:lang', (req, res) => { serveAdminDatasetPage(req, res, req.params.lang); });
     app.get('/v/:slug', (req, res) => { serveAdminDatasetPage(req, res, req.query.lang); });
 
-    // Dataset data API routes for admin preview (same as public server)
-    app.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
-    app.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
-    app.get('/api/datasets/id/:id', (req, res) => { serveDatasetDataById(req, res); });
+    // Dataset data API routes for admin preview (no visibility checks — admin can preview any dataset)
+    app.get('/api/datasets/slug/:slug/:lang', (req, res) => {
+        try {
+            const dataset = resolveDatasetBySlug(req.params.slug, req.params.lang, false);
+            if (!dataset) return res.status(404).json({ error: 'Not found' });
+            const data = JSON.parse(dataset.data);
+            const siblings = getDatasetSiblings(dataset);
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+    app.get('/api/datasets/slug/:slug', (req, res) => {
+        try {
+            const dataset = resolveDatasetBySlug(req.params.slug, null, false);
+            if (!dataset) return res.status(404).json({ error: 'Not found' });
+            const data = JSON.parse(dataset.data);
+            const siblings = getDatasetSiblings(dataset);
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+    app.get('/api/datasets/id/:id', (req, res) => {
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Not found' });
+            const data = JSON.parse(dataset.data);
+            const siblings = getDatasetSiblings(dataset);
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
 
     // Custom Sections API
     app.get('/api/custom-sections', (req, res) => {
