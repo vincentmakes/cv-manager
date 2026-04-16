@@ -2414,10 +2414,11 @@ if (PUBLIC_ONLY) {
     // Uses pdfkit directly for StructTreeRoot / tagged PDF support
     app.post('/api/export/ats-pdf', async (req, res) => {
         try {
-            const { scale = 1, paperSize = 'A4', locale: reqLocale } = req.body || {};
+            const { scale = 1, paperSize = 'A4', locale: reqLocale, forceEnglishHeaders } = req.body || {};
             const s = Math.max(0.5, Math.min(1.5, parseFloat(scale) || 1));
             const locale = resolveLocale(reqLocale);
             const t = (key) => serverT(key, locale);
+            const tHeader = forceEnglishHeaders ? (key) => serverT(key, 'en') : t;
 
             const cvData = gatherCvData();
             const p = cvData.profile || {};
@@ -2436,9 +2437,9 @@ if (PUBLIC_ONLY) {
 
             function getSectionName(key) {
                 const orderEntry = sectionOrder.find(s => s.key === key);
-                if (orderEntry && orderEntry.display_name) return orderEntry.display_name;
+                if (!forceEnglishHeaders && orderEntry && orderEntry.display_name) return orderEntry.display_name;
                 const translationKey = 'section.' + key;
-                const translated = t(translationKey);
+                const translated = tHeader(translationKey);
                 if (translated !== translationKey) return translated;
                 if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
                 if (orderEntry && orderEntry.name) return orderEntry.name;

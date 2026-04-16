@@ -2590,6 +2590,19 @@
     color: var(--text-secondary);
     white-space: nowrap;
 }
+.ats-pdf-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.ats-pdf-toggle-label input[type="checkbox"] {
+    accent-color: var(--primary);
+}
 .ats-pdf-scale-row {
     display: flex;
     align-items: center;

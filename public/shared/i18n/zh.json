@@ -416,5 +416,6 @@
     "datasets.make_private": "设为私密",
     "datasets.make_shared": "设为共享",
     "datasets.preview": "预览",
-    "datasets.copy_url": "复制链接"
+    "datasets.copy_url": "复制链接",
+    "ats.english_headers": "章节标题使用英文"
 }

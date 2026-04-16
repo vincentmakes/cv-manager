@@ -426,6 +426,7 @@
     "ats.title": "ATS-Friendly Document",
     "ats.scale": "Scale",
     "ats.paper_size": "Paper Size",
+    "ats.english_headers": "Section headers in English",
     "ats.download": "Download PDF",
     "ats.generate_failed": "Failed to generate ATS document",
     "ats.downloaded": "ATS document downloaded",

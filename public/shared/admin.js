@@ -4583,6 +4583,10 @@ function openAtsPdfModal() {
     document.getElementById('atsPdfModalOverlay').classList.add('active');
     document.getElementById('atsPdfScale').value = 100;
     document.getElementById('atsPdfScaleLabel').textContent = '100%';
+    const headerGroup = document.getElementById('atsPdfEnglishHeadersGroup');
+    if (headerGroup) {
+        headerGroup.style.display = (typeof I18n !== 'undefined' && I18n.locale !== 'en') ? '' : 'none';
+    }
     updateAtsPdfPreview();
 }
 
@@ -4612,11 +4616,12 @@ async function fetchAtsPdfPreview() {
     try {
         const scale = parseInt(document.getElementById('atsPdfScale').value) / 100;
         const paperSize = document.getElementById('atsPdfPaperSize').value;
+        const englishHeaders = document.getElementById('atsPdfEnglishHeaders')?.checked || false;
 
         const res = await fetch('/api/export/ats-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scale, paperSize, locale: I18n.locale })
+            body: JSON.stringify({ scale, paperSize, locale: I18n.locale, forceEnglishHeaders: englishHeaders })
         });
 
         if (!res.ok) throw new Error('Failed to generate PDF');
@@ -4640,11 +4645,12 @@ async function downloadAtsPdf() {
     try {
         const scale = parseInt(document.getElementById('atsPdfScale').value) / 100;
         const paperSize = document.getElementById('atsPdfPaperSize').value;
+        const englishHeaders = document.getElementById('atsPdfEnglishHeaders')?.checked || false;
 
         const res = await fetch('/api/export/ats-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scale, paperSize, locale: I18n.locale })
+            body: JSON.stringify({ scale, paperSize, locale: I18n.locale, forceEnglishHeaders: englishHeaders })
         });
 
         if (!res.ok) throw new Error('Failed to generate PDF');

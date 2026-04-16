@@ -416,5 +416,6 @@
     "datasets.make_private": "Rendre privé",
     "datasets.make_shared": "Partager",
     "datasets.preview": "Aperçu",
-    "datasets.copy_url": "Copier l'URL"
+    "datasets.copy_url": "Copier l'URL",
+    "ats.english_headers": "Titres de section en anglais"
 }

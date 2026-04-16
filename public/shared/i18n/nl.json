@@ -416,5 +416,6 @@
     "datasets.make_private": "Privé maken",
     "datasets.make_shared": "Delen",
     "datasets.preview": "Voorbeeld",
-    "datasets.copy_url": "URL kopiëren"
+    "datasets.copy_url": "URL kopiëren",
+    "ats.english_headers": "Sectiekoppen in het Engels"
 }
