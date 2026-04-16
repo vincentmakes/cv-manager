@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.30.1] - 2026-04-16
+
+### Changed
+- Added indexes on `saved_datasets.language_group`, `saved_datasets.version_group`, `saved_datasets.is_default` (partial), and `saved_datasets(slug, language)` to speed up sibling, version, default, and slug lookups on public page loads and dataset opens.
+- Tuned SQLite pragmas on the admin connection: `synchronous = NORMAL`, `cache_size = -16000` (16 MB), `temp_store = MEMORY`. Reduces commit latency and eliminates disk-backed temp sorts on the dataset list.
+
 ## [1.30.0] - 2026-04-16
 
 ### Changed
