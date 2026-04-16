@@ -2782,67 +2782,55 @@ async function saveSettingsSectionOrder() {
 let saveAsDatasetsCache = [];
 
 // Parse a name like "My CV v2" into { base: "My CV", version: 2 }.
-// Names without an explicit " vN" suffix are treated as version 1.
+// Used for display purposes only — grouping uses version_group from the backend.
 function parseDatasetVersion(name) {
     const m = /^(.+?)\s+v(\d+)$/i.exec((name || '').trim());
     if (m) return { base: m[1].trim(), version: parseInt(m[2], 10) };
     return { base: (name || '').trim(), version: 1 };
 }
 
-// Group an array of datasets by their parsed base name.
-// Returns [{ base, items: [...] }] sorted by most-recently-updated group desc.
-function groupDatasetsByBase(datasets) {
-    const map = new Map();
-    for (const ds of datasets) {
-        const { base, version } = parseDatasetVersion(ds.name);
-        if (!map.has(base)) map.set(base, []);
-        map.get(base).push({ ...ds, _version: version, _base: base });
-    }
-    const groups = Array.from(map.entries()).map(([base, items]) => {
-        items.sort((a, b) => a._version - b._version);
-        const latest = items.reduce((max, it) => {
-            const t = new Date(it.updated_at).getTime();
-            return t > max ? t : max;
-        }, 0);
-        return { base, items, latestUpdated: latest };
-    });
-    groups.sort((a, b) => b.latestUpdated - a.latestUpdated);
-    return groups;
-}
-
 // Group datasets into a 3-level hierarchy: Dataset → Version → Language.
-// Returns [{ base, versions: [{ version, name, languages: [ds...], language_group }] }]
+// Uses version_group (UUID) from backend for grouping, NOT name parsing.
+// Returns [{ base, versionGroup, versions: [{ version, name, languages: [ds...], language_group }] }]
 function groupDatasetsHierarchy(datasets) {
-    const baseMap = new Map();
+    const vgMap = new Map();
     for (const ds of datasets) {
-        const { base, version } = parseDatasetVersion(ds.name);
-        if (!baseMap.has(base)) baseMap.set(base, new Map());
-        const versionMap = baseMap.get(base);
-        if (!versionMap.has(version)) versionMap.set(version, []);
-        versionMap.get(version).push({ ...ds, _version: version, _base: base });
+        const vg = ds.version_group || ds.id.toString(); // fallback for legacy
+        const ver = ds.version || 1;
+        if (!vgMap.has(vg)) vgMap.set(vg, new Map());
+        const versionMap = vgMap.get(vg);
+        if (!versionMap.has(ver)) versionMap.set(ver, []);
+        versionMap.get(ver).push(ds);
     }
-    const groups = Array.from(baseMap.entries()).map(([base, versionMap]) => {
+    const groups = Array.from(vgMap.entries()).map(([vg, versionMap]) => {
         const versions = Array.from(versionMap.entries()).map(([version, langs]) => {
             langs.sort((a, b) => (a.language || 'en').localeCompare(b.language || 'en'));
             return { version, name: langs[0].name, languages: langs, language_group: langs[0].language_group };
         });
         versions.sort((a, b) => a.version - b.version);
+        // Derive display base name from the first version's name
+        const base = parseDatasetVersion(versions[0].name).base;
         const latest = versions.reduce((max, v) => {
-            const t = v.languages.reduce((m, ds) => Math.max(m, new Date(ds.updated_at).getTime()), 0);
+            const t = v.languages.reduce((m, d) => Math.max(m, new Date(d.updated_at).getTime()), 0);
             return Math.max(max, t);
         }, 0);
-        return { base, versions, latestUpdated: latest };
+        return { base, versionGroup: vg, versions, latestUpdated: latest };
     });
     groups.sort((a, b) => b.latestUpdated - a.latestUpdated);
     return groups;
 }
 
 // Given a base name and the current dataset list, return the next free "Base vN".
-function suggestNextVersion(baseName, datasets) {
+// Uses version_group from backend when available.
+function suggestNextVersion(baseName, datasets, versionGroup) {
     let max = 0;
     for (const ds of datasets) {
-        const parsed = parseDatasetVersion(ds.name);
-        if (parsed.base === baseName && parsed.version > max) max = parsed.version;
+        if (versionGroup && ds.version_group === versionGroup) {
+            if ((ds.version || 1) > max) max = ds.version || 1;
+        } else if (!versionGroup) {
+            const parsed = parseDatasetVersion(ds.name);
+            if (parsed.base === baseName && parsed.version > max) max = parsed.version;
+        }
     }
     const next = Math.max(max + 1, 2);
     return `${baseName} v${next}`;
@@ -2864,11 +2852,11 @@ async function saveAsDataset() {
             `<option value="${l.code}"${l.code === (activeDatasetLanguage || 'en') ? ' selected' : ''}>${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
         ).join('');
     }
-    // Reset language group and source group
+    // Reset language group and version group
     const langGroupInput = document.getElementById('saveAsLangGroup');
     if (langGroupInput) langGroupInput.value = '';
-    const srcGroupInput = document.getElementById('saveAsSourceGroup');
-    if (srcGroupInput) srcGroupInput.value = '';
+    const vgInput = document.getElementById('saveAsVersionGroup');
+    if (vgInput) vgInput.value = '';
     updateSaveAsSubmitState();
     document.getElementById('saveAsModalOverlay').classList.add('active');
     setTimeout(() => { input.focus(); input.select(); }, 30);
@@ -2946,7 +2934,7 @@ function renderSaveAsList(datasets) {
                 <div class="save-as-item save-as-standalone">
                     ${renderVersion(ver, false)}
                     <div class="save-as-row-actions">
-                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-source-group="${srcGroup}">
+                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${srcGroup}">
                             <span class="material-symbols-outlined" style="font-size:14px">add</span>
                             <span>${newVersionLabel}</span>
                         </button>
@@ -2979,7 +2967,7 @@ function renderSaveAsList(datasets) {
                     ` : ''}
                 </div>
                 <div class="save-as-group-footer">
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-source-group="${latest.language_group ? escapeHtml(latest.language_group) : ''}">
+                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${latest.language_group ? escapeHtml(latest.language_group) : ''}">
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
                         <span>${newVersionLabel}</span>
                     </button>
@@ -2996,22 +2984,20 @@ function saveAsOnListClick(e) {
     const langSelect = document.getElementById('saveAsLangSelect');
     const langGroupInput = document.getElementById('saveAsLangGroup');
     if (!input) return;
-    const srcGroupInput = document.getElementById('saveAsSourceGroup');
+    const vgInput = document.getElementById('saveAsVersionGroup');
     if (action === 'fill-name') {
         input.value = btn.getAttribute('data-name') || '';
         if (langSelect && btn.getAttribute('data-lang')) {
             langSelect.value = btn.getAttribute('data-lang');
         }
         if (langGroupInput) langGroupInput.value = '';
-        if (srcGroupInput) srcGroupInput.value = '';
+        if (vgInput) vgInput.value = '';
     } else if (action === 'new-version') {
         const base = btn.getAttribute('data-base') || '';
-        input.value = suggestNextVersion(base, saveAsDatasetsCache);
+        const versionGroup = btn.getAttribute('data-version-group') || '';
+        input.value = suggestNextVersion(base, saveAsDatasetsCache, versionGroup);
         if (langGroupInput) langGroupInput.value = '';
-        // Store the source group so backend can copy language siblings
-        const sourceGroup = btn.getAttribute('data-source-group') || '';
-        const srcGroupInput = document.getElementById('saveAsSourceGroup');
-        if (srcGroupInput) srcGroupInput.value = sourceGroup;
+        if (vgInput) vgInput.value = versionGroup;
     } else if (action === 'add-language') {
         const name = btn.getAttribute('data-name') || '';
         const group = btn.getAttribute('data-group') || '';
@@ -3082,17 +3068,17 @@ async function submitSaveAs() {
     if (!name) return;
     const langSelect = document.getElementById('saveAsLangSelect');
     const langGroupInput = document.getElementById('saveAsLangGroup');
-    const srcGroupInput = document.getElementById('saveAsSourceGroup');
+    const vgInput = document.getElementById('saveAsVersionGroup');
     const language = langSelect ? langSelect.value : 'en';
     const languageGroup = langGroupInput ? langGroupInput.value : '';
-    const sourceGroup = srcGroupInput ? srcGroupInput.value : '';
+    const versionGroup = vgInput ? vgInput.value : '';
 
     const match = saveAsDatasetsCache.find(d => d.name === name && d.language === language);
     if (match && !confirm(t('confirm.overwrite_dataset', { name }))) return;
     try {
         const body = { name, language };
         if (languageGroup) body.language_group = languageGroup;
-        if (sourceGroup) body.source_group = sourceGroup;
+        if (versionGroup) body.version_group = versionGroup;
         const result = await api('/api/datasets', { method: 'POST', body });
         if (result.success) {
             activeDatasetId = result.id;
@@ -3250,7 +3236,7 @@ async function loadDatasetsList() {
     function renderVersionBlock(ver, showVersionBadge) {
         const showLang = ver.languages.length > 1;
         const rows = ver.languages.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, versionBadge: showVersionBadge ? ds._version : null, showLangBadge: showLang })
+            renderDatasetOpenRow(ds, { isChild: true, versionBadge: showVersionBadge ? (ds.version || 1) : null, showLangBadge: showLang })
         ).join('');
         return rows;
     }

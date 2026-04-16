@@ -649,7 +649,7 @@ describe('Backend API', () => {
             assert.ok(Array.isArray(data));
         });
 
-        it('POST /api/datasets creates a dataset', async () => {
+        it('POST /api/datasets creates a dataset with version fields', async () => {
             const res = await fetch(`${BASE_URL}/api/datasets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -659,6 +659,8 @@ describe('Backend API', () => {
             const data = await res.json();
             assert.ok(data.id);
             assert.strictEqual(data.success, true);
+            assert.ok(data.version_group, 'should have version_group');
+            assert.strictEqual(data.version, 1);
         });
 
         it('POST /api/datasets rejects empty name', async () => {
@@ -952,6 +954,102 @@ describe('Backend API', () => {
 
             await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
             await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        // --- Backend Versioning ---
+        it('creating new version increments version number', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Ver Test' }),
+            });
+            const d1 = await res1.json();
+            assert.strictEqual(d1.version, 1);
+            assert.ok(d1.version_group);
+
+            // Create v2 using the version_group
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Ver Test v2', version_group: d1.version_group }),
+            });
+            const d2 = await res2.json();
+            assert.strictEqual(d2.version, 2);
+            assert.strictEqual(d2.version_group, d1.version_group);
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('new version copies language siblings from previous version', async () => {
+            // Create v1 EN
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'ML Ver', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            // Add DE to v1
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'ML Ver', language: 'de', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+
+            // Create v2 using version_group
+            const res3 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'ML Ver v2', language: 'en', version_group: d1.version_group }),
+            });
+            const d3 = await res3.json();
+            assert.strictEqual(d3.version, 2);
+
+            // Check that DE was also copied to v2
+            const listRes = await fetch(`${BASE_URL}/api/datasets`);
+            const all = await listRes.json();
+            const v2Items = all.filter(d => d.version_group === d1.version_group && d.version === 2);
+            assert.strictEqual(v2Items.length, 2);
+            assert.ok(v2Items.some(d => d.language === 'en'));
+            assert.ok(v2Items.some(d => d.language === 'de'));
+            // v2 should have a different language_group than v1
+            assert.notStrictEqual(v2Items[0].language_group, d1.language_group);
+
+            // Cleanup
+            for (const d of v2Items) await fetch(`${BASE_URL}/api/datasets/${d.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('datasets in same version_group share slug', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Slug Share' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Slug Share v2', version_group: d1.version_group }),
+            });
+            const d2 = await res2.json();
+            assert.strictEqual(d2.slug, d1.slug, 'versions should share the same slug');
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('version_group and version returned in GET /api/datasets', async () => {
+            const res = await fetch(`${BASE_URL}/api/datasets`);
+            const datasets = await res.json();
+            if (datasets.length > 0) {
+                assert.ok('version_group' in datasets[0], 'should have version_group');
+                assert.ok('version' in datasets[0], 'should have version');
+            }
         });
 
         // --- Custom Sections ---

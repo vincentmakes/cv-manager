@@ -4,6 +4,18 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.29.0] - 2026-04-16
+
+### Added
+- Proper backend versioning: `version_group` (UUID) and `version` (integer) columns on `saved_datasets`. Version grouping now uses database UUIDs instead of parsing "Name vN" from dataset names, making it resilient to renaming.
+- Creating a new version automatically copies all language variants from the previous version.
+- New backend tests for version increment, language sibling carry-over, slug sharing across versions, and version fields in API responses.
+
+### Changed
+- Frontend dataset hierarchy (`groupDatasetsHierarchy`) now groups by `version_group` from the API instead of regex name parsing. Display names still use the parsed base name for human readability.
+- `suggestNextVersion` uses `version_group` and the `version` field to find the max version, falling back to name parsing for legacy datasets.
+- "New version" buttons pass `version_group` UUID to the backend instead of `source_group`.
+
 ## [1.28.0] - 2026-04-16
 
 ### Added

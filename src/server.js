@@ -314,7 +314,7 @@ function serveDatasetData(req, res) {
         if (!dataset) return res.status(404).json({ error: 'Not found' });
         const data = JSON.parse(dataset.data);
         const siblings = getDatasetSiblings(dataset);
-        res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, siblings, ...data });
+        res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
     } catch (err) {
         if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Not found' });
         res.status(500).json({ error: err.message });
@@ -388,7 +388,7 @@ if (!PUBLIC_ONLY) {
         CREATE TABLE IF NOT EXISTS skills (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER NOT NULL, name TEXT NOT NULL, sort_order INTEGER DEFAULT 0, FOREIGN KEY (category_id) REFERENCES skill_categories(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS projects (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT, technologies TEXT, link TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS section_visibility (section_name TEXT PRIMARY KEY, visible INTEGER DEFAULT 1);
-        CREATE TABLE IF NOT EXISTS saved_datasets (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, data TEXT NOT NULL, slug TEXT UNIQUE, is_public INTEGER DEFAULT 0, is_default INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS saved_datasets (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, data TEXT NOT NULL, slug TEXT, language TEXT NOT NULL DEFAULT 'en', language_group TEXT, version_group TEXT, version INTEGER DEFAULT 1, is_public INTEGER DEFAULT 0, is_default INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(slug, version, language), UNIQUE(name, language), UNIQUE(version_group, version, language));
         
         -- Custom sections tables
         CREATE TABLE IF NOT EXISTS custom_sections (
@@ -634,6 +634,63 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.error('Migration error (saved_datasets language):', err.message); }
 
+    // Step 2p: Migration - add version_group and version columns to saved_datasets
+    // Recreates table to add UNIQUE(version_group, version, language) constraint.
+    // Existing rows get version_group and version derived from their name ("Name vN" pattern).
+    try {
+        const dsVerInfo = db.prepare("PRAGMA table_info(saved_datasets)").all();
+        if (!dsVerInfo.some(col => col.name === 'version_group')) {
+            console.log('Migrating saved_datasets table: adding version_group and version');
+            // Server-side name parser (mirrors the frontend parseDatasetVersion)
+            function parseVer(name) {
+                const m = /^(.+?)\s+v(\d+)$/i.exec((name || '').trim());
+                if (m) return { base: m[1].trim(), version: parseInt(m[2], 10) };
+                return { base: (name || '').trim(), version: 1 };
+            }
+            const migrate = db.transaction(() => {
+                db.exec(`CREATE TABLE saved_datasets_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    data TEXT NOT NULL,
+                    slug TEXT,
+                    language TEXT NOT NULL DEFAULT 'en',
+                    language_group TEXT,
+                    version_group TEXT,
+                    version INTEGER DEFAULT 1,
+                    is_public INTEGER DEFAULT 0,
+                    is_default INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(slug, version, language),
+                    UNIQUE(name, language),
+                    UNIQUE(version_group, version, language)
+                )`);
+                const existing = db.prepare('SELECT * FROM saved_datasets').all();
+                // Build base → version_group map so same base name shares a version_group
+                const baseToVG = {};
+                for (const row of existing) {
+                    const { base } = parseVer(row.name);
+                    if (!baseToVG[base]) baseToVG[base] = crypto.randomUUID();
+                }
+                const insertStmt = db.prepare(`INSERT INTO saved_datasets_new
+                    (id, name, data, slug, language, language_group, version_group, version, is_public, is_default, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+                for (const row of existing) {
+                    const { base, version } = parseVer(row.name);
+                    insertStmt.run(row.id, row.name, row.data, row.slug || null,
+                        row.language || 'en', row.language_group || null,
+                        baseToVG[base], version,
+                        row.is_public || 0, row.is_default || 0,
+                        row.created_at, row.updated_at);
+                }
+                db.exec('DROP TABLE saved_datasets');
+                db.exec('ALTER TABLE saved_datasets_new RENAME TO saved_datasets');
+            });
+            migrate();
+            console.log('Migration complete: version_group and version added to saved_datasets');
+        }
+    } catch (err) { console.error('Migration error (saved_datasets versioning):', err.message); }
+
     // Step 2h: Migration - normalize legacy date formats (e.g., "Jan 2020" → "2020-01")
     // Runs once; creates a flag in settings to avoid re-running on every startup
     try {
@@ -763,15 +820,19 @@ if (!PUBLIC_ONLY) {
             if (existingDefault) {
                 // A dataset named "Default" already exists — update it and mark as default
                 db.prepare('UPDATE saved_datasets SET data = ?, is_default = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existingDefault.id);
-                // Ensure it has a language_group
-                const ds = db.prepare('SELECT language_group FROM saved_datasets WHERE id = ?').get(existingDefault.id);
+                // Ensure it has language_group and version_group
+                const ds = db.prepare('SELECT language_group, version_group FROM saved_datasets WHERE id = ?').get(existingDefault.id);
                 if (!ds.language_group) {
                     db.prepare('UPDATE saved_datasets SET language_group = ? WHERE id = ?').run(crypto.randomUUID(), existingDefault.id);
+                }
+                if (!ds.version_group) {
+                    db.prepare('UPDATE saved_datasets SET version_group = ? WHERE id = ?').run(crypto.randomUUID(), existingDefault.id);
                 }
                 console.log(`Updated existing "Default" dataset (id: ${existingDefault.id}) and set as default`);
             } else {
                 const groupId = crypto.randomUUID();
-                const result = db.prepare("INSERT INTO saved_datasets (name, data, language, language_group, is_default, is_public) VALUES (?, ?, 'en', ?, 1, 0)").run('Default', JSON.stringify(cvData), groupId);
+                const versionGroupId = crypto.randomUUID();
+                const result = db.prepare("INSERT INTO saved_datasets (name, data, language, language_group, version_group, version, is_default, is_public) VALUES (?, ?, 'en', ?, ?, 1, 1, 0)").run('Default', JSON.stringify(cvData), groupId, versionGroupId);
                 const newId = result.lastInsertRowid;
                 try {
                     const slug = generateSlug('Default', newId);
@@ -1871,18 +1932,18 @@ if (PUBLIC_ONLY) {
         try {
             // Use SELECT * to avoid errors if slug column doesn't exist
             const datasets = db.prepare('SELECT * FROM saved_datasets ORDER BY updated_at DESC').all();
-            res.json(datasets.map(d => ({ id: d.id, name: d.name, slug: d.slug || null, language: d.language || 'en', language_group: d.language_group || null, is_public: !!d.is_public, is_default: !!d.is_default, created_at: d.created_at, updated_at: d.updated_at })));
+            res.json(datasets.map(d => ({ id: d.id, name: d.name, slug: d.slug || null, language: d.language || 'en', language_group: d.language_group || null, version_group: d.version_group || null, version: d.version || 1, is_public: !!d.is_public, is_default: !!d.is_default, created_at: d.created_at, updated_at: d.updated_at })));
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     });
     app.post('/api/datasets', (req, res) => {
-        const { name, language: reqLang, language_group: reqGroup, source_group: reqSourceGroup } = req.body;
+        const { name, language: reqLang, language_group: reqGroup, version_group: reqVersionGroup } = req.body;
         if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
         const language = (reqLang || 'en').trim().toLowerCase();
         const cvData = gatherCvData();
         try {
-            // Early check: if a language_group is provided, reject duplicate language before anything else
+            // Early check: if a language_group is provided, reject duplicate language
             if (reqGroup) {
                 const dupLang = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ?').get(reqGroup, language);
                 if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
@@ -1892,27 +1953,38 @@ if (PUBLIC_ONLY) {
                 db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existing.id);
                 const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(existing.id);
                 propagateStructure(existing.id);
-                res.json({ success: true, id: existing.id, slug: ds.slug || null, language: ds.language, language_group: ds.language_group, is_default: !!ds.is_default, updated: true });
+                res.json({ success: true, id: existing.id, slug: ds.slug || null, language: ds.language, language_group: ds.language_group, version_group: ds.version_group, version: ds.version || 1, is_default: !!ds.is_default, updated: true });
             } else {
                 let languageGroup = reqGroup || null;
+                let versionGroup = reqVersionGroup || null;
+                let version = 1;
                 let slug = null;
-                let isPublic = 0;
-                let isDefault = 0;
 
-                if (languageGroup) {
-                    // Adding a language variant to an existing group
-                    const sibling = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? LIMIT 1').get(languageGroup);
-                    if (!sibling) return res.status(400).json({ error: 'Language group not found' });
-                    const dupLang = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ?').get(languageGroup, language);
-                    if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
-                    slug = sibling.slug;
-                    isPublic = 0;
-                    isDefault = 0;
-                } else {
+                if (reqVersionGroup) {
+                    // Creating a new version of an existing dataset
+                    const maxRow = db.prepare('SELECT MAX(version) as maxVer FROM saved_datasets WHERE version_group = ?').get(reqVersionGroup);
+                    const maxVer = maxRow?.maxVer || 0;
+                    version = maxVer + 1;
+                    // Reuse slug from version group
+                    const existingMember = db.prepare('SELECT slug FROM saved_datasets WHERE version_group = ? AND slug IS NOT NULL LIMIT 1').get(reqVersionGroup);
+                    if (existingMember) slug = existingMember.slug;
+                    // New language_group for new version
                     languageGroup = crypto.randomUUID();
+                } else if (reqGroup) {
+                    // Adding a language variant to an existing version
+                    const sibling = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? LIMIT 1').get(reqGroup);
+                    if (!sibling) return res.status(400).json({ error: 'Language group not found' });
+                    slug = sibling.slug;
+                    versionGroup = sibling.version_group;
+                    version = sibling.version || 1;
+                } else {
+                    // Brand new dataset
+                    languageGroup = crypto.randomUUID();
+                    versionGroup = crypto.randomUUID();
                 }
 
-                const result = db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, is_public, is_default) VALUES (?, ?, ?, ?, ?, ?)').run(name.trim(), JSON.stringify(cvData), language, languageGroup, isPublic, isDefault);
+                const result = db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, version_group, version, is_public, is_default) VALUES (?, ?, ?, ?, ?, ?, 0, 0)')
+                    .run(name.trim(), JSON.stringify(cvData), language, languageGroup, versionGroup, version);
                 const newId = result.lastInsertRowid;
                 if (!slug) {
                     try {
@@ -1923,20 +1995,26 @@ if (PUBLIC_ONLY) {
                     db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId);
                 }
 
-                // If source_group is provided (new version from multi-lang dataset),
-                // copy all other language variants from the source group
-                if (reqSourceGroup && !reqGroup) {
-                    const sourceSiblings = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language != ?').all(reqSourceGroup, language);
-                    for (const src of sourceSiblings) {
-                        try {
-                            const sibResult = db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, slug, is_public, is_default) VALUES (?, ?, ?, ?, ?, 0, 0)')
-                                .run(name.trim(), src.data, src.language, languageGroup, slug);
-                        } catch (sibErr) { console.log('Sibling copy skipped:', sibErr.message); }
+                // If creating a new version, copy language siblings from the latest version
+                if (reqVersionGroup && !reqGroup) {
+                    const maxRow2 = db.prepare('SELECT MAX(version) as maxVer FROM saved_datasets WHERE version_group = ? AND version < ?').get(reqVersionGroup, version);
+                    const prevVer = maxRow2?.maxVer;
+                    if (prevVer) {
+                        const prevLangGroup = db.prepare('SELECT language_group FROM saved_datasets WHERE version_group = ? AND version = ? LIMIT 1').get(reqVersionGroup, prevVer);
+                        if (prevLangGroup) {
+                            const siblings = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language != ?').all(prevLangGroup.language_group, language);
+                            for (const src of siblings) {
+                                try {
+                                    db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, version_group, version, slug, is_public, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)')
+                                        .run(name.trim(), src.data, src.language, languageGroup, versionGroup, version, slug);
+                                } catch (sibErr) { console.log('Sibling copy skipped:', sibErr.message); }
+                            }
+                        }
                     }
                 }
 
                 propagateStructure(newId);
-                res.json({ success: true, id: newId, slug, language, language_group: languageGroup, is_default: !!isDefault, created: true });
+                res.json({ success: true, id: newId, slug, language, language_group: languageGroup, version_group: versionGroup, version, is_default: false, created: true });
             }
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
@@ -1961,9 +2039,9 @@ if (PUBLIC_ONLY) {
     // Get the current default dataset info
     app.get('/api/datasets/default', (req, res) => {
         try {
-            const dataset = db.prepare('SELECT id, name, slug, language, language_group, is_public, is_default, updated_at FROM saved_datasets WHERE is_default = 1 ORDER BY language ASC LIMIT 1').get();
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1 LIMIT 1').get();
             if (!dataset) return res.json({ exists: false });
-            res.json({ exists: true, id: dataset.id, name: dataset.name, slug: dataset.slug, language: dataset.language || 'en', language_group: dataset.language_group, is_public: !!dataset.is_public, updated_at: dataset.updated_at });
+            res.json({ exists: true, id: dataset.id, name: dataset.name, slug: dataset.slug, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_public: !!dataset.is_public, updated_at: dataset.updated_at });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
@@ -1975,10 +2053,10 @@ if (PUBLIC_ONLY) {
             const cvData = gatherCvData();
             db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), req.params.id);
             propagateStructure(req.params.id);
-            res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, is_default: !!dataset.is_default });
+            res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
@@ -2007,7 +2085,7 @@ if (PUBLIC_ONLY) {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
             if (!dataset.language_group) return res.json([]);
-            const siblings = db.prepare('SELECT id, name, language, slug, is_default, is_public, updated_at FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group);
+            const siblings = db.prepare('SELECT id, name, language, slug, version, is_default, is_public, updated_at FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group);
             res.json(siblings.map(s => ({ ...s, is_default: !!s.is_default, is_public: !!s.is_public })));
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
@@ -2022,7 +2100,7 @@ if (PUBLIC_ONLY) {
             const siblings = dataset.language_group
                 ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
                 : [{ id: dataset.id, language: dataset.language || 'en' }];
-            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, siblings, ...data });
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) {
             if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Versioned datasets not available' });
             res.status(500).json({ error: err.message });
@@ -2044,7 +2122,7 @@ if (PUBLIC_ONLY) {
             const siblings = dataset.language_group
                 ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
                 : [{ id: dataset.id, language: dataset.language || 'en' }];
-            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, siblings, ...data });
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) {
             if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Versioned datasets not available' });
             res.status(500).json({ error: err.message });
