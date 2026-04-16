@@ -3198,10 +3198,11 @@ function closeDatasetsModal() {
 function renderDatasetOpenRow(ds, opts = {}) {
     const isActive = ds.id === activeDatasetId;
     const isDefault = !!ds.is_default;
-    const showPublicToggle = ds.slug && !isDefault;
+    const isDefaultSibling = !isDefault && !!opts.isDefaultSibling;
+    const showPublicToggle = ds.slug && !isDefault && !isDefaultSibling;
     const classes = ['dataset-item'];
     if (isActive) classes.push('dataset-item-active');
-    if (isDefault) classes.push('dataset-item-is-default');
+    if (isDefault || isDefaultSibling) classes.push('dataset-item-is-default');
     if (opts.isChild) classes.push('dataset-item-child');
     const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
     const versionBadgeHtml = opts.versionBadge
@@ -3212,10 +3213,9 @@ function renderDatasetOpenRow(ds, opts = {}) {
     const langBadgeHtml = `<button type="button" class="dataset-lang-badge dataset-lang-badge-btn" onclick="openDatasetLangPicker(event, ${ds.id})" title="${escapeHtml(t('datasets.change_language'))}">${dsLang.toUpperCase()}</button>`;
     const slugUrlSuffix = opts.showLangBadge ? `/${dsLang}` : '';
 
-    // URL display: default datasets show /{lang}, non-default show /v/{slug}/{lang}
+    // URL display: default and its siblings show /{lang}, others show /v/{slug}/{lang}
     let urlHtml = '';
     if (isDefault && opts.showLangBadge) {
-        // Default dataset with languages — show /{lang}
         urlHtml = `<div class="dataset-url">
             <span class="dataset-url-text">/${dsLang}</span>
             <button class="dataset-url-copy" onclick="copyDatasetUrl('${dsLang}', true)" title="Copy URL">
@@ -3224,6 +3224,13 @@ function renderDatasetOpenRow(ds, opts = {}) {
         </div>`;
     } else if (isDefault) {
         urlHtml = '<div class="dataset-default-hint">Served at root URL <code>/</code></div>';
+    } else if (isDefaultSibling) {
+        urlHtml = `<div class="dataset-url">
+            <span class="dataset-url-text">/?lang=${dsLang}</span>
+            <button class="dataset-url-copy" onclick="copyDatasetUrl('?lang=${dsLang}', true)" title="Copy URL">
+                <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
+            </button>
+        </div>`;
     } else if (ds.slug) {
         urlHtml = `<div class="dataset-url">
             <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}${slugUrlSuffix}</span>
@@ -3281,17 +3288,24 @@ async function loadDatasetsList() {
         return;
     }
 
+    // Build set of language_groups that contain the default dataset
+    const defaultLangGroups = new Set();
+    datasets.forEach(ds => {
+        if (ds.is_default && ds.language_group) defaultLangGroups.add(ds.language_group);
+    });
+
     const hierarchy = groupDatasetsHierarchy(datasets);
 
     function renderVersionBlock(ver, showVersionBadge) {
         const showLang = ver.languages.length > 1;
+        const hasDefaultSibling = ver.language_group && defaultLangGroups.has(ver.language_group);
         if (!showLang) {
             // Single language — render dataset row directly with version badge inline
-            return renderDatasetOpenRow(ver.languages[0], { isChild: true, versionBadge: showVersionBadge ? (ver.version || 1) : null });
+            return renderDatasetOpenRow(ver.languages[0], { isChild: true, versionBadge: showVersionBadge ? (ver.version || 1) : null, isDefaultSibling: hasDefaultSibling });
         }
         const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version || 1}</span>` : '';
         const rows = ver.languages.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true })
+            renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true, isDefaultSibling: hasDefaultSibling })
         ).join('');
         return `
             <div class="dataset-open-version-row">
@@ -3310,13 +3324,14 @@ async function loadDatasetsList() {
 
         if (!hasMultipleVersions) {
             const ver = group.versions[0];
+            const hasDefaultSibling = ver.language_group && defaultLangGroups.has(ver.language_group);
             if (ver.languages.length === 1) {
                 // Single version, single language — standalone row
-                return renderDatasetOpenRow(ver.languages[0]);
+                return renderDatasetOpenRow(ver.languages[0], { isDefaultSibling: hasDefaultSibling });
             }
             // Single version, multiple languages — group with lang badges
             const rows = ver.languages.map(ds =>
-                renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true })
+                renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true, isDefaultSibling: hasDefaultSibling })
             ).join('');
             return `
                 <div class="dataset-open-group">
