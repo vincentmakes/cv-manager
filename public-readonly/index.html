@@ -23,7 +23,7 @@
     <!-- Language Switcher (only shown for datasets with multiple languages) -->
     <div class="public-lang-switcher no-print" id="publicLangSwitcher" style="display: none;">
         <button class="public-lang-switch-btn" id="publicLangSwitchBtn" onclick="togglePublicLangSwitcher()">
-            <span class="material-symbols-outlined" style="font-size:16px">translate</span>
+            <span id="publicLangSwitchFlag" class="public-lang-flag"></span>
             <span id="publicLangSwitchLabel"></span>
         </button>
         <div class="public-lang-dropdown" id="publicLangDropdown"></div>
@@ -133,6 +133,10 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await I18n.init();
+            // Sync UI locale to match the dataset language (headers, sections, etc.)
+            if (window.DATASET_LANG && I18n.locale !== window.DATASET_LANG) {
+                await I18n.setLocale(window.DATASET_LANG);
+            }
             if (window.STATIC_SITE) {
                 await loadStaticData();
             } else if (window.DATASET_SLUG) {
@@ -906,16 +910,23 @@
 
             const switcher = document.getElementById('publicLangSwitcher');
             const label = document.getElementById('publicLangSwitchLabel');
+            const flagEl = document.getElementById('publicLangSwitchFlag');
             const dropdown = document.getElementById('publicLangDropdown');
             if (!switcher || !dropdown) return;
 
             const currentLang = (window.DATASET_LANG || 'en').toLowerCase();
             if (label) label.textContent = currentLang.toUpperCase();
 
-            // Build language name map from I18n if available
-            const langNames = {};
+            // Build language info maps from I18n
+            const langInfo = {};
             if (typeof I18n !== 'undefined' && I18n.languages) {
-                I18n.languages.forEach(l => { langNames[l.code] = l.native; });
+                I18n.languages.forEach(l => { langInfo[l.code] = l; });
+            }
+
+            // Set flag on the pill button
+            const currentInfo = langInfo[currentLang];
+            if (flagEl && currentInfo && currentInfo.flag) {
+                flagEl.textContent = currentInfo.flag;
             }
 
             // Build dropdown items
@@ -923,19 +934,20 @@
             for (const sib of siblings) {
                 const lang = (sib.language || 'en').toLowerCase();
                 const isActive = lang === currentLang;
-                const name = langNames[lang] || lang.toUpperCase();
+                const info = langInfo[lang] || {};
+                const name = info.native || lang.toUpperCase();
+                const flag = info.flag || '';
 
                 // Build URL for this language variant
                 let href;
                 if (window.DATASET_SLUG) {
-                    // On /v/:slug page — navigate to /v/:slug/:lang
                     href = `/v/${window.DATASET_SLUG}/${lang}`;
                 } else {
-                    // On root / page — navigate to /?lang=xx
                     href = `/?lang=${lang}`;
                 }
 
                 html += `<a class="public-lang-option${isActive ? ' active' : ''}" href="${href}">
+                    <span class="public-lang-flag">${flag}</span>
                     <span class="public-lang-code">${lang.toUpperCase()}</span>
                     <span class="public-lang-name">${name}</span>
                     ${isActive ? '<span class="material-symbols-outlined" style="font-size:14px;margin-left:auto">check</span>' : ''}

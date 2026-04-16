@@ -338,6 +338,11 @@ async function switchDatasetLanguage(id, name, language) {
             await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
         } catch (err) { /* continue anyway */ }
     }
+    // Switch UI locale to match the dataset language
+    if (typeof I18n !== 'undefined' && language && I18n.locale !== language) {
+        await I18n.setLocale(language);
+        renderLanguageGrid();
+    }
     await loadDataset(id, name);
 }
 
@@ -2869,28 +2874,31 @@ function renderSaveAsList(datasets) {
                             <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
                         </div>
                     </button>
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
-                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                        <span>${newVersionLabel}</span>
-                    </button>
-                    ${addLangBtn(ds)}
+                    <div class="save-as-row-actions">
+                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
+                            <span class="material-symbols-outlined" style="font-size:14px">add</span>
+                            <span>${newVersionLabel}</span>
+                        </button>
+                        ${addLangBtn(ds)}
+                    </div>
                 </div>
             `;
         }
         const children = group.items.map(ds => {
             const escName = escapeHtml(ds.name);
             return `
-                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}" data-lang="${ds.language || 'en'}">
-                    ${langBadge(ds)}
-                    <span class="dataset-version-badge">v${ds._version}</span>
-                    <span class="save-as-row-name">${escName}</span>
-                    <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
-                </button>
+                <div class="save-as-version-child-row">
+                    <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}" data-lang="${ds.language || 'en'}">
+                        ${langBadge(ds)}
+                        <span class="dataset-version-badge">v${ds._version}</span>
+                        <span class="save-as-row-name">${escName}</span>
+                        <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
+                    </button>
+                    ${addLangBtn(ds)}
+                </div>
             `;
         }).join('');
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
-        // Find a representative item for the add-language button
-        const repDs = group.items[0];
         return `
             <div class="save-as-item save-as-group">
                 <div class="save-as-group-header">
@@ -2903,7 +2911,6 @@ function renderSaveAsList(datasets) {
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
                         <span>${newVersionLabel}</span>
                     </button>
-                    ${addLangBtn(repDs)}
                 </div>
             </div>
         `;
@@ -3280,6 +3287,10 @@ async function loadDataset(id, name) {
             activeDatasetLanguage = result.language || 'en';
             activeDatasetLanguageGroup = result.language_group || null;
             await loadActiveDatasetSiblings();
+            // Sync UI locale to match dataset language
+            if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
+                await I18n.setLocale(activeDatasetLanguage);
+            }
             closeDatasetsModal();
             await initAdmin();
             toast(t('toast.dataset_loaded', { name: result.name }));
@@ -3612,18 +3623,52 @@ function renderLanguageGrid() {
     const container = document.getElementById('toolbarLanguageGrid');
     if (!container) return;
 
-    container.innerHTML = I18n.languages.map(lang => `
-        <div class="language-option ${I18n.locale === lang.code ? 'active' : ''}" onclick="selectLanguage('${lang.code}')">
+    // Determine available languages based on active dataset's language group
+    const hasMultiLang = activeDatasetSiblings.length > 0;
+    const groupLangs = new Set();
+    if (hasMultiLang) {
+        groupLangs.add(activeDatasetLanguage || 'en');
+        activeDatasetSiblings.forEach(s => groupLangs.add(s.language));
+    }
+
+    let html = I18n.languages.map(lang => {
+        const isCurrent = I18n.locale === lang.code;
+        const isDisabled = hasMultiLang && !groupLangs.has(lang.code);
+        const flag = lang.flag || '';
+        return `
+        <div class="language-option ${isCurrent ? 'active' : ''} ${isDisabled ? 'language-option-disabled' : ''}" ${isDisabled ? '' : `onclick="selectLanguage('${lang.code}')"`}>
             <div>
-                <div class="language-option-native">${lang.native}</div>
+                <div class="language-option-native">${flag} ${lang.native}</div>
                 <div class="language-option-name">${lang.name}</div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
+
+    if (hasMultiLang) {
+        html += `<div class="language-picker-hint">${escapeHtml(t('datasets.add_language_hint'))}</div>`;
+    }
+
+    container.innerHTML = html;
 }
 
-// Handle language selection
+// Handle language selection from toolbar picker
 async function selectLanguage(code) {
+    // If a multi-language dataset is active, switch to that language variant
+    if (activeDatasetSiblings.length > 0) {
+        const sibling = activeDatasetSiblings.find(s => s.language === code);
+        if (sibling) {
+            await switchDatasetLanguage(sibling.id, sibling.name, code);
+            return;
+        }
+        // If the code matches the active dataset language, just switch locale
+        if (code === activeDatasetLanguage) {
+            await I18n.setLocale(code);
+            renderLanguageGrid();
+            document.getElementById('languagePickerDropdown').classList.remove('active');
+            return;
+        }
+    }
     await I18n.setLocale(code);
     renderLanguageGrid();
     document.getElementById('languagePickerDropdown').classList.remove('active');
