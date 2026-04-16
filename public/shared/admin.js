@@ -3261,10 +3261,24 @@ async function loadDatasetsList() {
 
     function renderVersionBlock(ver, showVersionBadge) {
         const showLang = ver.languages.length > 1;
+        if (!showVersionBadge && !showLang) {
+            // Single version, single language inside a group — just the row
+            return renderDatasetOpenRow(ver.languages[0], { isChild: true });
+        }
+        const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version || 1}</span>` : '';
         const rows = ver.languages.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, versionBadge: showVersionBadge ? (ds.version || 1) : null, showLangBadge: showLang })
+            renderDatasetOpenRow(ds, { isChild: true, showLangBadge: showLang })
         ).join('');
-        return rows;
+        return `
+            <div class="dataset-open-version-row">
+                ${badge ? `<div class="dataset-open-version-header">${badge}<span class="dataset-open-version-name">${escapeHtml(ver.name)}</span></div>` : ''}
+                <div class="dataset-open-version-langs">${rows}</div>
+            </div>`;
+    }
+
+    // Check whether a version block contains the active or default dataset
+    function versionHasHighlight(ver) {
+        return ver.languages.some(ds => ds.id === activeDatasetId || ds.is_default);
     }
 
     container.innerHTML = hierarchy.map(group => {
@@ -3298,6 +3312,8 @@ async function loadDatasetsList() {
 
         const latestHtml = renderVersionBlock(latest, true);
         const olderHtml = older.map(v => renderVersionBlock(v, true)).join('');
+        // Auto-expand if an older version contains the active or default dataset
+        const olderHasHighlight = older.some(v => versionHasHighlight(v));
 
         return `
             <div class="dataset-open-group">
@@ -3309,10 +3325,10 @@ async function loadDatasetsList() {
                     ${latestHtml}
                     ${olderCount > 0 ? `
                         <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
-                            <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
+                            <span class="material-symbols-outlined" style="font-size:14px">${olderHasHighlight ? 'expand_less' : 'expand_more'}</span>
                             <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
                         </button>
-                        <div class="version-collapsed-group" style="display:none;">${olderHtml}</div>
+                        <div class="version-collapsed-group" style="${olderHasHighlight ? '' : 'display:none;'}">${olderHtml}</div>
                     ` : ''}
                 </div>
             </div>`;

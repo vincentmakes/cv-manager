@@ -757,7 +757,7 @@
     align-items: center;
     padding: 12px 16px;
     background: var(--very-light);
-    border-radius: var(--radius-md);
+    border-radius: 0;
     margin-bottom: 8px;
     border-left: 3px solid var(--gray-300);
     gap: 12px;
@@ -976,7 +976,7 @@
     margin-bottom: 10px;
     border: 1px solid var(--gray-200);
     border-left: 3px solid var(--primary);
-    border-radius: var(--radius-md);
+    border-radius: 0;
     background: var(--white);
     overflow: hidden;
 }
@@ -1038,6 +1038,30 @@
     height: 1px;
     background: var(--gray-300);
 }
+/* Version sub-block inside the Open modal — mirrors save-as-version-row */
+.dataset-open-version-row {
+    padding: 4px 0;
+}
+.dataset-open-version-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+}
+.dataset-open-version-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dataset-open-version-langs {
+    padding-left: 8px;
+}
+
 /* Version badge inside the Open modal rows — shares .dataset-version-badge styling */
 .dataset-name-row .dataset-version-badge {
     margin-right: 4px;
@@ -1117,7 +1141,7 @@
 .save-as-item {
     margin-bottom: 8px;
     border: 1px solid var(--gray-200);
-    border-radius: var(--radius-md, 8px);
+    border-radius: 0;
     background: var(--white);
     overflow: hidden;
 }
@@ -1269,7 +1293,7 @@
     font-size: 12px;
     color: var(--gray-600);
     transition: background 0.15s ease;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
 }
 .save-as-lang-child:hover { background: var(--gray-100); }
 .save-as-lang-child.save-as-row-selected { background: rgba(0, 102, 255, 0.08); }
