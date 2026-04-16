@@ -1877,7 +1877,7 @@ if (PUBLIC_ONLY) {
         }
     });
     app.post('/api/datasets', (req, res) => {
-        const { name, language: reqLang, language_group: reqGroup } = req.body;
+        const { name, language: reqLang, language_group: reqGroup, source_group: reqSourceGroup } = req.body;
         if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
         const language = (reqLang || 'en').trim().toLowerCase();
         const cvData = gatherCvData();
@@ -1906,8 +1906,8 @@ if (PUBLIC_ONLY) {
                     const dupLang = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ?').get(languageGroup, language);
                     if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
                     slug = sibling.slug;
-                    isPublic = 0; // New language variants start private; user chooses which to make public
-                    isDefault = 0; // Default is per-variant; user sets it explicitly via the radio button
+                    isPublic = 0;
+                    isDefault = 0;
                 } else {
                     languageGroup = crypto.randomUUID();
                 }
@@ -1922,6 +1922,19 @@ if (PUBLIC_ONLY) {
                 } else {
                     db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId);
                 }
+
+                // If source_group is provided (new version from multi-lang dataset),
+                // copy all other language variants from the source group
+                if (reqSourceGroup && !reqGroup) {
+                    const sourceSiblings = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language != ?').all(reqSourceGroup, language);
+                    for (const src of sourceSiblings) {
+                        try {
+                            const sibResult = db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, slug, is_public, is_default) VALUES (?, ?, ?, ?, ?, 0, 0)')
+                                .run(name.trim(), src.data, src.language, languageGroup, slug);
+                        } catch (sibErr) { console.log('Sibling copy skipped:', sibErr.message); }
+                    }
+                }
+
                 propagateStructure(newId);
                 res.json({ success: true, id: newId, slug, language, language_group: languageGroup, is_default: !!isDefault, created: true });
             }

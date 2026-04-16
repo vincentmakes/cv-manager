@@ -2864,9 +2864,11 @@ async function saveAsDataset() {
             `<option value="${l.code}"${l.code === (activeDatasetLanguage || 'en') ? ' selected' : ''}>${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
         ).join('');
     }
-    // Reset language group
+    // Reset language group and source group
     const langGroupInput = document.getElementById('saveAsLangGroup');
     if (langGroupInput) langGroupInput.value = '';
+    const srcGroupInput = document.getElementById('saveAsSourceGroup');
+    if (srcGroupInput) srcGroupInput.value = '';
     updateSaveAsSubmitState();
     document.getElementById('saveAsModalOverlay').classList.add('active');
     setTimeout(() => { input.focus(); input.select(); }, 30);
@@ -2939,11 +2941,12 @@ function renderSaveAsList(datasets) {
         if (!hasMultipleVersions) {
             // Single version — render standalone
             const ver = group.versions[0];
+            const srcGroup = ver.language_group ? escapeHtml(ver.language_group) : '';
             return `
                 <div class="save-as-item save-as-standalone">
                     ${renderVersion(ver, false)}
                     <div class="save-as-row-actions">
-                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
+                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-source-group="${srcGroup}">
                             <span class="material-symbols-outlined" style="font-size:14px">add</span>
                             <span>${newVersionLabel}</span>
                         </button>
@@ -2976,7 +2979,7 @@ function renderSaveAsList(datasets) {
                     ` : ''}
                 </div>
                 <div class="save-as-group-footer">
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
+                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-source-group="${latest.language_group ? escapeHtml(latest.language_group) : ''}">
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
                         <span>${newVersionLabel}</span>
                     </button>
@@ -2993,16 +2996,22 @@ function saveAsOnListClick(e) {
     const langSelect = document.getElementById('saveAsLangSelect');
     const langGroupInput = document.getElementById('saveAsLangGroup');
     if (!input) return;
+    const srcGroupInput = document.getElementById('saveAsSourceGroup');
     if (action === 'fill-name') {
         input.value = btn.getAttribute('data-name') || '';
         if (langSelect && btn.getAttribute('data-lang')) {
             langSelect.value = btn.getAttribute('data-lang');
         }
         if (langGroupInput) langGroupInput.value = '';
+        if (srcGroupInput) srcGroupInput.value = '';
     } else if (action === 'new-version') {
         const base = btn.getAttribute('data-base') || '';
         input.value = suggestNextVersion(base, saveAsDatasetsCache);
         if (langGroupInput) langGroupInput.value = '';
+        // Store the source group so backend can copy language siblings
+        const sourceGroup = btn.getAttribute('data-source-group') || '';
+        const srcGroupInput = document.getElementById('saveAsSourceGroup');
+        if (srcGroupInput) srcGroupInput.value = sourceGroup;
     } else if (action === 'add-language') {
         const name = btn.getAttribute('data-name') || '';
         const group = btn.getAttribute('data-group') || '';
@@ -3073,14 +3082,17 @@ async function submitSaveAs() {
     if (!name) return;
     const langSelect = document.getElementById('saveAsLangSelect');
     const langGroupInput = document.getElementById('saveAsLangGroup');
+    const srcGroupInput = document.getElementById('saveAsSourceGroup');
     const language = langSelect ? langSelect.value : 'en';
     const languageGroup = langGroupInput ? langGroupInput.value : '';
+    const sourceGroup = srcGroupInput ? srcGroupInput.value : '';
 
     const match = saveAsDatasetsCache.find(d => d.name === name && d.language === language);
     if (match && !confirm(t('confirm.overwrite_dataset', { name }))) return;
     try {
         const body = { name, language };
         if (languageGroup) body.language_group = languageGroup;
+        if (sourceGroup) body.source_group = sourceGroup;
         const result = await api('/api/datasets', { method: 'POST', body });
         if (result.success) {
             activeDatasetId = result.id;
