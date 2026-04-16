@@ -2946,12 +2946,13 @@ function renderSaveAsList(datasets) {
 
     function renderVersion(ver, showVersionBadge) {
         const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version}</span>` : '';
-        if (ver.languages.length <= 1 && !showVersionBadge) {
-            // Single language, no version badge — flat row (no tree nesting)
+        if (ver.languages.length <= 1) {
+            // Single language — flat row with optional version badge (no tree nesting)
             const ds = ver.languages[0];
             return `
                 <div class="save-as-version-row save-as-version-flat">
                     <button type="button" class="save-as-flat-row" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
+                        ${badge}
                         <span class="save-as-row-info">
                             <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
                             <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
@@ -3282,13 +3283,13 @@ async function loadDatasetsList() {
 
     function renderVersionBlock(ver, showVersionBadge) {
         const showLang = ver.languages.length > 1;
-        if (!showVersionBadge && !showLang) {
-            // Single version, single language inside a group — just the row
-            return renderDatasetOpenRow(ver.languages[0], { isChild: true });
+        if (!showLang) {
+            // Single language — render dataset row directly with version badge inline
+            return renderDatasetOpenRow(ver.languages[0], { isChild: true, versionBadge: showVersionBadge ? (ver.version || 1) : null });
         }
         const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version || 1}</span>` : '';
         const rows = ver.languages.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, showLangBadge: showLang })
+            renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true })
         ).join('');
         return `
             <div class="dataset-open-version-row">
