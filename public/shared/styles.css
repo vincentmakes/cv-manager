@@ -1138,6 +1138,45 @@ body {
     line-height: 1.4;
     vertical-align: middle;
 }
+/* Clickable variant (in Open modal rows) */
+.dataset-lang-badge-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+.dataset-lang-badge-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+/* Floating language picker anchored to a badge */
+.dataset-lang-picker {
+    position: fixed;
+    z-index: 2000;
+    min-width: 180px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.dataset-lang-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--gray-700);
+    transition: background 0.15s ease;
+}
+.dataset-lang-picker-option:hover { background: var(--gray-50); }
 
 /* Public language switcher — top-right pill with flag */
 .public-lang-switcher {

@@ -2150,6 +2150,37 @@ if (PUBLIC_ONLY) {
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
+    // Change the language of a single dataset. Rejects the change if it would
+    // create a conflict with a sibling in the same language_group or version_group.
+    app.put('/api/datasets/:id/language', (req, res) => {
+        const { language } = req.body;
+        if (!language || !serverTranslations[language]) {
+            return res.status(400).json({ error: 'Invalid or unsupported language' });
+        }
+        try {
+            const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!ds) return res.status(404).json({ error: 'Dataset not found' });
+            if (ds.language === language) return res.json({ success: true, id: ds.id, language });
+            // Conflict checks
+            if (ds.language_group) {
+                const conflict = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ? AND id != ?').get(ds.language_group, language, ds.id);
+                if (conflict) return res.status(409).json({ error: 'Another variant in this dataset already uses that language' });
+            }
+            if (ds.version_group) {
+                const conflict = db.prepare('SELECT id FROM saved_datasets WHERE version_group = ? AND version = ? AND language = ? AND id != ?').get(ds.version_group, ds.version || 1, language, ds.id);
+                if (conflict) return res.status(409).json({ error: 'Another dataset with the same version already uses that language' });
+            }
+            const nameConflict = db.prepare('SELECT id FROM saved_datasets WHERE name = ? AND language = ? AND id != ?').get(ds.name, language, ds.id);
+            if (nameConflict) return res.status(409).json({ error: 'Another dataset with the same name already uses that language' });
+            if (ds.slug) {
+                const slugConflict = db.prepare('SELECT id FROM saved_datasets WHERE slug = ? AND version = ? AND language = ? AND id != ?').get(ds.slug, ds.version || 1, language, ds.id);
+                if (slugConflict) return res.status(409).json({ error: 'URL conflict with another dataset in that language' });
+            }
+            db.prepare('UPDATE saved_datasets SET language = ? WHERE id = ?').run(language, req.params.id);
+            res.json({ success: true, id: ds.id, language });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
     // Get all siblings of a dataset (same language_group)
     app.get('/api/datasets/:id/siblings', (req, res) => {
         try {

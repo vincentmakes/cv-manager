@@ -3204,10 +3204,9 @@ function renderDatasetOpenRow(ds, opts = {}) {
     const versionBadgeHtml = opts.versionBadge
         ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>`
         : '';
-    const langBadgeHtml = opts.showLangBadge
-        ? `<span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>`
-        : '';
     const dsLang = ds.language || 'en';
+    // Language badge is always shown and clickable to change the dataset's language
+    const langBadgeHtml = `<button type="button" class="dataset-lang-badge dataset-lang-badge-btn" onclick="openDatasetLangPicker(event, ${ds.id})" title="${escapeHtml(t('datasets.change_language'))}">${dsLang.toUpperCase()}</button>`;
     const slugUrlSuffix = opts.showLangBadge ? `/${dsLang}` : '';
 
     // URL display: default datasets show /{lang}, non-default show /v/{slug}/{lang}
@@ -3413,6 +3412,55 @@ async function toggleDatasetPublic(id, isPublic) {
     } catch (err) {
         toast(t('toast.visibility_update_failed'), 'error');
         await loadDatasetsList(); // Revert toggle state
+    }
+}
+
+// Open an inline language picker anchored to the clicked language badge
+function openDatasetLangPicker(event, datasetId) {
+    event.stopPropagation();
+    document.querySelectorAll('.dataset-lang-picker').forEach(el => el.remove());
+    const langs = (typeof I18n !== 'undefined' ? I18n.languages : []);
+    const picker = document.createElement('div');
+    picker.className = 'dataset-lang-picker';
+    picker.innerHTML = langs.map(l =>
+        `<button type="button" class="dataset-lang-picker-option" data-lang="${l.code}">
+            <span class="dataset-lang-code">${l.code.toUpperCase()}</span>
+            <span class="dataset-lang-name">${escapeHtml(l.native)}</span>
+        </button>`
+    ).join('');
+    picker.addEventListener('click', async (e) => {
+        const opt = e.target.closest('[data-lang]');
+        if (!opt) return;
+        await changeDatasetLanguage(datasetId, opt.getAttribute('data-lang'));
+    });
+    document.body.appendChild(picker);
+    const rect = event.currentTarget.getBoundingClientRect();
+    picker.style.top = `${rect.bottom + 4}px`;
+    picker.style.left = `${rect.left}px`;
+    const closePicker = (ev) => {
+        if (!picker.contains(ev.target)) {
+            picker.remove();
+            document.removeEventListener('click', closePicker);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closePicker), 0);
+}
+
+async function changeDatasetLanguage(id, language) {
+    try {
+        const result = await api(`/api/datasets/${id}/language`, {
+            method: 'PUT',
+            body: { language }
+        });
+        if (result.success) {
+            toast(t('toast.dataset_language_changed', { lang: language.toUpperCase() }));
+            document.querySelectorAll('.dataset-lang-picker').forEach(el => el.remove());
+            await loadDatasetsList();
+        } else {
+            toast(result.error || t('toast.update_failed'), 'error');
+        }
+    } catch (err) {
+        toast(err.message || t('toast.update_failed'), 'error');
     }
 }
 
