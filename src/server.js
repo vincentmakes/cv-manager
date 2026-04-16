@@ -1092,15 +1092,17 @@ function resolveDatasetBySlug(slug, lang, requirePublic) {
 }
 
 // Get siblings list for injecting into HTML pages.
-// If the dataset is default, ALL siblings in its language group are included (for language switching).
+// If any dataset in the group is default, ALL siblings are included (for language switching).
 // Otherwise, only public/default siblings are included.
 function getDatasetSiblings(dataset) {
     if (!dataset || !dataset.language_group) return [];
-    if (dataset.is_default) {
-        // Default dataset: include ALL siblings in the group (language switching always works)
+    // Check if any member of this language group is the default
+    const hasDefault = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND is_default = 1').get(dataset.language_group);
+    if (hasDefault) {
+        // Default group: include ALL siblings (language switching always works)
         return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group);
     }
-    return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? AND (is_public = 1 OR is_default = 1 OR id = ?) ORDER BY language ASC').all(dataset.language_group, dataset.id);
+    return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? AND (is_public = 1 OR id = ?) ORDER BY language ASC').all(dataset.language_group, dataset.id);
 }
 
 // Serve admin dataset preview page with language support
