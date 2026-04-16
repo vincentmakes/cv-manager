@@ -2957,10 +2957,10 @@ function renderCvManagerList(datasets) {
                 <span class="cvm-name">${escapeHtml(ds.name)}</span>
                 ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
                 ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
+                ${ds.is_public && !isDefault && !isDefSib ? `<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 14)}</span>` : ''}
                 ${urlHtml}
                 <span class="cvm-date">${formatDateTime(ds.updated_at)}</span>
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? t('datasets.reload') : t('datasets.load')}</button>
-                ${ds.is_public && !isDefault && !isDefSib ? `<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 14)}</span>` : ''}
                 <button class="btn btn-ghost btn-sm cvm-more-btn" onclick="openCvmMenu(event, ${ds.id}, '${safeName}', '${dsLang}', '${escapeHtml(ds.slug || '')}', ${isDefault}, ${isDefSib}, ${!!ds.is_public}, ${showToggle})">
                     ${materialIcon('more_vert', 16)}
                 </button>
