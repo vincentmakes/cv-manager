@@ -3009,9 +3009,13 @@ function renderCvManagerList(datasets) {
                     </div>
                 </div>`;
             }
+            const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
             return `<div class="cvm-group">
                 <div class="cvm-group-header">
                     <span class="cvm-group-name">${escapeHtml(group.base)}</span>
+                    <button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVG}">
+                        ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
+                    </button>
                     ${addLangBtn(ver)}
                     <span class="cvm-group-count">${escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))}</span>
                 </div>
@@ -3165,8 +3169,12 @@ async function submitSaveAs() {
             activeDatasetLanguageGroup = result.language_group || null;
             await loadActiveDatasetSiblings();
             persistActiveDataset();
+            if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
+                await I18n.setLocale(activeDatasetLanguage);
+            }
             showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             closeSaveAsModal();
+            await initAdmin();
             toast(result.created && languageGroup ? t('toast.language_variant_created') : result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
         } else {
             toast(result.error || t('toast.failed_save'), 'error');

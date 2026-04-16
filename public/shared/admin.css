@@ -2364,6 +2364,9 @@
     flex-shrink: 0;
 }
 .cvm-group-body { padding: 4px 8px; }
+.cvm-group-body .cvm-row { border-left: 3px solid transparent; margin-left: 8px; }
+.cvm-group-body .cvm-row-active { border-left-color: var(--accent); }
+.cvm-group-body .cvm-row-default { border-left-color: var(--primary); }
 .cvm-group-actions {
     display: flex;
     gap: 4px;
@@ -2388,7 +2391,11 @@
 .cvm-row-active.cvm-row-default { border-left-color: var(--primary); }
 .cvm-row-selected { background: rgba(234, 88, 12, 0.1) !important; border-left-color: #ea580c !important; }
 
-.cvm-radio { flex-shrink: 0; display: flex; align-items: center; }
+.cvm-radio { flex-shrink: 0; display: flex; align-items: center; position: relative; cursor: pointer; }
+.cvm-radio input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.cvm-radio input[type="radio"]:checked + .radio-dot { border-color: var(--primary); }
+.cvm-radio input[type="radio"]:checked + .radio-dot::after { transform: translate(-50%, -50%) scale(1); }
+.cvm-radio:hover .radio-dot { border-color: var(--primary-light); }
 .cvm-name {
     font-weight: 600;
     font-size: 13px;
