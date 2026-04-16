@@ -2931,8 +2931,9 @@ function renderSaveAsList(datasets) {
             // Single language — just show the dataset row
             const ds = ver.languages[0];
             return `<button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
+                <span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>
                 <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
-                <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
+                <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
             </button>`;
         }
         // Multiple languages — show each with a lang badge
@@ -2953,6 +2954,7 @@ function renderSaveAsList(datasets) {
                 <div class="save-as-version-row save-as-version-flat">
                     <button type="button" class="save-as-flat-row" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
                         ${badge}
+                        <span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>
                         <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
                         <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
                     </button>
