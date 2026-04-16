@@ -191,8 +191,9 @@ function servePublicIndex(req, res) {
             if (primary) {
                 const requestedLang = req.query.lang;
                 if (requestedLang && primary.language_group && requestedLang !== primary.language) {
-                    // Visitor requested a different language — find that sibling (must be public)
-                    const sibling = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language = ? AND is_public = 1').get(primary.language_group, requestedLang);
+                    // Visitor requested a different language — find sibling in same language group
+                    // No is_public check: siblings of the default are always accessible for language switching
+                    const sibling = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language = ?').get(primary.language_group, requestedLang);
                     defaultDataset = sibling || primary;
                 } else {
                     defaultDataset = primary;
@@ -321,10 +322,19 @@ function serveDatasetData(req, res) {
     }
 }
 
-// Serve dataset data by ID (for default dataset on public site)
+// Serve dataset data by ID (for default dataset and its siblings on public site)
 function serveDatasetDataById(req, res) {
     try {
-        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ? AND (is_public = 1 OR is_default = 1)').get(req.params.id);
+        // Allow access if: public, default, or sibling of the default dataset
+        let dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ? AND (is_public = 1 OR is_default = 1)').get(req.params.id);
+        if (!dataset) {
+            // Check if this is a sibling of the default dataset (same language_group)
+            const candidate = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (candidate && candidate.language_group) {
+                const defaultInGroup = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND is_default = 1').get(candidate.language_group);
+                if (defaultInGroup) dataset = candidate;
+            }
+        }
         if (!dataset) return res.status(404).json({ error: 'Not found' });
         const data = JSON.parse(dataset.data);
         const siblings = getDatasetSiblings(dataset);
@@ -1082,10 +1092,14 @@ function resolveDatasetBySlug(slug, lang, requirePublic) {
 }
 
 // Get siblings list for injecting into HTML pages.
-// Returns the dataset itself plus any public siblings in the same language group.
+// If the dataset is default, ALL siblings in its language group are included (for language switching).
+// Otherwise, only public/default siblings are included.
 function getDatasetSiblings(dataset) {
     if (!dataset || !dataset.language_group) return [];
-    // Include: the dataset itself (always) + siblings that are public or default
+    if (dataset.is_default) {
+        // Default dataset: include ALL siblings in the group (language switching always works)
+        return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group);
+    }
     return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? AND (is_public = 1 OR is_default = 1 OR id = ?) ORDER BY language ASC').all(dataset.language_group, dataset.id);
 }
 
