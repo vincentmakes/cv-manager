@@ -2427,7 +2427,10 @@
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
+    margin-left: 6px;
+    vertical-align: middle;
 }
+.cvm-shared-icon .material-symbols-outlined { font-size: 18px; }
 .cvm-more-btn {
     padding: 2px !important;
     min-width: unset !important;
