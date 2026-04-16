@@ -714,6 +714,47 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.error('Migration error (saved_datasets versioning):', err.message); }
 
+    // Step 2q: Fixup — consolidate orphaned version_groups
+    // If the "New version" button previously passed the wrong ID, datasets with
+    // the same base name may have ended up in separate version_groups. Re-group
+    // them so they share the oldest version_group UUID for that base name.
+    try {
+        const allDs = db.prepare('SELECT id, name, version_group, version FROM saved_datasets WHERE version_group IS NOT NULL').all();
+        if (allDs.length > 0) {
+            function parseVerName(name) {
+                const m = /^(.+?)\s+v(\d+)$/i.exec((name || '').trim());
+                if (m) return { base: m[1].trim(), version: parseInt(m[2], 10) };
+                return { base: (name || '').trim(), version: 1 };
+            }
+            // Map base name → canonical version_group (the first one seen)
+            const baseToVG = {};
+            const fixes = [];
+            // Sort by version so v1 is processed first — its version_group becomes canonical
+            allDs.sort((a, b) => (a.version || 1) - (b.version || 1));
+            for (const row of allDs) {
+                const { base, version } = parseVerName(row.name);
+                if (!baseToVG[base]) {
+                    baseToVG[base] = row.version_group;
+                } else if (row.version_group !== baseToVG[base]) {
+                    fixes.push({ id: row.id, newVG: baseToVG[base], version });
+                }
+            }
+            if (fixes.length > 0) {
+                const updateStmt = db.prepare('UPDATE saved_datasets SET version_group = ?, version = ? WHERE id = ?');
+                const fixup = db.transaction(() => {
+                    for (const f of fixes) {
+                        // Ensure version doesn't collide within the new group
+                        const maxRow = db.prepare('SELECT MAX(version) as maxVer FROM saved_datasets WHERE version_group = ?').get(f.newVG);
+                        const nextVer = Math.max(f.version, (maxRow?.maxVer || 0) + 1);
+                        updateStmt.run(f.newVG, nextVer, f.id);
+                    }
+                });
+                fixup();
+                console.log(`Fixup: consolidated ${fixes.length} dataset(s) into correct version_groups`);
+            }
+        }
+    } catch (err) { console.error('Fixup error (version_group consolidation):', err.message); }
+
     // Step 2h: Migration - normalize legacy date formats (e.g., "Jan 2020" → "2020-01")
     // Runs once; creates a flag in settings to avoid re-running on every startup
     try {
