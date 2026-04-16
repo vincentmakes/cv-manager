@@ -2968,12 +2968,12 @@ function renderSaveAsList(datasets) {
         if (!hasMultipleVersions) {
             // Single version — render standalone
             const ver = group.versions[0];
-            const srcGroup = ver.language_group ? escapeHtml(ver.language_group) : '';
+            const escVersionGroup = group.versionGroup ? escapeHtml(group.versionGroup) : '';
             return `
                 <div class="save-as-item save-as-standalone">
                     ${renderVersion(ver, false)}
                     <div class="save-as-row-actions">
-                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${srcGroup}">
+                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVersionGroup}">
                             <span class="material-symbols-outlined" style="font-size:14px">add</span>
                             <span>${newVersionLabel}</span>
                         </button>
@@ -3006,7 +3006,7 @@ function renderSaveAsList(datasets) {
                     ` : ''}
                 </div>
                 <div class="save-as-group-footer">
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${latest.language_group ? escapeHtml(latest.language_group) : ''}">
+                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${group.versionGroup ? escapeHtml(group.versionGroup) : ''}">
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
                         <span>${newVersionLabel}</span>
                     </button>
