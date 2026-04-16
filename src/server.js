@@ -156,7 +156,14 @@ try {
 let db;
 try {
     if (PUBLIC_ONLY) { db = new Database(DB_PATH, { readonly: true }); console.log('Database opened in read-only mode'); }
-    else { db = new Database(DB_PATH); console.log('Database opened successfully'); db.pragma('journal_mode = WAL'); }
+    else {
+        db = new Database(DB_PATH);
+        console.log('Database opened successfully');
+        db.pragma('journal_mode = WAL');
+        db.pragma('synchronous = NORMAL');
+        db.pragma('cache_size = -16000');
+        db.pragma('temp_store = MEMORY');
+    }
 } catch (err) { console.error(`Failed to open database: ${err.message}`); process.exit(1); }
 
 app.use(cors());
@@ -865,6 +872,14 @@ if (!PUBLIC_ONLY) {
             console.log(`Date normalization complete: ${expCount} experiences, ${eduCount} education, ${certCount} certifications, ${dsCount} datasets updated`);
         }
     } catch (err) { console.log('Migration check (date normalization):', err.message); }
+
+    // Step 2i: Create indexes on saved_datasets hot-path lookup columns
+    try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ds_lang_group ON saved_datasets(language_group)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ds_ver_group ON saved_datasets(version_group)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ds_is_default ON saved_datasets(is_default) WHERE is_default = 1');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ds_slug_lang ON saved_datasets(slug, language)');
+    } catch (err) { console.log('Index creation check:', err.message); }
 
     // Step 3: Insert default data (after migration ensures sort_order exists)
     db.exec(`INSERT OR IGNORE INTO profile (id) VALUES (1)`);
