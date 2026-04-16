@@ -417,5 +417,7 @@
     "datasets.make_shared": "Compartir",
     "datasets.preview": "Vista previa",
     "datasets.copy_url": "Copiar URL",
-    "ats.english_headers": "Encabezados de sección en inglés"
+    "ats.english_headers": "Encabezados de sección en inglés",
+    "datasets.legend_default": "Publicado en el sitio público",
+    "datasets.legend_shared": "Compartido en URL /v/"
 }

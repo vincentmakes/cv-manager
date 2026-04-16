@@ -2960,7 +2960,8 @@ function renderCvManagerList(datasets) {
                 ${urlHtml}
                 <span class="cvm-date">${formatDateTime(ds.updated_at)}</span>
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? t('datasets.reload') : t('datasets.load')}</button>
-                <button class="btn btn-ghost btn-sm cvm-more-btn" onclick="openCvmMenu(event, ${ds.id}, '${safeName}', '${dsLang}', ${!!ds.slug}, ${isDefault}, ${isDefSib}, ${!!ds.is_public}, ${showToggle})">
+                ${ds.is_public && !isDefault && !isDefSib ? `<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 14)}</span>` : ''}
+                <button class="btn btn-ghost btn-sm cvm-more-btn" onclick="openCvmMenu(event, ${ds.id}, '${safeName}', '${dsLang}', '${escapeHtml(ds.slug || '')}', ${isDefault}, ${isDefSib}, ${!!ds.is_public}, ${showToggle})">
                     ${materialIcon('more_vert', 16)}
                 </button>
             </div>`;
@@ -3235,7 +3236,7 @@ function toggleOlderVersions(btn) {
 }
 
 // Overflow menu for dataset row actions
-function openCvmMenu(event, id, name, lang, hasSlug, isDefault, isDefSib, isPublic, showToggle) {
+function openCvmMenu(event, id, name, lang, slug, isDefault, isDefSib, isPublic, showToggle) {
     event.stopPropagation();
     document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
     const menu = document.createElement('div');
@@ -3250,14 +3251,14 @@ function openCvmMenu(event, id, name, lang, hasSlug, isDefault, isDefSib, isPubl
     items += `<button onclick="openDatasetLangPicker(event, ${id}); this.closest('.cvm-overflow-menu').remove()">
         ${materialIcon('translate', 16)} <span>${t('datasets.change_language')}</span>
     </button>`;
-    if (hasSlug && !isDefault) {
-        items += `<button onclick="previewDataset('${escapeHtml(name)}'); this.closest('.cvm-overflow-menu').remove()">
+    if (slug && !isDefault) {
+        const slugSuffix = lang ? `/${lang}` : '';
+        items += `<button onclick="previewDataset('${slug}${slugSuffix}'); this.closest('.cvm-overflow-menu').remove()">
             ${materialIcon('visibility', 16)} <span>${t('datasets.preview')}</span>
         </button>`;
     }
-    if (hasSlug) {
-        const dsLang = lang;
-        const urlPath = isDefault ? '' : (isDefSib ? dsLang : `v/${escapeHtml(name)}`);
+    if (slug) {
+        const urlPath = isDefault ? '' : (isDefSib ? lang : `v/${slug}${lang ? '/' + lang : ''}`);
         items += `<button onclick="copyDatasetUrl('${urlPath}', ${isPublic || isDefault || isDefSib}); this.closest('.cvm-overflow-menu').remove()">
             ${materialIcon('content_copy', 16)} <span>${t('datasets.copy_url')}</span>
         </button>`;

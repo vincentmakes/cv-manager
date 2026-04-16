@@ -417,5 +417,7 @@
     "datasets.make_shared": "Freigeben",
     "datasets.preview": "Vorschau",
     "datasets.copy_url": "URL kopieren",
-    "ats.english_headers": "Abschnittsüberschriften auf Englisch"
+    "ats.english_headers": "Abschnittsüberschriften auf Englisch",
+    "datasets.legend_default": "Wird auf der öffentlichen Seite angezeigt",
+    "datasets.legend_shared": "Unter /v/-URL freigegeben"
 }

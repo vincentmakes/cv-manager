@@ -417,5 +417,7 @@
     "datasets.make_shared": "Delen",
     "datasets.preview": "Voorbeeld",
     "datasets.copy_url": "URL kopiëren",
-    "ats.english_headers": "Sectiekoppen in het Engels"
+    "ats.english_headers": "Sectiekoppen in het Engels",
+    "datasets.legend_default": "Weergegeven op de publieke site",
+    "datasets.legend_shared": "Gedeeld op /v/-URL"
 }
