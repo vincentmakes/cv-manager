@@ -934,10 +934,13 @@
                 const name = langNames[lang] || lang.toUpperCase();
 
                 let href;
-                if (window.DATASET_SLUG) {
+                if (window.DATASET_IS_DEFAULT) {
+                    // Default dataset: use clean /{lang} URLs
+                    href = `/${lang}`;
+                } else if (window.DATASET_SLUG) {
                     href = `/v/${window.DATASET_SLUG}/${lang}`;
                 } else {
-                    href = `/?lang=${lang}`;
+                    href = `/${lang}`;
                 }
 
                 html += `<a class="public-lang-option${isActive ? ' active' : ''}" href="${href}">

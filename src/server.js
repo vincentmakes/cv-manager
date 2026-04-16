@@ -223,7 +223,7 @@ function servePublicIndex(req, res) {
 
             // Inject default dataset slug with language info (no DATASET_PREVIEW = no preview banner)
             const siblings = getDatasetSiblings(defaultDataset);
-            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}";${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
+            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_IS_DEFAULT = true;${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
 
             return res.type('html').send(html);
@@ -1240,6 +1240,8 @@ if (PUBLIC_ONLY) {
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
+    // Clean language URLs for default dataset: /en, /de, /fr, etc.
+    publicApp.get('/:lang([a-z]{2})', (req, res) => { req.query.lang = req.params.lang; servePublicIndex(req, res); });
 
     publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
     publicApp.listen(PUBLIC_PORT, '0.0.0.0', () => { console.log(`CV Manager (Public Read-Only) running at http://localhost:${PUBLIC_PORT}`); });
@@ -2837,6 +2839,8 @@ if (PUBLIC_ONLY) {
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
     publicApp.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
+    // Clean language URLs for default dataset: /en, /de, /fr, etc.
+    publicApp.get('/:lang([a-z]{2})', (req, res) => { req.query.lang = req.params.lang; servePublicIndex(req, res); });
     publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
 
     app.listen(PORT, '0.0.0.0', () => { console.log(`CV Manager v${CURRENT_VERSION} (Admin) running at http://localhost:${PORT}`); });

@@ -3117,7 +3117,6 @@ function closeDatasetsModal() {
 function renderDatasetOpenRow(ds, opts = {}) {
     const isActive = ds.id === activeDatasetId;
     const isDefault = !!ds.is_default;
-    const showSlugUrl = ds.slug && !isDefault;
     const showPublicToggle = ds.slug && !isDefault;
     const classes = ['dataset-item'];
     if (isActive) classes.push('dataset-item-active');
@@ -3132,6 +3131,28 @@ function renderDatasetOpenRow(ds, opts = {}) {
         : '';
     const dsLang = ds.language || 'en';
     const slugUrlSuffix = opts.showLangBadge ? `/${dsLang}` : '';
+
+    // URL display: default datasets show /{lang}, non-default show /v/{slug}/{lang}
+    let urlHtml = '';
+    if (isDefault && opts.showLangBadge) {
+        // Default dataset with languages — show /{lang}
+        urlHtml = `<div class="dataset-url">
+            <span class="dataset-url-text">/${dsLang}</span>
+            <button class="dataset-url-copy" onclick="copyDatasetUrl('${dsLang}', true)" title="Copy URL">
+                <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
+            </button>
+        </div>`;
+    } else if (isDefault) {
+        urlHtml = '<div class="dataset-default-hint">Served at root URL <code>/</code></div>';
+    } else if (ds.slug) {
+        urlHtml = `<div class="dataset-url">
+            <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}${slugUrlSuffix}</span>
+            <button class="dataset-url-copy" onclick="copyDatasetUrl('v/${escapeHtml(ds.slug)}${slugUrlSuffix}', ${ds.is_public})" title="Copy URL">
+                <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
+            </button>
+            ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
+        </div>`;
+    }
 
     return `
         <div class="${classes.join(' ')}" data-id="${ds.id}">
@@ -3150,14 +3171,7 @@ function renderDatasetOpenRow(ds, opts = {}) {
                     ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
                 </div>
                 <div class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</div>
-                ${showSlugUrl ? `<div class="dataset-url">
-                    <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}${slugUrlSuffix}</span>
-                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}${slugUrlSuffix}', ${ds.is_public})" title="Copy URL">
-                        <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
-                    </button>
-                    ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
-                </div>` : ''}
-                ${isDefault ? '<div class="dataset-default-hint">Served at root URL <code>/</code></div>' : ''}
+                ${urlHtml}
             </div>
             <div class="dataset-actions">
                 ${showPublicToggle ? `
@@ -3270,9 +3284,10 @@ function previewDataset(slug) {
 }
 
 // Copy dataset URL to clipboard
-function copyDatasetUrl(slug, isPublic) {
+function copyDatasetUrl(pathOrSlug, isPublic) {
     // Use current origin — works for both admin preview and public site
-    const url = `${window.location.origin}/v/${slug}`;
+    const path = pathOrSlug.startsWith('v/') || pathOrSlug.length <= 2 ? pathOrSlug : `v/${pathOrSlug}`;
+    const url = `${window.location.origin}/${path}`;
     
     // Try modern clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
