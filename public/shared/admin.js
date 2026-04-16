@@ -2954,10 +2954,9 @@ function renderCvManagerList(datasets) {
                 </label>
                 <span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>
                 ${opts.versionBadge ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>` : ''}
-                <span class="cvm-name">${escapeHtml(ds.name)}</span>
+                <span class="cvm-name">${escapeHtml(ds.name)}${ds.is_public && !isDefault && !isDefSib ? ` <span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>` : ''}</span>
                 ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
                 ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
-                ${ds.is_public && !isDefault && !isDefSib ? `<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 14)}</span>` : ''}
                 ${urlHtml}
                 <span class="cvm-date">${formatDateTime(ds.updated_at)}</span>
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? t('datasets.reload') : t('datasets.load')}</button>
