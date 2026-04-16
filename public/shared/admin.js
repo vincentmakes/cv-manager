@@ -3225,8 +3225,8 @@ function renderDatasetOpenRow(ds, opts = {}) {
         urlHtml = '<div class="dataset-default-hint">Served at root URL <code>/</code></div>';
     } else if (isDefaultSibling) {
         urlHtml = `<div class="dataset-url">
-            <span class="dataset-url-text">/?lang=${dsLang}</span>
-            <button class="dataset-url-copy" onclick="copyDatasetUrl('?lang=${dsLang}', true)" title="Copy URL">
+            <span class="dataset-url-text">/${dsLang}</span>
+            <button class="dataset-url-copy" onclick="copyDatasetUrl('${dsLang}', true)" title="Copy URL">
                 <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
             </button>
         </div>`;
