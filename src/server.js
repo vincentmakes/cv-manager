@@ -186,13 +186,17 @@ function servePublicIndex(req, res) {
         // Check if a default dataset exists — serve from it instead of live DB
         let defaultDataset = null;
         try {
-            const requestedLang = req.query.lang;
-            if (requestedLang) {
-                defaultDataset = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1 AND language = ?').get(requestedLang);
-            }
-            if (!defaultDataset) {
-                // Serve the most recently updated default variant (reflects admin's last edit)
-                defaultDataset = db.prepare("SELECT * FROM saved_datasets WHERE is_default = 1 ORDER BY updated_at DESC LIMIT 1").get();
+            // Find THE one default variant
+            const primary = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1').get();
+            if (primary) {
+                const requestedLang = req.query.lang;
+                if (requestedLang && primary.language_group && requestedLang !== primary.language) {
+                    // Visitor requested a different language — find that sibling (must be public)
+                    const sibling = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language = ? AND is_public = 1').get(primary.language_group, requestedLang);
+                    defaultDataset = sibling || primary;
+                } else {
+                    defaultDataset = primary;
+                }
             }
         } catch (e) { /* is_default column may not exist yet */ }
 
@@ -997,15 +1001,18 @@ function resolveDatasetBySlug(slug, lang, requirePublic) {
         dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ? AND language = ?${publicFilter}`).get(slug, lang);
     }
     if (!dataset) {
-        dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ?${publicFilter} ORDER BY updated_at DESC LIMIT 1`).get(slug);
+        // Prefer the default variant, then most recently updated
+        dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ?${publicFilter} ORDER BY is_default DESC, updated_at DESC LIMIT 1`).get(slug);
     }
     return dataset || null;
 }
 
-// Get siblings list for injecting into HTML pages
+// Get siblings list for injecting into HTML pages.
+// Returns the dataset itself plus any public siblings in the same language group.
 function getDatasetSiblings(dataset) {
     if (!dataset || !dataset.language_group) return [];
-    return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? AND (is_public = 1 OR is_default = 1) ORDER BY language ASC').all(dataset.language_group);
+    // Include: the dataset itself (always) + siblings that are public or default
+    return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? AND (is_public = 1 OR is_default = 1 OR id = ?) ORDER BY language ASC').all(dataset.language_group, dataset.id);
 }
 
 // Serve admin dataset preview page with language support
@@ -1900,7 +1907,7 @@ if (PUBLIC_ONLY) {
                     if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
                     slug = sibling.slug;
                     isPublic = 0; // New language variants start private; user chooses which to make public
-                    isDefault = sibling.is_default || 0;
+                    isDefault = 0; // Default is per-variant; user sets it explicitly via the radio button
                 } else {
                     languageGroup = crypto.randomUUID();
                 }
@@ -1921,20 +1928,15 @@ if (PUBLIC_ONLY) {
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
-    // Set a dataset as the default (public at /) — applies to entire language group
+    // Set a dataset as the default (public at /) — sets this ONE specific variant
     app.put('/api/datasets/:id/default', (req, res) => {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
 
-            // Clear any existing default, then set all group members as default (atomic)
             const setDefault = db.transaction(() => {
                 db.prepare('UPDATE saved_datasets SET is_default = 0 WHERE is_default = 1').run();
-                if (dataset.language_group) {
-                    db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE language_group = ?').run(dataset.language_group);
-                } else {
-                    db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE id = ?').run(req.params.id);
-                }
+                db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE id = ?').run(req.params.id);
             });
             setDefault();
 

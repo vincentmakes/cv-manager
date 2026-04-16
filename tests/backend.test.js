@@ -832,31 +832,38 @@ describe('Backend API', () => {
             await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
         });
 
-        it('set default applies to entire language group', async () => {
+        it('set default applies to one specific variant only', async () => {
             const res1 = await fetch(`${BASE_URL}/api/datasets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: 'Def Group', language: 'en' }),
+                body: JSON.stringify({ name: 'Def Single', language: 'en' }),
             });
             const d1 = await res1.json();
 
             const res2 = await fetch(`${BASE_URL}/api/datasets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: 'Def Group', language: 'de', language_group: d1.language_group }),
+                body: JSON.stringify({ name: 'Def Single', language: 'de', language_group: d1.language_group }),
             });
             const d2 = await res2.json();
 
-            // Set d1 as default
+            // Set d1 (EN) as default
             await fetch(`${BASE_URL}/api/datasets/${d1.id}/default`, { method: 'PUT' });
 
-            // Check both are default
+            // Only d1 should be default, not d2
             const listRes = await fetch(`${BASE_URL}/api/datasets`);
             const all = await listRes.json();
             const g1 = all.find(d => d.id === d1.id);
             const g2 = all.find(d => d.id === d2.id);
             assert.strictEqual(g1.is_default, true);
-            assert.strictEqual(g2.is_default, true);
+            assert.strictEqual(g2.is_default, false);
+
+            // Now set d2 (DE) as default — d1 should lose default
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}/default`, { method: 'PUT' });
+            const listRes2 = await fetch(`${BASE_URL}/api/datasets`);
+            const all2 = await listRes2.json();
+            assert.strictEqual(all2.find(d => d.id === d1.id).is_default, false);
+            assert.strictEqual(all2.find(d => d.id === d2.id).is_default, true);
 
             // Create another dataset and set it as default to allow cleanup
             const res3 = await fetch(`${BASE_URL}/api/datasets`, {
