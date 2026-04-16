@@ -2953,10 +2953,8 @@ function renderSaveAsList(datasets) {
                 <div class="save-as-version-row save-as-version-flat">
                     <button type="button" class="save-as-flat-row" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
                         ${badge}
-                        <span class="save-as-row-info">
-                            <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
-                            <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
-                        </span>
+                        <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
+                        <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
                     </button>
                 </div>`;
         }
@@ -3247,10 +3245,10 @@ function renderDatasetOpenRow(ds, opts = {}) {
                     <span class="dataset-name">${escapeHtml(ds.name)}</span>
                     ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
                     ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
-                    <span class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</span>
                 </div>
                 ${urlHtml}
             </div>
+            <span class="dataset-date">${formatDateTime(ds.updated_at)}</span>
             <div class="dataset-actions">
                 ${showPublicToggle ? `
                     <div class="dataset-toggle-group">
