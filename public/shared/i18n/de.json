@@ -10,7 +10,6 @@
     "toolbar.print": "Drucken / PDF",
     "toolbar.menu": "Menü",
     "toolbar.change_theme": "Designfarbe ändern",
-
     "theme.title": "Designfarbe",
     "theme.brightness": "Helligkeit",
     "theme.reset": "Zurücksetzen",
@@ -23,7 +22,6 @@
     "theme.cyan": "Cyan",
     "theme.indigo": "Indigo",
     "theme.pink": "Rosa",
-
     "banner.update": "Update verfügbar: v{{latest}} (Sie verwenden v{{current}})",
     "banner.whats_new": "Was ist neu",
     "banner.dismiss": "Ausblenden",
@@ -33,7 +31,6 @@
     "banner.saved": "✓ Gespeichert",
     "banner.save_failed": "Speichern fehlgeschlagen",
     "badge.open_to_work": "Offen für Arbeit",
-
     "section.about": "Berufliche Zusammenfassung",
     "section.timeline": "Karriereverlauf",
     "section.experience": "Berufserfahrung",
@@ -41,7 +38,6 @@
     "section.education": "Ausbildung",
     "section.skills": "Fähigkeiten & Expertise",
     "section.projects": "Ausgewählte Projekte",
-
     "action.edit_profile": "Profil bearbeiten",
     "action.edit_about": "Über mich bearbeiten",
     "action.toggle_visibility": "Sichtbarkeit umschalten",
@@ -52,7 +48,6 @@
     "action.add_project": "Projekt hinzufügen",
     "action.move_up": "Nach oben",
     "action.move_down": "Nach unten",
-
     "btn.save": "Speichern",
     "btn.cancel": "Abbrechen",
     "btn.delete": "Löschen",
@@ -61,7 +56,6 @@
     "btn.done": "Fertig",
     "btn.add_item": "Eintrag hinzufügen",
     "btn.delete_section": "Abschnitt löschen",
-
     "modal.edit": "Bearbeiten",
     "modal.edit_experience": "Erfahrung bearbeiten",
     "modal.add_experience": "Erfahrung hinzufügen",
@@ -73,7 +67,6 @@
     "modal.add_skill": "Fähigkeitskategorie hinzufügen",
     "modal.edit_project": "Projekt bearbeiten",
     "modal.add_project": "Projekt hinzufügen",
-
     "form.profile_picture": "Profilbild",
     "form.show_profile_picture": "Profilbild anzeigen",
     "form.choose_image": "Bild auswählen",
@@ -132,7 +125,6 @@
     "form.project_title": "Projekttitel",
     "form.technologies": "Technologien (kommagetrennt)",
     "form.link_optional": "Link (optional)",
-
     "icon.code": "Code / Programmierung",
     "icon.server": "Server / Infrastruktur",
     "icon.database": "Datenbank / Daten",
@@ -163,21 +155,18 @@
     "icon.eco": "Nachhaltigkeit",
     "icon.finance": "Finanzen",
     "icon.default": "Standard",
-
     "settings.title": "Einstellungen",
     "settings.tab.sections": "Abschnitte & Überschriften",
     "settings.tab.custom": "Benutzerdefinierte Abschnitte",
     "settings.tab.print": "Drucken & Export",
     "settings.tab.advanced": "Erweitert",
     "settings.version.update_available": "Update verfügbar: v{{version}}",
-
     "settings.sections.info": "Abschnitte per Drag & Drop neu anordnen oder die Pfeiltasten verwenden. Sichtbarkeit mit dem Augensymbol umschalten. Auf Abschnittsnamen klicken, um Überschriften zu bearbeiten.",
     "settings.sections.click_to_edit": "Klicken, um Abschnittsüberschrift zu bearbeiten",
     "settings.sections.reset_default": "Auf Standard zurücksetzen",
     "settings.custom.info": "Erstellen Sie benutzerdefinierte Abschnitte mit verschiedenen Layouts. Benutzerdefinierte Abschnitte erscheinen in der Abschnittsreihenfolge oben.",
     "settings.custom.add": "Benutzerdefinierten Abschnitt hinzufügen",
     "settings.custom.no_sections": "Noch keine benutzerdefinierten Abschnitte.\nKlicken Sie auf \"Benutzerdefinierten Abschnitt hinzufügen\", um einen zu erstellen.",
-
     "settings.print.public_button": "Öffentliche Drucktaste",
     "settings.print.public_button_desc": "Drucktaste auf öffentlicher Seite anzeigen",
     "settings.print.page_numbers": "Seitenzahlen",
@@ -199,7 +188,6 @@
     "settings.print.static_site_btn": "ZIP herunterladen",
     "settings.print.static_site_generating": "Wird erstellt...",
     "settings.print.static_site_docs_link": "Erfahren Sie, wie Sie Ihre statische Seite bereitstellen →",
-
     "settings.advanced.info": "Erweiterte Einstellungen für Formatierung, SEO, Analysen und benutzerdefinierte Integrationen.",
     "settings.advanced.date_format": "Datumsformat",
     "settings.advanced.date_format_desc": "Wählen Sie, wie Daten in Ihrem Lebenslauf angezeigt werden",
@@ -229,9 +217,7 @@
     "settings.advanced.tracking_code": "Tracking-Code",
     "settings.advanced.tracking_code_desc": "Fügen Sie hier Ihren Analytics-Tracking-Code ein (Google Analytics, Matomo usw.). Dieser Code wird in die öffentlichen Lebenslaufseiten eingefügt.",
     "settings.advanced.tracking_code_hint": "Der Code wird vor dem schließenden </head>-Tag eingefügt. Änderungen werden gespeichert, wenn Sie auf \"Änderungen speichern\" klicken.",
-
     "settings.language.info": "Wählen Sie die Anzeigesprache für die CV-Manager-Oberfläche. Dies hat keinen Einfluss auf den Inhalt Ihres Lebenslaufs.",
-
     "datasets.title": "Gespeicherte Datensätze",
     "datasets.legend.radio": "Wählen Sie, welchen Datensatz Besucher unter Ihrer Stamm-URL sehen",
     "datasets.legend.toggle": "Andere Datensätze unter ihrer eigenen /v/slug-URL teilen",
@@ -270,7 +256,6 @@
     "lang_switcher.switch_to": "Wechseln zu {{lang}}",
     "toast.language_variant_created": "Sprachvariante erstellt",
     "confirm.switch_language": "Zu {{lang}} wechseln? Aktuelle Änderungen werden automatisch gespeichert.",
-
     "custom_section.edit_title": "Benutzerdefinierten Abschnitt bearbeiten",
     "custom_section.add_title": "Benutzerdefinierten Abschnitt hinzufügen",
     "custom_section.section_name": "Abschnittsname",
@@ -281,7 +266,6 @@
     "custom_section.grid_columns": "Rasterspalten",
     "custom_section.show_on_timeline": "Einträge in der Karriere-Zeitleiste anzeigen",
     "custom_section.show_on_timeline_hint": "Einträge werden zusammen mit den Berufserfahrungen in der Zeitleiste angezeigt",
-
     "custom_item.edit_title": "Eintrag bearbeiten",
     "custom_item.add_title": "Eintrag hinzufügen",
     "custom_item.platform": "Plattform",
@@ -314,7 +298,6 @@
     "custom_item.caption_placeholder": "z. B. Bildbeschreibung",
     "custom_item.add_picture": "Bild hinzufügen",
     "custom_item.add_item": "Eintrag hinzufügen",
-
     "toast.saved": "Erfolgreich gespeichert",
     "toast.deleted": "Gelöscht",
     "toast.visibility_updated": "Sichtbarkeit aktualisiert",
@@ -375,18 +358,15 @@
     "toast.item_delete_failed": "Eintrag konnte nicht gelöscht werden",
     "toast.failed_save": "Speichern fehlgeschlagen",
     "toast.credential_url_invalid": "Nachweis-URL muss mit http:// oder https:// beginnen",
-
     "confirm.delete_item": "Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?",
     "confirm.delete_dataset": "Datensatz \"{{name}}\" löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm.delete_section": "Diesen benutzerdefinierten Abschnitt und alle seine Einträge löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm.delete_custom_item": "Diesen Eintrag löschen?",
     "confirm.delete_logo": "Dieses unbenutzte Logo löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm.overwrite_dataset": "\"{{name}}\" überschreiben? Der vorhandene Lebenslauf wird durch die aktuellen Daten ersetzt.",
-
     "duration.years": "{{count}} J.",
     "duration.months": "{{count}} Mon.",
     "duration.years_months": "{{years}} J. {{months}} Mon.",
-
     "month.short.jan": "Jan",
     "month.short.feb": "Feb",
     "month.short.mar": "Mär",
@@ -411,9 +391,7 @@
     "month.long.october": "Oktober",
     "month.long.november": "November",
     "month.long.december": "Dezember",
-
     "toolbar.ats_export": "ATS-Dokument",
-
     "ats.title": "ATS-freundliches Dokument",
     "ats.scale": "Skalierung",
     "ats.paper_size": "Papierformat",
@@ -425,13 +403,18 @@
     "ats.pdf_title_suffix": "Lebenslauf",
     "ats.pdf_subject": "Lebenslauf / CV",
     "ats.name_fallback": "Name",
-
     "present": "Aktuell",
     "loading": "Laden...",
     "items": "Einträge",
-
     "view_link": "Ansehen →",
     "learn_more": "Mehr erfahren →",
     "view_project": "Projekt ansehen",
-    "view_credential": "Nachweis ansehen"
+    "view_credential": "Nachweis ansehen",
+    "toolbar.cv_manager": "CV-Verwaltung",
+    "datasets.cv_manager_title": "CV-Verwaltung",
+    "datasets.default_hint_short": "Standard",
+    "datasets.make_private": "Privat machen",
+    "datasets.make_shared": "Freigeben",
+    "datasets.preview": "Vorschau",
+    "datasets.copy_url": "URL kopieren"
 }

@@ -256,7 +256,6 @@
     "lang_switcher.switch_to": "Overschakelen naar {{lang}}",
     "toast.language_variant_created": "Taalvariant aangemaakt",
     "confirm.switch_language": "Overschakelen naar {{lang}}? Huidige wijzigingen worden automatisch opgeslagen.",
-
     "custom_section.edit_title": "Aangepaste sectie bewerken",
     "custom_section.add_title": "Aangepaste sectie toevoegen",
     "custom_section.section_name": "Sectienaam",
@@ -368,7 +367,6 @@
     "duration.years": "{{count}} jr",
     "duration.months": "{{count}} mnd",
     "duration.years_months": "{{years}} jr {{months}} mnd",
-
     "month.short.jan": "Jan",
     "month.short.feb": "Feb",
     "month.short.mar": "Mrt",
@@ -393,9 +391,7 @@
     "month.long.october": "Oktober",
     "month.long.november": "November",
     "month.long.december": "December",
-
     "toolbar.ats_export": "ATS-document",
-
     "ats.title": "ATS-vriendelijk document",
     "ats.scale": "Schaal",
     "ats.paper_size": "Papierformaat",
@@ -407,12 +403,18 @@
     "ats.pdf_title_suffix": "CV",
     "ats.pdf_subject": "CV / Curriculum vitae",
     "ats.name_fallback": "Naam",
-
     "present": "Heden",
     "loading": "Laden...",
     "items": "items",
     "view_link": "Bekijken →",
     "learn_more": "Meer informatie →",
     "view_project": "Project bekijken",
-    "view_credential": "Referentie bekijken"
+    "view_credential": "Referentie bekijken",
+    "toolbar.cv_manager": "CV-beheer",
+    "datasets.cv_manager_title": "CV-beheer",
+    "datasets.default_hint_short": "Standaard",
+    "datasets.make_private": "Privé maken",
+    "datasets.make_shared": "Delen",
+    "datasets.preview": "Voorbeeld",
+    "datasets.copy_url": "URL kopiëren"
 }

@@ -4,6 +4,25 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.30.0] - 2026-04-16
+
+### Changed
+- Unified CV Manager modal replaces the separate Open and Save As modals. A single "CV Manager" button in the toolbar opens one modal with a save-as form at the top and the full dataset list below.
+- Each dataset row now shows: default radio, language badge, version badge, name, URL, date, Load button, and a ⋮ overflow menu for secondary actions (share/private, change language, preview, copy URL, delete).
+- Flat row layout per language variant — no intermediate version headers for single-language versions, eliminating redundant name repetition.
+- Group headers show base name, "+ New version" button, and version count on one line.
+- Compact legend moved to the modal footer.
+
+### Fixed
+- "New version" button now correctly passes version_group UUID instead of language_group, fixing version grouping for new versions.
+- Startup fixup consolidates orphaned version_groups created by the previous bug.
+- Default dataset siblings now hide the public/private toggle and show the correct `/{lang}` URL.
+- Language is now included in JSON export/import for proper round-tripping.
+
+### Added
+- Per-dataset language editor: clickable language badge on each row opens a picker to reassign a dataset's language.
+- `PUT /api/datasets/:id/language` endpoint with conflict validation.
+
 ## [1.29.0] - 2026-04-16
 
 ### Added

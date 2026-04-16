@@ -2871,105 +2871,123 @@ function suggestNextVersion(baseName, datasets, versionGroup) {
     return `${baseName} v${next}`;
 }
 
-async function saveAsDataset() {
+// ─── Unified CV Manager Modal ───────────────────────────────
+
+async function openCvManager() {
     try {
         saveAsDatasetsCache = await api('/api/datasets') || [];
     } catch (err) {
         saveAsDatasetsCache = [];
     }
-    renderSaveAsList(saveAsDatasetsCache);
+    renderCvManagerList(saveAsDatasetsCache);
     const input = document.getElementById('saveAsNameInput');
-    input.value = activeDatasetName || '';
-    // Populate language dropdown
+    if (input) input.value = activeDatasetName || '';
     const langSelect = document.getElementById('saveAsLangSelect');
     if (langSelect && typeof I18n !== 'undefined') {
         langSelect.innerHTML = I18n.languages.map(l =>
             `<option value="${l.code}"${l.code === (activeDatasetLanguage || 'en') ? ' selected' : ''}>${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
         ).join('');
     }
-    // Reset language group and version group
     const langGroupInput = document.getElementById('saveAsLangGroup');
     if (langGroupInput) langGroupInput.value = '';
     const vgInput = document.getElementById('saveAsVersionGroup');
     if (vgInput) vgInput.value = '';
     updateSaveAsSubmitState();
-    document.getElementById('saveAsModalOverlay').classList.add('active');
-    setTimeout(() => { input.focus(); input.select(); }, 30);
+    document.getElementById('cvManagerOverlay').classList.add('active');
+    if (input) setTimeout(() => { input.focus(); input.select(); }, 30);
 }
 
-function closeSaveAsModal() {
-    const overlay = document.getElementById('saveAsModalOverlay');
+// Backwards-compat aliases so banner language switcher and other callers still work
+async function saveAsDataset() { return openCvManager(); }
+async function openDatasetsModal() { return openCvManager(); }
+function closeSaveAsModal() { closeCvManager(); }
+function closeDatasetsModal() { closeCvManager(); }
+
+function closeCvManager() {
+    const overlay = document.getElementById('cvManagerOverlay');
     if (overlay) overlay.classList.remove('active');
+    document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
 }
 
-function renderSaveAsList(datasets) {
-    const container = document.getElementById('saveAsExistingList');
+function renderCvManagerList(datasets) {
+    const container = document.getElementById('datasetsList');
     if (!container) return;
     if (!datasets || datasets.length === 0) {
-        container.innerHTML = `<p class="save-as-empty">${escapeHtml(t('datasets.no_existing'))}</p>`;
+        container.innerHTML = `<p class="cvm-empty">${escapeHtml(t('datasets.no_existing'))}</p>`;
         return;
     }
     const hierarchy = groupDatasetsHierarchy(datasets);
     const newVersionLabel = escapeHtml(t('datasets.new_version'));
     const addLanguageLabel = escapeHtml(t('datasets.add_language'));
-    const lastUpdatedLabel = escapeHtml(t('datasets.last_updated'));
+
+    // Build set of language_groups that contain the default dataset
+    const defaultLangGroups = new Set();
+    datasets.forEach(ds => {
+        if (ds.is_default && ds.language_group) defaultLangGroups.add(ds.language_group);
+    });
+
+    function cvmRow(ds, opts = {}) {
+        const isActive = ds.id === activeDatasetId;
+        const isDefault = !!ds.is_default;
+        const isDefSib = !isDefault && !!opts.isDefaultSibling;
+        const dsLang = ds.language || 'en';
+        const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
+        const slugSuffix = opts.showLangBadge ? `/${dsLang}` : '';
+        const classes = ['cvm-row'];
+        if (isActive) classes.push('cvm-row-active');
+        if (isDefault || isDefSib) classes.push('cvm-row-default');
+
+        let urlText = '';
+        if (isDefault && opts.showLangBadge) urlText = `/${dsLang}`;
+        else if (isDefault) urlText = '/';
+        else if (isDefSib) urlText = `/${dsLang}`;
+        else if (ds.slug) urlText = `/v/${escapeHtml(ds.slug)}${slugSuffix}`;
+
+        const urlHtml = urlText ? `<span class="cvm-url">${urlText}</span>` : '';
+        const showToggle = ds.slug && !isDefault && !isDefSib;
+
+        return `
+            <div class="${classes.join(' ')}" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" data-lang="${dsLang}">
+                <label class="cvm-radio" title="${isDefault ? t('datasets.default_hint') : ''}">
+                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
+                    <span class="radio-dot"></span>
+                </label>
+                <span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>
+                ${opts.versionBadge ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>` : ''}
+                <span class="cvm-name">${escapeHtml(ds.name)}</span>
+                ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
+                ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
+                ${urlHtml}
+                <span class="cvm-date">${formatDateTime(ds.updated_at)}</span>
+                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? t('datasets.reload') : t('datasets.load')}</button>
+                <button class="btn btn-ghost btn-sm cvm-more-btn" onclick="openCvmMenu(event, ${ds.id}, '${safeName}', '${dsLang}', ${!!ds.slug}, ${isDefault}, ${isDefSib}, ${!!ds.is_public}, ${showToggle})">
+                    ${materialIcon('more_vert', 16)}
+                </button>
+            </div>`;
+    }
+
+    function renderVersionBlock(ver, showVersionBadge) {
+        const hasDefSib = ver.language_group && defaultLangGroups.has(ver.language_group);
+        if (ver.languages.length <= 1) {
+            return cvmRow(ver.languages[0], { versionBadge: showVersionBadge ? (ver.version || 1) : null, isDefaultSibling: hasDefSib });
+        }
+        return ver.languages.map(ds =>
+            cvmRow(ds, { versionBadge: showVersionBadge ? (ver.version || 1) : null, showLangBadge: true, isDefaultSibling: hasDefSib })
+        ).join('');
+    }
 
     function addLangBtn(ver) {
         if (!ver.language_group) return '';
         const existingLangs = new Set(ver.languages.map(d => d.language || 'en'));
         const allLangs = (typeof I18n !== 'undefined' ? I18n.languages : []).map(l => l.code);
-        const available = allLangs.filter(c => !existingLangs.has(c));
-        if (available.length === 0) return '';
-        return `<button type="button" class="btn btn-ghost btn-sm save-as-newlang-btn" data-action="add-language" data-name="${escapeHtml(ver.name)}" data-group="${escapeHtml(ver.language_group)}">
-            <span class="material-symbols-outlined" style="font-size:14px">translate</span>
-            <span>${addLanguageLabel}</span>
+        if (allLangs.filter(c => !existingLangs.has(c)).length === 0) return '';
+        return `<button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="add-language" data-name="${escapeHtml(ver.name)}" data-group="${escapeHtml(ver.language_group)}">
+            ${materialIcon('translate', 14)} <span>${addLanguageLabel}</span>
         </button>`;
     }
 
-    function renderLangRows(ver) {
-        if (ver.languages.length <= 1) {
-            // Single language — just show the dataset row
-            const ds = ver.languages[0];
-            return `<button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
-                <span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>
-                <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
-                <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
-            </button>`;
-        }
-        // Multiple languages — show each with a lang badge
-        return ver.languages.map(ds => `
-            <button type="button" class="save-as-lang-child" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
-                <span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>
-                <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
-            </button>
-        `).join('');
-    }
-
-    function renderVersion(ver, showVersionBadge) {
-        const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version}</span>` : '';
-        if (ver.languages.length <= 1) {
-            // Single language — flat row with optional version badge (no tree nesting)
-            const ds = ver.languages[0];
-            return `
-                <div class="save-as-version-row save-as-version-flat">
-                    <button type="button" class="save-as-flat-row" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
-                        ${badge}
-                        <span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>
-                        <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
-                        <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
-                    </button>
-                    ${addLangBtn(ver)}
-                </div>`;
-        }
-        return `
-            <div class="save-as-version-row">
-                <div class="save-as-version-header">
-                    ${badge}
-                    <span class="save-as-version-name">${escapeHtml(ver.name)}</span>
-                    ${addLangBtn(ver)}
-                </div>
-                <div class="save-as-version-langs">${renderLangRows(ver)}</div>
-            </div>`;
+    function versionHasHighlight(ver) {
+        return ver.languages.some(ds => ds.id === activeDatasetId || ds.is_default);
     }
 
     container.innerHTML = hierarchy.map(group => {
@@ -2977,54 +2995,63 @@ function renderSaveAsList(datasets) {
         const hasMultipleVersions = group.versions.length > 1;
 
         if (!hasMultipleVersions) {
-            // Single version — render standalone
             const ver = group.versions[0];
-            const escVersionGroup = group.versionGroup ? escapeHtml(group.versionGroup) : '';
-            return `
-                <div class="save-as-item save-as-standalone">
-                    ${renderVersion(ver, false)}
-                    <div class="save-as-row-actions">
-                        <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVersionGroup}">
-                            <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                            <span>${newVersionLabel}</span>
+            if (ver.languages.length === 1) {
+                const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
+                const hasDefSib = ver.language_group && defaultLangGroups.has(ver.language_group);
+                return `<div class="cvm-group cvm-group-standalone">
+                    ${cvmRow(ver.languages[0], { isDefaultSibling: hasDefSib })}
+                    <div class="cvm-group-actions">
+                        <button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVG}">
+                            ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
                         </button>
-                        ${!ver.language_group ? '' : addLangBtn(ver)}
+                        ${addLangBtn(ver)}
                     </div>
                 </div>`;
+            }
+            return `<div class="cvm-group">
+                <div class="cvm-group-header">
+                    <span class="cvm-group-name">${escapeHtml(group.base)}</span>
+                    ${addLangBtn(ver)}
+                    <span class="cvm-group-count">${escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))}</span>
+                </div>
+                <div class="cvm-group-body">${renderVersionBlock(ver, false)}</div>
+            </div>`;
         }
 
-        // Multiple versions — show latest, collapse older
         const latest = group.versions[group.versions.length - 1];
         const older = group.versions.slice(0, -1);
         const olderCount = older.length;
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.versions.length }));
-        // Auto-expand if an older version contains the dataset being edited
-        const olderHasActive = older.some(v => v.languages.some(ds => ds.id === activeDatasetId));
-        return `
-            <div class="save-as-item save-as-group">
-                <div class="save-as-group-header">
-                    <span class="save-as-group-base">${escBase}</span>
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}" data-version-group="${group.versionGroup ? escapeHtml(group.versionGroup) : ''}">
-                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                        <span>${newVersionLabel}</span>
+        const olderHasHighlight = older.some(v => versionHasHighlight(v));
+        const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
+
+        return `<div class="cvm-group">
+            <div class="cvm-group-header">
+                <span class="cvm-group-name">${escapeHtml(group.base)}</span>
+                <button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVG}">
+                    ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
+                </button>
+                <span class="cvm-group-count">${countLabel}</span>
+            </div>
+            <div class="cvm-group-body">
+                ${renderVersionBlock(latest, true)}
+                ${olderCount > 0 ? `
+                    <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
+                        ${materialIcon(olderHasHighlight ? 'expand_less' : 'expand_more', 14)}
+                        <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
                     </button>
-                    <span class="save-as-group-count">${countLabel}</span>
-                </div>
-                <div class="save-as-group-children">
-                    ${renderVersion(latest, true)}
-                    ${olderCount > 0 ? `
-                        <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
-                            <span class="material-symbols-outlined" style="font-size:14px">${olderHasActive ? 'expand_less' : 'expand_more'}</span>
-                            <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
-                        </button>
-                        <div class="version-collapsed-group" style="${olderHasActive ? '' : 'display:none;'}">
-                            ${older.map(v => renderVersion(v, true)).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>`;
+                    <div class="version-collapsed-group" style="${olderHasHighlight ? '' : 'display:none;'}">
+                        ${older.map(v => renderVersionBlock(v, true)).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>`;
     }).join('');
 }
+
+// Backwards-compat alias
+function renderSaveAsList(datasets) { renderCvManagerList(datasets); }
 
 function saveAsOnListClick(e) {
     const btn = e.target.closest('[data-action]');
@@ -3101,12 +3128,12 @@ function updateSaveAsSubmitState() {
         btn.textContent = t('datasets.save_new', { name });
         btn.classList.add('btn-primary');
     }
-    // Highlight the matching row (if any) so users see which CV will be overwritten
-    document.querySelectorAll('#saveAsExistingList [data-action="fill-name"]').forEach(el => {
+    // Highlight the matching row so users see which CV will be overwritten
+    document.querySelectorAll('#datasetsList .cvm-row').forEach(el => {
         if (name && el.getAttribute('data-name') === name && el.getAttribute('data-lang') === language) {
-            el.classList.add('save-as-row-selected');
+            el.classList.add('cvm-row-selected');
         } else {
-            el.classList.remove('save-as-row-selected');
+            el.classList.remove('cvm-row-selected');
         }
     });
 }
@@ -3150,9 +3177,9 @@ async function submitSaveAs() {
 }
 
 // Wire up input + list listeners once the modal is in the DOM
-(function initSaveAsModalListeners() {
+(function initCvManagerListeners() {
     function setup() {
-        const list = document.getElementById('saveAsExistingList');
+        const list = document.getElementById('datasetsList');
         const input = document.getElementById('saveAsNameInput');
         if (list && !list.dataset.saveAsBound) {
             list.addEventListener('click', saveAsOnListClick);
@@ -3181,196 +3208,17 @@ async function submitSaveAs() {
     }
 })();
 
-async function openDatasetsModal() {
-    await loadDatasetsList();
-    document.getElementById('datasetsModalOverlay').classList.add('active');
-}
 
-function closeDatasetsModal() {
-    document.getElementById('datasetsModalOverlay').classList.remove('active');
-}
 
-// Render a single dataset row for the Open modal.
-// opts.isChild = true indents the row and attaches tree connectors to the version children.
-// opts.versionBadge = number renders a v{n} badge next to the name.
-// opts.showLangBadge = true renders a language badge next to the name.
-function renderDatasetOpenRow(ds, opts = {}) {
-    const isActive = ds.id === activeDatasetId;
-    const isDefault = !!ds.is_default;
-    const isDefaultSibling = !isDefault && !!opts.isDefaultSibling;
-    const showPublicToggle = ds.slug && !isDefault && !isDefaultSibling;
-    const classes = ['dataset-item'];
-    if (isActive) classes.push('dataset-item-active');
-    if (isDefault || isDefaultSibling) classes.push('dataset-item-is-default');
-    if (opts.isChild) classes.push('dataset-item-child');
-    const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
-    const versionBadgeHtml = opts.versionBadge
-        ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>`
-        : '';
-    const dsLang = ds.language || 'en';
-    // Language badge is always shown and clickable to change the dataset's language
-    const langBadgeHtml = `<button type="button" class="dataset-lang-badge dataset-lang-badge-btn" onclick="openDatasetLangPicker(event, ${ds.id})" title="${escapeHtml(t('datasets.change_language'))}">${dsLang.toUpperCase()}</button>`;
-    const slugUrlSuffix = opts.showLangBadge ? `/${dsLang}` : '';
-
-    // URL display: default and its siblings show /{lang}, others show /v/{slug}/{lang}
-    let urlHtml = '';
-    if (isDefault && opts.showLangBadge) {
-        urlHtml = `<div class="dataset-url">
-            <span class="dataset-url-text">/${dsLang}</span>
-            <button class="dataset-url-copy" onclick="copyDatasetUrl('${dsLang}', true)" title="Copy URL">
-                <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
-            </button>
-        </div>`;
-    } else if (isDefault) {
-        urlHtml = '<div class="dataset-default-hint">Served at root URL <code>/</code></div>';
-    } else if (isDefaultSibling) {
-        urlHtml = `<div class="dataset-url">
-            <span class="dataset-url-text">/${dsLang}</span>
-            <button class="dataset-url-copy" onclick="copyDatasetUrl('${dsLang}', true)" title="Copy URL">
-                <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
-            </button>
-        </div>`;
-    } else if (ds.slug) {
-        urlHtml = `<div class="dataset-url">
-            <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}${slugUrlSuffix}</span>
-            <button class="dataset-url-copy" onclick="copyDatasetUrl('v/${escapeHtml(ds.slug)}${slugUrlSuffix}', ${ds.is_public})" title="Copy URL">
-                <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
-            </button>
-            ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
-        </div>`;
-    }
-
-    return `
-        <div class="${classes.join(' ')}" data-id="${ds.id}">
-            <div class="dataset-default-radio">
-                <label class="radio-label" title="${isDefault ? 'This dataset is currently served at the root URL /' : 'Click to make this dataset the one served at the root URL /'}">
-                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
-                    <span class="radio-dot"></span>
-                </label>
-            </div>
-            <div class="dataset-info">
-                <div class="dataset-name-row">
-                    ${langBadgeHtml}
-                    ${versionBadgeHtml}
-                    <span class="dataset-name">${escapeHtml(ds.name)}</span>
-                    ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
-                    ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
-                </div>
-                ${urlHtml}
-            </div>
-            <span class="dataset-date">${formatDateTime(ds.updated_at)}</span>
-            <div class="dataset-actions">
-                ${showPublicToggle ? `
-                    <div class="dataset-toggle-group">
-                        <label class="toggle-switch dataset-toggle" title="When enabled, this version is accessible at its /v/ slug URL">
-                            <input type="checkbox" ${ds.is_public ? 'checked' : ''} onchange="toggleDatasetPublic(${ds.id}, this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="dataset-toggle-label">${ds.is_public ? 'Shared' : 'Private'}</span>
-                    </div>` : ''}
-                ${ds.slug && !isDefault ? `
-                    <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}${slugUrlSuffix}')" title="Preview saved version">
-                        <span class="material-symbols-outlined" style="font-size:14px">visibility</span>
-                    </button>` : ''}
-                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? 'Reload' : 'Load'}</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${safeName}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
-            </div>
-        </div>`;
-}
-
+// Reload the unified list (called after actions like toggle public, set default, delete)
 async function loadDatasetsList() {
-    const datasets = await api('/api/datasets');
-    const container = document.getElementById('datasetsList');
-
-    if (datasets.length === 0) {
-        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No saved datasets yet.<br>Use "Save As..." to save your current CV.</p>';
-        return;
+    try {
+        saveAsDatasetsCache = await api('/api/datasets') || [];
+    } catch (err) {
+        saveAsDatasetsCache = [];
     }
-
-    // Build set of language_groups that contain the default dataset
-    const defaultLangGroups = new Set();
-    datasets.forEach(ds => {
-        if (ds.is_default && ds.language_group) defaultLangGroups.add(ds.language_group);
-    });
-
-    const hierarchy = groupDatasetsHierarchy(datasets);
-
-    function renderVersionBlock(ver, showVersionBadge) {
-        const showLang = ver.languages.length > 1;
-        const hasDefaultSibling = ver.language_group && defaultLangGroups.has(ver.language_group);
-        if (!showLang) {
-            // Single language — render dataset row directly with version badge inline
-            return renderDatasetOpenRow(ver.languages[0], { isChild: true, versionBadge: showVersionBadge ? (ver.version || 1) : null, isDefaultSibling: hasDefaultSibling });
-        }
-        const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version || 1}</span>` : '';
-        const rows = ver.languages.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true, isDefaultSibling: hasDefaultSibling })
-        ).join('');
-        return `
-            <div class="dataset-open-version-row">
-                ${badge ? `<div class="dataset-open-version-header">${badge}<span class="dataset-open-version-name">${escapeHtml(ver.name)}</span></div>` : ''}
-                <div class="dataset-open-version-langs">${rows}</div>
-            </div>`;
-    }
-
-    // Check whether a version block contains the active or default dataset
-    function versionHasHighlight(ver) {
-        return ver.languages.some(ds => ds.id === activeDatasetId || ds.is_default);
-    }
-
-    container.innerHTML = hierarchy.map(group => {
-        const hasMultipleVersions = group.versions.length > 1;
-
-        if (!hasMultipleVersions) {
-            const ver = group.versions[0];
-            const hasDefaultSibling = ver.language_group && defaultLangGroups.has(ver.language_group);
-            if (ver.languages.length === 1) {
-                // Single version, single language — standalone row
-                return renderDatasetOpenRow(ver.languages[0], { isDefaultSibling: hasDefaultSibling });
-            }
-            // Single version, multiple languages — group with lang badges
-            const rows = ver.languages.map(ds =>
-                renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true, isDefaultSibling: hasDefaultSibling })
-            ).join('');
-            return `
-                <div class="dataset-open-group">
-                    <div class="dataset-open-group-header">
-                        <span class="dataset-open-group-base">${escapeHtml(group.base)}</span>
-                        <span class="dataset-open-group-count">${escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))}</span>
-                    </div>
-                    <div class="dataset-open-group-children">${rows}</div>
-                </div>`;
-        }
-
-        // Multiple versions — show latest, collapse older
-        const latest = group.versions[group.versions.length - 1];
-        const older = group.versions.slice(0, -1);
-        const olderCount = older.length;
-        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.versions.length }));
-
-        const latestHtml = renderVersionBlock(latest, true);
-        const olderHtml = older.map(v => renderVersionBlock(v, true)).join('');
-        // Auto-expand if an older version contains the active or default dataset
-        const olderHasHighlight = older.some(v => versionHasHighlight(v));
-
-        return `
-            <div class="dataset-open-group">
-                <div class="dataset-open-group-header">
-                    <span class="dataset-open-group-base">${escapeHtml(group.base)}</span>
-                    <span class="dataset-open-group-count">${countLabel}</span>
-                </div>
-                <div class="dataset-open-group-children">
-                    ${latestHtml}
-                    ${olderCount > 0 ? `
-                        <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
-                            <span class="material-symbols-outlined" style="font-size:14px">${olderHasHighlight ? 'expand_less' : 'expand_more'}</span>
-                            <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
-                        </button>
-                        <div class="version-collapsed-group" style="${olderHasHighlight ? '' : 'display:none;'}">${olderHtml}</div>
-                    ` : ''}
-                </div>
-            </div>`;
-    }).join('');
+    renderCvManagerList(saveAsDatasetsCache);
+    updateSaveAsSubmitState();
 }
 
 // Toggle older versions visibility in both modals
@@ -3386,6 +3234,54 @@ function toggleOlderVersions(btn) {
         const text = label.textContent;
         label.textContent = isHidden ? text.replace('older', 'older') : text;
     }
+}
+
+// Overflow menu for dataset row actions
+function openCvmMenu(event, id, name, lang, hasSlug, isDefault, isDefSib, isPublic, showToggle) {
+    event.stopPropagation();
+    document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
+    const menu = document.createElement('div');
+    menu.className = 'cvm-overflow-menu';
+    let items = '';
+    if (showToggle) {
+        items += `<button onclick="toggleDatasetPublic(${id}, ${!isPublic}); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon(isPublic ? 'link_off' : 'share', 16)}
+            <span>${isPublic ? t('datasets.make_private') : t('datasets.make_shared')}</span>
+        </button>`;
+    }
+    items += `<button onclick="openDatasetLangPicker(event, ${id}); this.closest('.cvm-overflow-menu').remove()">
+        ${materialIcon('translate', 16)} <span>${t('datasets.change_language')}</span>
+    </button>`;
+    if (hasSlug && !isDefault) {
+        items += `<button onclick="previewDataset('${escapeHtml(name)}'); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon('visibility', 16)} <span>${t('datasets.preview')}</span>
+        </button>`;
+    }
+    if (hasSlug) {
+        const dsLang = lang;
+        const urlPath = isDefault ? '' : (isDefSib ? dsLang : `v/${escapeHtml(name)}`);
+        items += `<button onclick="copyDatasetUrl('${urlPath}', ${isPublic || isDefault || isDefSib}); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon('content_copy', 16)} <span>${t('datasets.copy_url')}</span>
+        </button>`;
+    }
+    if (!isDefault) {
+        items += `<div class="cvm-overflow-divider"></div>`;
+        items += `<button class="cvm-overflow-danger" onclick="deleteDataset(${id}, '${name}'); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon('delete', 16)} <span>${t('btn.delete')}</span>
+        </button>`;
+    }
+    menu.innerHTML = items;
+    document.body.appendChild(menu);
+    const rect = event.currentTarget.getBoundingClientRect();
+    menu.style.top = `${rect.bottom + 4}px`;
+    menu.style.right = `${window.innerWidth - rect.right}px`;
+    const closeFn = (ev) => {
+        if (!menu.contains(ev.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeFn);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closeFn), 0);
 }
 
 // Preview dataset in new tab (admin only)

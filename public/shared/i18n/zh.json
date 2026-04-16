@@ -256,7 +256,6 @@
     "lang_switcher.switch_to": "切换到 {{lang}}",
     "toast.language_variant_created": "语言变体已创建",
     "confirm.switch_language": "切换到 {{lang}}？当前更改将自动保存。",
-
     "custom_section.edit_title": "编辑自定义板块",
     "custom_section.add_title": "添加自定义板块",
     "custom_section.section_name": "板块名称",
@@ -368,7 +367,6 @@
     "duration.years": "{{count}}年",
     "duration.months": "{{count}}个月",
     "duration.years_months": "{{years}}年{{months}}个月",
-
     "month.short.jan": "1月",
     "month.short.feb": "2月",
     "month.short.mar": "3月",
@@ -393,9 +391,7 @@
     "month.long.october": "10月",
     "month.long.november": "11月",
     "month.long.december": "12月",
-
     "toolbar.ats_export": "ATS 文档",
-
     "ats.title": "ATS 友好文档",
     "ats.scale": "缩放",
     "ats.paper_size": "纸张大小",
@@ -407,12 +403,18 @@
     "ats.pdf_title_suffix": "简历",
     "ats.pdf_subject": "简历 / CV",
     "ats.name_fallback": "姓名",
-
     "present": "至今",
     "loading": "加载中...",
     "items": "条目",
     "view_link": "查看 →",
     "learn_more": "了解更多 →",
     "view_project": "查看项目",
-    "view_credential": "查看证书"
+    "view_credential": "查看证书",
+    "toolbar.cv_manager": "CV管理器",
+    "datasets.cv_manager_title": "CV管理器",
+    "datasets.default_hint_short": "默认",
+    "datasets.make_private": "设为私密",
+    "datasets.make_shared": "设为共享",
+    "datasets.preview": "预览",
+    "datasets.copy_url": "复制链接"
 }

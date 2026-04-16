@@ -256,7 +256,6 @@
     "lang_switcher.switch_to": "Cambiar a {{lang}}",
     "toast.language_variant_created": "Variante de idioma creada",
     "confirm.switch_language": "¿Cambiar a {{lang}}? Los cambios actuales se guardarán automáticamente.",
-
     "custom_section.edit_title": "Editar sección personalizada",
     "custom_section.add_title": "Añadir sección personalizada",
     "custom_section.section_name": "Nombre de sección",
@@ -368,7 +367,6 @@
     "duration.years": "{{count}} año",
     "duration.months": "{{count}} meses",
     "duration.years_months": "{{years}} años {{months}} meses",
-
     "month.short.jan": "Ene",
     "month.short.feb": "Feb",
     "month.short.mar": "Mar",
@@ -393,9 +391,7 @@
     "month.long.october": "Octubre",
     "month.long.november": "Noviembre",
     "month.long.december": "Diciembre",
-
     "toolbar.ats_export": "Documento ATS",
-
     "ats.title": "Documento compatible con ATS",
     "ats.scale": "Escala",
     "ats.paper_size": "Tamaño de papel",
@@ -407,12 +403,18 @@
     "ats.pdf_title_suffix": "Currículum",
     "ats.pdf_subject": "Currículum / CV",
     "ats.name_fallback": "Nombre",
-
     "present": "Actualidad",
     "loading": "Cargando...",
     "items": "elementos",
     "view_link": "Ver →",
     "learn_more": "Más información →",
     "view_project": "Ver proyecto",
-    "view_credential": "Ver credencial"
+    "view_credential": "Ver credencial",
+    "toolbar.cv_manager": "Gestor de CV",
+    "datasets.cv_manager_title": "Gestor de CV",
+    "datasets.default_hint_short": "Predeterminado",
+    "datasets.make_private": "Hacer privado",
+    "datasets.make_shared": "Compartir",
+    "datasets.preview": "Vista previa",
+    "datasets.copy_url": "Copiar URL"
 }
