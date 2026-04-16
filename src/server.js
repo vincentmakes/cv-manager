@@ -2235,6 +2235,11 @@ if (PUBLIC_ONLY) {
     app.get('/v/:slug/:lang', (req, res) => { serveAdminDatasetPage(req, res, req.params.lang); });
     app.get('/v/:slug', (req, res) => { serveAdminDatasetPage(req, res, req.query.lang); });
 
+    // Dataset data API routes for admin preview (same as public server)
+    app.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
+    app.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
+    app.get('/api/datasets/id/:id', (req, res) => { serveDatasetDataById(req, res); });
+
     // Custom Sections API
     app.get('/api/custom-sections', (req, res) => {
         const sections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
