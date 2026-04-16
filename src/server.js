@@ -191,7 +191,8 @@ function servePublicIndex(req, res) {
                 defaultDataset = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1 AND language = ?').get(requestedLang);
             }
             if (!defaultDataset) {
-                defaultDataset = db.prepare("SELECT * FROM saved_datasets WHERE is_default = 1 ORDER BY CASE WHEN language = 'en' THEN 0 ELSE 1 END, language ASC LIMIT 1").get();
+                // Serve the most recently updated default variant (reflects admin's last edit)
+                defaultDataset = db.prepare("SELECT * FROM saved_datasets WHERE is_default = 1 ORDER BY updated_at DESC LIMIT 1").get();
             }
         } catch (e) { /* is_default column may not exist yet */ }
 
@@ -996,7 +997,7 @@ function resolveDatasetBySlug(slug, lang, requirePublic) {
         dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ? AND language = ?${publicFilter}`).get(slug, lang);
     }
     if (!dataset) {
-        dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ?${publicFilter} ORDER BY CASE WHEN language = 'en' THEN 0 ELSE 1 END, language ASC LIMIT 1`).get(slug);
+        dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ?${publicFilter} ORDER BY updated_at DESC LIMIT 1`).get(slug);
     }
     return dataset || null;
 }
