@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.29.1] - 2026-04-16
+
+### Fixed
+- Active language in the banner language switcher dropdown now has white text on blue background for proper contrast
+- "Add language" item in the language switcher dropdown is now clickable and opens the Save As modal pre-filled for adding a new language variant
+
 ## [1.29.0] - 2026-04-16
 
 ### Added

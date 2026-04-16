@@ -1251,16 +1251,17 @@ body {
 }
 .dataset-lang-option:hover { background: var(--gray-50); }
 .dataset-lang-option.active {
-    background: var(--primary-light, rgba(0, 102, 255, 0.08));
-    color: var(--primary);
+    background: var(--primary);
+    color: var(--white, #fff);
     font-weight: 600;
 }
-.dataset-lang-option.disabled {
-    opacity: 0.5;
-    cursor: default;
+.dataset-lang-option.active:hover { background: var(--primary); }
+.dataset-lang-option.add-lang {
+    cursor: pointer;
     border-top: 1px solid var(--gray-100);
+    opacity: 0.8;
 }
-.dataset-lang-option.disabled:hover { background: transparent; }
+.dataset-lang-option.add-lang:hover { opacity: 1; background: var(--gray-50); }
 .dataset-lang-code {
     font-weight: 700;
     font-size: 11px;

@@ -334,11 +334,10 @@ function renderDatasetLangSwitcher() {
             <span class="dataset-lang-name">${escapeHtml(langNames[sib.language] || sib.language)}</span>
         </div>`;
     }
-    // Add language hint
-    html += `<div class="dataset-lang-option disabled" title="${escapeHtml(t('datasets.add_language_hint'))}">
+    // Add language option
+    html += `<div class="dataset-lang-option add-lang" onclick="addLanguageFromSwitcher()">
         <span class="material-symbols-outlined" style="font-size:14px">add</span>
         <span class="dataset-lang-name">${escapeHtml(t('datasets.add_language'))}</span>
-        <span class="material-symbols-outlined" style="font-size:12px;margin-left:auto;opacity:0.5">info</span>
     </div>`;
 
     dropdown.innerHTML = html;
@@ -348,6 +347,33 @@ function renderDatasetLangSwitcher() {
 function toggleDatasetLangSwitcher() {
     const dropdown = document.getElementById('datasetLangDropdown');
     if (dropdown) dropdown.classList.toggle('active');
+}
+
+// Open Save As modal pre-filled for adding a new language to the current language group
+async function addLanguageFromSwitcher() {
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (dropdown) dropdown.classList.remove('active');
+    if (!activeDatasetLanguageGroup) return;
+    // Open Save As modal, then override fields for add-language mode
+    await saveAsDataset();
+    const input = document.getElementById('saveAsNameInput');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
+    const langSelect = document.getElementById('saveAsLangSelect');
+    if (input) input.value = activeDatasetName || '';
+    if (langGroupInput) langGroupInput.value = activeDatasetLanguageGroup;
+    // Filter language dropdown to only languages not already in this group
+    if (langSelect && typeof I18n !== 'undefined') {
+        const existingLangs = new Set();
+        existingLangs.add(activeDatasetLanguage || 'en');
+        activeDatasetSiblings.forEach(s => existingLangs.add(s.language));
+        const available = I18n.languages.filter(l => !existingLangs.has(l.code));
+        if (available.length > 0) {
+            langSelect.innerHTML = available.map(l =>
+                `<option value="${l.code}">${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
+            ).join('');
+        }
+    }
+    updateSaveAsSubmitState();
 }
 
 // Close language switcher when clicking outside
