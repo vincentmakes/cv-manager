@@ -2,135 +2,149 @@
 
 ## Geral
 
-??? question "Meus dados são armazenados em algum servidor externo?"
-    Não. Tudo roda localmente no seu servidor. Os dados do seu CV são armazenados em um arquivo de banco de dados SQLite no diretório `/data`.
+??? question "Os meus dados são armazenados em algum servidor externo?"
+    Não. Tudo corre localmente no seu servidor. Os dados do seu CV são armazenados num ficheiro de base de dados SQLite no diretório `/data`.
 
-??? question "Posso rodar o CV Manager sem Docker?"
-    Sim. Instale o Node.js 18+, execute `npm install` no diretório do projeto e depois `node src/server.js`. O admin roda na porta 3000 e o site público na porta 3001.
+??? question "Posso executar o CV Manager sem Docker?"
+    Sim. Instale o Node.js 18+, execute `npm install` no diretório do projeto e depois `node src/server.js`. A interface de administração corre na porta 3000 e o site público na porta 3001.
 
 ??? question "Várias pessoas podem usar a mesma instância?"
-    O CV Manager é projetado como uma aplicação para um único usuário. Cada instância gerencia o CV de uma pessoa. Para várias pessoas, execute containers separados.
+    O CV Manager foi concebido como uma aplicação para um único utilizador. Cada instância gere o CV de uma pessoa. Para várias pessoas, execute containers separados.
 
 ## Edição
 
 ??? question "Como marco uma posição como 'atual'?"
-    Deixe o campo **Data de Término** vazio. Ele será exibido como "Presente" no CV.
+    Deixe o campo **Data de término** vazio. Será exibido como "Presente" no CV.
 
-??? question "Posso reordenar itens dentro de uma seção?"
-    Sim. A maioria dos itens suporta reordenação por arrastar e soltar. A ordem é salva automaticamente.
+??? question "Posso reordenar itens dentro de uma secção?"
+    Sim. A maioria dos itens suporta reordenação por arrastar e soltar. A ordem é guardada automaticamente.
 
 ??? question "Como adiciono marcadores a uma experiência?"
     Edite a experiência e insira os destaques no campo **Destaques** — um marcador por linha.
 
-??? question "Como adiciono um logotipo da empresa?"
-    Edite a experiência, role até a seção **Logotipo da Empresa** e clique em **Escolher imagem** para fazer upload. Você também pode clicar em **Usar existente** para reutilizar um logotipo já enviado. Ative o toggle **"Sincronizar logotipo em todas as experiências da [Empresa]"** para aplicar o mesmo logotipo a todas as experiências naquela empresa.
+??? question "Como adiciono um logótipo da empresa?"
+    Edite a experiência, desloque-se até à secção **Logótipo da empresa** e clique em **Escolher imagem** para carregar. Também pode clicar em **Usar existente** para reutilizar um logótipo já carregado. Ative a opção **"Sincronizar logótipo em todas as experiências de [Empresa]"** para aplicar o mesmo logótipo a todas as experiências nessa empresa.
 
-??? question "Excluí algo acidentalmente. Posso desfazer?"
-    Não há recurso de desfazer. Como as edições são salvas automaticamente no conjunto de dados ativo, a alteração é persistida imediatamente. Se você tem uma exportação anterior ou um conjunto de dados salvo separado, pode restaurar a partir deles. É uma boa prática exportar seu CV regularmente como backup.
+??? question "Eliminei algo acidentalmente. Posso desfazer?"
+    Não existe funcionalidade de desfazer. Como as edições são guardadas automaticamente no conjunto de dados ativo, a alteração é persistida imediatamente. Se tiver uma exportação anterior ou um conjunto de dados guardado separadamente, pode restaurar a partir daí. É boa prática exportar o seu CV regularmente como backup.
 
-## Seções Personalizadas
+## Secções personalizadas
 
-??? question "Quantas seções personalizadas posso criar?"
-    Não há limite rígido. Crie quantas precisar.
+??? question "Quantas secções personalizadas posso criar?"
+    Não existe limite rígido. Crie quantas precisar.
 
-??? question "Posso alterar o tipo de layout de uma seção personalizada após criá-la?"
-    Sim. Edite a seção e selecione um layout diferente. Note que alguns campos podem não ser transferidos entre tipos de layout (ex.: mudar de cartões para links sociais).
+??? question "Posso alterar o tipo de layout de uma secção personalizada após criá-la?"
+    Sim. Edite a secção e selecione um layout diferente. Note que alguns campos podem não ser transferidos entre tipos de layout (por exemplo, mudar de cartões para links sociais).
 
-??? question "Qual a diferença entre os layouts 'Marcadores' e 'Texto Livre'?"
-    **Marcadores** renderiza cada linha como um item de lista com marcador e um título de grupo. **Texto Livre** renderiza texto simples com quebras de linha preservadas e sem título — semelhante à seção Sobre/Bio.
+??? question "Qual a diferença entre os layouts 'Marcadores' e 'Texto livre'?"
+    **Marcadores** apresenta cada linha como um item de lista com marcador e um título de grupo. **Texto livre** apresenta texto simples com quebras de linha preservadas e sem título — semelhante à secção Sobre/Bio.
 
 ## Impressão e PDF
 
-??? question "Por que meu PDF parece diferente da tela?"
-    A saída de impressão usa estilos de impressão dedicados, otimizados para papel. Alguns efeitos visuais (estados de hover, animações, gradientes) são simplificados. Itens ocultos e controles de admin são removidos automaticamente.
+??? question "Porque é que o meu PDF parece diferente do ecrã?"
+    A saída de impressão usa estilos dedicados otimizados para papel. Alguns efeitos visuais (estados de hover, animações, gradientes) são simplificados. Itens ocultos e controlos de administração são removidos automaticamente.
 
-??? question "Como faço para encaixar meu CV em menos páginas?"
-    Tente ativar **Permitir Divisão de Seções** e **Permitir Divisão de Itens** nas configurações de Impressão e Exportação. Você também pode ocultar itens ou seções menos importantes, ou usar layouts de seções personalizadas mais compactos. Também ajuste a escala de impressão pela caixa de diálogo de impressão de qualquer navegador (às vezes fica um pouco escondida).
+??? question "Como faço para encaixar o meu CV em menos páginas?"
+    Tente ativar **Permitir divisão de secções** e **Permitir divisão de itens** nas configurações de Impressão e exportação. Também pode ocultar itens ou secções menos importantes, ou usar layouts de secções personalizadas mais compactos. Além disso, ajuste a escala de impressão pela caixa de diálogo de impressão de qualquer navegador (às vezes fica um pouco escondida).
 
-??? question "Por que alguns itens estão faltando no meu CV impresso?"
+??? question "Porque é que alguns itens estão a faltar no meu CV impresso?"
     Verifique se esses itens foram alternados para oculto (ícone de olho). Itens ocultos são excluídos da saída de impressão e da visualização pública.
 
-??? question "Os números de página não estão aparecendo?"
-    Certifique-se de que **Números de Página** está ativado em Configurações → Impressão e Exportação. Alguns visualizadores de PDF do navegador podem não exibir números de página gerados por CSS — tente baixar o PDF e abri-lo em um leitor dedicado.
+??? question "Os números de página não estão a aparecer?"
+    Certifique-se de que **Números de página** está ativado em Configurações → Impressão e exportação. Alguns visualizadores de PDF do navegador podem não exibir números de página gerados por CSS — tente descarregar o PDF e abri-lo num leitor dedicado.
 
-## Linha do Tempo
+## Linha do tempo
 
-??? question "A linha do tempo mostra as datas erradas / apenas anos / datas completas?"
-    A linha do tempo tem sua própria configuração de data. Vá em **Configurações → Avançado → Linha do Tempo: Apenas Anos** para alternar entre exibição apenas de anos e o formato completo de data.
+??? question "A linha do tempo mostra datas erradas / apenas anos / datas completas?"
+    A linha do tempo tem a sua própria configuração de data. Vá a **Configurações → Avançado → Linha do tempo: Apenas anos** para alternar entre exibição apenas de anos e o formato completo de data.
 
 ??? question "Posso adicionar entradas diretamente na linha do tempo?"
     Não. A linha do tempo é gerada automaticamente a partir das suas experiências profissionais. Adicione ou edite experiências e a linha do tempo é atualizada automaticamente.
 
-??? question "A bandeira do país não está aparecendo na linha do tempo?"
-    Certifique-se de que o campo **Código do País** na experiência está definido com um código de país ISO de 2 letras válido (ex.: `us`, `gb`, `ch`, `de`, `fr`). As bandeiras são carregadas de um CDN externo.
+??? question "A bandeira do país não está a aparecer na linha do tempo?"
+    Certifique-se de que o campo **Código do país** na experiência está definido com um código de país ISO de 2 letras válido (por exemplo, `us`, `gb`, `ch`, `de`, `fr`). As bandeiras são carregadas de um CDN externo.
 
 ??? question "O que acontece quando tenho dois empregos ao mesmo tempo?"
-    A linha do tempo detecta automaticamente posições sobrepostas e as renderiza como **trilhas paralelas**. O emprego concorrente aparece em uma linha de ramificação elevada com conectores em curva S mostrando os pontos de bifurcação e junção. Nenhuma configuração necessária — é baseado inteiramente nas suas datas de início/fim. Sobreposições menores que 1 mês são ignoradas (comum durante transições de emprego).
+    A linha do tempo deteta automaticamente posições sobrepostas e apresenta-as como **trilhas paralelas**. O emprego concorrente aparece numa linha de ramificação elevada com conectores em curva S mostrando os pontos de bifurcação e junção. Nenhuma configuração necessária — é baseado inteiramente nas suas datas de início/fim. Sobreposições inferiores a 1 mês são ignoradas (comum durante transições de emprego).
 
-??? question "Por que a linha do tempo mostra um logotipo em vez do nome da empresa?"
-    Se você enviou um logotipo da empresa para essa experiência, a linha do tempo exibe a imagem do logotipo em vez do texto. Se o arquivo do logotipo estiver ausente, ele volta a exibir o nome da empresa. Para remover um logotipo da linha do tempo, edite a experiência e clique em **Remover** na seção Logotipo da Empresa.
+??? question "Porque é que a linha do tempo mostra um logótipo em vez do nome da empresa?"
+    Se carregou um logótipo da empresa para essa experiência, a linha do tempo exibe a imagem do logótipo em vez do texto. Se o ficheiro do logótipo estiver em falta, volta a exibir o nome da empresa. Para remover um logótipo da linha do tempo, edite a experiência e clique em **Remover** na secção Logótipo da empresa.
 
-## Idioma e Atualizações
+## Idioma e atualizações
 
-??? question "Como mudo o idioma do admin?"
-    Clique no **ícone de globo** na barra de ferramentas e selecione um idioma na grade suspensa. A alteração é aplicada imediatamente e salva entre sessões.
+??? question "Como mudo o idioma da administração?"
+    Clique no **ícone de globo** na barra de ferramentas e selecione um idioma na grelha. A alteração é aplicada imediatamente e guardada entre sessões.
 
-??? question "Como verifico qual versão estou usando?"
-    Abra **Configurações** — o número da versão é mostrado no canto inferior esquerdo do modal (ex.: `v1.11.0`).
+??? question "Como verifico que versão estou a usar?"
+    Abra as **Configurações** — o número da versão é mostrado no canto inferior esquerdo da janela modal (por exemplo, `v1.11.0`).
 
 ??? question "Não vejo o banner de atualização mesmo havendo uma nova versão disponível?"
-    A verificação de versão é armazenada em cache por 24 horas. Reinicie seu servidor (ou container Docker) para limpar o cache e forçar uma nova verificação. Seu servidor também precisa de acesso de saída à internet para alcançar `raw.githubusercontent.com`.
+    A verificação de versão é armazenada em cache durante 24 horas. Reinicie o seu servidor (ou container Docker) para limpar a cache e forçar uma nova verificação. O seu servidor também precisa de acesso de saída à internet para alcançar `raw.githubusercontent.com`.
 
-## Conjuntos de Dados / Múltiplos CVs
+## Conjuntos de dados / Múltiplos CVs
 
 ??? question "O que é o conjunto de dados 'Default'?"
-    O conjunto de dados padrão é a versão do seu CV que os visitantes veem na sua URL raiz (`/`). Na primeira instalação, o CV Manager cria automaticamente um conjunto de dados "Default" a partir dos dados do seu CV. Você pode alterar qual conjunto de dados é o padrão a qualquer momento usando o botão de rádio no modal Abrir.
+    O conjunto de dados predefinido é a versão do seu CV que os visitantes veem no seu URL raiz (`/`). Na primeira instalação, o CV Manager cria automaticamente um conjunto de dados "Default" a partir dos dados do seu CV. Pode alterar qual conjunto de dados é o predefinido a qualquer momento usando o botão de rádio na janela modal do Gestor de CV.
 
-??? question "Minhas edições são salvas automaticamente?"
-    Sim. Toda alteração que você faz no admin (adicionar, editar, excluir, reordenar, alternar visibilidade) é automaticamente salva no conjunto de dados ativo após um curto intervalo. O banner mostra "Salvando…" e depois "Salvo" para confirmar.
+??? question "As minhas edições são guardadas automaticamente?"
+    Sim. Toda a alteração que faz na administração (adicionar, editar, eliminar, reordenar, alternar visibilidade) é automaticamente guardada no conjunto de dados ativo após um curto intervalo. O banner mostra "A guardar…" e depois "Guardado" para confirmar.
 
-??? question "O que acontece quando eu 'Carrego' um conjunto de dados?"
-    Carregar um conjunto de dados alterna sua cópia de trabalho para esse conjunto de dados. Suas edições anteriores já foram salvas automaticamente, então nada é perdido.
+??? question "O que acontece quando 'Carrego' um conjunto de dados?"
+    Carregar um conjunto de dados alterna a sua cópia de trabalho para esse conjunto de dados. As suas edições anteriores já foram guardadas automaticamente, portanto nada é perdido. O idioma da interface de administração também muda para corresponder ao idioma do conteúdo do conjunto de dados.
 
-??? question "Os visitantes podem ver minhas edições em tempo real?"
-    Não. O site público serve o conjunto de dados padrão congelado, não suas edições ao vivo. Os visitantes só veem as alterações depois que o salvamento automático as grava no conjunto de dados padrão. Se você estiver editando um conjunto de dados que não é o padrão, os visitantes não verão essas alterações até que você o defina como padrão.
+??? question "Os visitantes podem ver as minhas edições em tempo real?"
+    Não. O site público serve o conjunto de dados predefinido congelado, não as suas edições em tempo real. Os visitantes só veem as alterações depois de o salvamento automático as gravar no conjunto de dados predefinido. Se estiver a editar um conjunto de dados que não é o predefinido, os visitantes não verão essas alterações até que o defina como predefinido.
 
-??? question "Os visitantes podem ver meus conjuntos de dados salvos?"
-    Somente se você torná-los públicos. Cada conjunto de dados tem um toggle no modal Abrir. Quando definido como público, essa versão se torna acessível em `/v/slug` no site público (porta 3001). Conjuntos de dados privados são visualizáveis apenas pela interface de admin.
+??? question "Os visitantes podem ver os meus conjuntos de dados guardados?"
+    Apenas se os tornar públicos. Cada conjunto de dados tem uma ação **Tornar partilhado** no menu overflow ⋮. Quando partilhado, essa versão fica acessível em `/v/slug` no site público (porta 3001). Conjuntos de dados privados são apenas pré-visualizáveis a partir da interface de administração.
 
-??? question "Como compartilho uma versão específica do CV com alguém?"
-    Abra o modal **Abrir...**, ative o toggle do conjunto de dados para público e clique no ícone de cópia ao lado da URL do slug. Compartilhe esse link — ele funciona no site público sem expor sua interface de admin.
+??? question "Como partilho uma versão específica do CV com alguém?"
+    Abra o **Gestor de CV**, use o menu ⋮ no conjunto de dados → **Tornar partilhado**, depois **Copiar URL**. Partilhe esse link — funciona no site público sem expor a sua interface de administração.
 
 ??? question "Posso ter várias versões públicas ao mesmo tempo?"
-    Sim. Você pode tornar quantos conjuntos de dados quiser públicos. Cada um recebe sua própria URL (ex.: `/v/technical-cv-1`, `/v/marketing-cv-2`). A página principal `/` mostra o conjunto de dados padrão.
+    Sim. Pode partilhar quantos conjuntos de dados quiser. Cada um recebe o seu próprio URL (por exemplo, `/v/technical-cv-1`, `/v/marketing-cv-2`). A página principal `/` mostra o conjunto de dados predefinido.
 
-??? question "Posso excluir o conjunto de dados padrão?"
-    Não. O conjunto de dados atualmente selecionado como padrão (via botão de rádio) não pode ser excluído. Defina um conjunto de dados diferente como padrão primeiro e depois exclua o antigo.
+??? question "Posso eliminar o conjunto de dados predefinido?"
+    Não. O conjunto de dados atualmente selecionado como predefinido (via botão de rádio) não pode ser eliminado. Defina um conjunto de dados diferente como predefinido primeiro e depois elimine o antigo.
 
-??? question "Os mecanismos de busca vão indexar minhas URLs versionadas?"
-    Por padrão, não — páginas versionadas recebem `noindex, nofollow`. Para permitir a indexação, ative **Indexar URLs Versionadas** em Configurações → Avançado.
+??? question "Os motores de busca vão indexar os meus URLs versionados?"
+    Por predefinição, não — páginas versionadas recebem `noindex, nofollow`. Para permitir a indexação, ative **Indexar URLs versionados** em Configurações → Avançado.
 
-## Site Público e SEO
+## Variantes linguísticas
 
-??? question "Como compartilho meu CV?"
-    Compartilhe a URL do seu servidor público (porta 3001). Se você configurou um domínio com Cloudflare Tunnel ou proxy reverso, compartilhe esse domínio. A URL raiz sempre mostra seu conjunto de dados padrão. Você também pode compartilhar versões específicas usando URLs públicas versionadas (veja [Conjuntos de Dados](../guide/datasets.pt.md)).
+??? question "Como crio um CV noutro idioma?"
+    Abra o **Gestor de CV** e clique em **+ Adicionar idioma** no cabeçalho do grupo do conjunto de dados que pretende traduzir. Selecione o idioma de destino e guarde. A nova variante começa como uma cópia do conteúdo existente — depois mude para ela e traduza o texto.
 
-??? question "Os mecanismos de busca vão indexar meu CV?"
-    Por padrão, sim — a página pública principal inclui meta tags adequadas, um sitemap e robots.txt. Para impedir a indexação, altere a configuração **Indexação por Mecanismos de Busca** para "No Index" em Configurações → Avançado. URLs públicas versionadas (`/v/slug`) **não são indexadas** por padrão; ative **Indexar URLs Versionadas** se quiser que elas sejam rastreadas.
+??? question "Como funcionam as variantes linguísticas?"
+    As variantes linguísticas são conjuntos de dados separados que partilham o mesmo nome e slug de URL. Estão ligadas por um grupo linguístico — alterações estruturais (ordem das secções, visibilidade, layout) sincronizam-se automaticamente entre todas as variantes, enquanto o conteúdo (texto, títulos, descrições) permanece independente.
+
+??? question "Os visitantes podem alternar idiomas no site público?"
+    Sim. Quando o conjunto de dados predefinido tem irmãos linguísticos, um botão de alternância de idioma aparece no site público. Os visitantes podem alternar entre URLs `/{lang}` (por exemplo, `/`, `/de`, `/fr`). Para conjuntos de dados partilhados não predefinidos, as variantes linguísticas estão em `/v/slug/{lang}`.
+
+??? question "O que acontece quando defino uma variante linguística como predefinida?"
+    Definir qualquer variante linguística como predefinida torna-a a versão principal em `/`. Os seus irmãos linguísticos ficam automaticamente acessíveis em `/{lang}` sem necessidade de os alternar como partilhados — são implicitamente públicos.
+
+## Site público e SEO
+
+??? question "Como partilho o meu CV?"
+    Partilhe o URL do seu servidor público (porta 3001). Se configurou um domínio com Cloudflare Tunnel ou proxy reverso, partilhe esse domínio. O URL raiz mostra sempre o seu conjunto de dados predefinido. Também pode partilhar versões específicas usando URLs públicos versionados (veja [Conjuntos de dados](../guide/datasets.md)).
+
+??? question "Os motores de busca vão indexar o meu CV?"
+    Por predefinição, sim — a página pública principal inclui meta tags adequadas, um sitemap e robots.txt. Para impedir a indexação, altere a configuração **Indexação por motores de busca** para "No Index" em Configurações → Avançado. URLs públicos versionados (`/v/slug`) **não são indexados** por predefinição; ative **Indexar URLs versionados** se quiser que sejam rastreados.
 
 ??? question "Posso adicionar o Google Analytics ao meu CV?"
-    Sim. Cole seu código de rastreamento em **Configurações → Avançado → Código de Rastreamento**. Ele é injetado apenas nas páginas públicas.
+    Sim. Cole o seu código de rastreamento em **Configurações → Avançado → Código de rastreamento**. É injetado apenas nas páginas públicas.
 
-## Docker e Infraestrutura
+## Docker e infraestrutura
 
-??? question "Minhas alterações não estão aparecendo no site público?"
-    O site público serve o **conjunto de dados padrão**, que é atualizado automaticamente quando você edita no admin. Tente um hard refresh (`Ctrl+Shift+R`) no site público. Se estiver rodando containers separados, certifique-se de que eles compartilham o mesmo volume de dados.
+??? question "As minhas alterações não estão a aparecer no site público?"
+    O site público serve o **conjunto de dados predefinido**, que é atualizado automaticamente quando edita na administração. Tente um hard refresh (`Ctrl+Shift+R`) no site público. Se estiver a executar containers separados, certifique-se de que partilham o mesmo volume de dados.
 
-??? question "Estou recebendo um erro de 'port already in use'?"
+??? question "Estou a receber um erro de 'port already in use'?"
     Altere o mapeamento de porta do host na sua configuração Docker. Por exemplo, mapeie para `3010:3000` e `3011:3001`. **Não** altere a variável de ambiente `PUBLIC_PORT` — essa é a porta interna do container.
 
 ??? question "Como faço backup dos meus dados?"
-    Duas opções: use o botão **Exportar** na barra de ferramentas do admin (exporta JSON) ou faça backup do diretório `data/` que contém o banco de dados SQLite e as imagens enviadas.
+    Duas opções: use o botão **Exportar** na barra de ferramentas da administração (exporta JSON) ou faça backup do diretório `data/` que contém a base de dados SQLite e as imagens carregadas.
 
-??? question "A foto de perfil não está aparecendo?"
-    Certifique-se de que a imagem foi enviada pela interface de admin. O arquivo é armazenado em `data/uploads/picture.jpeg`. Verifique as permissões do arquivo se estiver rodando no Linux.
+??? question "A foto de perfil não está a aparecer?"
+    Certifique-se de que a imagem foi carregada pela interface de administração. O ficheiro é armazenado em `data/uploads/picture.jpeg`. Verifique as permissões do ficheiro se estiver a executar no Linux.
