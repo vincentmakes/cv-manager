@@ -2996,20 +2996,10 @@ function renderCvManagerList(datasets) {
 
         if (!hasMultipleVersions) {
             const ver = group.versions[0];
-            if (ver.languages.length === 1) {
-                const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
-                const hasDefSib = ver.language_group && defaultLangGroups.has(ver.language_group);
-                return `<div class="cvm-group cvm-group-standalone">
-                    ${cvmRow(ver.languages[0], { isDefaultSibling: hasDefSib })}
-                    <div class="cvm-group-actions">
-                        <button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVG}">
-                            ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
-                        </button>
-                        ${addLangBtn(ver)}
-                    </div>
-                </div>`;
-            }
             const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
+            const countLabel = ver.languages.length > 1
+                ? escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))
+                : escapeHtml(t('datasets.versions_count', { count: 1 }));
             return `<div class="cvm-group">
                 <div class="cvm-group-header">
                     <span class="cvm-group-name">${escapeHtml(group.base)}</span>
@@ -3017,7 +3007,7 @@ function renderCvManagerList(datasets) {
                         ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
                     </button>
                     ${addLangBtn(ver)}
-                    <span class="cvm-group-count">${escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))}</span>
+                    <span class="cvm-group-count">${countLabel}</span>
                 </div>
                 <div class="cvm-group-body">${renderVersionBlock(ver, false)}</div>
             </div>`;
