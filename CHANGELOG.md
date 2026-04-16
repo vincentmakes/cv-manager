@@ -4,12 +4,6 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.29.1] - 2026-04-16
-
-### Fixed
-- Active language in the banner language switcher dropdown now has white text on blue background for proper contrast
-- "Add language" item in the language switcher dropdown is now clickable and opens the Save As modal pre-filled for adding a new language variant
-
 ## [1.29.0] - 2026-04-16
 
 ### Added
@@ -21,6 +15,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follo
 - Frontend dataset hierarchy (`groupDatasetsHierarchy`) now groups by `version_group` from the API instead of regex name parsing. Display names still use the parsed base name for human readability.
 - `suggestNextVersion` uses `version_group` and the `version` field to find the max version, falling back to name parsing for legacy datasets.
 - "New version" buttons pass `version_group` UUID to the backend instead of `source_group`.
+
+### Fixed
+- Active language in the banner language switcher dropdown now has white text on blue background for proper contrast
+- "Add language" item in the language switcher dropdown is now clickable and opens the Save As modal pre-filled for adding a new language variant
 
 ## [1.28.0] - 2026-04-16
 
