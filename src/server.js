@@ -1896,7 +1896,7 @@ if (PUBLIC_ONLY) {
                     const dupLang = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ?').get(languageGroup, language);
                     if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
                     slug = sibling.slug;
-                    isPublic = sibling.is_public || 0;
+                    isPublic = 0; // New language variants start private; user chooses which to make public
                     isDefault = sibling.is_default || 0;
                 } else {
                     languageGroup = crypto.randomUUID();
@@ -1971,17 +1971,13 @@ if (PUBLIC_ONLY) {
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
-    // Toggle dataset public visibility — applies to entire language group
+    // Toggle dataset public visibility — per individual language variant
     app.put('/api/datasets/:id/public', (req, res) => {
         const { is_public } = req.body;
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!ds) return res.status(404).json({ error: 'Dataset not found' });
-            if (ds.language_group) {
-                db.prepare('UPDATE saved_datasets SET is_public = ? WHERE language_group = ?').run(is_public ? 1 : 0, ds.language_group);
-            } else {
-                db.prepare('UPDATE saved_datasets SET is_public = ? WHERE id = ?').run(is_public ? 1 : 0, req.params.id);
-            }
+            db.prepare('UPDATE saved_datasets SET is_public = ? WHERE id = ?').run(is_public ? 1 : 0, req.params.id);
             const updated = db.prepare('SELECT id, name, slug, is_public, is_default FROM saved_datasets WHERE id = ?').get(req.params.id);
             res.json({ success: true, id: updated.id, slug: updated.slug, is_public: !!updated.is_public, is_default: !!updated.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }

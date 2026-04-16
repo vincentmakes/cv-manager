@@ -872,35 +872,35 @@ describe('Backend API', () => {
             await fetch(`${BASE_URL}/api/datasets/${d3.id}`, { method: 'DELETE' });
         });
 
-        it('toggle public applies to entire language group', async () => {
+        it('toggle public applies per individual language variant', async () => {
             const res1 = await fetch(`${BASE_URL}/api/datasets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: 'Pub Group', language: 'en' }),
+                body: JSON.stringify({ name: 'Pub Indiv', language: 'en' }),
             });
             const d1 = await res1.json();
 
             const res2 = await fetch(`${BASE_URL}/api/datasets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: 'Pub Group', language: 'es', language_group: d1.language_group }),
+                body: JSON.stringify({ name: 'Pub Indiv', language: 'es', language_group: d1.language_group }),
             });
             const d2 = await res2.json();
 
-            // Toggle public on d1
+            // Toggle public on d1 only
             await fetch(`${BASE_URL}/api/datasets/${d1.id}/public`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_public: true }),
             });
 
-            // Check both are public
+            // d1 should be public, d2 should remain private
             const listRes = await fetch(`${BASE_URL}/api/datasets`);
             const all = await listRes.json();
             const g1 = all.find(d => d.id === d1.id);
             const g2 = all.find(d => d.id === d2.id);
             assert.strictEqual(g1.is_public, true);
-            assert.strictEqual(g2.is_public, true);
+            assert.strictEqual(g2.is_public, false);
 
             await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
             await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });

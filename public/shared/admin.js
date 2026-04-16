@@ -2884,7 +2884,21 @@ function renderSaveAsList(datasets) {
                 </div>
             `;
         }
-        const children = group.items.map(ds => {
+        // Latest version shown, older ones collapsed
+        const latest = group.items[group.items.length - 1];
+        const older = group.items.slice(0, -1);
+        const latestName = escapeHtml(latest.name);
+        const latestHtml = `
+            <div class="save-as-version-child-row">
+                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${latestName}" data-lang="${latest.language || 'en'}">
+                    ${langBadge(latest)}
+                    <span class="dataset-version-badge">v${latest._version}</span>
+                    <span class="save-as-row-name">${latestName}</span>
+                    <span class="save-as-row-date">${formatDateTime(latest.updated_at)}</span>
+                </button>
+                ${addLangBtn(latest)}
+            </div>`;
+        const olderHtml = older.map(ds => {
             const escName = escapeHtml(ds.name);
             return `
                 <div class="save-as-version-child-row">
@@ -2895,17 +2909,26 @@ function renderSaveAsList(datasets) {
                         <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
                     </button>
                     ${addLangBtn(ds)}
-                </div>
-            `;
+                </div>`;
         }).join('');
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
+        const olderCount = older.length;
         return `
             <div class="save-as-item save-as-group">
                 <div class="save-as-group-header">
                     <span class="save-as-group-base">${escBase}</span>
                     <span class="save-as-group-count">${countLabel}</span>
                 </div>
-                <div class="save-as-group-children">${children}</div>
+                <div class="save-as-group-children">
+                    ${latestHtml}
+                    ${olderCount > 0 ? `
+                        <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
+                            <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
+                            <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
+                        </button>
+                        <div class="version-collapsed-group" style="display:none;">${olderHtml}</div>
+                    ` : ''}
+                </div>
                 <div class="save-as-group-footer">
                     <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
@@ -3167,21 +3190,49 @@ async function loadDatasetsList() {
             // Standalone dataset — render as today, no grouping chrome.
             return renderDatasetOpenRow(group.items[0], { showLangBadge: showLang });
         }
-        // Multi-version group — wrap in a container with a shared header.
+        // Multi-version group — show latest, collapse older versions.
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
-        const children = group.items.map(ds =>
+        const latest = group.items[group.items.length - 1];
+        const older = group.items.slice(0, -1);
+        const latestHtml = renderDatasetOpenRow(latest, { isChild: true, versionBadge: latest._version, showLangBadge: showLang });
+        const olderHtml = older.map(ds =>
             renderDatasetOpenRow(ds, { isChild: true, versionBadge: ds._version, showLangBadge: showLang })
         ).join('');
+        const olderCount = older.length;
         return `
             <div class="dataset-open-group">
                 <div class="dataset-open-group-header">
                     <span class="dataset-open-group-base">${escapeHtml(group.base)}</span>
                     <span class="dataset-open-group-count">${countLabel}</span>
                 </div>
-                <div class="dataset-open-group-children">${children}</div>
+                <div class="dataset-open-group-children">
+                    ${latestHtml}
+                    ${olderCount > 0 ? `
+                        <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
+                            <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
+                            <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
+                        </button>
+                        <div class="version-collapsed-group" style="display:none;">${olderHtml}</div>
+                    ` : ''}
+                </div>
             </div>
         `;
     }).join('');
+}
+
+// Toggle older versions visibility in both modals
+function toggleOlderVersions(btn) {
+    const container = btn.nextElementSibling;
+    if (!container) return;
+    const isHidden = container.style.display === 'none';
+    container.style.display = isHidden ? '' : 'none';
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = isHidden ? 'expand_less' : 'expand_more';
+    const label = btn.querySelector('span:last-child');
+    if (label) {
+        const text = label.textContent;
+        label.textContent = isHidden ? text.replace('older', 'older') : text;
+    }
 }
 
 // Preview dataset in new tab (admin only)
