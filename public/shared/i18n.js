@@ -7,14 +7,14 @@ const I18n = {
     loaded: false,
 
     languages: [
-        { code: 'en', name: 'English', native: 'English', flag: '🇬🇧' },
-        { code: 'de', name: 'German', native: 'Deutsch', flag: '🇩🇪' },
-        { code: 'fr', name: 'French', native: 'Français', flag: '🇫🇷' },
-        { code: 'nl', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱' },
-        { code: 'es', name: 'Spanish', native: 'Español', flag: '🇪🇸' },
-        { code: 'it', name: 'Italian', native: 'Italiano', flag: '🇮🇹' },
-        { code: 'pt', name: 'Portuguese', native: 'Português', flag: '🇵🇹' },
-        { code: 'zh', name: 'Chinese', native: '中文', flag: '🇨🇳' }
+        { code: 'en', name: 'English', native: 'English' },
+        { code: 'de', name: 'German', native: 'Deutsch' },
+        { code: 'fr', name: 'French', native: 'Français' },
+        { code: 'nl', name: 'Dutch', native: 'Nederlands' },
+        { code: 'es', name: 'Spanish', native: 'Español' },
+        { code: 'it', name: 'Italian', native: 'Italiano' },
+        { code: 'pt', name: 'Portuguese', native: 'Português' },
+        { code: 'zh', name: 'Chinese', native: '中文' }
     ],
 
     async init() {

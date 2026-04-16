@@ -1166,8 +1166,14 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .public-lang-flag {
-    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
     line-height: 1;
+}
+.lang-flag-img {
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
 }
 .public-lang-dropdown {
     display: none;
@@ -1264,10 +1270,10 @@ body {
 
 /* Save As modal — language field */
 .save-as-language-field {
-    margin-top: 12px;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 0;
+    flex-shrink: 0;
 }
 .save-as-lang-select {
     flex: 1;

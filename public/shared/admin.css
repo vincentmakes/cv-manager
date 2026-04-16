@@ -1047,8 +1047,17 @@
 .btn-warning { background: #ea580c; color: var(--white); }
 .btn-warning:hover { background: #c2410c; transform: translateY(-1px); }
 
+/* Save As — inline row: name + language + action buttons */
+.save-as-name-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
 .save-as-name-field {
-    margin-bottom: 18px;
+    flex: 1;
+    min-width: 180px;
 }
 .save-as-name-label {
     display: block;
@@ -1074,8 +1083,14 @@
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
+.save-as-name-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-bottom: 1px;
+}
 .save-as-hint {
-    margin-top: 6px;
+    margin-bottom: 12px;
     font-size: 12px;
     color: var(--gray-500);
 }
@@ -1216,6 +1231,48 @@
 .save-as-version-child:hover { background: var(--gray-100); }
 .save-as-version-child .save-as-row-name { flex: 1; }
 .save-as-version-child .save-as-row-date { margin-left: auto; }
+
+/* Save As — Version row with nested language children */
+.save-as-version-row {
+    padding: 4px 0;
+}
+.save-as-version-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+}
+.save-as-version-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.save-as-version-langs {
+    padding-left: 8px;
+}
+.save-as-lang-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 5px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--gray-600);
+    transition: background 0.15s ease;
+    border-radius: var(--radius-sm);
+}
+.save-as-lang-child:hover { background: var(--gray-100); }
+.save-as-lang-child.save-as-row-selected { background: rgba(0, 102, 255, 0.08); }
 
 .dataset-version-badge {
     display: inline-flex;

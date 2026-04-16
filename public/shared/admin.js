@@ -2779,6 +2779,33 @@ function groupDatasetsByBase(datasets) {
     return groups;
 }
 
+// Group datasets into a 3-level hierarchy: Dataset → Version → Language.
+// Returns [{ base, versions: [{ version, name, languages: [ds...], language_group }] }]
+function groupDatasetsHierarchy(datasets) {
+    const baseMap = new Map();
+    for (const ds of datasets) {
+        const { base, version } = parseDatasetVersion(ds.name);
+        if (!baseMap.has(base)) baseMap.set(base, new Map());
+        const versionMap = baseMap.get(base);
+        if (!versionMap.has(version)) versionMap.set(version, []);
+        versionMap.get(version).push({ ...ds, _version: version, _base: base });
+    }
+    const groups = Array.from(baseMap.entries()).map(([base, versionMap]) => {
+        const versions = Array.from(versionMap.entries()).map(([version, langs]) => {
+            langs.sort((a, b) => (a.language || 'en').localeCompare(b.language || 'en'));
+            return { version, name: langs[0].name, languages: langs, language_group: langs[0].language_group };
+        });
+        versions.sort((a, b) => a.version - b.version);
+        const latest = versions.reduce((max, v) => {
+            const t = v.languages.reduce((m, ds) => Math.max(m, new Date(ds.updated_at).getTime()), 0);
+            return Math.max(max, t);
+        }, 0);
+        return { base, versions, latestUpdated: latest };
+    });
+    groups.sort((a, b) => b.latestUpdated - a.latestUpdated);
+    return groups;
+}
+
 // Given a base name and the current dataset list, return the next free "Base vN".
 function suggestNextVersion(baseName, datasets) {
     let max = 0;
@@ -2826,93 +2853,79 @@ function renderSaveAsList(datasets) {
         container.innerHTML = `<p class="save-as-empty">${escapeHtml(t('datasets.no_existing'))}</p>`;
         return;
     }
-    const groups = groupDatasetsByBase(datasets);
+    const hierarchy = groupDatasetsHierarchy(datasets);
     const newVersionLabel = escapeHtml(t('datasets.new_version'));
     const addLanguageLabel = escapeHtml(t('datasets.add_language'));
     const lastUpdatedLabel = escapeHtml(t('datasets.last_updated'));
 
-    // Collect languages per language_group for "Add language" buttons
-    const groupLanguages = {};
-    for (const ds of datasets) {
-        if (ds.language_group) {
-            if (!groupLanguages[ds.language_group]) groupLanguages[ds.language_group] = new Set();
-            groupLanguages[ds.language_group].add(ds.language || 'en');
-        }
-    }
-
-    function langBadge(ds) {
-        const lg = ds.language_group;
-        if (lg && groupLanguages[lg] && groupLanguages[lg].size > 1) {
-            return `<span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>`;
-        }
-        return '';
-    }
-
-    function addLangBtn(ds) {
-        if (!ds.language_group) return '';
-        const existing = groupLanguages[ds.language_group];
-        if (!existing) return '';
+    function addLangBtn(ver) {
+        if (!ver.language_group) return '';
+        const existingLangs = new Set(ver.languages.map(d => d.language || 'en'));
         const allLangs = (typeof I18n !== 'undefined' ? I18n.languages : []).map(l => l.code);
-        const available = allLangs.filter(c => !existing.has(c));
+        const available = allLangs.filter(c => !existingLangs.has(c));
         if (available.length === 0) return '';
-        return `<button type="button" class="btn btn-ghost btn-sm save-as-newlang-btn" data-action="add-language" data-name="${escapeHtml(ds.name)}" data-group="${escapeHtml(ds.language_group)}">
+        return `<button type="button" class="btn btn-ghost btn-sm save-as-newlang-btn" data-action="add-language" data-name="${escapeHtml(ver.name)}" data-group="${escapeHtml(ver.language_group)}">
             <span class="material-symbols-outlined" style="font-size:14px">translate</span>
             <span>${addLanguageLabel}</span>
         </button>`;
     }
 
-    container.innerHTML = groups.map(group => {
+    function renderLangRows(ver) {
+        if (ver.languages.length <= 1) {
+            // Single language — just show the dataset row
+            const ds = ver.languages[0];
+            return `<button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
+                <span class="save-as-row-name">${escapeHtml(ds.name)}</span>
+                <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
+            </button>`;
+        }
+        // Multiple languages — show each with a lang badge
+        return ver.languages.map(ds => `
+            <button type="button" class="save-as-lang-child" data-action="fill-name" data-name="${escapeHtml(ds.name)}" data-lang="${ds.language || 'en'}">
+                <span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>
+                <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
+            </button>
+        `).join('');
+    }
+
+    function renderVersion(ver, showVersionBadge) {
+        const badge = showVersionBadge ? `<span class="dataset-version-badge">v${ver.version}</span>` : '';
+        return `
+            <div class="save-as-version-row">
+                <div class="save-as-version-header">
+                    ${badge}
+                    <span class="save-as-version-name">${escapeHtml(ver.name)}</span>
+                    ${addLangBtn(ver)}
+                </div>
+                <div class="save-as-version-langs">${renderLangRows(ver)}</div>
+            </div>`;
+    }
+
+    container.innerHTML = hierarchy.map(group => {
         const escBase = escapeHtml(group.base);
-        if (group.items.length === 1) {
-            const ds = group.items[0];
-            const escName = escapeHtml(ds.name);
+        const hasMultipleVersions = group.versions.length > 1;
+
+        if (!hasMultipleVersions) {
+            // Single version — render standalone
+            const ver = group.versions[0];
             return `
                 <div class="save-as-item save-as-standalone">
-                    <button type="button" class="save-as-row" data-action="fill-name" data-name="${escName}" data-lang="${ds.language || 'en'}">
-                        <div class="save-as-row-info">
-                            <span class="save-as-row-name">${langBadge(ds)}${escName}</span>
-                            <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
-                        </div>
-                    </button>
+                    ${renderVersion(ver, false)}
                     <div class="save-as-row-actions">
                         <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
                             <span class="material-symbols-outlined" style="font-size:14px">add</span>
                             <span>${newVersionLabel}</span>
                         </button>
-                        ${addLangBtn(ds)}
+                        ${!ver.language_group ? '' : addLangBtn(ver)}
                     </div>
-                </div>
-            `;
-        }
-        // Latest version shown, older ones collapsed
-        const latest = group.items[group.items.length - 1];
-        const older = group.items.slice(0, -1);
-        const latestName = escapeHtml(latest.name);
-        const latestHtml = `
-            <div class="save-as-version-child-row">
-                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${latestName}" data-lang="${latest.language || 'en'}">
-                    ${langBadge(latest)}
-                    <span class="dataset-version-badge">v${latest._version}</span>
-                    <span class="save-as-row-name">${latestName}</span>
-                    <span class="save-as-row-date">${formatDateTime(latest.updated_at)}</span>
-                </button>
-                ${addLangBtn(latest)}
-            </div>`;
-        const olderHtml = older.map(ds => {
-            const escName = escapeHtml(ds.name);
-            return `
-                <div class="save-as-version-child-row">
-                    <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}" data-lang="${ds.language || 'en'}">
-                        ${langBadge(ds)}
-                        <span class="dataset-version-badge">v${ds._version}</span>
-                        <span class="save-as-row-name">${escName}</span>
-                        <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
-                    </button>
-                    ${addLangBtn(ds)}
                 </div>`;
-        }).join('');
-        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
+        }
+
+        // Multiple versions — show latest, collapse older
+        const latest = group.versions[group.versions.length - 1];
+        const older = group.versions.slice(0, -1);
         const olderCount = older.length;
+        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.versions.length }));
         return `
             <div class="save-as-item save-as-group">
                 <div class="save-as-group-header">
@@ -2920,13 +2933,15 @@ function renderSaveAsList(datasets) {
                     <span class="save-as-group-count">${countLabel}</span>
                 </div>
                 <div class="save-as-group-children">
-                    ${latestHtml}
+                    ${renderVersion(latest, true)}
                     ${olderCount > 0 ? `
                         <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
                             <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
                             <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
                         </button>
-                        <div class="version-collapsed-group" style="display:none;">${olderHtml}</div>
+                        <div class="version-collapsed-group" style="display:none;">
+                            ${older.map(v => renderVersion(v, true)).join('')}
+                        </div>
                     ` : ''}
                 </div>
                 <div class="save-as-group-footer">
@@ -2935,8 +2950,7 @@ function renderSaveAsList(datasets) {
                         <span>${newVersionLabel}</span>
                     </button>
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
 }
 
@@ -3173,32 +3187,48 @@ async function loadDatasetsList() {
         return;
     }
 
-    // Detect language groups with multiple languages to show badges
-    const langGroupCounts = {};
-    for (const ds of datasets) {
-        if (ds.language_group) {
-            if (!langGroupCounts[ds.language_group]) langGroupCounts[ds.language_group] = new Set();
-            langGroupCounts[ds.language_group].add(ds.language || 'en');
-        }
-    }
-    const multiLangGroups = new Set(Object.entries(langGroupCounts).filter(([, s]) => s.size > 1).map(([k]) => k));
+    const hierarchy = groupDatasetsHierarchy(datasets);
 
-    const groups = groupDatasetsByBase(datasets);
-    container.innerHTML = groups.map(group => {
-        const showLang = group.items.some(ds => multiLangGroups.has(ds.language_group));
-        if (group.items.length === 1) {
-            // Standalone dataset — render as today, no grouping chrome.
-            return renderDatasetOpenRow(group.items[0], { showLangBadge: showLang });
-        }
-        // Multi-version group — show latest, collapse older versions.
-        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
-        const latest = group.items[group.items.length - 1];
-        const older = group.items.slice(0, -1);
-        const latestHtml = renderDatasetOpenRow(latest, { isChild: true, versionBadge: latest._version, showLangBadge: showLang });
-        const olderHtml = older.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, versionBadge: ds._version, showLangBadge: showLang })
+    function renderVersionBlock(ver, showVersionBadge) {
+        const showLang = ver.languages.length > 1;
+        const rows = ver.languages.map(ds =>
+            renderDatasetOpenRow(ds, { isChild: true, versionBadge: showVersionBadge ? ds._version : null, showLangBadge: showLang })
         ).join('');
+        return rows;
+    }
+
+    container.innerHTML = hierarchy.map(group => {
+        const hasMultipleVersions = group.versions.length > 1;
+
+        if (!hasMultipleVersions) {
+            const ver = group.versions[0];
+            if (ver.languages.length === 1) {
+                // Single version, single language — standalone row
+                return renderDatasetOpenRow(ver.languages[0]);
+            }
+            // Single version, multiple languages — group with lang badges
+            const rows = ver.languages.map(ds =>
+                renderDatasetOpenRow(ds, { isChild: true, showLangBadge: true })
+            ).join('');
+            return `
+                <div class="dataset-open-group">
+                    <div class="dataset-open-group-header">
+                        <span class="dataset-open-group-base">${escapeHtml(group.base)}</span>
+                        <span class="dataset-open-group-count">${escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))}</span>
+                    </div>
+                    <div class="dataset-open-group-children">${rows}</div>
+                </div>`;
+        }
+
+        // Multiple versions — show latest, collapse older
+        const latest = group.versions[group.versions.length - 1];
+        const older = group.versions.slice(0, -1);
         const olderCount = older.length;
+        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.versions.length }));
+
+        const latestHtml = renderVersionBlock(latest, true);
+        const olderHtml = older.map(v => renderVersionBlock(v, true)).join('');
+
         return `
             <div class="dataset-open-group">
                 <div class="dataset-open-group-header">
@@ -3215,8 +3245,7 @@ async function loadDatasetsList() {
                         <div class="version-collapsed-group" style="display:none;">${olderHtml}</div>
                     ` : ''}
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
 }
 
@@ -3685,11 +3714,10 @@ function renderLanguageGrid() {
     let html = I18n.languages.map(lang => {
         const isCurrent = I18n.locale === lang.code;
         const isDisabled = hasMultiLang && !groupLangs.has(lang.code);
-        const flag = lang.flag || '';
         return `
         <div class="language-option ${isCurrent ? 'active' : ''} ${isDisabled ? 'language-option-disabled' : ''}" ${isDisabled ? '' : `onclick="selectLanguage('${lang.code}')"`}>
             <div>
-                <div class="language-option-native">${flag} ${lang.native}</div>
+                <div class="language-option-native">${lang.native}</div>
                 <div class="language-option-name">${lang.name}</div>
             </div>
         </div>
