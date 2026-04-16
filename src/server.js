@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
 const archiver = require('archiver');
@@ -185,7 +186,13 @@ function servePublicIndex(req, res) {
         // Check if a default dataset exists — serve from it instead of live DB
         let defaultDataset = null;
         try {
-            defaultDataset = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1').get();
+            const requestedLang = req.query.lang;
+            if (requestedLang) {
+                defaultDataset = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1 AND language = ?').get(requestedLang);
+            }
+            if (!defaultDataset) {
+                defaultDataset = db.prepare("SELECT * FROM saved_datasets WHERE is_default = 1 ORDER BY CASE WHEN language = 'en' THEN 0 ELSE 1 END, language ASC LIMIT 1").get();
+            }
         } catch (e) { /* is_default column may not exist yet */ }
 
         if (defaultDataset && defaultDataset.slug) {
@@ -193,29 +200,32 @@ function servePublicIndex(req, res) {
             const name = data.profile?.name || defaultDataset.name;
             const bio = data.profile?.bio || 'Professional CV';
             const description = bio.substring(0, 160).replace(/\n/g, ' ');
-            
+            const dsLang = defaultDataset.language || 'en';
+
             let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+            html = html.replace(/<html lang="[^"]*"/, `<html lang="${dsLang}"`);
             html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
-            
+
             // Inject robots meta from settings
             const robotsSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
             const robotsValue = robotsSetting?.value || 'index, follow';
             html = html.replace(/<meta name="robots"[^>]*>/, `<meta name="robots" id="metaRobots" content="${robotsValue}">`);
-            
+
             const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
-            
+
             // Inject tracking code right after <head> (server-side for GA verification)
             const trackingCode = getTrackingCode();
             if (trackingCode) {
                 html = html.replace('<head>', `<head>\n${trackingCode}`);
             }
-            
-            // Inject default dataset slug (no DATASET_PREVIEW = no preview banner)
-            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}";</script>`;
+
+            // Inject default dataset slug with language info (no DATASET_PREVIEW = no preview banner)
+            const siblings = getDatasetSiblings(defaultDataset);
+            const datasetScript = `<script>window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}";${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
-            
+
             return res.type('html').send(html);
         }
 
@@ -224,63 +234,66 @@ function servePublicIndex(req, res) {
         const name = profile?.name || 'CV';
         const bio = profile?.bio || 'Professional CV';
         const description = bio.substring(0, 160).replace(/\n/g, ' ');
-        
+
         let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
-        
+
         // Inject robots meta from settings
         const robotsSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
         const robotsValue = robotsSetting?.value || 'index, follow';
         html = html.replace(/<meta name="robots"[^>]*>/, `<meta name="robots" id="metaRobots" content="${robotsValue}">`);
-        
+
         const ogTags = `\n    <meta property="og:title" content="${name} - CV">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
-        
+
         // Inject tracking code right after <head> (server-side for GA verification)
         const trackingCode = getTrackingCode();
         if (trackingCode) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
-        
+
         res.type('html').send(html);
     } catch (err) { res.sendFile(path.join(__dirname, '../public-readonly/index.html')); }
 }
 
 // Serve a public dataset page by slug (for /v/:slug on public server)
-function serveDatasetPage(req, res) {
+function serveDatasetPage(req, res, lang) {
     try {
-        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND (is_public = 1 OR is_default = 1)').get(req.params.slug);
+        const dataset = resolveDatasetBySlug(req.params.slug, lang || req.params.lang || req.query.lang, true);
         if (!dataset) return res.status(404).send('Not found');
-        
+
         const data = JSON.parse(dataset.data);
         const name = data.profile?.name || dataset.name;
         const bio = data.profile?.bio || '';
         const description = bio.substring(0, 160).replace(/\n/g, ' ');
-        
+        const dsLang = dataset.language || 'en';
+
         let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+        html = html.replace(/<html lang="[^"]*"/, `<html lang="${dsLang}"`);
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV (${dataset.name})</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
-        
+
         const ogTags = `\n    <meta property="og:title" content="${name} - CV (${dataset.name})">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
-        
-        // Inject slug only (no DATASET_PREVIEW = public view, no preview banner)
-        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}";</script>`;
+
+        // Inject dataset context with language info
+        const siblings = getDatasetSiblings(dataset);
+        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}";${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
-        
+
         // Apply noindex if slugsIndex setting is not enabled
         const slugsIndexSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('slugsIndex');
         if (!slugsIndexSetting || slugsIndexSetting.value !== 'true') {
             html = html.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" id="metaRobots" content="noindex, nofollow">');
         }
-        
+
         // Inject tracking code right after <head> (server-side for GA verification)
         const trackingCode = getTrackingCode();
         if (trackingCode) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
-        
+
         res.type('html').send(html);
     } catch (err) {
         if (err.message?.includes('no such column')) return res.status(404).send('Not found');
@@ -291,11 +304,12 @@ function serveDatasetPage(req, res) {
 // Serve dataset data as JSON for public slug API
 function serveDatasetData(req, res) {
     try {
-        // Allow access if dataset is public OR is the default (default = served at /)
-        const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND (is_public = 1 OR is_default = 1)').get(req.params.slug);
+        const lang = req.params.lang || req.query.lang;
+        const dataset = resolveDatasetBySlug(req.params.slug, lang, true);
         if (!dataset) return res.status(404).json({ error: 'Not found' });
         const data = JSON.parse(dataset.data);
-        res.json({ name: dataset.name, slug: dataset.slug, ...data });
+        const siblings = getDatasetSiblings(dataset);
+        res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, siblings, ...data });
     } catch (err) {
         if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Not found' });
         res.status(500).json({ error: err.message });
@@ -577,6 +591,44 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (certifications logo_propagate):', err.message); }
 
+    // Step 2o: Migration - add language and language_group columns to saved_datasets
+    // Recreates table to change UNIQUE constraints: name → (name, language), slug → (slug, language)
+    try {
+        const dsLangInfo = db.prepare("PRAGMA table_info(saved_datasets)").all();
+        if (!dsLangInfo.some(col => col.name === 'language')) {
+            console.log('Migrating saved_datasets table: adding language support');
+            const migrate = db.transaction(() => {
+                db.exec(`CREATE TABLE saved_datasets_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    data TEXT NOT NULL,
+                    slug TEXT,
+                    language TEXT NOT NULL DEFAULT 'en',
+                    language_group TEXT,
+                    is_public INTEGER DEFAULT 0,
+                    is_default INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(slug, language),
+                    UNIQUE(name, language)
+                )`);
+                const existing = db.prepare('SELECT * FROM saved_datasets').all();
+                const insertStmt = db.prepare(`INSERT INTO saved_datasets_new
+                    (id, name, data, slug, language, language_group, is_public, is_default, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, 'en', ?, ?, ?, ?, ?)`);
+                for (const row of existing) {
+                    const groupId = crypto.randomUUID();
+                    insertStmt.run(row.id, row.name, row.data, row.slug || null, groupId,
+                        row.is_public || 0, row.is_default || 0, row.created_at, row.updated_at);
+                }
+                db.exec('DROP TABLE saved_datasets');
+                db.exec('ALTER TABLE saved_datasets_new RENAME TO saved_datasets');
+            });
+            migrate();
+            console.log('Migration complete: language support added to saved_datasets');
+        }
+    } catch (err) { console.error('Migration error (saved_datasets language):', err.message); }
+
     // Step 2h: Migration - normalize legacy date formats (e.g., "Jan 2020" → "2020-01")
     // Runs once; creates a flag in settings to avoid re-running on every startup
     try {
@@ -702,13 +754,19 @@ if (!PUBLIC_ONLY) {
         if (!hasDefault) {
             console.log('Auto-creating default dataset from live CV data');
             const cvData = gatherCvData();
-            const existingDefault = db.prepare('SELECT id FROM saved_datasets WHERE name = ?').get('Default');
+            const existingDefault = db.prepare("SELECT id FROM saved_datasets WHERE name = ? AND language = 'en'").get('Default');
             if (existingDefault) {
                 // A dataset named "Default" already exists — update it and mark as default
                 db.prepare('UPDATE saved_datasets SET data = ?, is_default = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existingDefault.id);
+                // Ensure it has a language_group
+                const ds = db.prepare('SELECT language_group FROM saved_datasets WHERE id = ?').get(existingDefault.id);
+                if (!ds.language_group) {
+                    db.prepare('UPDATE saved_datasets SET language_group = ? WHERE id = ?').run(crypto.randomUUID(), existingDefault.id);
+                }
                 console.log(`Updated existing "Default" dataset (id: ${existingDefault.id}) and set as default`);
             } else {
-                const result = db.prepare('INSERT INTO saved_datasets (name, data, is_default, is_public) VALUES (?, ?, 1, 0)').run('Default', JSON.stringify(cvData));
+                const groupId = crypto.randomUUID();
+                const result = db.prepare("INSERT INTO saved_datasets (name, data, language, language_group, is_default, is_public) VALUES (?, ?, 'en', ?, 1, 0)").run('Default', JSON.stringify(cvData), groupId);
                 const newId = result.lastInsertRowid;
                 try {
                     const slug = generateSlug('Default', newId);
@@ -815,6 +873,169 @@ function generateSlug(name, id) {
         .replace(/^-|-$/g, '')
         .substring(0, 50);
     return base ? `${base}-${id}` : `dataset-${id}`;
+}
+
+// Propagate structural changes from a source dataset to its language siblings.
+// Structure (section order, visibility, custom section layout) is shared across
+// language variants; content (text, descriptions) stays per-language.
+function propagateStructure(sourceId) {
+    try {
+        const source = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(sourceId);
+        if (!source || !source.language_group) return;
+
+        const siblings = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND id != ?').all(source.language_group, sourceId);
+        if (siblings.length === 0) return;
+
+        const srcData = JSON.parse(source.data);
+
+        // Extract structural snapshot from source
+        const srcSectionVis = srcData.sectionVisibility || {};
+        const srcSectionOrder = (srcData.sectionOrder || []).map(s => ({
+            key: s.key, sort_order: s.sort_order, visible: s.visible
+        }));
+        const srcCustomStructure = (srcData.customSections || []).map(cs => ({
+            section_key: cs.section_key,
+            layout_type: cs.layout_type,
+            icon: cs.icon,
+            sort_order: cs.sort_order,
+            visible: cs.visible,
+            metadata: cs.metadata,
+            items: (cs.items || []).map(item => ({
+                sort_order: item.sort_order,
+                visible: item.visible,
+                icon: item.icon,
+                image: item.image
+            }))
+        }));
+
+        const updateSibling = db.transaction(() => {
+            for (const sibling of siblings) {
+                const sibData = JSON.parse(sibling.data);
+
+                // 1. Propagate sectionVisibility
+                sibData.sectionVisibility = { ...srcSectionVis };
+
+                // 2. Propagate sectionOrder (preserve sibling display_name)
+                const sibOrderMap = {};
+                (sibData.sectionOrder || []).forEach(s => { sibOrderMap[s.key] = s; });
+                sibData.sectionOrder = srcSectionOrder.map(s => {
+                    const existing = sibOrderMap[s.key] || {};
+                    return {
+                        ...existing,
+                        key: s.key,
+                        sort_order: s.sort_order,
+                        visible: s.visible,
+                        // Preserve sibling's display_name (content) and name/default_name
+                        display_name: existing.display_name !== undefined ? existing.display_name : null,
+                        name: existing.name || existing.display_name || s.key,
+                        default_name: existing.default_name || s.key
+                    };
+                });
+
+                // 3. Propagate customSections structure
+                const sibCsMap = {};
+                (sibData.customSections || []).forEach(cs => { sibCsMap[cs.section_key] = cs; });
+
+                sibData.customSections = srcCustomStructure.map(srcCs => {
+                    const sibCs = sibCsMap[srcCs.section_key];
+
+                    // Section content from sibling (or empty if new)
+                    const sectionName = sibCs ? sibCs.name : (srcData.customSections.find(c => c.section_key === srcCs.section_key)?.name || srcCs.section_key);
+                    const displayName = sibCs ? sibCs.display_name : null;
+
+                    // Sync items by position
+                    const sibItems = sibCs ? (sibCs.items || []) : [];
+                    const srcItems = srcCs.items || [];
+                    const mergedItems = srcItems.map((srcItem, idx) => {
+                        const sibItem = sibItems[idx] || {};
+                        return {
+                            // Content from sibling (or empty placeholder)
+                            title: sibItem.title !== undefined ? sibItem.title : '',
+                            subtitle: sibItem.subtitle !== undefined ? sibItem.subtitle : '',
+                            description: sibItem.description !== undefined ? sibItem.description : '',
+                            link: sibItem.link !== undefined ? sibItem.link : '',
+                            metadata: sibItem.metadata !== undefined ? sibItem.metadata : null,
+                            // Structure from source
+                            sort_order: srcItem.sort_order,
+                            visible: srcItem.visible,
+                            icon: srcItem.icon,
+                            image: srcItem.image
+                        };
+                    });
+
+                    return {
+                        // Preserve sibling's id if it existed (not critical for JSON blob)
+                        ...(sibCs ? { id: sibCs.id } : {}),
+                        name: sectionName,
+                        section_key: srcCs.section_key,
+                        layout_type: srcCs.layout_type,
+                        icon: srcCs.icon,
+                        sort_order: srcCs.sort_order,
+                        visible: srcCs.visible,
+                        metadata: srcCs.metadata,
+                        display_name: displayName,
+                        items: mergedItems
+                    };
+                });
+
+                db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+                    .run(JSON.stringify(sibData), sibling.id);
+            }
+        });
+        updateSibling();
+    } catch (err) {
+        console.error('Structural propagation error:', err.message);
+    }
+}
+
+// Resolve a dataset by slug and optional language, returning the best match
+function resolveDatasetBySlug(slug, lang, requirePublic) {
+    const publicFilter = requirePublic ? ' AND (is_public = 1 OR is_default = 1)' : '';
+    let dataset;
+    if (lang) {
+        dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ? AND language = ?${publicFilter}`).get(slug, lang);
+    }
+    if (!dataset) {
+        dataset = db.prepare(`SELECT * FROM saved_datasets WHERE slug = ?${publicFilter} ORDER BY CASE WHEN language = 'en' THEN 0 ELSE 1 END, language ASC LIMIT 1`).get(slug);
+    }
+    return dataset || null;
+}
+
+// Get siblings list for injecting into HTML pages
+function getDatasetSiblings(dataset) {
+    if (!dataset || !dataset.language_group) return [];
+    return db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? AND (is_public = 1 OR is_default = 1) ORDER BY language ASC').all(dataset.language_group);
+}
+
+// Serve admin dataset preview page with language support
+function serveAdminDatasetPage(req, res, lang) {
+    try {
+        const dataset = resolveDatasetBySlug(req.params.slug, lang, false);
+        if (!dataset) return res.status(404).send('Dataset not found');
+
+        const data = JSON.parse(dataset.data);
+        const name = data.profile?.name || dataset.name;
+        const bio = data.profile?.bio || '';
+        const description = bio.substring(0, 160).replace(/\n/g, ' ');
+        const dsLang = dataset.language || 'en';
+
+        let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+        html = html.replace(/<html lang="[^"]*"/, `<html lang="${dsLang}"`);
+        html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV (${dataset.name})</title>`);
+        html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
+
+        // Inject dataset context for client
+        const siblings = dataset.language_group
+            ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
+            : [{ id: dataset.id, language: dsLang }];
+        const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_PREVIEW = true; window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};</script>`;
+        html = html.replace('</head>', `${datasetScript}</head>`);
+
+        res.type('html').send(html);
+    } catch (err) {
+        if (err.message?.includes('no such column')) return res.status(404).send('Versioned datasets not available');
+        res.status(500).send('Error loading dataset');
+    }
 }
 
 // Known analytics providers and their required companion domains
@@ -1014,8 +1235,10 @@ if (PUBLIC_ONLY) {
         res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) });
     });
 
-    // Public versioned CV routes
+    // Public versioned CV routes (language-specific must come before generic)
+    publicApp.get('/v/:slug/:lang', (req, res) => { serveDatasetPage(req, res, req.params.lang); });
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
+    publicApp.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
 
     publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
@@ -1638,26 +1861,80 @@ if (PUBLIC_ONLY) {
         try {
             // Use SELECT * to avoid errors if slug column doesn't exist
             const datasets = db.prepare('SELECT * FROM saved_datasets ORDER BY updated_at DESC').all();
-            res.json(datasets.map(d => ({ id: d.id, name: d.name, slug: d.slug || null, is_public: !!d.is_public, is_default: !!d.is_default, created_at: d.created_at, updated_at: d.updated_at })));
+            res.json(datasets.map(d => ({ id: d.id, name: d.name, slug: d.slug || null, language: d.language || 'en', language_group: d.language_group || null, is_public: !!d.is_public, is_default: !!d.is_default, created_at: d.created_at, updated_at: d.updated_at })));
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     });
-    app.post('/api/datasets', (req, res) => { const { name } = req.body; if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' }); const cvData = gatherCvData(); try { const existing = db.prepare('SELECT id FROM saved_datasets WHERE name = ?').get(name.trim()); if (existing) { db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existing.id); const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(existing.id); res.json({ success: true, id: existing.id, slug: ds.slug || null, is_default: !!ds.is_default, updated: true }); } else { const result = db.prepare('INSERT INTO saved_datasets (name, data) VALUES (?, ?)').run(name.trim(), JSON.stringify(cvData)); const newId = result.lastInsertRowid; let slug = null; try { slug = generateSlug(name.trim(), newId); db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId); } catch (slugErr) { console.log('Slug update skipped (column may not exist):', slugErr.message); } res.json({ success: true, id: newId, slug, is_default: false, created: true }); } } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/datasets', (req, res) => {
+        const { name, language: reqLang, language_group: reqGroup } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+        const language = (reqLang || 'en').trim().toLowerCase();
+        const cvData = gatherCvData();
+        try {
+            // Early check: if a language_group is provided, reject duplicate language before anything else
+            if (reqGroup) {
+                const dupLang = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ?').get(reqGroup, language);
+                if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
+            }
+            const existing = db.prepare('SELECT id FROM saved_datasets WHERE name = ? AND language = ?').get(name.trim(), language);
+            if (existing) {
+                db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), existing.id);
+                const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(existing.id);
+                propagateStructure(existing.id);
+                res.json({ success: true, id: existing.id, slug: ds.slug || null, language: ds.language, language_group: ds.language_group, is_default: !!ds.is_default, updated: true });
+            } else {
+                let languageGroup = reqGroup || null;
+                let slug = null;
+                let isPublic = 0;
+                let isDefault = 0;
 
-    // Set a dataset as the default (public at /)
+                if (languageGroup) {
+                    // Adding a language variant to an existing group
+                    const sibling = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? LIMIT 1').get(languageGroup);
+                    if (!sibling) return res.status(400).json({ error: 'Language group not found' });
+                    const dupLang = db.prepare('SELECT id FROM saved_datasets WHERE language_group = ? AND language = ?').get(languageGroup, language);
+                    if (dupLang) return res.status(400).json({ error: 'This language already exists in the group' });
+                    slug = sibling.slug;
+                    isPublic = sibling.is_public || 0;
+                    isDefault = sibling.is_default || 0;
+                } else {
+                    languageGroup = crypto.randomUUID();
+                }
+
+                const result = db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, is_public, is_default) VALUES (?, ?, ?, ?, ?, ?)').run(name.trim(), JSON.stringify(cvData), language, languageGroup, isPublic, isDefault);
+                const newId = result.lastInsertRowid;
+                if (!slug) {
+                    try {
+                        slug = generateSlug(name.trim(), newId);
+                        db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId);
+                    } catch (slugErr) { console.log('Slug update skipped:', slugErr.message); }
+                } else {
+                    db.prepare('UPDATE saved_datasets SET slug = ? WHERE id = ?').run(slug, newId);
+                }
+                propagateStructure(newId);
+                res.json({ success: true, id: newId, slug, language, language_group: languageGroup, is_default: !!isDefault, created: true });
+            }
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    // Set a dataset as the default (public at /) — applies to entire language group
     app.put('/api/datasets/:id/default', (req, res) => {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-            
-            // Clear any existing default, then set the new one (atomic)
+
+            // Clear any existing default, then set all group members as default (atomic)
             const setDefault = db.transaction(() => {
                 db.prepare('UPDATE saved_datasets SET is_default = 0 WHERE is_default = 1').run();
-                db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE id = ?').run(req.params.id);
+                if (dataset.language_group) {
+                    db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE language_group = ?').run(dataset.language_group);
+                } else {
+                    db.prepare('UPDATE saved_datasets SET is_default = 1 WHERE id = ?').run(req.params.id);
+                }
             });
             setDefault();
-            
+
             const updated = db.prepare('SELECT id, name, slug, is_public, is_default FROM saved_datasets WHERE id = ?').get(req.params.id);
             res.json({ success: true, id: updated.id, name: updated.name, slug: updated.slug, is_default: !!updated.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1666,9 +1943,9 @@ if (PUBLIC_ONLY) {
     // Get the current default dataset info
     app.get('/api/datasets/default', (req, res) => {
         try {
-            const dataset = db.prepare('SELECT id, name, slug, is_public, is_default, updated_at FROM saved_datasets WHERE is_default = 1').get();
+            const dataset = db.prepare('SELECT id, name, slug, language, language_group, is_public, is_default, updated_at FROM saved_datasets WHERE is_default = 1 ORDER BY language ASC LIMIT 1').get();
             if (!dataset) return res.json({ exists: false });
-            res.json({ exists: true, id: dataset.id, name: dataset.name, slug: dataset.slug, is_public: !!dataset.is_public, updated_at: dataset.updated_at });
+            res.json({ exists: true, id: dataset.id, name: dataset.name, slug: dataset.slug, language: dataset.language || 'en', language_group: dataset.language_group, is_public: !!dataset.is_public, updated_at: dataset.updated_at });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
@@ -1679,10 +1956,11 @@ if (PUBLIC_ONLY) {
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
             const cvData = gatherCvData();
             db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(cvData), req.params.id);
-            res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default });
+            propagateStructure(req.params.id);
+            res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, is_default: !!dataset.is_default });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, is_default: !!dataset.is_default }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
@@ -1693,61 +1971,75 @@ if (PUBLIC_ONLY) {
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
-    // Toggle dataset public visibility
+    // Toggle dataset public visibility — applies to entire language group
     app.put('/api/datasets/:id/public', (req, res) => {
         const { is_public } = req.body;
         try {
-            db.prepare('UPDATE saved_datasets SET is_public = ? WHERE id = ?').run(is_public ? 1 : 0, req.params.id);
-            const ds = db.prepare('SELECT id, name, slug, is_public, is_default FROM saved_datasets WHERE id = ?').get(req.params.id);
+            const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!ds) return res.status(404).json({ error: 'Dataset not found' });
-            res.json({ success: true, id: ds.id, slug: ds.slug, is_public: !!ds.is_public, is_default: !!ds.is_default });
+            if (ds.language_group) {
+                db.prepare('UPDATE saved_datasets SET is_public = ? WHERE language_group = ?').run(is_public ? 1 : 0, ds.language_group);
+            } else {
+                db.prepare('UPDATE saved_datasets SET is_public = ? WHERE id = ?').run(is_public ? 1 : 0, req.params.id);
+            }
+            const updated = db.prepare('SELECT id, name, slug, is_public, is_default FROM saved_datasets WHERE id = ?').get(req.params.id);
+            res.json({ success: true, id: updated.id, slug: updated.slug, is_public: !!updated.is_public, is_default: !!updated.is_default });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    // Get all siblings of a dataset (same language_group)
+    app.get('/api/datasets/:id/siblings', (req, res) => {
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            if (!dataset.language_group) return res.json([]);
+            const siblings = db.prepare('SELECT id, name, language, slug, is_default, is_public, updated_at FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group);
+            res.json(siblings.map(s => ({ ...s, is_default: !!s.is_default, is_public: !!s.is_public })));
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
 
     // Dataset preview API - returns CV data for a specific dataset (admin only)
-    app.get('/api/datasets/slug/:slug', (req, res) => {
+    // Language-specific: /api/datasets/slug/:slug/:lang
+    app.get('/api/datasets/slug/:slug/:lang', (req, res) => {
         try {
-            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ?').get(req.params.slug);
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND language = ?').get(req.params.slug, req.params.lang);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
             const data = JSON.parse(dataset.data);
-            res.json({ name: dataset.name, slug: dataset.slug, ...data });
-        } catch (err) { 
-            // If slug column doesn't exist, return 404
-            if (err.message.includes('no such column')) {
-                return res.status(404).json({ error: 'Versioned datasets not available' });
+            const siblings = dataset.language_group
+                ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
+                : [{ id: dataset.id, language: dataset.language || 'en' }];
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, siblings, ...data });
+        } catch (err) {
+            if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Versioned datasets not available' });
+            res.status(500).json({ error: err.message });
+        }
+    });
+    // Fallback (no lang): return first available variant (prefer 'en')
+    app.get('/api/datasets/slug/:slug', (req, res) => {
+        try {
+            const lang = req.query.lang;
+            let dataset;
+            if (lang) {
+                dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND language = ?').get(req.params.slug, lang);
             }
-            res.status(500).json({ error: err.message }); 
+            if (!dataset) {
+                dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? ORDER BY CASE WHEN language = \'en\' THEN 0 ELSE 1 END, language ASC LIMIT 1').get(req.params.slug);
+            }
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            const data = JSON.parse(dataset.data);
+            const siblings = dataset.language_group
+                ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
+                : [{ id: dataset.id, language: dataset.language || 'en' }];
+            res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, siblings, ...data });
+        } catch (err) {
+            if (err.message?.includes('no such column')) return res.status(404).json({ error: 'Versioned datasets not available' });
+            res.status(500).json({ error: err.message });
         }
     });
 
-    // Dataset preview page route (admin only) - serves the public-readonly template with dataset context
-    app.get('/v/:slug', (req, res) => {
-        try {
-            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ?').get(req.params.slug);
-            if (!dataset) return res.status(404).send('Dataset not found');
-            
-            const data = JSON.parse(dataset.data);
-            const name = data.profile?.name || dataset.name;
-            const bio = data.profile?.bio || '';
-            const description = bio.substring(0, 160).replace(/\n/g, ' ');
-            
-            let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
-            html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV (${dataset.name})</title>`);
-            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
-            
-            // Inject script to load dataset data instead of live data (admin preview mode)
-            const datasetScript = `<script>window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_PREVIEW = true;</script>`;
-            html = html.replace('</head>', `${datasetScript}</head>`);
-            
-            res.type('html').send(html);
-        } catch (err) { 
-            // If slug column doesn't exist, return 404
-            if (err.message.includes('no such column')) {
-                return res.status(404).send('Versioned datasets not available');
-            }
-            res.status(500).send('Error loading dataset'); 
-        }
-    });
+    // Dataset preview page route (admin only) — language-specific
+    app.get('/v/:slug/:lang', (req, res) => { serveAdminDatasetPage(req, res, req.params.lang); });
+    app.get('/v/:slug', (req, res) => { serveAdminDatasetPage(req, res, req.query.lang); });
 
     // Custom Sections API
     app.get('/api/custom-sections', (req, res) => {
@@ -2544,8 +2836,10 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
     publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
-    // Public versioned CV routes
+    // Public versioned CV routes (language-specific must come before generic)
+    publicApp.get('/v/:slug/:lang', (req, res) => { serveDatasetPage(req, res, req.params.lang); });
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });
+    publicApp.get('/api/datasets/slug/:slug/:lang', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
 

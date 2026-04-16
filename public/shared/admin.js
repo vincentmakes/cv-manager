@@ -7,6 +7,9 @@ let sectionOrder = [];
 let activeDatasetId = null;
 let activeDatasetName = null;
 let activeDatasetIsDefault = false;
+let activeDatasetLanguage = null;
+let activeDatasetLanguageGroup = null;
+let activeDatasetSiblings = [];
 let adminInitialized = false; // tracks whether first init has completed
 
 // Mobile menu toggle
@@ -202,7 +205,10 @@ async function loadDefaultDatasetOnStartup() {
                 activeDatasetId = result.id;
                 activeDatasetName = result.name;
                 activeDatasetIsDefault = !!result.is_default;
-                
+                activeDatasetLanguage = result.language || 'en';
+                activeDatasetLanguageGroup = result.language_group || null;
+                await loadActiveDatasetSiblings();
+
                 // Render UI from the now-loaded data
                 await renderAdminUI();
                 showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
@@ -213,16 +219,42 @@ async function loadDefaultDatasetOnStartup() {
     }
 }
 
+// Load siblings for the active dataset
+async function loadActiveDatasetSiblings() {
+    activeDatasetSiblings = [];
+    if (!activeDatasetId) return;
+    try {
+        const siblings = await api(`/api/datasets/${activeDatasetId}/siblings`);
+        activeDatasetSiblings = (siblings || []).filter(s => s.id !== activeDatasetId);
+    } catch (err) { /* ignore */ }
+}
+
 // Show the active dataset banner
 function showActiveDatasetBanner(id, name, isDefault) {
     const banner = document.getElementById('activeDatasetBanner');
     const nameEl = document.getElementById('activeDatasetName');
     const defaultBadge = document.getElementById('activeDatasetDefaultBadge');
     if (!banner || !nameEl) return;
-    
+
     nameEl.textContent = name;
     defaultBadge.style.display = isDefault ? '' : 'none';
     banner.style.display = '';
+
+    // Language badge
+    const langBadge = document.getElementById('activeDatasetLangBadge');
+    if (langBadge) {
+        if (activeDatasetLanguage && activeDatasetSiblings.length > 0) {
+            langBadge.textContent = activeDatasetLanguage.toUpperCase();
+            langBadge.title = t('datasets.lang_badge_tooltip', { lang: activeDatasetLanguage.toUpperCase() });
+            langBadge.style.display = '';
+        } else {
+            langBadge.style.display = 'none';
+        }
+    }
+
+    // Language switcher
+    renderDatasetLangSwitcher();
+
     updateBannerMargins();
 }
 
@@ -233,7 +265,80 @@ function hideActiveDatasetBanner() {
     activeDatasetId = null;
     activeDatasetName = null;
     activeDatasetIsDefault = false;
+    activeDatasetLanguage = null;
+    activeDatasetLanguageGroup = null;
+    activeDatasetSiblings = [];
     updateBannerMargins();
+}
+
+// Render the admin language switcher dropdown
+function renderDatasetLangSwitcher() {
+    const switcher = document.getElementById('datasetLangSwitcher');
+    const label = document.getElementById('datasetLangSwitchLabel');
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (!switcher || !dropdown) return;
+
+    if (activeDatasetSiblings.length === 0) {
+        switcher.style.display = 'none';
+        return;
+    }
+
+    switcher.style.display = '';
+    if (label) label.textContent = (activeDatasetLanguage || 'en').toUpperCase();
+
+    const langNames = {};
+    (typeof I18n !== 'undefined' ? I18n.languages : []).forEach(l => { langNames[l.code] = l.native; });
+
+    let html = '';
+    // Current language (highlighted)
+    html += `<div class="dataset-lang-option active">
+        <span class="dataset-lang-code">${(activeDatasetLanguage || 'en').toUpperCase()}</span>
+        <span class="dataset-lang-name">${escapeHtml(langNames[activeDatasetLanguage] || activeDatasetLanguage)}</span>
+        <span class="material-symbols-outlined" style="font-size:14px;margin-left:auto">check</span>
+    </div>`;
+    // Siblings
+    for (const sib of activeDatasetSiblings) {
+        html += `<div class="dataset-lang-option" onclick="switchDatasetLanguage(${sib.id}, '${escapeHtml(sib.name || '')}', '${sib.language}')">
+            <span class="dataset-lang-code">${sib.language.toUpperCase()}</span>
+            <span class="dataset-lang-name">${escapeHtml(langNames[sib.language] || sib.language)}</span>
+        </div>`;
+    }
+    // Add language hint
+    html += `<div class="dataset-lang-option disabled" title="${escapeHtml(t('datasets.add_language_hint'))}">
+        <span class="material-symbols-outlined" style="font-size:14px">add</span>
+        <span class="dataset-lang-name">${escapeHtml(t('datasets.add_language'))}</span>
+        <span class="material-symbols-outlined" style="font-size:12px;margin-left:auto;opacity:0.5">info</span>
+    </div>`;
+
+    dropdown.innerHTML = html;
+}
+
+// Toggle the language switcher dropdown
+function toggleDatasetLangSwitcher() {
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (dropdown) dropdown.classList.toggle('active');
+}
+
+// Close language switcher when clicking outside
+document.addEventListener('click', (e) => {
+    const switcher = document.getElementById('datasetLangSwitcher');
+    if (switcher && !switcher.contains(e.target)) {
+        const dropdown = document.getElementById('datasetLangDropdown');
+        if (dropdown) dropdown.classList.remove('active');
+    }
+});
+
+// Switch to a different language variant in admin
+async function switchDatasetLanguage(id, name, language) {
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (dropdown) dropdown.classList.remove('active');
+    // Auto-save current dataset first
+    if (activeDatasetId) {
+        try {
+            await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
+        } catch (err) { /* continue anyway */ }
+    }
+    await loadDataset(id, name);
 }
 
 // Auto-save active dataset (debounced)
@@ -2689,6 +2794,16 @@ async function saveAsDataset() {
     renderSaveAsList(saveAsDatasetsCache);
     const input = document.getElementById('saveAsNameInput');
     input.value = activeDatasetName || '';
+    // Populate language dropdown
+    const langSelect = document.getElementById('saveAsLangSelect');
+    if (langSelect && typeof I18n !== 'undefined') {
+        langSelect.innerHTML = I18n.languages.map(l =>
+            `<option value="${l.code}"${l.code === (activeDatasetLanguage || 'en') ? ' selected' : ''}>${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
+        ).join('');
+    }
+    // Reset language group
+    const langGroupInput = document.getElementById('saveAsLangGroup');
+    if (langGroupInput) langGroupInput.value = '';
     updateSaveAsSubmitState();
     document.getElementById('saveAsModalOverlay').classList.add('active');
     setTimeout(() => { input.focus(); input.select(); }, 30);
@@ -2708,7 +2823,38 @@ function renderSaveAsList(datasets) {
     }
     const groups = groupDatasetsByBase(datasets);
     const newVersionLabel = escapeHtml(t('datasets.new_version'));
+    const addLanguageLabel = escapeHtml(t('datasets.add_language'));
     const lastUpdatedLabel = escapeHtml(t('datasets.last_updated'));
+
+    // Collect languages per language_group for "Add language" buttons
+    const groupLanguages = {};
+    for (const ds of datasets) {
+        if (ds.language_group) {
+            if (!groupLanguages[ds.language_group]) groupLanguages[ds.language_group] = new Set();
+            groupLanguages[ds.language_group].add(ds.language || 'en');
+        }
+    }
+
+    function langBadge(ds) {
+        const lg = ds.language_group;
+        if (lg && groupLanguages[lg] && groupLanguages[lg].size > 1) {
+            return `<span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>`;
+        }
+        return '';
+    }
+
+    function addLangBtn(ds) {
+        if (!ds.language_group) return '';
+        const existing = groupLanguages[ds.language_group];
+        if (!existing) return '';
+        const allLangs = (typeof I18n !== 'undefined' ? I18n.languages : []).map(l => l.code);
+        const available = allLangs.filter(c => !existing.has(c));
+        if (available.length === 0) return '';
+        return `<button type="button" class="btn btn-ghost btn-sm save-as-newlang-btn" data-action="add-language" data-name="${escapeHtml(ds.name)}" data-group="${escapeHtml(ds.language_group)}">
+            <span class="material-symbols-outlined" style="font-size:14px">translate</span>
+            <span>${addLanguageLabel}</span>
+        </button>`;
+    }
 
     container.innerHTML = groups.map(group => {
         const escBase = escapeHtml(group.base);
@@ -2717,9 +2863,9 @@ function renderSaveAsList(datasets) {
             const escName = escapeHtml(ds.name);
             return `
                 <div class="save-as-item save-as-standalone">
-                    <button type="button" class="save-as-row" data-action="fill-name" data-name="${escName}">
+                    <button type="button" class="save-as-row" data-action="fill-name" data-name="${escName}" data-lang="${ds.language || 'en'}">
                         <div class="save-as-row-info">
-                            <span class="save-as-row-name">${escName}</span>
+                            <span class="save-as-row-name">${langBadge(ds)}${escName}</span>
                             <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
                         </div>
                     </button>
@@ -2727,13 +2873,15 @@ function renderSaveAsList(datasets) {
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
                         <span>${newVersionLabel}</span>
                     </button>
+                    ${addLangBtn(ds)}
                 </div>
             `;
         }
         const children = group.items.map(ds => {
             const escName = escapeHtml(ds.name);
             return `
-                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}">
+                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}" data-lang="${ds.language || 'en'}">
+                    ${langBadge(ds)}
                     <span class="dataset-version-badge">v${ds._version}</span>
                     <span class="save-as-row-name">${escName}</span>
                     <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
@@ -2741,6 +2889,8 @@ function renderSaveAsList(datasets) {
             `;
         }).join('');
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
+        // Find a representative item for the add-language button
+        const repDs = group.items[0];
         return `
             <div class="save-as-item save-as-group">
                 <div class="save-as-group-header">
@@ -2753,6 +2903,7 @@ function renderSaveAsList(datasets) {
                         <span class="material-symbols-outlined" style="font-size:14px">add</span>
                         <span>${newVersionLabel}</span>
                     </button>
+                    ${addLangBtn(repDs)}
                 </div>
             </div>
         `;
@@ -2764,12 +2915,39 @@ function saveAsOnListClick(e) {
     if (!btn) return;
     const action = btn.getAttribute('data-action');
     const input = document.getElementById('saveAsNameInput');
+    const langSelect = document.getElementById('saveAsLangSelect');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
     if (!input) return;
     if (action === 'fill-name') {
         input.value = btn.getAttribute('data-name') || '';
+        if (langSelect && btn.getAttribute('data-lang')) {
+            langSelect.value = btn.getAttribute('data-lang');
+        }
+        if (langGroupInput) langGroupInput.value = '';
     } else if (action === 'new-version') {
         const base = btn.getAttribute('data-base') || '';
         input.value = suggestNextVersion(base, saveAsDatasetsCache);
+        if (langGroupInput) langGroupInput.value = '';
+    } else if (action === 'add-language') {
+        const name = btn.getAttribute('data-name') || '';
+        const group = btn.getAttribute('data-group') || '';
+        input.value = name;
+        if (langGroupInput) langGroupInput.value = group;
+        // Set language to first available language not in this group
+        if (langSelect && group) {
+            const existingLangs = new Set();
+            saveAsDatasetsCache.forEach(ds => {
+                if (ds.language_group === group) existingLangs.add(ds.language || 'en');
+            });
+            const available = (typeof I18n !== 'undefined' ? I18n.languages : []).map(l => l.code).filter(c => !existingLangs.has(c));
+            if (available.length > 0) {
+                // Filter select to only show available languages
+                langSelect.innerHTML = available.map(code => {
+                    const langObj = I18n.languages.find(l => l.code === code);
+                    return `<option value="${code}">${escapeHtml(langObj ? langObj.native : code)} (${code.toUpperCase()})</option>`;
+                }).join('');
+            }
+        }
     }
     updateSaveAsSubmitState();
     input.focus();
@@ -2778,18 +2956,26 @@ function saveAsOnListClick(e) {
 function updateSaveAsSubmitState() {
     const input = document.getElementById('saveAsNameInput');
     const btn = document.getElementById('saveAsSubmitBtn');
+    const langSelect = document.getElementById('saveAsLangSelect');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
     if (!input || !btn) return;
     const name = (input.value || '').trim();
-    const match = saveAsDatasetsCache.find(d => d.name === name);
+    const language = langSelect ? langSelect.value : 'en';
+    const languageGroup = langGroupInput ? langGroupInput.value : '';
+    const match = saveAsDatasetsCache.find(d => d.name === name && d.language === language);
     btn.classList.remove('btn-primary', 'btn-warning');
     if (!name) {
         btn.disabled = true;
         btn.textContent = t('datasets.save_new_empty');
         btn.classList.add('btn-primary');
-    } else if (match) {
+    } else if (match && !languageGroup) {
         btn.disabled = false;
         btn.textContent = t('datasets.overwrite', { name });
         btn.classList.add('btn-warning');
+    } else if (languageGroup) {
+        btn.disabled = false;
+        btn.textContent = t('datasets.save_new_lang', { name, lang: language.toUpperCase() });
+        btn.classList.add('btn-primary');
     } else {
         btn.disabled = false;
         btn.textContent = t('datasets.save_new', { name });
@@ -2797,7 +2983,7 @@ function updateSaveAsSubmitState() {
     }
     // Highlight the matching row (if any) so users see which CV will be overwritten
     document.querySelectorAll('#saveAsExistingList [data-action="fill-name"]').forEach(el => {
-        if (name && el.getAttribute('data-name') === name) {
+        if (name && el.getAttribute('data-name') === name && el.getAttribute('data-lang') === language) {
             el.classList.add('save-as-row-selected');
         } else {
             el.classList.remove('save-as-row-selected');
@@ -2810,17 +2996,27 @@ async function submitSaveAs() {
     if (!input) return;
     const name = (input.value || '').trim();
     if (!name) return;
-    const match = saveAsDatasetsCache.find(d => d.name === name);
+    const langSelect = document.getElementById('saveAsLangSelect');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
+    const language = langSelect ? langSelect.value : 'en';
+    const languageGroup = langGroupInput ? langGroupInput.value : '';
+
+    const match = saveAsDatasetsCache.find(d => d.name === name && d.language === language);
     if (match && !confirm(t('confirm.overwrite_dataset', { name }))) return;
     try {
-        const result = await api('/api/datasets', { method: 'POST', body: { name } });
+        const body = { name, language };
+        if (languageGroup) body.language_group = languageGroup;
+        const result = await api('/api/datasets', { method: 'POST', body });
         if (result.success) {
             activeDatasetId = result.id;
             activeDatasetName = name;
             activeDatasetIsDefault = !!result.is_default;
+            activeDatasetLanguage = result.language || language;
+            activeDatasetLanguageGroup = result.language_group || null;
+            await loadActiveDatasetSiblings();
             showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             closeSaveAsModal();
-            toast(result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
+            toast(result.created && languageGroup ? t('toast.language_variant_created') : result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
         } else {
             toast(result.error || t('toast.failed_save'), 'error');
         }
@@ -2848,6 +3044,11 @@ async function submitSaveAs() {
             });
             input.dataset.saveAsBound = '1';
         }
+        const langSelect = document.getElementById('saveAsLangSelect');
+        if (langSelect && !langSelect.dataset.saveAsBound) {
+            langSelect.addEventListener('change', updateSaveAsSubmitState);
+            langSelect.dataset.saveAsBound = '1';
+        }
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
@@ -2868,6 +3069,7 @@ function closeDatasetsModal() {
 // Render a single dataset row for the Open modal.
 // opts.isChild = true indents the row and attaches tree connectors to the version children.
 // opts.versionBadge = number renders a v{n} badge next to the name.
+// opts.showLangBadge = true renders a language badge next to the name.
 function renderDatasetOpenRow(ds, opts = {}) {
     const isActive = ds.id === activeDatasetId;
     const isDefault = !!ds.is_default;
@@ -2881,6 +3083,11 @@ function renderDatasetOpenRow(ds, opts = {}) {
     const versionBadgeHtml = opts.versionBadge
         ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>`
         : '';
+    const langBadgeHtml = opts.showLangBadge
+        ? `<span class="dataset-lang-badge">${(ds.language || 'en').toUpperCase()}</span>`
+        : '';
+    const dsLang = ds.language || 'en';
+    const slugUrlSuffix = opts.showLangBadge ? `/${dsLang}` : '';
 
     return `
         <div class="${classes.join(' ')}" data-id="${ds.id}">
@@ -2892,6 +3099,7 @@ function renderDatasetOpenRow(ds, opts = {}) {
             </div>
             <div class="dataset-info">
                 <div class="dataset-name-row">
+                    ${langBadgeHtml}
                     ${versionBadgeHtml}
                     <span class="dataset-name">${escapeHtml(ds.name)}</span>
                     ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
@@ -2899,8 +3107,8 @@ function renderDatasetOpenRow(ds, opts = {}) {
                 </div>
                 <div class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</div>
                 ${showSlugUrl ? `<div class="dataset-url">
-                    <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
-                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
+                    <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}${slugUrlSuffix}</span>
+                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}${slugUrlSuffix}', ${ds.is_public})" title="Copy URL">
                         <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
                     </button>
                     ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
@@ -2917,7 +3125,7 @@ function renderDatasetOpenRow(ds, opts = {}) {
                         <span class="dataset-toggle-label">${ds.is_public ? 'Shared' : 'Private'}</span>
                     </div>` : ''}
                 ${ds.slug && !isDefault ? `
-                    <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
+                    <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}${slugUrlSuffix}')" title="Preview saved version">
                         <span class="material-symbols-outlined" style="font-size:14px">visibility</span>
                     </button>` : ''}
                 <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? 'Reload' : 'Load'}</button>
@@ -2935,16 +3143,27 @@ async function loadDatasetsList() {
         return;
     }
 
+    // Detect language groups with multiple languages to show badges
+    const langGroupCounts = {};
+    for (const ds of datasets) {
+        if (ds.language_group) {
+            if (!langGroupCounts[ds.language_group]) langGroupCounts[ds.language_group] = new Set();
+            langGroupCounts[ds.language_group].add(ds.language || 'en');
+        }
+    }
+    const multiLangGroups = new Set(Object.entries(langGroupCounts).filter(([, s]) => s.size > 1).map(([k]) => k));
+
     const groups = groupDatasetsByBase(datasets);
     container.innerHTML = groups.map(group => {
+        const showLang = group.items.some(ds => multiLangGroups.has(ds.language_group));
         if (group.items.length === 1) {
             // Standalone dataset — render as today, no grouping chrome.
-            return renderDatasetOpenRow(group.items[0]);
+            return renderDatasetOpenRow(group.items[0], { showLangBadge: showLang });
         }
         // Multi-version group — wrap in a container with a shared header.
         const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
         const children = group.items.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, versionBadge: ds._version })
+            renderDatasetOpenRow(ds, { isChild: true, versionBadge: ds._version, showLangBadge: showLang })
         ).join('');
         return `
             <div class="dataset-open-group">
@@ -3058,6 +3277,9 @@ async function loadDataset(id, name) {
             activeDatasetId = result.id;
             activeDatasetName = result.name;
             activeDatasetIsDefault = !!result.is_default;
+            activeDatasetLanguage = result.language || 'en';
+            activeDatasetLanguageGroup = result.language_group || null;
+            await loadActiveDatasetSiblings();
             closeDatasetsModal();
             await initAdmin();
             toast(t('toast.dataset_loaded', { name: result.name }));

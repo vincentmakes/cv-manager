@@ -257,6 +257,20 @@
     "datasets.save_new": "Save as new \"{{name}}\"",
     "datasets.save_new_empty": "Save as new",
     "datasets.overwrite": "Overwrite \"{{name}}\"",
+    "datasets.language": "Language",
+    "datasets.add_language": "Add language",
+    "datasets.add_language_hint": "To add a new language, use Save As",
+    "datasets.no_languages_available": "All languages already have variants",
+    "datasets.save_new_lang": "Save as \"{{name}}\" ({{lang}})",
+    "datasets.language_variant": "{{lang}} variant",
+    "datasets.lang_badge_tooltip": "Content language: {{lang}}",
+    "datasets.languages_count": "{{count}} languages",
+
+    "lang_switcher.label": "Language",
+    "lang_switcher.switch_to": "Switch to {{lang}}",
+
+    "toast.language_variant_created": "Language variant created",
+    "confirm.switch_language": "Switch to {{lang}}? Current changes will be auto-saved.",
 
     "custom_section.edit_title": "Edit Custom Section",
     "custom_section.add_title": "Add Custom Section",

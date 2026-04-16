@@ -121,7 +121,17 @@
             <span class="material-symbols-outlined" style="font-size:14px">edit</span>
             <span class="active-dataset-label" data-i18n="banner.editing">Editing:</span>
             <span id="activeDatasetName" class="active-dataset-name"></span>
+            <span id="activeDatasetLangBadge" class="dataset-lang-badge" style="display: none;"></span>
             <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
+            <!-- Language switcher (admin) -->
+            <div class="dataset-lang-switcher" id="datasetLangSwitcher" style="display: none;">
+                <button class="btn btn-ghost btn-sm dataset-lang-switch-btn" id="datasetLangSwitchBtn" onclick="toggleDatasetLangSwitcher()">
+                    <span class="material-symbols-outlined" style="font-size:14px">translate</span>
+                    <span id="datasetLangSwitchLabel"></span>
+                    <span class="material-symbols-outlined" style="font-size:12px">expand_more</span>
+                </button>
+                <div class="dataset-lang-dropdown" id="datasetLangDropdown"></div>
+            </div>
             <div class="active-dataset-actions">
                 <span id="activeDatasetStatus" class="active-dataset-status"></span>
             </div>
@@ -343,6 +353,11 @@
                     <label for="saveAsNameInput" class="save-as-name-label" data-i18n="datasets.name_label">Name</label>
                     <input type="text" id="saveAsNameInput" class="save-as-name-input" autocomplete="off" data-i18n-placeholder="datasets.name_placeholder" placeholder="Enter a name for this CV">
                     <div class="save-as-hint" data-i18n="datasets.save_as_hint">Click an existing CV below to overwrite it, or type a new name.</div>
+                </div>
+                <div class="save-as-language-field">
+                    <label for="saveAsLangSelect" class="save-as-name-label" data-i18n="datasets.language">Language</label>
+                    <select id="saveAsLangSelect" class="save-as-lang-select"></select>
+                    <input type="hidden" id="saveAsLangGroup" value="">
                 </div>
                 <div class="save-as-existing">
                     <h4 class="save-as-existing-title" data-i18n="datasets.existing_datasets">Existing CVs</h4>

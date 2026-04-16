@@ -4,6 +4,19 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.28.0] - 2026-04-16
+
+### Added
+- Per-dataset CV localization: save language-specific variants of each CV (e.g. English + German) that share the same structure but have independent content. Language variants are linked via a `language_group` and share the same URL slug.
+- Public language switcher: visitors can switch between available language variants at `/v/{slug}/{lang}`. A translate button appears on the public site when multiple languages are available (hidden during printing).
+- Admin language switcher: when editing a dataset with language siblings, a language switcher in the active-dataset banner lets you quickly switch between variants. New languages are added via the Save As modal.
+- Structural propagation: changes to section order, visibility, custom section layout, and item count automatically sync across all language siblings. Content (text, titles, descriptions) stays independent per language.
+- Language-specific URL routing: `/v/{slug}/{lang}` for versioned datasets, `/?lang=xx` for the root URL. Single-language datasets continue to work at `/v/{slug}`.
+- Group-wide default and public toggles: setting a dataset as default or toggling public visibility applies to all language variants in the group.
+- New i18n keys for language management UI in all 8 locale files (en, de, fr, nl, es, it, pt, zh).
+- Database migration adds `language` and `language_group` columns to `saved_datasets` with composite unique constraints on `(slug, language)` and `(name, language)`.
+- Backend tests for language variant creation, sibling management, structural propagation, and group-wide operations.
+
 ## [1.27.0] - 2026-04-15
 
 ### Changed

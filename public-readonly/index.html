@@ -19,7 +19,16 @@
     <button class="public-print-btn no-print" id="publicPrintBtn" onclick="window.print()" style="display: none;" data-i18n-title="toolbar.print" title="Print / Save as PDF">
         <span class="material-symbols-outlined" style="font-size:20px">print</span>
     </button>
-    
+
+    <!-- Language Switcher (only shown for datasets with multiple languages) -->
+    <div class="public-lang-switcher no-print" id="publicLangSwitcher" style="display: none;">
+        <button class="public-lang-switch-btn" id="publicLangSwitchBtn" onclick="togglePublicLangSwitcher()">
+            <span class="material-symbols-outlined" style="font-size:16px">translate</span>
+            <span id="publicLangSwitchLabel"></span>
+        </button>
+        <div class="public-lang-dropdown" id="publicLangDropdown"></div>
+    </div>
+
     <!-- Preview Banner (only shown for versioned dataset URLs) -->
     <div class="preview-banner no-print" id="previewBanner" style="display: none;">
         <div class="preview-banner-content">
@@ -131,6 +140,8 @@
             } else {
                 await loadLiveData();
             }
+            // Initialize language switcher if siblings are available
+            initPublicLangSwitcher();
         });
         
         // Load live data from current CV (normal mode)
@@ -266,7 +277,8 @@
         // Load saved dataset preview (admin mode only)
         async function loadDatasetPreview() {
             try {
-                datasetData = await api(`/api/datasets/slug/${window.DATASET_SLUG}`);
+                const langSuffix = window.DATASET_LANG ? `/${window.DATASET_LANG}` : '';
+                datasetData = await api(`/api/datasets/slug/${window.DATASET_SLUG}${langSuffix}`);
                 if (!datasetData || datasetData.error) {
                     console.error('Failed to load dataset');
                     return;
@@ -886,6 +898,66 @@
             };
             return `#${f(0)}${f(8)}${f(4)}`;
         }
+
+        // --- Public Language Switcher ---
+        function initPublicLangSwitcher() {
+            const siblings = window.DATASET_SIBLINGS;
+            if (!siblings || siblings.length <= 1) return;
+
+            const switcher = document.getElementById('publicLangSwitcher');
+            const label = document.getElementById('publicLangSwitchLabel');
+            const dropdown = document.getElementById('publicLangDropdown');
+            if (!switcher || !dropdown) return;
+
+            const currentLang = (window.DATASET_LANG || 'en').toLowerCase();
+            if (label) label.textContent = currentLang.toUpperCase();
+
+            // Build language name map from I18n if available
+            const langNames = {};
+            if (typeof I18n !== 'undefined' && I18n.languages) {
+                I18n.languages.forEach(l => { langNames[l.code] = l.native; });
+            }
+
+            // Build dropdown items
+            let html = '';
+            for (const sib of siblings) {
+                const lang = (sib.language || 'en').toLowerCase();
+                const isActive = lang === currentLang;
+                const name = langNames[lang] || lang.toUpperCase();
+
+                // Build URL for this language variant
+                let href;
+                if (window.DATASET_SLUG) {
+                    // On /v/:slug page — navigate to /v/:slug/:lang
+                    href = `/v/${window.DATASET_SLUG}/${lang}`;
+                } else {
+                    // On root / page — navigate to /?lang=xx
+                    href = `/?lang=${lang}`;
+                }
+
+                html += `<a class="public-lang-option${isActive ? ' active' : ''}" href="${href}">
+                    <span class="public-lang-code">${lang.toUpperCase()}</span>
+                    <span class="public-lang-name">${name}</span>
+                    ${isActive ? '<span class="material-symbols-outlined" style="font-size:14px;margin-left:auto">check</span>' : ''}
+                </a>`;
+            }
+            dropdown.innerHTML = html;
+            switcher.style.display = '';
+        }
+
+        function togglePublicLangSwitcher() {
+            const dropdown = document.getElementById('publicLangDropdown');
+            if (dropdown) dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const switcher = document.getElementById('publicLangSwitcher');
+            if (switcher && !switcher.contains(e.target)) {
+                const dropdown = document.getElementById('publicLangDropdown');
+                if (dropdown) dropdown.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
