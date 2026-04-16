@@ -4,6 +4,54 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.30.0] - 2026-04-16
+
+### Changed
+- Unified CV Manager modal replaces the separate Open and Save As modals. A single "CV Manager" button in the toolbar opens one modal with a save-as form at the top and the full dataset list below.
+- Each dataset row now shows: default radio, language badge, version badge, name, URL, date, Load button, and a ⋮ overflow menu for secondary actions (share/private, change language, preview, copy URL, delete).
+- Flat row layout per language variant — no intermediate version headers for single-language versions, eliminating redundant name repetition.
+- Group headers show base name, "+ New version" button, and version count on one line.
+- Compact legend moved to the modal footer.
+
+### Fixed
+- "New version" button now correctly passes version_group UUID instead of language_group, fixing version grouping for new versions.
+- Startup fixup consolidates orphaned version_groups created by the previous bug.
+- Default dataset siblings now hide the public/private toggle and show the correct `/{lang}` URL.
+- Language is now included in JSON export/import for proper round-tripping.
+
+### Added
+- Per-dataset language editor: clickable language badge on each row opens a picker to reassign a dataset's language.
+- `PUT /api/datasets/:id/language` endpoint with conflict validation.
+
+## [1.29.0] - 2026-04-16
+
+### Added
+- Proper backend versioning: `version_group` (UUID) and `version` (integer) columns on `saved_datasets`. Version grouping now uses database UUIDs instead of parsing "Name vN" from dataset names, making it resilient to renaming.
+- Creating a new version automatically copies all language variants from the previous version.
+- New backend tests for version increment, language sibling carry-over, slug sharing across versions, and version fields in API responses.
+
+### Changed
+- Frontend dataset hierarchy (`groupDatasetsHierarchy`) now groups by `version_group` from the API instead of regex name parsing. Display names still use the parsed base name for human readability.
+- `suggestNextVersion` uses `version_group` and the `version` field to find the max version, falling back to name parsing for legacy datasets.
+- "New version" buttons pass `version_group` UUID to the backend instead of `source_group`.
+
+### Fixed
+- Active language in the banner language switcher dropdown now has white text on blue background for proper contrast
+- "Add language" item in the language switcher dropdown is now clickable and opens the Save As modal pre-filled for adding a new language variant
+
+## [1.28.0] - 2026-04-16
+
+### Added
+- Per-dataset CV localization: save language-specific variants of each CV (e.g. English + German) that share the same structure but have independent content. Language variants are linked via a `language_group` and share the same URL slug.
+- Public language switcher: visitors can switch between available language variants at `/v/{slug}/{lang}`. A translate button appears on the public site when multiple languages are available (hidden during printing).
+- Admin language switcher: when editing a dataset with language siblings, a language switcher in the active-dataset banner lets you quickly switch between variants. New languages are added via the Save As modal.
+- Structural propagation: changes to section order, visibility, custom section layout, and item count automatically sync across all language siblings. Content (text, titles, descriptions) stays independent per language.
+- Language-specific URL routing: `/v/{slug}/{lang}` for versioned datasets, `/?lang=xx` for the root URL. Single-language datasets continue to work at `/v/{slug}`.
+- Group-wide default and public toggles: setting a dataset as default or toggling public visibility applies to all language variants in the group.
+- New i18n keys for language management UI in all 8 locale files (en, de, fr, nl, es, it, pt, zh).
+- Database migration adds `language` and `language_group` columns to `saved_datasets` with composite unique constraints on `(slug, language)` and `(name, language)`.
+- Backend tests for language variant creation, sibling management, structural propagation, and group-wide operations.
+
 ## [1.27.0] - 2026-04-15
 
 ### Changed

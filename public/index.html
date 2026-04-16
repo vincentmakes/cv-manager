@@ -18,13 +18,9 @@
     <div class="toolbar no-print">
         <div class="toolbar-title">CV Manager</div>
         <div class="toolbar-actions" id="toolbarActions">
-            <button class="btn btn-secondary" onclick="openDatasetsModal()">
-                <span class="material-symbols-outlined">folder_open</span>
-                <span data-i18n="toolbar.open">Open...</span>
-            </button>
-            <button class="btn btn-secondary" onclick="saveAsDataset()">
-                <span class="material-symbols-outlined">save_alt</span>
-                <span data-i18n="toolbar.save_as">Save As...</span>
+            <button class="btn btn-secondary" onclick="openCvManager()">
+                <span class="material-symbols-outlined">folder_managed</span>
+                <span data-i18n="toolbar.cv_manager">CV Manager</span>
             </button>
             <div class="color-picker-wrapper">
                 <button class="btn btn-secondary" onclick="toggleColorPicker()" data-i18n-title="toolbar.change_theme" title="Change Theme Color">
@@ -121,7 +117,17 @@
             <span class="material-symbols-outlined" style="font-size:14px">edit</span>
             <span class="active-dataset-label" data-i18n="banner.editing">Editing:</span>
             <span id="activeDatasetName" class="active-dataset-name"></span>
+            <span id="activeDatasetLangBadge" class="dataset-lang-badge" style="display: none;"></span>
             <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
+            <!-- Language switcher (admin) -->
+            <div class="dataset-lang-switcher" id="datasetLangSwitcher" style="display: none;">
+                <button class="btn btn-ghost btn-sm dataset-lang-switch-btn" id="datasetLangSwitchBtn" onclick="toggleDatasetLangSwitcher()">
+                    <span class="material-symbols-outlined" style="font-size:14px">translate</span>
+                    <span id="datasetLangSwitchLabel"></span>
+                    <span class="material-symbols-outlined" style="font-size:12px">expand_more</span>
+                </button>
+                <div class="dataset-lang-dropdown" id="datasetLangDropdown"></div>
+            </div>
             <div class="active-dataset-actions">
                 <span id="activeDatasetStatus" class="active-dataset-status"></span>
             </div>
@@ -294,66 +300,47 @@
         </div>
     </div>
 
-    <!-- Datasets Modal -->
-    <div class="modal-overlay" id="datasetsModalOverlay">
-        <div class="modal">
+    <!-- Unified CV Manager Modal -->
+    <div class="modal-overlay" id="cvManagerOverlay">
+        <div class="modal modal-lg">
             <div class="modal-header">
-                <h3 class="modal-title" data-i18n="datasets.title">Saved Datasets</h3>
-                <button class="modal-close" onclick="closeDatasetsModal()">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <div class="modal-body" id="datasetsModalBody">
-                <div class="datasets-legend">
-                    <div class="datasets-legend-item">
-                        <span class="radio-dot radio-dot-preview"></span>
-                        <span><strong>Radio button</strong> — select which dataset visitors see at your root URL <code>/</code></span>
-                    </div>
-                    <div class="datasets-legend-item">
-                        <span class="toggle-preview"><span class="toggle-preview-knob"></span></span>
-                        <span><strong>Toggle</strong> — share other datasets at their own <code>/v/slug</code> URL</span>
-                    </div>
-                    <div class="datasets-legend-item">
-                        <span class="material-symbols-outlined legend-icon" style="font-size:14px">visibility</span>
-                        <span><strong>Eye</strong> — preview a saved dataset without making it public</span>
-                    </div>
-                </div>
-                <div id="datasetsList"></div>
-            </div>
-            <div class="modal-footer">
-                <div class="modal-footer-left"></div>
-                <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeDatasetsModal()" data-i18n="btn.close">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Save As Modal -->
-    <div class="modal-overlay" id="saveAsModalOverlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" data-i18n="datasets.save_as_title">Save CV As</h3>
-                <button class="modal-close" onclick="closeSaveAsModal()">
+                <h3 class="modal-title" data-i18n="datasets.cv_manager_title">CV Manager</h3>
+                <button class="modal-close" onclick="closeCvManager()">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="save-as-name-field">
-                    <label for="saveAsNameInput" class="save-as-name-label" data-i18n="datasets.name_label">Name</label>
-                    <input type="text" id="saveAsNameInput" class="save-as-name-input" autocomplete="off" data-i18n-placeholder="datasets.name_placeholder" placeholder="Enter a name for this CV">
-                    <div class="save-as-hint" data-i18n="datasets.save_as_hint">Click an existing CV below to overwrite it, or type a new name.</div>
+                <!-- Save As zone -->
+                <div class="cvm-save-section">
+                    <div class="cvm-save-row">
+                        <div class="cvm-save-field">
+                            <label for="saveAsNameInput" class="cvm-label" data-i18n="datasets.name_label">Name</label>
+                            <input type="text" id="saveAsNameInput" class="cvm-input" autocomplete="off" data-i18n-placeholder="datasets.name_placeholder" placeholder="Enter a name for this CV">
+                        </div>
+                        <div class="cvm-save-lang">
+                            <label for="saveAsLangSelect" class="cvm-label" data-i18n="datasets.language">Language</label>
+                            <select id="saveAsLangSelect" class="cvm-select"></select>
+                            <input type="hidden" id="saveAsLangGroup" value="">
+                            <input type="hidden" id="saveAsVersionGroup" value="">
+                        </div>
+                        <div class="cvm-save-actions">
+                            <button class="btn btn-primary" id="saveAsSubmitBtn" onclick="submitSaveAs()" disabled data-i18n="datasets.save_new_empty">Save as new</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="save-as-existing">
-                    <h4 class="save-as-existing-title" data-i18n="datasets.existing_datasets">Existing CVs</h4>
-                    <div id="saveAsExistingList"></div>
+                <!-- Saved CVs list -->
+                <div class="cvm-list-section">
+                    <h4 class="cvm-list-title" data-i18n="datasets.existing_datasets">Existing CVs</h4>
+                    <div id="datasetsList"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="modal-footer-left"></div>
+                <div class="modal-footer-left cvm-legend">
+                    <span class="cvm-legend-item"><span class="radio-dot radio-dot-preview"></span> = <span data-i18n="datasets.legend_default">Served on public site</span></span>
+                    <span class="cvm-legend-item"><span class="material-symbols-outlined" style="font-size:13px">share</span> = <span data-i18n="datasets.legend_shared">Shared at /v/ URL</span></span>
+                </div>
                 <div class="modal-footer-right">
-                    <button class="btn btn-ghost" onclick="closeSaveAsModal()" data-i18n="btn.cancel">Cancel</button>
-                    <button class="btn btn-primary" id="saveAsSubmitBtn" onclick="submitSaveAs()" disabled data-i18n="datasets.save_new_empty">Save as new</button>
+                    <button class="btn btn-ghost" onclick="closeCvManager()" data-i18n="btn.close">Close</button>
                 </div>
             </div>
         </div>
@@ -708,6 +695,12 @@
                             <option value="A4">A4</option>
                             <option value="LETTER">Letter</option>
                         </select>
+                    </div>
+                    <div class="ats-pdf-control-group" id="atsPdfEnglishHeadersGroup" style="display:none">
+                        <label class="ats-pdf-toggle-label">
+                            <input type="checkbox" id="atsPdfEnglishHeaders" onchange="updateAtsPdfPreview()">
+                            <span data-i18n="ats.english_headers">Section headers in English</span>
+                        </label>
                     </div>
                     <div class="ats-pdf-actions">
                         <button class="btn btn-primary" onclick="downloadAtsPdf()" id="atsPdfDownloadBtn">

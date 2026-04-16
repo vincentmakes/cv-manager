@@ -7,6 +7,9 @@ let sectionOrder = [];
 let activeDatasetId = null;
 let activeDatasetName = null;
 let activeDatasetIsDefault = false;
+let activeDatasetLanguage = null;
+let activeDatasetLanguageGroup = null;
+let activeDatasetSiblings = [];
 let adminInitialized = false; // tracks whether first init has completed
 
 // Mobile menu toggle
@@ -191,19 +194,43 @@ function updateBannerMargins() {
     document.querySelector('.container').style.marginTop = (baseMargin + extraHeight) + 'px';
 }
 
-// Load default dataset on admin startup
+// Load default dataset on admin startup — restores last-edited dataset if available
 async function loadDefaultDatasetOnStartup() {
     try {
+        // Try to restore the last-edited dataset from sessionStorage
+        const lastId = sessionStorage.getItem('cv_active_dataset_id');
+        if (lastId) {
+            try {
+                const result = await api(`/api/datasets/${lastId}/load`, { method: 'POST' });
+                if (result.success) {
+                    activeDatasetId = result.id;
+                    activeDatasetName = result.name;
+                    activeDatasetIsDefault = !!result.is_default;
+                    activeDatasetLanguage = result.language || 'en';
+                    activeDatasetLanguageGroup = result.language_group || null;
+                    await loadActiveDatasetSiblings();
+                    // Sync UI locale to match
+                    if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
+                        await I18n.setLocale(activeDatasetLanguage);
+                    }
+                    await renderAdminUI();
+                    showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
+                    return;
+                }
+            } catch (err) { /* stored dataset may have been deleted, fall through */ }
+        }
+
         const defaultDs = await api('/api/datasets/default');
         if (defaultDs && defaultDs.exists) {
-            // Load the default dataset into the working copy
             const result = await api(`/api/datasets/${defaultDs.id}/load`, { method: 'POST' });
             if (result.success) {
                 activeDatasetId = result.id;
                 activeDatasetName = result.name;
                 activeDatasetIsDefault = !!result.is_default;
-                
-                // Render UI from the now-loaded data
+                activeDatasetLanguage = result.language || 'en';
+                activeDatasetLanguageGroup = result.language_group || null;
+                await loadActiveDatasetSiblings();
+                persistActiveDataset();
                 await renderAdminUI();
                 showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             }
@@ -213,16 +240,51 @@ async function loadDefaultDatasetOnStartup() {
     }
 }
 
+// Persist / clear active dataset ID in sessionStorage
+function persistActiveDataset() {
+    if (activeDatasetId) {
+        sessionStorage.setItem('cv_active_dataset_id', activeDatasetId);
+    } else {
+        sessionStorage.removeItem('cv_active_dataset_id');
+    }
+}
+
+// Load siblings for the active dataset
+async function loadActiveDatasetSiblings() {
+    activeDatasetSiblings = [];
+    if (!activeDatasetId) return;
+    try {
+        const siblings = await api(`/api/datasets/${activeDatasetId}/siblings`);
+        activeDatasetSiblings = (siblings || []).filter(s => s.id !== activeDatasetId);
+    } catch (err) { /* ignore */ }
+}
+
 // Show the active dataset banner
 function showActiveDatasetBanner(id, name, isDefault) {
     const banner = document.getElementById('activeDatasetBanner');
     const nameEl = document.getElementById('activeDatasetName');
     const defaultBadge = document.getElementById('activeDatasetDefaultBadge');
     if (!banner || !nameEl) return;
-    
+
     nameEl.textContent = name;
     defaultBadge.style.display = isDefault ? '' : 'none';
     banner.style.display = '';
+
+    // Language badge
+    const langBadge = document.getElementById('activeDatasetLangBadge');
+    if (langBadge) {
+        if (activeDatasetLanguage && activeDatasetSiblings.length > 0) {
+            langBadge.textContent = activeDatasetLanguage.toUpperCase();
+            langBadge.title = t('datasets.lang_badge_tooltip', { lang: activeDatasetLanguage.toUpperCase() });
+            langBadge.style.display = '';
+        } else {
+            langBadge.style.display = 'none';
+        }
+    }
+
+    // Language switcher
+    renderDatasetLangSwitcher();
+
     updateBannerMargins();
 }
 
@@ -233,7 +295,112 @@ function hideActiveDatasetBanner() {
     activeDatasetId = null;
     activeDatasetName = null;
     activeDatasetIsDefault = false;
+    activeDatasetLanguage = null;
+    activeDatasetLanguageGroup = null;
+    activeDatasetSiblings = [];
+    persistActiveDataset();
     updateBannerMargins();
+}
+
+// Render the admin language switcher dropdown
+function renderDatasetLangSwitcher() {
+    const switcher = document.getElementById('datasetLangSwitcher');
+    const label = document.getElementById('datasetLangSwitchLabel');
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (!switcher || !dropdown) return;
+
+    if (activeDatasetSiblings.length === 0) {
+        switcher.style.display = 'none';
+        return;
+    }
+
+    switcher.style.display = '';
+    if (label) label.textContent = (activeDatasetLanguage || 'en').toUpperCase();
+
+    const langNames = {};
+    (typeof I18n !== 'undefined' ? I18n.languages : []).forEach(l => { langNames[l.code] = l.native; });
+
+    let html = '';
+    // Current language (highlighted)
+    html += `<div class="dataset-lang-option active">
+        <span class="dataset-lang-code">${(activeDatasetLanguage || 'en').toUpperCase()}</span>
+        <span class="dataset-lang-name">${escapeHtml(langNames[activeDatasetLanguage] || activeDatasetLanguage)}</span>
+        <span class="material-symbols-outlined" style="font-size:14px;margin-left:auto">check</span>
+    </div>`;
+    // Siblings
+    for (const sib of activeDatasetSiblings) {
+        html += `<div class="dataset-lang-option" onclick="switchDatasetLanguage(${sib.id}, '${escapeHtml(sib.name || '')}', '${sib.language}')">
+            <span class="dataset-lang-code">${sib.language.toUpperCase()}</span>
+            <span class="dataset-lang-name">${escapeHtml(langNames[sib.language] || sib.language)}</span>
+        </div>`;
+    }
+    // Add language option
+    html += `<div class="dataset-lang-option add-lang" onclick="addLanguageFromSwitcher()">
+        <span class="material-symbols-outlined" style="font-size:14px">add</span>
+        <span class="dataset-lang-name">${escapeHtml(t('datasets.add_language'))}</span>
+    </div>`;
+
+    dropdown.innerHTML = html;
+}
+
+// Toggle the language switcher dropdown
+function toggleDatasetLangSwitcher() {
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (dropdown) dropdown.classList.toggle('active');
+}
+
+// Open Save As modal pre-filled for adding a new language to the current language group
+async function addLanguageFromSwitcher() {
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (dropdown) dropdown.classList.remove('active');
+    if (!activeDatasetLanguageGroup) return;
+    // Open Save As modal, then override fields for add-language mode
+    await saveAsDataset();
+    const input = document.getElementById('saveAsNameInput');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
+    const langSelect = document.getElementById('saveAsLangSelect');
+    if (input) input.value = activeDatasetName || '';
+    if (langGroupInput) langGroupInput.value = activeDatasetLanguageGroup;
+    // Filter language dropdown to only languages not already in this group
+    if (langSelect && typeof I18n !== 'undefined') {
+        const existingLangs = new Set();
+        existingLangs.add(activeDatasetLanguage || 'en');
+        activeDatasetSiblings.forEach(s => existingLangs.add(s.language));
+        const available = I18n.languages.filter(l => !existingLangs.has(l.code));
+        if (available.length > 0) {
+            langSelect.innerHTML = available.map(l =>
+                `<option value="${l.code}">${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
+            ).join('');
+        }
+    }
+    updateSaveAsSubmitState();
+}
+
+// Close language switcher when clicking outside
+document.addEventListener('click', (e) => {
+    const switcher = document.getElementById('datasetLangSwitcher');
+    if (switcher && !switcher.contains(e.target)) {
+        const dropdown = document.getElementById('datasetLangDropdown');
+        if (dropdown) dropdown.classList.remove('active');
+    }
+});
+
+// Switch to a different language variant in admin
+async function switchDatasetLanguage(id, name, language) {
+    const dropdown = document.getElementById('datasetLangDropdown');
+    if (dropdown) dropdown.classList.remove('active');
+    // Auto-save current dataset first
+    if (activeDatasetId) {
+        try {
+            await api(`/api/datasets/${activeDatasetId}/save`, { method: 'POST' });
+        } catch (err) { /* continue anyway */ }
+    }
+    // Switch UI locale to match the dataset language
+    if (typeof I18n !== 'undefined' && language && I18n.locale !== language) {
+        await I18n.setLocale(language);
+        renderLanguageGrid();
+    }
+    await loadDataset(id, name);
 }
 
 // Auto-save active dataset (debounced)
@@ -1598,11 +1765,13 @@ async function showAllItems() {
 // Export/Import
 async function exportData() {
     const data = await api('/api/cv');
+    const lang = activeDatasetLanguage || I18n.locale || 'en';
+    data.language = lang;
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'cv-data.json';
+    a.download = `cv-data-${lang}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast(t('toast.exported'));
@@ -1638,11 +1807,12 @@ async function exportStaticSite() {
 async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
             const data = JSON.parse(e.target.result);
+            const importedLang = data.language || null;
             const result = await api('/api/import', { method: 'POST', body: data });
             if (result.error) {
                 toast(result.error, 'error');
@@ -1650,6 +1820,12 @@ async function importData(event) {
             }
             // Clear active dataset — imported data doesn't belong to any dataset
             hideActiveDatasetBanner();
+            // Switch UI locale to match imported language
+            if (importedLang && typeof I18n !== 'undefined' && I18n.locale !== importedLang) {
+                await I18n.setLocale(importedLang);
+                renderLanguageGrid();
+            }
+            activeDatasetLanguage = importedLang;
             await initAdmin();
             toast(t('toast.imported'));
         } catch (err) {
@@ -2641,135 +2817,278 @@ async function saveSettingsSectionOrder() {
 let saveAsDatasetsCache = [];
 
 // Parse a name like "My CV v2" into { base: "My CV", version: 2 }.
-// Names without an explicit " vN" suffix are treated as version 1.
+// Used for display purposes only — grouping uses version_group from the backend.
 function parseDatasetVersion(name) {
     const m = /^(.+?)\s+v(\d+)$/i.exec((name || '').trim());
     if (m) return { base: m[1].trim(), version: parseInt(m[2], 10) };
     return { base: (name || '').trim(), version: 1 };
 }
 
-// Group an array of datasets by their parsed base name.
-// Returns [{ base, items: [...] }] sorted by most-recently-updated group desc.
-function groupDatasetsByBase(datasets) {
-    const map = new Map();
+// Group datasets into a 3-level hierarchy: Dataset → Version → Language.
+// Uses version_group (UUID) from backend for grouping, NOT name parsing.
+// Returns [{ base, versionGroup, versions: [{ version, name, languages: [ds...], language_group }] }]
+function groupDatasetsHierarchy(datasets) {
+    const vgMap = new Map();
     for (const ds of datasets) {
-        const { base, version } = parseDatasetVersion(ds.name);
-        if (!map.has(base)) map.set(base, []);
-        map.get(base).push({ ...ds, _version: version, _base: base });
+        const vg = ds.version_group || ds.id.toString(); // fallback for legacy
+        const ver = ds.version || 1;
+        if (!vgMap.has(vg)) vgMap.set(vg, new Map());
+        const versionMap = vgMap.get(vg);
+        if (!versionMap.has(ver)) versionMap.set(ver, []);
+        versionMap.get(ver).push(ds);
     }
-    const groups = Array.from(map.entries()).map(([base, items]) => {
-        items.sort((a, b) => a._version - b._version);
-        const latest = items.reduce((max, it) => {
-            const t = new Date(it.updated_at).getTime();
-            return t > max ? t : max;
+    const groups = Array.from(vgMap.entries()).map(([vg, versionMap]) => {
+        const versions = Array.from(versionMap.entries()).map(([version, langs]) => {
+            langs.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+            return { version, name: langs[0].name, languages: langs, language_group: langs[0].language_group };
+        });
+        versions.sort((a, b) => a.version - b.version);
+        // Derive display base name from the first version's name
+        const base = parseDatasetVersion(versions[0].name).base;
+        const latest = versions.reduce((max, v) => {
+            const t = v.languages.reduce((m, d) => Math.max(m, new Date(d.updated_at).getTime()), 0);
+            return Math.max(max, t);
         }, 0);
-        return { base, items, latestUpdated: latest };
+        return { base, versionGroup: vg, versions, latestUpdated: latest };
     });
     groups.sort((a, b) => b.latestUpdated - a.latestUpdated);
     return groups;
 }
 
 // Given a base name and the current dataset list, return the next free "Base vN".
-function suggestNextVersion(baseName, datasets) {
+// Uses version_group from backend when available.
+function suggestNextVersion(baseName, datasets, versionGroup) {
     let max = 0;
     for (const ds of datasets) {
-        const parsed = parseDatasetVersion(ds.name);
-        if (parsed.base === baseName && parsed.version > max) max = parsed.version;
+        if (versionGroup && ds.version_group === versionGroup) {
+            if ((ds.version || 1) > max) max = ds.version || 1;
+        } else if (!versionGroup) {
+            const parsed = parseDatasetVersion(ds.name);
+            if (parsed.base === baseName && parsed.version > max) max = parsed.version;
+        }
     }
     const next = Math.max(max + 1, 2);
     return `${baseName} v${next}`;
 }
 
-async function saveAsDataset() {
+// ─── Unified CV Manager Modal ───────────────────────────────
+
+async function openCvManager() {
     try {
         saveAsDatasetsCache = await api('/api/datasets') || [];
     } catch (err) {
         saveAsDatasetsCache = [];
     }
-    renderSaveAsList(saveAsDatasetsCache);
+    renderCvManagerList(saveAsDatasetsCache);
     const input = document.getElementById('saveAsNameInput');
-    input.value = activeDatasetName || '';
+    if (input) input.value = activeDatasetName || '';
+    const langSelect = document.getElementById('saveAsLangSelect');
+    if (langSelect && typeof I18n !== 'undefined') {
+        langSelect.innerHTML = I18n.languages.map(l =>
+            `<option value="${l.code}"${l.code === (activeDatasetLanguage || 'en') ? ' selected' : ''}>${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
+        ).join('');
+    }
+    const langGroupInput = document.getElementById('saveAsLangGroup');
+    if (langGroupInput) langGroupInput.value = '';
+    const vgInput = document.getElementById('saveAsVersionGroup');
+    if (vgInput) vgInput.value = '';
     updateSaveAsSubmitState();
-    document.getElementById('saveAsModalOverlay').classList.add('active');
-    setTimeout(() => { input.focus(); input.select(); }, 30);
+    document.getElementById('cvManagerOverlay').classList.add('active');
+    if (input) setTimeout(() => { input.focus(); input.select(); }, 30);
 }
 
-function closeSaveAsModal() {
-    const overlay = document.getElementById('saveAsModalOverlay');
+// Backwards-compat aliases so banner language switcher and other callers still work
+async function saveAsDataset() { return openCvManager(); }
+async function openDatasetsModal() { return openCvManager(); }
+function closeSaveAsModal() { closeCvManager(); }
+function closeDatasetsModal() { closeCvManager(); }
+
+function closeCvManager() {
+    const overlay = document.getElementById('cvManagerOverlay');
     if (overlay) overlay.classList.remove('active');
+    document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
 }
 
-function renderSaveAsList(datasets) {
-    const container = document.getElementById('saveAsExistingList');
+function renderCvManagerList(datasets) {
+    const container = document.getElementById('datasetsList');
     if (!container) return;
     if (!datasets || datasets.length === 0) {
-        container.innerHTML = `<p class="save-as-empty">${escapeHtml(t('datasets.no_existing'))}</p>`;
+        container.innerHTML = `<p class="cvm-empty">${escapeHtml(t('datasets.no_existing'))}</p>`;
         return;
     }
-    const groups = groupDatasetsByBase(datasets);
+    const hierarchy = groupDatasetsHierarchy(datasets);
     const newVersionLabel = escapeHtml(t('datasets.new_version'));
-    const lastUpdatedLabel = escapeHtml(t('datasets.last_updated'));
+    const addLanguageLabel = escapeHtml(t('datasets.add_language'));
 
-    container.innerHTML = groups.map(group => {
-        const escBase = escapeHtml(group.base);
-        if (group.items.length === 1) {
-            const ds = group.items[0];
-            const escName = escapeHtml(ds.name);
-            return `
-                <div class="save-as-item save-as-standalone">
-                    <button type="button" class="save-as-row" data-action="fill-name" data-name="${escName}">
-                        <div class="save-as-row-info">
-                            <span class="save-as-row-name">${escName}</span>
-                            <span class="save-as-row-date">${lastUpdatedLabel} ${formatDateTime(ds.updated_at)}</span>
-                        </div>
-                    </button>
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
-                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                        <span>${newVersionLabel}</span>
-                    </button>
-                </div>
-            `;
-        }
-        const children = group.items.map(ds => {
-            const escName = escapeHtml(ds.name);
-            return `
-                <button type="button" class="save-as-version-child" data-action="fill-name" data-name="${escName}">
-                    <span class="dataset-version-badge">v${ds._version}</span>
-                    <span class="save-as-row-name">${escName}</span>
-                    <span class="save-as-row-date">${formatDateTime(ds.updated_at)}</span>
-                </button>
-            `;
-        }).join('');
-        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
+    // Build set of language_groups that contain the default dataset
+    const defaultLangGroups = new Set();
+    datasets.forEach(ds => {
+        if (ds.is_default && ds.language_group) defaultLangGroups.add(ds.language_group);
+    });
+
+    function cvmRow(ds, opts = {}) {
+        const isActive = ds.id === activeDatasetId;
+        const isDefault = !!ds.is_default;
+        const isDefSib = !isDefault && !!opts.isDefaultSibling;
+        const dsLang = ds.language || 'en';
+        const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
+        const slugSuffix = opts.showLangBadge ? `/${dsLang}` : '';
+        const classes = ['cvm-row'];
+        if (isActive) classes.push('cvm-row-active');
+        if (isDefault || isDefSib) classes.push('cvm-row-default');
+
+        let urlText = '';
+        if (isDefault && opts.showLangBadge) urlText = `/${dsLang}`;
+        else if (isDefault) urlText = '/';
+        else if (isDefSib) urlText = `/${dsLang}`;
+        else if (ds.slug) urlText = `/v/${escapeHtml(ds.slug)}${slugSuffix}`;
+
+        const urlHtml = urlText ? `<span class="cvm-url">${urlText}</span>` : '';
+        const showToggle = ds.slug && !isDefault && !isDefSib;
+
         return `
-            <div class="save-as-item save-as-group">
-                <div class="save-as-group-header">
-                    <span class="save-as-group-base">${escBase}</span>
-                    <span class="save-as-group-count">${countLabel}</span>
-                </div>
-                <div class="save-as-group-children">${children}</div>
-                <div class="save-as-group-footer">
-                    <button type="button" class="btn btn-ghost btn-sm save-as-newver-btn" data-action="new-version" data-base="${escBase}">
-                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                        <span>${newVersionLabel}</span>
+            <div class="${classes.join(' ')}" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" data-lang="${dsLang}">
+                <label class="cvm-radio" title="${isDefault ? t('datasets.default_hint') : ''}">
+                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
+                    <span class="radio-dot"></span>
+                </label>
+                <span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>
+                ${opts.versionBadge ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>` : ''}
+                <span class="cvm-name">${escapeHtml(ds.name)}${ds.is_public && !isDefault && !isDefSib ? ` <span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>` : ''}</span>
+                ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
+                ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
+                ${urlHtml}
+                <span class="cvm-date">${formatDateTime(ds.updated_at)}</span>
+                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? t('datasets.reload') : t('datasets.load')}</button>
+                <button class="btn btn-ghost btn-sm cvm-more-btn" onclick="openCvmMenu(event, ${ds.id}, '${safeName}', '${dsLang}', '${escapeHtml(ds.slug || '')}', ${isDefault}, ${isDefSib}, ${!!ds.is_public}, ${showToggle})">
+                    ${materialIcon('more_vert', 16)}
+                </button>
+            </div>`;
+    }
+
+    function renderVersionBlock(ver, showVersionBadge) {
+        const hasDefSib = ver.language_group && defaultLangGroups.has(ver.language_group);
+        if (ver.languages.length <= 1) {
+            return cvmRow(ver.languages[0], { versionBadge: showVersionBadge ? (ver.version || 1) : null, isDefaultSibling: hasDefSib });
+        }
+        return ver.languages.map(ds =>
+            cvmRow(ds, { versionBadge: showVersionBadge ? (ver.version || 1) : null, showLangBadge: true, isDefaultSibling: hasDefSib })
+        ).join('');
+    }
+
+    function addLangBtn(ver) {
+        if (!ver.language_group) return '';
+        const existingLangs = new Set(ver.languages.map(d => d.language || 'en'));
+        const allLangs = (typeof I18n !== 'undefined' ? I18n.languages : []).map(l => l.code);
+        if (allLangs.filter(c => !existingLangs.has(c)).length === 0) return '';
+        return `<button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="add-language" data-name="${escapeHtml(ver.name)}" data-group="${escapeHtml(ver.language_group)}">
+            ${materialIcon('translate', 14)} <span>${addLanguageLabel}</span>
+        </button>`;
+    }
+
+    function versionHasHighlight(ver) {
+        return ver.languages.some(ds => ds.id === activeDatasetId || ds.is_default);
+    }
+
+    container.innerHTML = hierarchy.map(group => {
+        const escBase = escapeHtml(group.base);
+        const hasMultipleVersions = group.versions.length > 1;
+
+        if (!hasMultipleVersions) {
+            const ver = group.versions[0];
+            const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
+            const countLabel = ver.languages.length > 1
+                ? escapeHtml(t('datasets.languages_count', { count: ver.languages.length }))
+                : escapeHtml(t('datasets.versions_count', { count: 1 }));
+            return `<div class="cvm-group">
+                <div class="cvm-group-header">
+                    <span class="cvm-group-name">${escapeHtml(group.base)}</span>
+                    <button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVG}">
+                        ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
                     </button>
+                    ${addLangBtn(ver)}
+                    <span class="cvm-group-count">${countLabel}</span>
                 </div>
+                <div class="cvm-group-body">${renderVersionBlock(ver, false)}</div>
+            </div>`;
+        }
+
+        const latest = group.versions[group.versions.length - 1];
+        const older = group.versions.slice(0, -1);
+        const olderCount = older.length;
+        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.versions.length }));
+        const olderHasHighlight = older.some(v => versionHasHighlight(v));
+        const escVG = group.versionGroup ? escapeHtml(group.versionGroup) : '';
+
+        return `<div class="cvm-group">
+            <div class="cvm-group-header">
+                <span class="cvm-group-name">${escapeHtml(group.base)}</span>
+                <button type="button" class="btn btn-ghost btn-sm cvm-action-btn" data-action="new-version" data-base="${escBase}" data-version-group="${escVG}">
+                    ${materialIcon('add', 14)} <span>${newVersionLabel}</span>
+                </button>
+                <span class="cvm-group-count">${countLabel}</span>
             </div>
-        `;
+            <div class="cvm-group-body">
+                ${renderVersionBlock(latest, true)}
+                ${olderCount > 0 ? `
+                    <button type="button" class="btn btn-ghost btn-sm version-collapse-toggle" onclick="toggleOlderVersions(this)">
+                        ${materialIcon(olderHasHighlight ? 'expand_less' : 'expand_more', 14)}
+                        <span>${olderCount} older version${olderCount > 1 ? 's' : ''}</span>
+                    </button>
+                    <div class="version-collapsed-group" style="${olderHasHighlight ? '' : 'display:none;'}">
+                        ${older.map(v => renderVersionBlock(v, true)).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>`;
     }).join('');
 }
+
+// Backwards-compat alias
+function renderSaveAsList(datasets) { renderCvManagerList(datasets); }
 
 function saveAsOnListClick(e) {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const action = btn.getAttribute('data-action');
     const input = document.getElementById('saveAsNameInput');
+    const langSelect = document.getElementById('saveAsLangSelect');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
     if (!input) return;
+    const vgInput = document.getElementById('saveAsVersionGroup');
     if (action === 'fill-name') {
         input.value = btn.getAttribute('data-name') || '';
+        if (langSelect && btn.getAttribute('data-lang')) {
+            langSelect.value = btn.getAttribute('data-lang');
+        }
+        if (langGroupInput) langGroupInput.value = '';
+        if (vgInput) vgInput.value = '';
     } else if (action === 'new-version') {
         const base = btn.getAttribute('data-base') || '';
-        input.value = suggestNextVersion(base, saveAsDatasetsCache);
+        const versionGroup = btn.getAttribute('data-version-group') || '';
+        input.value = suggestNextVersion(base, saveAsDatasetsCache, versionGroup);
+        if (langGroupInput) langGroupInput.value = '';
+        if (vgInput) vgInput.value = versionGroup;
+    } else if (action === 'add-language') {
+        const name = btn.getAttribute('data-name') || '';
+        const group = btn.getAttribute('data-group') || '';
+        input.value = name;
+        if (langGroupInput) langGroupInput.value = group;
+        // Set language to first available language not in this group
+        if (langSelect && group) {
+            const existingLangs = new Set();
+            saveAsDatasetsCache.forEach(ds => {
+                if (ds.language_group === group) existingLangs.add(ds.language || 'en');
+            });
+            const available = (typeof I18n !== 'undefined' ? I18n.languages : []).map(l => l.code).filter(c => !existingLangs.has(c));
+            if (available.length > 0) {
+                // Filter select to only show available languages
+                langSelect.innerHTML = available.map(code => {
+                    const langObj = I18n.languages.find(l => l.code === code);
+                    return `<option value="${code}">${escapeHtml(langObj ? langObj.native : code)} (${code.toUpperCase()})</option>`;
+                }).join('');
+            }
+        }
     }
     updateSaveAsSubmitState();
     input.focus();
@@ -2778,29 +3097,37 @@ function saveAsOnListClick(e) {
 function updateSaveAsSubmitState() {
     const input = document.getElementById('saveAsNameInput');
     const btn = document.getElementById('saveAsSubmitBtn');
+    const langSelect = document.getElementById('saveAsLangSelect');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
     if (!input || !btn) return;
     const name = (input.value || '').trim();
-    const match = saveAsDatasetsCache.find(d => d.name === name);
+    const language = langSelect ? langSelect.value : 'en';
+    const languageGroup = langGroupInput ? langGroupInput.value : '';
+    const match = saveAsDatasetsCache.find(d => d.name === name && d.language === language);
     btn.classList.remove('btn-primary', 'btn-warning');
     if (!name) {
         btn.disabled = true;
         btn.textContent = t('datasets.save_new_empty');
         btn.classList.add('btn-primary');
-    } else if (match) {
+    } else if (match && !languageGroup) {
         btn.disabled = false;
         btn.textContent = t('datasets.overwrite', { name });
         btn.classList.add('btn-warning');
+    } else if (languageGroup) {
+        btn.disabled = false;
+        btn.textContent = t('datasets.save_new_lang', { name, lang: language.toUpperCase() });
+        btn.classList.add('btn-primary');
     } else {
         btn.disabled = false;
         btn.textContent = t('datasets.save_new', { name });
         btn.classList.add('btn-primary');
     }
-    // Highlight the matching row (if any) so users see which CV will be overwritten
-    document.querySelectorAll('#saveAsExistingList [data-action="fill-name"]').forEach(el => {
-        if (name && el.getAttribute('data-name') === name) {
-            el.classList.add('save-as-row-selected');
+    // Highlight the matching row so users see which CV will be overwritten
+    document.querySelectorAll('#datasetsList .cvm-row').forEach(el => {
+        if (name && el.getAttribute('data-name') === name && el.getAttribute('data-lang') === language) {
+            el.classList.add('cvm-row-selected');
         } else {
-            el.classList.remove('save-as-row-selected');
+            el.classList.remove('cvm-row-selected');
         }
     });
 }
@@ -2810,17 +3137,35 @@ async function submitSaveAs() {
     if (!input) return;
     const name = (input.value || '').trim();
     if (!name) return;
-    const match = saveAsDatasetsCache.find(d => d.name === name);
+    const langSelect = document.getElementById('saveAsLangSelect');
+    const langGroupInput = document.getElementById('saveAsLangGroup');
+    const vgInput = document.getElementById('saveAsVersionGroup');
+    const language = langSelect ? langSelect.value : 'en';
+    const languageGroup = langGroupInput ? langGroupInput.value : '';
+    const versionGroup = vgInput ? vgInput.value : '';
+
+    const match = saveAsDatasetsCache.find(d => d.name === name && d.language === language);
     if (match && !confirm(t('confirm.overwrite_dataset', { name }))) return;
     try {
-        const result = await api('/api/datasets', { method: 'POST', body: { name } });
+        const body = { name, language };
+        if (languageGroup) body.language_group = languageGroup;
+        if (versionGroup) body.version_group = versionGroup;
+        const result = await api('/api/datasets', { method: 'POST', body });
         if (result.success) {
             activeDatasetId = result.id;
             activeDatasetName = name;
             activeDatasetIsDefault = !!result.is_default;
+            activeDatasetLanguage = result.language || language;
+            activeDatasetLanguageGroup = result.language_group || null;
+            await loadActiveDatasetSiblings();
+            persistActiveDataset();
+            if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
+                await I18n.setLocale(activeDatasetLanguage);
+            }
             showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
             closeSaveAsModal();
-            toast(result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
+            await initAdmin();
+            toast(result.created && languageGroup ? t('toast.language_variant_created') : result.updated ? t('toast.dataset_updated') : t('toast.dataset_saved'));
         } else {
             toast(result.error || t('toast.failed_save'), 'error');
         }
@@ -2830,9 +3175,9 @@ async function submitSaveAs() {
 }
 
 // Wire up input + list listeners once the modal is in the DOM
-(function initSaveAsModalListeners() {
+(function initCvManagerListeners() {
     function setup() {
-        const list = document.getElementById('saveAsExistingList');
+        const list = document.getElementById('datasetsList');
         const input = document.getElementById('saveAsNameInput');
         if (list && !list.dataset.saveAsBound) {
             list.addEventListener('click', saveAsOnListClick);
@@ -2848,6 +3193,11 @@ async function submitSaveAs() {
             });
             input.dataset.saveAsBound = '1';
         }
+        const langSelect = document.getElementById('saveAsLangSelect');
+        if (langSelect && !langSelect.dataset.saveAsBound) {
+            langSelect.addEventListener('change', updateSaveAsSubmitState);
+            langSelect.dataset.saveAsBound = '1';
+        }
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
@@ -2856,106 +3206,80 @@ async function submitSaveAs() {
     }
 })();
 
-async function openDatasetsModal() {
-    await loadDatasetsList();
-    document.getElementById('datasetsModalOverlay').classList.add('active');
-}
 
-function closeDatasetsModal() {
-    document.getElementById('datasetsModalOverlay').classList.remove('active');
-}
 
-// Render a single dataset row for the Open modal.
-// opts.isChild = true indents the row and attaches tree connectors to the version children.
-// opts.versionBadge = number renders a v{n} badge next to the name.
-function renderDatasetOpenRow(ds, opts = {}) {
-    const isActive = ds.id === activeDatasetId;
-    const isDefault = !!ds.is_default;
-    const showSlugUrl = ds.slug && !isDefault;
-    const showPublicToggle = ds.slug && !isDefault;
-    const classes = ['dataset-item'];
-    if (isActive) classes.push('dataset-item-active');
-    if (isDefault) classes.push('dataset-item-is-default');
-    if (opts.isChild) classes.push('dataset-item-child');
-    const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
-    const versionBadgeHtml = opts.versionBadge
-        ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>`
-        : '';
-
-    return `
-        <div class="${classes.join(' ')}" data-id="${ds.id}">
-            <div class="dataset-default-radio">
-                <label class="radio-label" title="${isDefault ? 'This dataset is currently served at the root URL /' : 'Click to make this dataset the one served at the root URL /'}">
-                    <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
-                    <span class="radio-dot"></span>
-                </label>
-            </div>
-            <div class="dataset-info">
-                <div class="dataset-name-row">
-                    ${versionBadgeHtml}
-                    <span class="dataset-name">${escapeHtml(ds.name)}</span>
-                    ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
-                    ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
-                </div>
-                <div class="dataset-date">${escapeHtml(t('datasets.last_updated'))} ${formatDateTime(ds.updated_at)}</div>
-                ${showSlugUrl ? `<div class="dataset-url">
-                    <span class="dataset-url-text">/v/${escapeHtml(ds.slug)}</span>
-                    <button class="dataset-url-copy" onclick="copyDatasetUrl('${escapeHtml(ds.slug)}', ${ds.is_public})" title="Copy URL">
-                        <span class="material-symbols-outlined" style="font-size:12px">content_copy</span>
-                    </button>
-                    ${ds.is_public ? '<span class="dataset-public-badge">Public</span>' : ''}
-                </div>` : ''}
-                ${isDefault ? '<div class="dataset-default-hint">Served at root URL <code>/</code></div>' : ''}
-            </div>
-            <div class="dataset-actions">
-                ${showPublicToggle ? `
-                    <div class="dataset-toggle-group">
-                        <label class="toggle-switch dataset-toggle" title="When enabled, this version is accessible at its /v/ slug URL">
-                            <input type="checkbox" ${ds.is_public ? 'checked' : ''} onchange="toggleDatasetPublic(${ds.id}, this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="dataset-toggle-label">${ds.is_public ? 'Shared' : 'Private'}</span>
-                    </div>` : ''}
-                ${ds.slug && !isDefault ? `
-                    <button class="btn btn-ghost btn-sm" onclick="previewDataset('${escapeHtml(ds.slug)}')" title="Preview saved version">
-                        <span class="material-symbols-outlined" style="font-size:14px">visibility</span>
-                    </button>` : ''}
-                <button class="btn btn-primary btn-sm" onclick="loadDataset(${ds.id}, '${safeName}')">${isActive ? 'Reload' : 'Load'}</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDataset(${ds.id}, '${safeName}')" ${isDefault ? 'disabled title="Cannot delete the default dataset"' : ''}>Delete</button>
-            </div>
-        </div>`;
-}
-
+// Reload the unified list (called after actions like toggle public, set default, delete)
 async function loadDatasetsList() {
-    const datasets = await api('/api/datasets');
-    const container = document.getElementById('datasetsList');
-
-    if (datasets.length === 0) {
-        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No saved datasets yet.<br>Use "Save As..." to save your current CV.</p>';
-        return;
+    try {
+        saveAsDatasetsCache = await api('/api/datasets') || [];
+    } catch (err) {
+        saveAsDatasetsCache = [];
     }
+    renderCvManagerList(saveAsDatasetsCache);
+    updateSaveAsSubmitState();
+}
 
-    const groups = groupDatasetsByBase(datasets);
-    container.innerHTML = groups.map(group => {
-        if (group.items.length === 1) {
-            // Standalone dataset — render as today, no grouping chrome.
-            return renderDatasetOpenRow(group.items[0]);
+// Toggle older versions visibility in both modals
+function toggleOlderVersions(btn) {
+    const container = btn.nextElementSibling;
+    if (!container) return;
+    const isHidden = container.style.display === 'none';
+    container.style.display = isHidden ? '' : 'none';
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = isHidden ? 'expand_less' : 'expand_more';
+    const label = btn.querySelector('span:last-child');
+    if (label) {
+        const text = label.textContent;
+        label.textContent = isHidden ? text.replace('older', 'older') : text;
+    }
+}
+
+// Overflow menu for dataset row actions
+function openCvmMenu(event, id, name, lang, slug, isDefault, isDefSib, isPublic, showToggle) {
+    event.stopPropagation();
+    document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
+    const menu = document.createElement('div');
+    menu.className = 'cvm-overflow-menu';
+    let items = '';
+    if (showToggle) {
+        items += `<button onclick="toggleDatasetPublic(${id}, ${!isPublic}); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon(isPublic ? 'link_off' : 'share', 16)}
+            <span>${isPublic ? t('datasets.make_private') : t('datasets.make_shared')}</span>
+        </button>`;
+    }
+    items += `<button onclick="openDatasetLangPicker(event, ${id}); this.closest('.cvm-overflow-menu').remove()">
+        ${materialIcon('translate', 16)} <span>${t('datasets.change_language')}</span>
+    </button>`;
+    if (slug && !isDefault) {
+        const slugSuffix = lang ? `/${lang}` : '';
+        items += `<button onclick="previewDataset('${slug}${slugSuffix}'); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon('visibility', 16)} <span>${t('datasets.preview')}</span>
+        </button>`;
+    }
+    if (slug) {
+        const urlPath = isDefault ? '' : (isDefSib ? lang : `v/${slug}${lang ? '/' + lang : ''}`);
+        items += `<button onclick="copyDatasetUrl('${urlPath}', ${isPublic || isDefault || isDefSib}); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon('content_copy', 16)} <span>${t('datasets.copy_url')}</span>
+        </button>`;
+    }
+    if (!isDefault) {
+        items += `<div class="cvm-overflow-divider"></div>`;
+        items += `<button class="cvm-overflow-danger" onclick="deleteDataset(${id}, '${name}'); this.closest('.cvm-overflow-menu').remove()">
+            ${materialIcon('delete', 16)} <span>${t('btn.delete')}</span>
+        </button>`;
+    }
+    menu.innerHTML = items;
+    document.body.appendChild(menu);
+    const rect = event.currentTarget.getBoundingClientRect();
+    menu.style.top = `${rect.bottom + 4}px`;
+    menu.style.right = `${window.innerWidth - rect.right}px`;
+    const closeFn = (ev) => {
+        if (!menu.contains(ev.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeFn);
         }
-        // Multi-version group — wrap in a container with a shared header.
-        const countLabel = escapeHtml(t('datasets.versions_count', { count: group.items.length }));
-        const children = group.items.map(ds =>
-            renderDatasetOpenRow(ds, { isChild: true, versionBadge: ds._version })
-        ).join('');
-        return `
-            <div class="dataset-open-group">
-                <div class="dataset-open-group-header">
-                    <span class="dataset-open-group-base">${escapeHtml(group.base)}</span>
-                    <span class="dataset-open-group-count">${countLabel}</span>
-                </div>
-                <div class="dataset-open-group-children">${children}</div>
-            </div>
-        `;
-    }).join('');
+    };
+    setTimeout(() => document.addEventListener('click', closeFn), 0);
 }
 
 // Preview dataset in new tab (admin only)
@@ -2964,9 +3288,10 @@ function previewDataset(slug) {
 }
 
 // Copy dataset URL to clipboard
-function copyDatasetUrl(slug, isPublic) {
+function copyDatasetUrl(pathOrSlug, isPublic) {
     // Use current origin — works for both admin preview and public site
-    const url = `${window.location.origin}/v/${slug}`;
+    const path = pathOrSlug.startsWith('v/') || pathOrSlug.length <= 2 ? pathOrSlug : `v/${pathOrSlug}`;
+    const url = `${window.location.origin}/${path}`;
     
     // Try modern clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -2998,6 +3323,55 @@ async function toggleDatasetPublic(id, isPublic) {
     } catch (err) {
         toast(t('toast.visibility_update_failed'), 'error');
         await loadDatasetsList(); // Revert toggle state
+    }
+}
+
+// Open an inline language picker anchored to the clicked language badge
+function openDatasetLangPicker(event, datasetId) {
+    event.stopPropagation();
+    document.querySelectorAll('.dataset-lang-picker').forEach(el => el.remove());
+    const langs = (typeof I18n !== 'undefined' ? I18n.languages : []);
+    const picker = document.createElement('div');
+    picker.className = 'dataset-lang-picker';
+    picker.innerHTML = langs.map(l =>
+        `<button type="button" class="dataset-lang-picker-option" data-lang="${l.code}">
+            <span class="dataset-lang-code">${l.code.toUpperCase()}</span>
+            <span class="dataset-lang-name">${escapeHtml(l.native)}</span>
+        </button>`
+    ).join('');
+    picker.addEventListener('click', async (e) => {
+        const opt = e.target.closest('[data-lang]');
+        if (!opt) return;
+        await changeDatasetLanguage(datasetId, opt.getAttribute('data-lang'));
+    });
+    document.body.appendChild(picker);
+    const rect = event.currentTarget.getBoundingClientRect();
+    picker.style.top = `${rect.bottom + 4}px`;
+    picker.style.left = `${rect.left}px`;
+    const closePicker = (ev) => {
+        if (!picker.contains(ev.target)) {
+            picker.remove();
+            document.removeEventListener('click', closePicker);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closePicker), 0);
+}
+
+async function changeDatasetLanguage(id, language) {
+    try {
+        const result = await api(`/api/datasets/${id}/language`, {
+            method: 'PUT',
+            body: { language }
+        });
+        if (result.success) {
+            toast(t('toast.dataset_language_changed', { lang: language.toUpperCase() }));
+            document.querySelectorAll('.dataset-lang-picker').forEach(el => el.remove());
+            await loadDatasetsList();
+        } else {
+            toast(result.error || t('toast.update_failed'), 'error');
+        }
+    } catch (err) {
+        toast(err.message || t('toast.update_failed'), 'error');
     }
 }
 
@@ -3058,6 +3432,14 @@ async function loadDataset(id, name) {
             activeDatasetId = result.id;
             activeDatasetName = result.name;
             activeDatasetIsDefault = !!result.is_default;
+            activeDatasetLanguage = result.language || 'en';
+            activeDatasetLanguageGroup = result.language_group || null;
+            await loadActiveDatasetSiblings();
+            persistActiveDataset();
+            // Sync UI locale to match dataset language
+            if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
+                await I18n.setLocale(activeDatasetLanguage);
+            }
             closeDatasetsModal();
             await initAdmin();
             toast(t('toast.dataset_loaded', { name: result.name }));
@@ -3390,18 +3772,51 @@ function renderLanguageGrid() {
     const container = document.getElementById('toolbarLanguageGrid');
     if (!container) return;
 
-    container.innerHTML = I18n.languages.map(lang => `
-        <div class="language-option ${I18n.locale === lang.code ? 'active' : ''}" onclick="selectLanguage('${lang.code}')">
+    // Determine available languages based on active dataset's language group
+    const hasMultiLang = activeDatasetSiblings.length > 0;
+    const groupLangs = new Set();
+    if (hasMultiLang) {
+        groupLangs.add(activeDatasetLanguage || 'en');
+        activeDatasetSiblings.forEach(s => groupLangs.add(s.language));
+    }
+
+    let html = I18n.languages.map(lang => {
+        const isCurrent = I18n.locale === lang.code;
+        const isDisabled = hasMultiLang && !groupLangs.has(lang.code);
+        return `
+        <div class="language-option ${isCurrent ? 'active' : ''} ${isDisabled ? 'language-option-disabled' : ''}" ${isDisabled ? '' : `onclick="selectLanguage('${lang.code}')"`}>
             <div>
                 <div class="language-option-native">${lang.native}</div>
                 <div class="language-option-name">${lang.name}</div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
+
+    if (hasMultiLang) {
+        html += `<div class="language-picker-hint">${escapeHtml(t('datasets.add_language_hint'))}</div>`;
+    }
+
+    container.innerHTML = html;
 }
 
-// Handle language selection
+// Handle language selection from toolbar picker
 async function selectLanguage(code) {
+    // If a multi-language dataset is active, switch to that language variant
+    if (activeDatasetSiblings.length > 0) {
+        const sibling = activeDatasetSiblings.find(s => s.language === code);
+        if (sibling) {
+            await switchDatasetLanguage(sibling.id, sibling.name, code);
+            return;
+        }
+        // If the code matches the active dataset language, just switch locale
+        if (code === activeDatasetLanguage) {
+            await I18n.setLocale(code);
+            renderLanguageGrid();
+            document.getElementById('languagePickerDropdown').classList.remove('active');
+            return;
+        }
+    }
     await I18n.setLocale(code);
     renderLanguageGrid();
     document.getElementById('languagePickerDropdown').classList.remove('active');
@@ -4168,6 +4583,10 @@ function openAtsPdfModal() {
     document.getElementById('atsPdfModalOverlay').classList.add('active');
     document.getElementById('atsPdfScale').value = 100;
     document.getElementById('atsPdfScaleLabel').textContent = '100%';
+    const headerGroup = document.getElementById('atsPdfEnglishHeadersGroup');
+    if (headerGroup) {
+        headerGroup.style.display = (typeof I18n !== 'undefined' && I18n.locale !== 'en') ? '' : 'none';
+    }
     updateAtsPdfPreview();
 }
 
@@ -4197,11 +4616,12 @@ async function fetchAtsPdfPreview() {
     try {
         const scale = parseInt(document.getElementById('atsPdfScale').value) / 100;
         const paperSize = document.getElementById('atsPdfPaperSize').value;
+        const englishHeaders = document.getElementById('atsPdfEnglishHeaders')?.checked || false;
 
         const res = await fetch('/api/export/ats-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scale, paperSize, locale: I18n.locale })
+            body: JSON.stringify({ scale, paperSize, locale: I18n.locale, forceEnglishHeaders: englishHeaders })
         });
 
         if (!res.ok) throw new Error('Failed to generate PDF');
@@ -4225,11 +4645,12 @@ async function downloadAtsPdf() {
     try {
         const scale = parseInt(document.getElementById('atsPdfScale').value) / 100;
         const paperSize = document.getElementById('atsPdfPaperSize').value;
+        const englishHeaders = document.getElementById('atsPdfEnglishHeaders')?.checked || false;
 
         const res = await fetch('/api/export/ats-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scale, paperSize, locale: I18n.locale })
+            body: JSON.stringify({ scale, paperSize, locale: I18n.locale, forceEnglishHeaders: englishHeaders })
         });
 
         if (!res.ok) throw new Error('Failed to generate PDF');

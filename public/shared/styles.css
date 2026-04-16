@@ -1122,6 +1122,233 @@ body {
     flex-shrink: 0;
 }
 
+/* Language badge (used in dataset rows, banners, etc.) */
+.dataset-lang-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+    background: var(--primary);
+    color: var(--white);
+    text-transform: uppercase;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+/* Clickable variant (in Open modal rows) */
+.dataset-lang-badge-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+.dataset-lang-badge-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+/* Floating language picker anchored to a badge */
+.dataset-lang-picker {
+    position: fixed;
+    z-index: 2000;
+    min-width: 180px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.dataset-lang-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--gray-700);
+    transition: background 0.15s ease;
+}
+.dataset-lang-picker-option:hover { background: var(--gray-50); }
+
+/* Public language switcher — top-right pill with flag */
+.public-lang-switcher {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+}
+.public-lang-switch-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 24px;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+    transition: all 0.2s ease;
+}
+.public-lang-switch-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4);
+}
+.public-lang-flag {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+.lang-flag-img {
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+}
+.public-lang-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 170px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+.public-lang-dropdown.active { display: block; }
+.public-lang-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: var(--gray-700);
+    font-size: 13px;
+    transition: background 0.15s;
+    cursor: pointer;
+}
+.public-lang-option:hover { background: var(--gray-50); }
+.public-lang-option.active {
+    background: var(--primary);
+    color: var(--white);
+    font-weight: 600;
+}
+.public-lang-code {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    min-width: 24px;
+}
+.public-lang-name { flex: 1; }
+
+/* Admin dataset language switcher */
+.dataset-lang-switcher {
+    position: relative;
+    margin-left: 8px;
+}
+.dataset-lang-switch-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+}
+.dataset-lang-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 180px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    z-index: 1001;
+}
+.dataset-lang-dropdown.active { display: block; }
+.dataset-lang-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.dataset-lang-option:hover { background: var(--gray-50); }
+.dataset-lang-option.active {
+    background: var(--primary);
+    color: var(--white, #fff);
+    font-weight: 600;
+}
+.dataset-lang-option.active:hover { background: var(--primary); }
+.dataset-lang-option.add-lang {
+    cursor: pointer;
+    border-top: 1px solid var(--gray-100);
+    opacity: 0.8;
+}
+.dataset-lang-option.add-lang:hover { opacity: 1; background: var(--gray-50); }
+.dataset-lang-code {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    min-width: 22px;
+}
+.dataset-lang-name { flex: 1; }
+
+/* Save As modal — language field */
+.save-as-language-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex-shrink: 0;
+}
+.save-as-lang-select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--white);
+    color: var(--gray-700);
+}
+
+/* Save As modal — add language button */
+.save-as-newlang-btn {
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+/* Save As modal — version child row with add-language */
+.save-as-version-child-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.save-as-version-child-row .save-as-version-child {
+    flex: 1;
+    min-width: 0;
+}
+.save-as-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
 /* Preview Banner (for versioned dataset URLs) */
 .preview-banner {
     position: fixed;

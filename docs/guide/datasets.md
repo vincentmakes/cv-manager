@@ -1,94 +1,122 @@
-# Datasets (Multiple CV Versions)
+# Datasets & Language Variants
 
 ## How Datasets Work
 
-Datasets are saved snapshots of your CV. One dataset is always the **default** — this is the version visitors see at your root URL (`/`). You can create additional datasets for different audiences (e.g., a technical CV, a management CV) and share them at their own URLs.
+Datasets are saved snapshots of your CV. One dataset is always the **default** — this is the version visitors see at your root URL (`/`). You can create additional datasets for different audiences (e.g., a technical CV, a management CV), in different languages, and share them at their own URLs.
 
 When you first install CV Manager, a "Default" dataset is automatically created from your CV data. All edits you make in the admin are **auto-saved** back to the active dataset — there's no separate "save" step.
 
-## The Active Dataset Banner
+## The CV Manager
 
-A banner below the toolbar shows which dataset you're currently editing. It displays:
+Click **CV Manager** in the toolbar to open the unified modal for all dataset operations: saving, loading, creating versions, adding languages, setting defaults, and managing visibility.
 
-- The **dataset name** (e.g., "Default", "Technical CV")
-- A **"Default" badge** if this dataset is the one served at `/`
-- An **auto-save status** — briefly shows "Saving…" then "✓ Saved" after each edit
+The modal has two zones:
 
-Every change you make (adding items, editing content, reordering, toggling visibility) is automatically saved to the active dataset after a short delay.
+- A **save-as form** at the top — name field, language selector, and a save button
+- A **list of saved CVs** below — grouped by base name, with all management actions
 
-## Saving a New Dataset
+### Saving a New Dataset
 
-Click **Save As...** in the toolbar to open the save modal. From here you can create a brand-new dataset or overwrite an existing one.
+The name field is pre-filled with the active dataset's name. The language dropdown defaults to the active language.
 
-The modal has two parts:
+- **Type a new name** and click the blue **Save as new "…"** button to create a brand-new dataset
+- **Click an existing row** in the list to fill the name field — the button changes to the orange **Overwrite "…"** (with confirmation)
 
-- A **name field** at the top, pre-filled with the currently-active dataset's name
-- A list of **existing CVs** below, with related versions grouped visually
+### Dataset List
 
-### Grouped versions
+Each saved CV appears as a **group** with a header showing the base name, a **+ New version** button, and a version/language count badge.
 
-Datasets that share the same base name are displayed together. For example, `Frontend Engineer`, `Frontend Engineer v2`, and `Frontend Engineer v3` appear as one block under a shared header — each version tagged with a small `v1` / `v2` / `v3` badge. Standalone CVs with no siblings render as a single row.
+Inside each group, every language variant is a row:
 
-### Click a CV to overwrite it
+```
+○  EN  v2  Full Stack Developer v2     /v/full-stack-dev/en   16/04/2026   [Load]  ⋮
+```
 
-Clicking any row in the list fills the name field with that CV's name, and the primary button switches to **Overwrite "…"** (orange). Clicking it asks you to confirm before replacing that CV with your current data.
+- **Radio button** (○) — select which dataset visitors see at `/` (the default)
+- **Language badge** (EN) — the content language of this variant
+- **Version badge** (v2) — shown when the group has multiple versions
+- **Name** — the dataset name
+- **URL** — the public URL path (if shared or default)
+- **Date** — last modified
+- **Load** — switch to editing this dataset
+- **⋮** (overflow menu) — additional actions
 
-### Create a new version
+### Overflow Menu (⋮)
 
-Every group has a **+ New version** shortcut that suggests the next free `vN` name — if `Frontend Engineer v3` is the most recent version, the shortcut fills the name field with `Frontend Engineer v4`. The button reads **Save as new "…"** and submitting saves the new version alongside the existing ones.
+Each row's overflow menu contains:
 
-### Type a fresh name
+| Action | Description |
+|--------|-------------|
+| **Make shared / Make private** | Toggle public visibility at `/v/slug` (hidden for default and its language siblings) |
+| **Change language** | Reassign this dataset's language code |
+| **Preview** | Open the saved version in a new tab |
+| **Copy URL** | Copy the public or preview URL to clipboard |
+| **Delete** | Permanently remove (disabled for the default dataset) |
 
-If you type a name that doesn't match any existing CV, the button reads **Save as new "…"** (blue). Submitting creates a brand-new dataset.
+## Versions
+
+Datasets that share the same base name are grouped together. For example, `Frontend Engineer`, `Frontend Engineer v2`, and `Frontend Engineer v3` appear as one block under a shared header.
+
+### Creating a New Version
+
+Click **+ New version** in the group header. The name field auto-fills with the next version number (e.g., `Frontend Engineer v4`). When you save, the new version:
+
+- Gets a proper version badge (v4)
+- Shares the same URL slug as its siblings
+- Inherits all language variants from the previous version
+
+### Collapsible Older Versions
+
+When a group has multiple versions, only the latest is shown. A **"N older versions"** toggle lets you expand to see all versions. If the dataset you're editing or the default is in an older version, it auto-expands so you can always see it.
 
 !!! tip
-    Use the `Base vN` naming convention (e.g. `Frontend Engineer`, `Frontend Engineer v2`) to get automatic version grouping and next-version suggestions. Datasets without a `vN` suffix are treated as the "v1" of their name.
+    Use the `Base vN` naming convention (e.g., `Frontend Engineer`, `Frontend Engineer v2`) to get automatic version grouping and next-version suggestions.
 
-## The Open Modal
+## Language Variants
 
-Click **Open...** to see all saved datasets. A **legend** at the top explains the three controls:
+Each version of a dataset can have multiple language variants — for example, an English and a German version of the same CV, sharing the same structure but with independent content.
 
-| Control | Purpose |
-|---------|---------|
-| **Radio button** | Select which dataset is served at your root URL `/` (the default) |
-| **Toggle** | Share other datasets at their own `/v/slug` URL |
-| **Eye button** | Preview a saved dataset without making it public |
+### Adding a Language Variant
 
-Sibling versions of the same base CV are **grouped together**. A family like `Frontend Engineer`, `Frontend Engineer v2`, `Frontend Engineer v3` appears as a single block under a shared header, with each version indented beneath a tree connector and tagged with a small `v1` / `v2` / `v3` badge. Standalone CVs with no other versions continue to render as a single row.
+1. Open **CV Manager**
+2. Click **+ Add language** on the group header (or use the **⋮ → Add language** flow from the save-as form)
+3. Select the target language and save
 
-Each dataset row shows:
+The new variant starts as a copy of the existing content. The admin UI automatically switches to the new language so you can start translating.
 
-- **Name** (prefixed with its version badge when part of a group) and last-updated date
-- **"Default" badge** — on the dataset selected with the radio button
-- **"Editing" badge** — on the dataset currently loaded in the admin
-- A **versioned URL** (e.g., `/v/technical-cv-1`) — hidden for the default dataset since it's served at `/`
-- **Load** button — switches to this dataset (shows "Reload" if already active)
-- **Delete** button — permanently removes the dataset (disabled for the current default)
+### Switching Languages
 
-## Setting the Default Dataset
+When editing a dataset that has language siblings, a **language switcher** appears in the active dataset banner below the toolbar. Click a language code to switch — your current work is auto-saved first, then the other variant loads and the UI locale switches to match.
 
-The default dataset is the version visitors see when they visit your root URL (`/`). To change it:
+### Structural Sync
 
-1. Open the **Open...** modal
-2. Click the **radio button** next to the dataset you want as your public CV
-3. The change takes effect immediately — the public site now serves that dataset
+Changes to **structure** — section order, visibility, custom section layout, and item count — automatically propagate across all language siblings. **Content** (text, titles, descriptions) stays independent per language, so you can translate freely without worrying about layout drift.
 
-This decouples your public CV from your editing. You can freely edit content in the admin without visitors seeing work-in-progress changes until you're ready.
+### Changing a Dataset's Language
+
+Click the **language badge** on any row to open a picker and reassign its language code. This is useful for legacy datasets that defaulted to English during setup.
+
+## Setting the Default
+
+The default dataset is the version visitors see at your root URL (`/`). To change it:
+
+1. Open **CV Manager**
+2. Click the **radio button** (○) next to the dataset you want as default
+3. The change takes effect immediately
+
+Language siblings of the default are automatically accessible at `/{lang}` (e.g., `/de`, `/fr`) — they don't need a separate public toggle.
+
+!!! note
+    The public site serves the saved default dataset, not your live edits. You can safely experiment in the admin without affecting what visitors see.
 
 ## Public Versioned URLs
 
-Each saved dataset (other than the default) gets a unique URL path (e.g., `/v/technical-cv-1`). By default, these are **private** — only accessible from the admin interface for previewing.
+Non-default datasets can be shared at their own URLs. Use the **⋮ → Make shared** action to make a dataset public at `/v/slug`. Multiple datasets can be public simultaneously.
 
-To share a specific version publicly:
+- **Default dataset**: served at `/`
+- **Default's language siblings**: served at `/{lang}` (e.g., `/fr`)
+- **Shared datasets**: served at `/v/slug` or `/v/slug/{lang}`
+- **Private datasets**: only previewable from the admin
 
-1. Open the **Open...** modal
-2. Find the dataset you want to share
-3. Toggle the **switch** next to it — it turns blue and a green **Public** badge appears
-4. The `/v/slug` URL is now accessible on the **public site** (port 3001)
-
-This lets you share tailored CV versions with different audiences. For example, you might make a "Technical CV" public for engineering roles while keeping a "Management CV" private until needed.
-
-**Copying the URL**: Click the copy icon next to the slug to copy the full URL to your clipboard. The toast message will tell you whether you copied a public or preview-only URL.
-
-!!! note
-    The main public page at `/` always shows the **default dataset** — not your live edits. This means you can safely experiment in the admin without affecting what visitors see.
+!!! tip "Copying URLs"
+    Click the URL path shown on each row to copy the full public URL to your clipboard.

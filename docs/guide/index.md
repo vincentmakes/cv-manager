@@ -9,8 +9,8 @@ This guide covers everything you can do with CV Manager's admin interface.
 - **[Custom Sections](custom-sections.md)** — Create additional sections with 7 layout types
 - **[Timeline](timeline.md)** — Auto-generated timeline with parallel job support
 - **[Theme & Appearance](theme.md)** — Colors and date format options
-- **[Language](language.md)** — Switch the admin interface language
-- **[Datasets](datasets.md)** — Save multiple CV versions for different audiences
+- **[Language](language.md)** — Admin interface language, CV content language, and language variants
+- **[Datasets](datasets.md)** — Save multiple CV versions and language variants for different audiences
 - **[Print & PDF](print-pdf.md)** — Export your CV with configurable page numbers and splitting
 - **[Import & Export](import-export.md)** — Backup and restore your CV data
 - **[Static Site Export](static-site.md)** — Deploy your CV to GitHub Pages, Cloudflare Pages, or any static hosting

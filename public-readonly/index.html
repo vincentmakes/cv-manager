@@ -19,7 +19,16 @@
     <button class="public-print-btn no-print" id="publicPrintBtn" onclick="window.print()" style="display: none;" data-i18n-title="toolbar.print" title="Print / Save as PDF">
         <span class="material-symbols-outlined" style="font-size:20px">print</span>
     </button>
-    
+
+    <!-- Language Switcher (only shown for datasets with multiple languages) -->
+    <div class="public-lang-switcher no-print" id="publicLangSwitcher" style="display: none;">
+        <button class="public-lang-switch-btn" id="publicLangSwitchBtn" onclick="togglePublicLangSwitcher()">
+            <span id="publicLangSwitchFlag" class="public-lang-flag"></span>
+            <span id="publicLangSwitchLabel"></span>
+        </button>
+        <div class="public-lang-dropdown" id="publicLangDropdown"></div>
+    </div>
+
     <!-- Preview Banner (only shown for versioned dataset URLs) -->
     <div class="preview-banner no-print" id="previewBanner" style="display: none;">
         <div class="preview-banner-content">
@@ -124,6 +133,10 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await I18n.init();
+            // Sync UI locale to match the dataset language (headers, sections, etc.)
+            if (window.DATASET_LANG && I18n.locale !== window.DATASET_LANG) {
+                await I18n.setLocale(window.DATASET_LANG);
+            }
             if (window.STATIC_SITE) {
                 await loadStaticData();
             } else if (window.DATASET_SLUG) {
@@ -131,6 +144,8 @@
             } else {
                 await loadLiveData();
             }
+            // Initialize language switcher if siblings are available
+            initPublicLangSwitcher();
         });
         
         // Load live data from current CV (normal mode)
@@ -263,10 +278,18 @@
             }
         }
 
-        // Load saved dataset preview (admin mode only)
+        // Load saved dataset preview
         async function loadDatasetPreview() {
             try {
-                datasetData = await api(`/api/datasets/slug/${window.DATASET_SLUG}`);
+                // Use dataset ID when available (exact match), fall back to slug+lang
+                let url;
+                if (window.DATASET_ID) {
+                    url = `/api/datasets/id/${window.DATASET_ID}`;
+                } else {
+                    const langSuffix = window.DATASET_LANG ? `/${window.DATASET_LANG}` : '';
+                    url = `/api/datasets/slug/${window.DATASET_SLUG}${langSuffix}`;
+                }
+                datasetData = await api(url);
                 if (!datasetData || datasetData.error) {
                     console.error('Failed to load dataset');
                     return;
@@ -886,6 +909,71 @@
             };
             return `#${f(0)}${f(8)}${f(4)}`;
         }
+
+        // --- Public Language Switcher ---
+        function initPublicLangSwitcher() {
+            const siblings = window.DATASET_SIBLINGS;
+            if (!siblings || siblings.length <= 1) return;
+
+            const switcher = document.getElementById('publicLangSwitcher');
+            const label = document.getElementById('publicLangSwitchLabel');
+            const flagEl = document.getElementById('publicLangSwitchFlag');
+            const dropdown = document.getElementById('publicLangDropdown');
+            if (!switcher || !dropdown) return;
+
+            const currentLang = (window.DATASET_LANG || 'en').toLowerCase();
+            if (label) label.textContent = currentLang.toUpperCase();
+
+            // Build language name map from I18n
+            const langNames = {};
+            if (typeof I18n !== 'undefined' && I18n.languages) {
+                I18n.languages.forEach(l => { langNames[l.code] = l.native; });
+            }
+
+            // Set round flag on the pill button using flagcdn
+            if (flagEl) flagEl.innerHTML = langFlagImg(currentLang, 18);
+
+            // Build dropdown items
+            let html = '';
+            for (const sib of siblings) {
+                const lang = (sib.language || 'en').toLowerCase();
+                const isActive = lang === currentLang;
+                const name = langNames[lang] || lang.toUpperCase();
+
+                let href;
+                if (window.DATASET_IS_DEFAULT) {
+                    // Default dataset: use clean /{lang} URLs
+                    href = `/${lang}`;
+                } else if (window.DATASET_SLUG) {
+                    href = `/v/${window.DATASET_SLUG}/${lang}`;
+                } else {
+                    href = `/${lang}`;
+                }
+
+                html += `<a class="public-lang-option${isActive ? ' active' : ''}" href="${href}">
+                    <span class="public-lang-flag">${langFlagImg(lang, 16)}</span>
+                    <span class="public-lang-code">${lang.toUpperCase()}</span>
+                    <span class="public-lang-name">${name}</span>
+                    ${isActive ? '<span class="material-symbols-outlined" style="font-size:14px;margin-left:auto">check</span>' : ''}
+                </a>`;
+            }
+            dropdown.innerHTML = html;
+            switcher.style.display = '';
+        }
+
+        function togglePublicLangSwitcher() {
+            const dropdown = document.getElementById('publicLangDropdown');
+            if (dropdown) dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const switcher = document.getElementById('publicLangSwitcher');
+            if (switcher && !switcher.contains(e.target)) {
+                const dropdown = document.getElementById('publicLangDropdown');
+                if (dropdown) dropdown.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>

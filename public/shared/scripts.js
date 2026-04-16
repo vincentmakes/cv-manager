@@ -1,5 +1,21 @@
 /* CV Manager - Shared JavaScript */
 
+// Map ISO 639-1 language codes to ISO 3166-1 alpha-2 country codes for flag images
+const LANG_TO_COUNTRY = {
+    en: 'gb', de: 'de', fr: 'fr', nl: 'nl', es: 'es', it: 'it', pt: 'pt', zh: 'cn',
+    ja: 'jp', ko: 'kr', ar: 'sa', hi: 'in', ru: 'ru', pl: 'pl', sv: 'se', da: 'dk',
+    fi: 'fi', no: 'no', cs: 'cz', ro: 'ro', hu: 'hu', el: 'gr', tr: 'tr', uk: 'ua',
+    th: 'th', vi: 'vn', id: 'id', ms: 'my', he: 'il', bg: 'bg', hr: 'hr', sk: 'sk',
+    sl: 'si', sr: 'rs', lt: 'lt', lv: 'lv', et: 'ee', ca: 'es', gl: 'es'
+};
+function langToCountryCode(lang) { return LANG_TO_COUNTRY[(lang || '').toLowerCase()] || null; }
+function langFlagImg(lang, size) {
+    const cc = langToCountryCode(lang);
+    if (!cc) return '';
+    const s = size || 20;
+    return `<img src="https://flagcdn.com/w40/${cc}.png" alt="${(lang || '').toUpperCase()}" class="lang-flag-img" style="width:${s}px;height:${s}px;" onerror="this.style.display='none'">`;
+}
+
 // Material Icon helper function
 function materialIcon(name, size = 16) {
     return `<span class="material-symbols-outlined" aria-hidden="true" style="font-size:${size}px">${name}</span>`;

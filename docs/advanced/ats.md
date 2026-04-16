@@ -26,8 +26,15 @@ In addition to the built-in web optimization, CV Manager can generate a **dedica
 1. Click **ATS Document** in the admin toolbar
 2. Adjust the **Scale** slider to control content density (50%–150%)
 3. Choose your preferred **Paper Size** (A4 or Letter)
-4. Preview the document in the modal
-5. Click **Download PDF** to save the file
+4. If working in a non-English language, optionally check **Section headers in English** to render section headings (Work Experience, Education, Skills, etc.) in English while keeping all other content in the active language
+5. Preview the document in the modal
+6. Click **Download PDF** to save the file
+
+### Section Headers in English
+
+When your CV is in a non-English language, many ATS systems still expect English section headings to correctly categorize content. The **Section headers in English** checkbox (only visible when the active locale is not English) forces section headings to render in English while everything else — dates, content, skills — stays in the active language.
+
+This is useful when applying to international companies or through English-language job portals with a CV written in another language.
 
 ### What Makes It Different from Print / PDF?
 
@@ -53,3 +60,6 @@ In addition to the built-in web optimization, CV Manager can generate a **dedica
 
 !!! tip "Scale for density"
     If your CV is long, try reducing the scale to 70–80% to fit more content per page. The preview updates in real-time so you can find the sweet spot.
+
+!!! tip "English headers for international applications"
+    If your CV content is in French, German, or another language, enable the English headers toggle when applying to companies that use English-language ATS systems. Most ATS parsers expect English section headings like "Work Experience" and "Education".

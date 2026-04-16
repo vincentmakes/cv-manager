@@ -9,8 +9,8 @@ Dieses Handbuch behandelt alles, was Sie mit der Admin-Oberfläche von CV Manage
 - **[Benutzerdefinierte Abschnitte](custom-sections.md)** — Zusätzliche Abschnitte mit 7 Layout-Typen erstellen
 - **[Zeitstrahl](timeline.md)** — Automatisch generierter Zeitstrahl mit Unterstützung paralleler Positionen
 - **[Design & Erscheinungsbild](theme.md)** — Farben und Datumsformat-Optionen
-- **[Sprache](language.md)** — Die Sprache der Admin-Oberfläche wechseln
-- **[Datensätze](datasets.md)** — Mehrere Lebenslauf-Versionen für verschiedene Zielgruppen speichern
+- **[Sprache](language.md)** — Sprache der Admin-Oberfläche, Inhaltssprache des Lebenslaufs und Sprachvarianten
+- **[Datensätze](datasets.md)** — Mehrere Lebenslauf-Versionen und Sprachvarianten für verschiedene Zielgruppen speichern
 - **[Drucken & PDF](print-pdf.md)** — Ihren Lebenslauf mit konfigurierbaren Seitenzahlen und Seitenumbrüchen exportieren
 - **[Import & Export](import-export.md)** — Lebenslauf-Daten sichern und wiederherstellen
 - **[Statische Webseite](static-site.md)** — Lebenslauf auf GitHub Pages, Cloudflare Pages oder jedem statischen Hosting bereitstellen
@@ -25,5 +25,5 @@ CV Manager prüft automatisch auf GitHub, ob neuere Versionen verfügbar sind. W
 
 Der Link „Was ist neu" öffnet das Änderungsprotokoll. Sie können das Banner mit der X-Schaltfläche schließen.
 
-!!! note "Hinweis"
+!!! note
     Die Versionsprüfung wird für 24 Stunden zwischengespeichert. Starten Sie Ihren Server (oder Docker-Container) neu, um den Cache zu leeren und eine erneute Prüfung zu erzwingen.

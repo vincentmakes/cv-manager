@@ -649,7 +649,7 @@ describe('Backend API', () => {
             assert.ok(Array.isArray(data));
         });
 
-        it('POST /api/datasets creates a dataset', async () => {
+        it('POST /api/datasets creates a dataset with version fields', async () => {
             const res = await fetch(`${BASE_URL}/api/datasets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -659,6 +659,8 @@ describe('Backend API', () => {
             const data = await res.json();
             assert.ok(data.id);
             assert.strictEqual(data.success, true);
+            assert.ok(data.version_group, 'should have version_group');
+            assert.strictEqual(data.version, 1);
         });
 
         it('POST /api/datasets rejects empty name', async () => {
@@ -734,6 +736,320 @@ describe('Backend API', () => {
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.strictEqual(data.is_public, true);
+        });
+
+        // --- Dataset Language Variants ---
+        it('POST /api/datasets with language creates dataset with language fields', async () => {
+            const res = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Lang Test', language: 'en' }),
+            });
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(data.id);
+            assert.strictEqual(data.language, 'en');
+            assert.ok(data.language_group);
+            // Clean up
+            await fetch(`${BASE_URL}/api/datasets/${data.id}`, { method: 'DELETE' });
+        });
+
+        it('creates language sibling sharing slug and group', async () => {
+            // Create base dataset
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Multi Lang', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            // Create sibling in same group
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Multi Lang', language: 'de', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+            assert.ok(d2.id);
+            assert.strictEqual(d2.language, 'de');
+            assert.strictEqual(d2.language_group, d1.language_group);
+            assert.strictEqual(d2.slug, d1.slug); // Share slug
+
+            // Clean up
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('rejects duplicate language in group', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Dup Test', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Dup Test', language: 'en', language_group: d1.language_group }),
+            });
+            assert.strictEqual(res2.status, 400);
+
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('GET /api/datasets returns language fields', async () => {
+            const res = await fetch(`${BASE_URL}/api/datasets`);
+            const datasets = await res.json();
+            assert.ok(Array.isArray(datasets));
+            if (datasets.length > 0) {
+                assert.ok('language' in datasets[0]);
+                assert.ok('language_group' in datasets[0]);
+            }
+        });
+
+        it('GET /api/datasets/:id/siblings returns group members', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Sib Test', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Sib Test', language: 'fr', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+
+            const sibRes = await fetch(`${BASE_URL}/api/datasets/${d1.id}/siblings`);
+            const siblings = await sibRes.json();
+            assert.ok(Array.isArray(siblings));
+            assert.strictEqual(siblings.length, 2);
+            assert.ok(siblings.some(s => s.language === 'en'));
+            assert.ok(siblings.some(s => s.language === 'fr'));
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('set default applies to one specific variant only', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Def Single', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Def Single', language: 'de', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+
+            // Set d1 (EN) as default
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}/default`, { method: 'PUT' });
+
+            // Only d1 should be default, not d2
+            const listRes = await fetch(`${BASE_URL}/api/datasets`);
+            const all = await listRes.json();
+            const g1 = all.find(d => d.id === d1.id);
+            const g2 = all.find(d => d.id === d2.id);
+            assert.strictEqual(g1.is_default, true);
+            assert.strictEqual(g2.is_default, false);
+
+            // Now set d2 (DE) as default — d1 should lose default
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}/default`, { method: 'PUT' });
+            const listRes2 = await fetch(`${BASE_URL}/api/datasets`);
+            const all2 = await listRes2.json();
+            assert.strictEqual(all2.find(d => d.id === d1.id).is_default, false);
+            assert.strictEqual(all2.find(d => d.id === d2.id).is_default, true);
+
+            // Create another dataset and set it as default to allow cleanup
+            const res3 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Other Default' }),
+            });
+            const d3 = await res3.json();
+            await fetch(`${BASE_URL}/api/datasets/${d3.id}/default`, { method: 'PUT' });
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d3.id}`, { method: 'DELETE' });
+        });
+
+        it('toggle public applies per individual language variant', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Pub Indiv', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Pub Indiv', language: 'es', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+
+            // Toggle public on d1 only
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}/public`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_public: true }),
+            });
+
+            // d1 should be public, d2 should remain private
+            const listRes = await fetch(`${BASE_URL}/api/datasets`);
+            const all = await listRes.json();
+            const g1 = all.find(d => d.id === d1.id);
+            const g2 = all.find(d => d.id === d2.id);
+            assert.strictEqual(g1.is_public, true);
+            assert.strictEqual(g2.is_public, false);
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('structural propagation syncs section order to siblings', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Prop Test', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Prop Test', language: 'de', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+
+            // Modify section order (reorder sections on live data)
+            await fetch(`${BASE_URL}/api/sections/order`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sections: [
+                    { key: 'skills', visible: true, sort_order: 0 },
+                    { key: 'about', visible: true, sort_order: 1 },
+                    { key: 'experience', visible: false, sort_order: 2 },
+                ] }),
+            });
+
+            // Save d1 (triggers propagation)
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}/save`, { method: 'POST' });
+
+            // Check d2 got the structural update
+            const slugRes = await fetch(`${BASE_URL}/api/datasets/slug/${d2.slug}/de`);
+            const d2Data = await slugRes.json();
+            if (d2Data.sectionOrder) {
+                const skills = d2Data.sectionOrder.find(s => s.key === 'skills');
+                if (skills) assert.strictEqual(skills.sort_order, 0);
+            }
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        // --- Backend Versioning ---
+        it('creating new version increments version number', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Ver Test' }),
+            });
+            const d1 = await res1.json();
+            assert.strictEqual(d1.version, 1);
+            assert.ok(d1.version_group);
+
+            // Create v2 using the version_group
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Ver Test v2', version_group: d1.version_group }),
+            });
+            const d2 = await res2.json();
+            assert.strictEqual(d2.version, 2);
+            assert.strictEqual(d2.version_group, d1.version_group);
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('new version copies language siblings from previous version', async () => {
+            // Create v1 EN
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'ML Ver', language: 'en' }),
+            });
+            const d1 = await res1.json();
+
+            // Add DE to v1
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'ML Ver', language: 'de', language_group: d1.language_group }),
+            });
+            const d2 = await res2.json();
+
+            // Create v2 using version_group
+            const res3 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'ML Ver v2', language: 'en', version_group: d1.version_group }),
+            });
+            const d3 = await res3.json();
+            assert.strictEqual(d3.version, 2);
+
+            // Check that DE was also copied to v2
+            const listRes = await fetch(`${BASE_URL}/api/datasets`);
+            const all = await listRes.json();
+            const v2Items = all.filter(d => d.version_group === d1.version_group && d.version === 2);
+            assert.strictEqual(v2Items.length, 2);
+            assert.ok(v2Items.some(d => d.language === 'en'));
+            assert.ok(v2Items.some(d => d.language === 'de'));
+            // v2 should have a different language_group than v1
+            assert.notStrictEqual(v2Items[0].language_group, d1.language_group);
+
+            // Cleanup
+            for (const d of v2Items) await fetch(`${BASE_URL}/api/datasets/${d.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('datasets in same version_group share slug', async () => {
+            const res1 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Slug Share' }),
+            });
+            const d1 = await res1.json();
+
+            const res2 = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Slug Share v2', version_group: d1.version_group }),
+            });
+            const d2 = await res2.json();
+            assert.strictEqual(d2.slug, d1.slug, 'versions should share the same slug');
+
+            await fetch(`${BASE_URL}/api/datasets/${d2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${d1.id}`, { method: 'DELETE' });
+        });
+
+        it('version_group and version returned in GET /api/datasets', async () => {
+            const res = await fetch(`${BASE_URL}/api/datasets`);
+            const datasets = await res.json();
+            if (datasets.length > 0) {
+                assert.ok('version_group' in datasets[0], 'should have version_group');
+                assert.ok('version' in datasets[0], 'should have version');
+            }
         });
 
         // --- Custom Sections ---
