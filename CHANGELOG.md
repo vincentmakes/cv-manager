@@ -4,18 +4,10 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.34.1] - 2026-04-17
-
-### Changed
-- Phantom "+ Create custom section" placeholder now reveals only when the cursor is inside the inter-section gap (no longer triggered by hovering the section above), and the placeholder below the final section is always visible as a discoverability hint.
-
-### Fixed
-- Flicker when the cursor moved from a section into the gap below it: the phantom element now physically occupies the gap as a hit target (via negative margin-top + padding) and keeps its top edge fixed while expanding, so hover state never lapses mid-animation.
-
 ## [1.34.0] - 2026-04-17
 
 ### Added
-- Inline custom section creation: hovering below any section reveals a dashed "+ Create custom section" placeholder; clicking it opens the creation dialog and inserts the new section directly after the hovered one. No more round-trip through Settings.
+- Inline custom section creation: a dashed "+ Create custom section" placeholder appears when hovering the gap between two sections (and stays visible below the last section as a discoverability hint). Clicking it opens the creation dialog and inserts the new section directly after the one above it. No more round-trip through Settings.
 - Inline rename and delete controls on every custom section header (pencil + trash icons), alongside the existing visibility toggle.
 
 ### Removed
