@@ -189,9 +189,8 @@ body {
    The outer keeps breathing-room padding so the cursor can leave the pill and move
    through the padding without dismissing the phantom. */
 .phantom-section {
-    margin-top: -16px;        /* overlap the section's 16px margin-bottom so baseline gap stays visually consistent */
-    padding: 24px 0;          /* breathing-room padding top/bottom — forgiving hit zone around the pill */
-    min-height: 48px;         /* fits the larger pill comfortably */
+    margin-top: -16px;        /* overlap the section's 16px margin-bottom so baseline gap stays the same as before the hint existed */
+    padding: 0;               /* baseline has no padding — the 20px hint overlaps the section margin, net gap stays ~16px */
     position: relative;
     cursor: pointer;
     display: flex;
@@ -200,13 +199,18 @@ body {
     user-select: none;
     background: transparent;
     box-sizing: content-box;
+    transition: padding 0.15s ease;
+}
+
+/* Breathing-room padding kicks in only when the pill is shown */
+.phantom-section:hover {
+    padding: 16px 0;
 }
 
 /* Last phantom: sit fully below the last section with extra breathing room on top */
 .phantom-section.phantom-last {
     margin-top: 16px;         /* push below the last section's margin-bottom for more breathing room */
-    padding-top: 32px;         /* extra top padding on top of the base — asked for explicitly */
-    padding-bottom: 24px;
+    padding: 32px 0 24px 0;    /* extra top padding — asked for explicitly */
 }
 
 /* Default-visible "⎯ (+) ⎯" separator between sections. Replaced by the dashed pill
@@ -227,8 +231,8 @@ body {
 }
 
 .phantom-hint-circle {
-    font-size: 22px;
-    color: var(--gray-500);
+    font-size: 20px;                  /* snug fit in the 16px section gap (icon glyph sits inside the font box with a bit of natural padding) */
+    color: var(--gray-300);           /* match the line color on each side */
     line-height: 1;
     flex-shrink: 0;
 }
