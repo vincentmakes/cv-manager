@@ -418,6 +418,7 @@
     "toolbar.cv_manager": "CV-Verwaltung",
     "datasets.cv_manager_title": "CV-Verwaltung",
     "datasets.default_hint_short": "Öffentlich",
+    "datasets.make_public": "Öffentlich machen",
     "datasets.make_private": "Privat machen",
     "datasets.make_shared": "Freigeben",
     "datasets.preview": "Vorschau",

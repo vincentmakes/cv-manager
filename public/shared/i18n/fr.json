@@ -418,6 +418,7 @@
     "toolbar.cv_manager": "Gestionnaire CV",
     "datasets.cv_manager_title": "Gestionnaire CV",
     "datasets.default_hint_short": "Public",
+    "datasets.make_public": "Rendre public",
     "datasets.make_private": "Rendre privé",
     "datasets.make_shared": "Partager",
     "datasets.preview": "Aperçu",

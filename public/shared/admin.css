@@ -18,8 +18,7 @@
     box-shadow: var(--shadow-lg);
 }
 
-.toolbar-title { font-size: 18px; font-weight: 600; color: var(--white); display: flex; align-items: center; }
-.toolbar-title-icon { height: 44px; width: auto; display: block; }
+.toolbar-title { font-size: 18px; font-weight: 600; color: var(--white); }
 .toolbar-actions { display: flex; gap: 8px; }
 .toolbar-end { display: none; gap: 8px; align-items: center; }
 .btn-icon-only span:not(.material-symbols-outlined) { display: none; }
@@ -841,6 +840,26 @@
     padding: 1px 6px;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(0, 102, 255, 0.25);
+}
+
+.dataset-make-public-btn {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    background: transparent;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--gray-300);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.dataset-make-public-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    border-style: solid;
+    background: rgba(0, 102, 255, 0.05);
 }
 
 .dataset-active-badge {
@@ -2122,7 +2141,6 @@
     .toolbar-actions .btn svg { width: 18px; height: 18px; }
     .toolbar-actions .btn .material-symbols-outlined { font-size: 18px; }
     .toolbar-title { font-size: 15px; }
-    .toolbar-title-icon { height: 36px; }
 }
 
 /* Phone: hamburger menu */
