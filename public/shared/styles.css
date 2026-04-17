@@ -1276,9 +1276,8 @@ body {
     flex-wrap: wrap;
 }
 .active-dataset-variants-label {
-    font-size: 11px;
     color: var(--gray-500);
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: 0.2px;
 }
 
@@ -1358,7 +1357,7 @@ body {
     box-shadow: 0 2px 8px rgba(0, 102, 255, 0.35);
     transform: translateY(-1px);
 }
-.dataset-add-lang-btn .material-symbols-outlined { color: inherit; }
+.active-dataset-banner-content .dataset-add-lang-btn .material-symbols-outlined { color: inherit; }
 .dataset-add-lang-dropdown {
     display: none;
     position: absolute;

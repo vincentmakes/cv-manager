@@ -750,7 +750,7 @@
     border: 1px solid rgba(0, 102, 255, 0.3);
     color: var(--primary);
 }
-.active-dataset-shared-badge .material-symbols-outlined { color: inherit; }
+.active-dataset-banner-content .active-dataset-shared-badge .material-symbols-outlined { color: inherit; }
 .active-dataset-actions { display: flex; gap: 6px; align-items: center; }
 .active-dataset-status {
     font-size: 11px;
