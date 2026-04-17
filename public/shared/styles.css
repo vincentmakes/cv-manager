@@ -219,7 +219,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
+    width: 50%;                       /* lines span half the phantom width → each side is ~half its previous length */
     pointer-events: none;
     transition: opacity 0.15s ease;
 }
