@@ -296,11 +296,13 @@ function showActiveDatasetBanner(id, name, isDefault) {
     const banner = document.getElementById('activeDatasetBanner');
     const nameEl = document.getElementById('activeDatasetName');
     const publicBadge = document.getElementById('activeDatasetPublicBadge');
+    const makePublicBtn = document.getElementById('activeDatasetMakePublicBtn');
     const sharedBadge = document.getElementById('activeDatasetSharedBadge');
     if (!banner || !nameEl) return;
 
     nameEl.textContent = name;
     if (publicBadge) publicBadge.style.display = isDefault ? '' : 'none';
+    if (makePublicBtn) makePublicBtn.style.display = isDefault ? 'none' : '';
     if (sharedBadge) sharedBadge.style.display = activeDatasetIsPublic ? '' : 'none';
     banner.style.display = '';
 
@@ -463,6 +465,12 @@ async function addDatasetLanguage(code) {
 async function addLanguageFromSwitcher() {
     // No preselection — picks the first available language in Save As
     await addDatasetLanguage('');
+}
+
+// Make the active dataset the default (served at root URL) from the banner
+async function makeActiveDatasetPublic() {
+    if (!activeDatasetId) return;
+    await setDatasetDefault(activeDatasetId, activeDatasetName || '');
 }
 
 // Close add-language dropdown when clicking outside

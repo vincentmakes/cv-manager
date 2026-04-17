@@ -16,7 +16,7 @@
 <body>
     <!-- Toolbar -->
     <div class="toolbar no-print">
-        <div class="toolbar-title">CV Manager</div>
+        <div class="toolbar-title"></div>
         <div class="toolbar-actions" id="toolbarActions">
             <button class="btn btn-secondary" onclick="openCvManager()">
                 <span class="material-symbols-outlined">folder_managed</span>
@@ -120,6 +120,7 @@
             <span id="activeDatasetVersionBadge" class="active-dataset-version-badge" style="display: none;"></span>
             <span id="activeDatasetLangBadge" class="dataset-lang-badge" style="display: none;"></span>
             <span id="activeDatasetPublicBadge" class="active-dataset-public-badge" style="display: none;" data-i18n="banner.public">Public</span>
+            <button id="activeDatasetMakePublicBtn" type="button" class="active-dataset-make-public-btn" style="display: none;" onclick="makeActiveDatasetPublic()" data-i18n-title="datasets.default_hint" title="Set as the CV served at the root URL"><span data-i18n="datasets.make_public">Make public</span></button>
             <span id="activeDatasetSharedBadge" class="active-dataset-shared-badge" style="display: none;" data-i18n-title="banner.shared_tooltip" title="Shared via public URL"><span class="material-symbols-outlined" style="font-size:14px">share</span></span>
             <!-- Right-aligned variants group: label + sibling chips + add-language button -->
             <div class="active-dataset-variants-group" id="activeDatasetVariantsGroup">
