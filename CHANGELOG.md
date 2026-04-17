@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.31.1] - 2026-04-17
+
+### Changed
+- Banner version pill is now a high-contrast amber pill so it stands out next to the language and default badges.
+- Sibling language chips and the Add-language button are now right-aligned on the banner with an intro label ("Switch other variants of this CV:") so the controls feel like a cohesive group.
+- Round flag badges added to the current-language pill, sibling chips, and Add-language dropdown options for quicker visual recognition.
+- Add-language button restyled as a filled primary pill with an explicit "Add language" label.
+
 ## [1.31.0] - 2026-04-17
 
 ### Added

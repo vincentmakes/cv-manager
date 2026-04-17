@@ -300,12 +300,13 @@ function showActiveDatasetBanner(id, name, isDefault) {
     defaultBadge.style.display = isDefault ? '' : 'none';
     banner.style.display = '';
 
-    // Language badge — always show when a dataset is active
+    // Language badge — always show when a dataset is active, with a round flag
     const langBadge = document.getElementById('activeDatasetLangBadge');
     if (langBadge) {
-        const lang = (activeDatasetLanguage || 'en').toUpperCase();
-        langBadge.textContent = lang;
-        langBadge.title = t('datasets.lang_badge_tooltip', { lang });
+        const code = activeDatasetLanguage || 'en';
+        const upper = code.toUpperCase();
+        langBadge.innerHTML = `<span class="dataset-lang-flag">${languageFlag(code)}</span><span class="dataset-lang-badge-code">${escapeHtml(upper)}</span>`;
+        langBadge.title = t('datasets.lang_badge_tooltip', { lang: upper });
         langBadge.style.display = '';
     }
 
@@ -344,13 +345,32 @@ function hideActiveDatasetBanner() {
     updateBannerMargins();
 }
 
-// Render the sibling language chips inline in the banner
+// Map ISO language code to a flag emoji (rendered inside a round badge)
+function languageFlag(code) {
+    const map = {
+        en: '\uD83C\uDDEC\uD83C\uDDE7',
+        de: '\uD83C\uDDE9\uD83C\uDDEA',
+        fr: '\uD83C\uDDEB\uD83C\uDDF7',
+        nl: '\uD83C\uDDF3\uD83C\uDDF1',
+        es: '\uD83C\uDDEA\uD83C\uDDF8',
+        it: '\uD83C\uDDEE\uD83C\uDDF9',
+        pt: '\uD83C\uDDF5\uD83C\uDDF9',
+        zh: '\uD83C\uDDE8\uD83C\uDDF3'
+    };
+    return map[code] || '\uD83C\uDF10'; // globe fallback
+}
+
+// Render the sibling language chips inline in the banner, plus the intro label
 function renderActiveDatasetLangChips() {
     const container = document.getElementById('activeDatasetLangChips');
+    const label = document.getElementById('activeDatasetVariantsLabel');
     if (!container) return;
 
     const langNames = {};
     (typeof I18n !== 'undefined' ? I18n.languages : []).forEach(l => { langNames[l.code] = l.native; });
+
+    // Intro label only when there's at least one sibling to switch to
+    if (label) label.style.display = activeDatasetSiblings.length > 0 ? '' : 'none';
 
     container.innerHTML = activeDatasetSiblings.map(sib => {
         const code = (sib.language || '').toUpperCase();
@@ -358,8 +378,8 @@ function renderActiveDatasetLangChips() {
         const tooltip = t('datasets.switch_to_lang', { lang: name });
         const attr = s => escapeHtml(s).replace(/"/g, '&quot;');
         return `<button type="button" class="dataset-lang-chip" title="${attr(tooltip)}" data-sibling-id="${sib.id}" data-sibling-name="${attr(sib.name || '')}" data-sibling-lang="${attr(sib.language)}">
+            <span class="dataset-lang-flag">${languageFlag(sib.language)}</span>
             <span class="dataset-lang-chip-code">${escapeHtml(code)}</span>
-            <span class="dataset-lang-chip-name">${escapeHtml(name)}</span>
         </button>`;
     }).join('');
 
@@ -400,6 +420,7 @@ function renderAddLangDropdown() {
     }
 
     dropdown.innerHTML = available.map(l => `<div class="dataset-lang-option" onclick="addDatasetLanguage('${escapeHtml(l.code)}')">
+        <span class="dataset-lang-flag">${languageFlag(l.code)}</span>
         <span class="dataset-lang-code">${escapeHtml(l.code.toUpperCase())}</span>
         <span class="dataset-lang-name">${escapeHtml(l.native)}</span>
     </div>`).join('');

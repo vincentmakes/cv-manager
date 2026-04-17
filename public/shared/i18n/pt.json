@@ -255,6 +255,7 @@
     "datasets.switch_to_lang": "Mudar para {{lang}}",
     "datasets.add_language_title": "Adicionar uma nova variante de idioma",
     "datasets.version_badge_tooltip": "Versão {{version}}",
+    "datasets.switch_variants": "Alternar para outra variante deste CV:",
     "lang_switcher.label": "Idioma",
     "lang_switcher.switch_to": "Mudar para {{lang}}",
     "toast.language_variant_created": "Variante de idioma criada",

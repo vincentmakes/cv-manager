@@ -120,15 +120,17 @@
             <span id="activeDatasetLangBadge" class="dataset-lang-badge" style="display: none;"></span>
             <span id="activeDatasetVersionBadge" class="active-dataset-version-badge" style="display: none;"></span>
             <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
-            <!-- Sibling language chips (admin) -->
-            <div class="active-dataset-lang-chips" id="activeDatasetLangChips"></div>
-            <!-- Add language dropdown (admin) -->
-            <div class="dataset-add-lang-wrapper" id="datasetAddLangWrapper" style="display: none;">
-                <button class="btn btn-ghost btn-sm dataset-add-lang-btn" id="datasetAddLangBtn" onclick="toggleDatasetAddLangDropdown()" data-i18n-title="datasets.add_language_title" title="Add a new language variant">
-                    <span class="material-symbols-outlined" style="font-size:14px">add</span>
-                    <span class="material-symbols-outlined" style="font-size:14px">translate</span>
-                </button>
-                <div class="dataset-add-lang-dropdown" id="datasetAddLangDropdown"></div>
+            <!-- Right-aligned variants group: label + sibling chips + add-language button -->
+            <div class="active-dataset-variants-group" id="activeDatasetVariantsGroup">
+                <span class="active-dataset-variants-label" id="activeDatasetVariantsLabel" style="display: none;" data-i18n="datasets.switch_variants">Switch other variants of this CV:</span>
+                <div class="active-dataset-lang-chips" id="activeDatasetLangChips"></div>
+                <div class="dataset-add-lang-wrapper" id="datasetAddLangWrapper" style="display: none;">
+                    <button class="dataset-add-lang-btn" id="datasetAddLangBtn" onclick="toggleDatasetAddLangDropdown()" data-i18n-title="datasets.add_language_title" title="Add a new language variant">
+                        <span class="material-symbols-outlined" style="font-size:14px">add</span>
+                        <span data-i18n="datasets.add_language">Add language</span>
+                    </button>
+                    <div class="dataset-add-lang-dropdown" id="datasetAddLangDropdown"></div>
+                </div>
             </div>
             <div class="active-dataset-actions">
                 <span id="activeDatasetStatus" class="active-dataset-status"></span>

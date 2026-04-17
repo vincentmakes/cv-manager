@@ -1253,84 +1253,142 @@ body {
 }
 .public-lang-name { flex: 1; }
 
-/* Admin dataset language switcher — sibling chips */
+/* Admin dataset version badge — high-contrast amber pill */
+.active-dataset-version-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 12px;
+    background: #f59e0b;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 1px 2px rgba(245, 158, 11, 0.3);
+}
+
+/* Right-aligned variants group (intro label + sibling chips + add-language button) */
+.active-dataset-variants-group {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.active-dataset-variants-label {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+/* Round flag badge — circular container holding a flag emoji */
+.dataset-lang-flag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    line-height: 1;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* Current-language badge in the active dataset banner — flag + code pill.
+   Scoped by id so we don't override the compact badges in the CV Manager list. */
+#activeDatasetLangBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px 2px 3px;
+    font-size: 11px;
+    line-height: 1.2;
+}
+#activeDatasetLangBadge .dataset-lang-badge-code {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Sibling chips — bigger, brighter, with round flag */
 .active-dataset-lang-chips {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 .dataset-lang-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
+    gap: 6px;
+    padding: 3px 10px 3px 3px;
     border: 1px solid var(--gray-200);
-    border-radius: 12px;
+    border-radius: 999px;
     background: var(--white);
     color: var(--gray-700);
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 .dataset-lang-chip:hover {
     background: var(--primary);
     border-color: var(--primary);
     color: var(--white, #fff);
+    box-shadow: 0 2px 6px rgba(0, 102, 255, 0.25);
+    transform: translateY(-1px);
 }
 .dataset-lang-chip-code {
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-.dataset-lang-chip-name {
-    font-weight: 500;
-    opacity: 0.85;
+    letter-spacing: 0.6px;
 }
 
-/* Admin dataset version badge */
-.active-dataset-version-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 12px;
-    background: var(--gray-100);
-    color: var(--gray-700);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-
-/* Admin dataset add-language button + dropdown */
+/* Add-language button — filled primary pill with icon + label */
 .dataset-add-lang-wrapper {
     position: relative;
-    margin-left: 4px;
 }
 .dataset-add-lang-btn {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    padding: 2px 6px;
+    gap: 4px;
+    padding: 4px 10px 4px 7px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--white, #fff);
     font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+    box-shadow: 0 1px 2px rgba(0, 102, 255, 0.25);
 }
+.dataset-add-lang-btn:hover {
+    background: var(--primary-dark, #0048b8);
+    box-shadow: 0 2px 8px rgba(0, 102, 255, 0.35);
+    transform: translateY(-1px);
+}
+.dataset-add-lang-btn .material-symbols-outlined { color: inherit; }
 .dataset-add-lang-dropdown {
     display: none;
     position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    min-width: 180px;
-    max-height: 280px;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    max-height: 300px;
     overflow-y: auto;
     background: var(--white);
     border: 1px solid var(--gray-200);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     z-index: 1001;
 }
 .dataset-add-lang-dropdown.active { display: block; }
 .dataset-lang-option {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding: 8px 12px;
     font-size: 13px;
     color: var(--gray-700);
