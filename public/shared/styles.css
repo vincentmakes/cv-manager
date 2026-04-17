@@ -190,7 +190,8 @@ body {
    through the padding without dismissing the phantom. */
 .phantom-section {
     margin-top: -16px;        /* overlap the section's 16px margin-bottom so baseline gap stays visually consistent */
-    padding: 16px 0;          /* breathing-room padding ≈ the inter-section gap */
+    padding: 24px 0;          /* breathing-room padding top/bottom — forgiving hit zone around the pill */
+    min-height: 48px;         /* fits the larger pill comfortably */
     position: relative;
     cursor: pointer;
     display: flex;
@@ -198,6 +199,14 @@ body {
     justify-content: center;
     user-select: none;
     background: transparent;
+    box-sizing: content-box;
+}
+
+/* Last phantom: sit fully below the last section with extra breathing room on top */
+.phantom-section.phantom-last {
+    margin-top: 16px;         /* push below the last section's margin-bottom for more breathing room */
+    padding-top: 32px;         /* extra top padding on top of the base — asked for explicitly */
+    padding-bottom: 24px;
 }
 
 /* Default-visible "⎯ (+) ⎯" separator between sections. Replaced by the dashed pill
@@ -245,18 +254,35 @@ body {
     transform: translate(-50%, -50%);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
+    gap: 10px;
+    min-width: 260px;
+    justify-content: center;
+    padding: 10px 24px;
     border: 2px dashed transparent;
     border-radius: var(--radius-md);
     color: var(--gray-500);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     background: var(--white);
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;     /* hover always resolved on the outer element */
     transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+/* Circled "+" inside the pill, mirroring the hint's affordance */
+.phantom-box-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
 .phantom-section:hover .phantom-box {
@@ -267,9 +293,9 @@ body {
 }
 
 .phantom-section.phantom-last .phantom-box {
-    opacity: 0.55;
-    border-color: var(--gray-300);
-    color: var(--gray-500);
+    opacity: 0.7;
+    border-color: var(--gray-400);
+    color: var(--gray-600);
     background: var(--white);
 }
 
@@ -278,10 +304,6 @@ body {
     border-color: var(--primary);
     background: var(--very-light);
     color: var(--primary);
-}
-
-.phantom-box .material-symbols-outlined {
-    font-size: 18px;
 }
 
 @media print {

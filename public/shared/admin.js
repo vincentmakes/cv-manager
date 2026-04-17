@@ -709,7 +709,7 @@ function injectPhantomSections() {
         //   .phantom-box   — the dashed pill shown on hover (or always, for .phantom-last)
         // Both have pointer-events: none so hover is resolved on the outer element, which
         // carries the breathing-room padding.
-        phantom.innerHTML = `<span class="phantom-box"><span class="material-symbols-outlined">add</span><span>${t('custom_section.create_phantom')}</span></span>`;
+        phantom.innerHTML = `<span class="phantom-box"><span class="phantom-box-plus">+</span><span>${t('custom_section.create_phantom')}</span></span>`;
         if (!isLast) {
             phantom.insertAdjacentHTML('afterbegin', '<span class="phantom-hint" aria-hidden="true"><span class="phantom-hint-line"></span><span class="phantom-hint-circle">+</span><span class="phantom-hint-line"></span></span>');
         }
