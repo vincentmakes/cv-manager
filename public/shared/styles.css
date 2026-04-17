@@ -179,6 +179,49 @@ body {
     position: relative;
 }
 
+/* Phantom "create custom section" placeholder — revealed on hover below each section */
+.phantom-section {
+    margin-top: -16px;
+    margin-bottom: 16px;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-md);
+    color: var(--gray-500);
+    font-size: 13px;
+    font-weight: 500;
+    user-select: none;
+    transition: opacity 0.15s ease, height 0.15s ease, margin-top 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    background: transparent;
+}
+
+.section:hover + .phantom-section,
+.phantom-section:hover {
+    opacity: 1;
+    height: 36px;
+    margin-top: 0;
+}
+
+.phantom-section:hover {
+    background: var(--very-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.phantom-section .material-symbols-outlined {
+    font-size: 18px;
+}
+
+@media print {
+    .phantom-section { display: none !important; }
+}
+
 .section-header {
     display: flex;
     align-items: center;

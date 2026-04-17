@@ -175,7 +175,6 @@
 
     "settings.title": "Settings",
     "settings.tab.sections": "Sections & Headlines",
-    "settings.tab.custom": "Custom Sections",
     "settings.tab.print": "Print & Export",
     "settings.tab.advanced": "Advanced",
     "settings.version.update_available": "Update available: v{{version}}",
@@ -183,9 +182,6 @@
     "settings.sections.info": "Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Click section names to edit headlines.",
     "settings.sections.click_to_edit": "Click to edit section headline",
     "settings.sections.reset_default": "Reset to default",
-    "settings.custom.info": "Create custom sections with different layouts. Custom sections appear in the section order list above.",
-    "settings.custom.add": "Add Custom Section",
-    "settings.custom.no_sections": "No custom sections yet.\nClick \"Add Custom Section\" to create one.",
 
     "settings.print.public_button": "Public Print Button",
     "settings.print.public_button_desc": "Show print button on public site",
@@ -297,6 +293,8 @@
 
     "custom_section.edit_title": "Edit Custom Section",
     "custom_section.add_title": "Add Custom Section",
+    "custom_section.rename_title": "Rename Section",
+    "custom_section.create_phantom": "Create custom section",
     "custom_section.section_name": "Section Name",
     "custom_section.section_name_placeholder": "e.g., Social Links, Awards, Publications",
     "custom_section.layout_type": "Layout Type",

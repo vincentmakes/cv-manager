@@ -4,12 +4,21 @@ Seções personalizadas permitem que você adicione qualquer conteúdo que não 
 
 ## Criando uma Seção Personalizada
 
-1. Abra **Configurações** → aba **Seções Personalizadas**
-2. Clique em **Adicionar Seção Personalizada**
+1. Passe o cursor logo abaixo de qualquer seção existente do seu CV — um marcador tracejado **+ Criar seção personalizada** aparece
+2. Clique no marcador para abrir a caixa de diálogo de criação
 3. Digite um nome para a seção
 4. Escolha um tipo de layout (veja abaixo)
-5. Opcionalmente, escolha um **ícone de seção** (estrela, livro, link, globo, coração, prêmio, maleta) — exibido ao lado do título
-6. Salve — a nova seção aparece no seu CV
+5. Salve — a nova seção será inserida logo abaixo da seção sobre a qual você passou o cursor
+
+## Gerenciando uma Seção Personalizada
+
+Cada seção personalizada possui três botões de ícone em seu cabeçalho:
+
+- **Excluir** (ícone de lixeira) — remove a seção e todos os seus itens após confirmação
+- **Renomear** (ícone de lápis) — abre uma pequena caixa de diálogo para alterar o título da seção
+- **Visibilidade** (ícone de olho) — ativa ou desativa a exibição da seção no CV publicado
+
+O tipo de layout de uma seção é escolhido na criação e não pode ser alterado depois — se precisar de um layout diferente, crie uma nova seção e mova os itens para lá.
 
 ## Tipos de Layout
 
@@ -59,4 +68,4 @@ Para layouts de grade, lista, cartão e marcadores, cada item possui uma caixa d
 Clique em **Gerenciar Itens** em qualquer seção personalizada para adicionar, editar, reordenar ou excluir itens dentro dessa seção.
 
 !!! note "Nota"
-    Não há limite fixo para seções personalizadas. Crie quantas precisar. Você também pode alterar o tipo de layout de uma seção personalizada após criá-la — basta editar a seção e selecionar um layout diferente.
+    Não há limite fixo para seções personalizadas. Crie quantas precisar.

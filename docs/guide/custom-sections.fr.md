@@ -4,12 +4,21 @@ Les sections personnalisées vous permettent d'ajouter tout contenu qui ne corre
 
 ## Créer une section personnalisée
 
-1. Ouvrez **Paramètres** → onglet **Sections personnalisées**
-2. Cliquez sur **Ajouter une section personnalisée**
+1. Survolez juste en dessous d'une section existante de votre CV — un espace réservé en pointillés **+ Créer une section personnalisée** apparaît
+2. Cliquez sur l'espace réservé pour ouvrir la boîte de dialogue de création
 3. Entrez un nom de section
 4. Choisissez un type de mise en page (voir ci-dessous)
-5. Choisissez éventuellement une **icône de section** (étoile, livre, lien, globe, cœur, récompense, mallette) — affichée à côté du titre
-6. Enregistrez — la nouvelle section apparaît dans votre CV
+5. Enregistrez — la nouvelle section est insérée directement sous la section que vous avez survolée
+
+## Gérer une section personnalisée
+
+Chaque section personnalisée dispose de trois boutons d'icône dans son en-tête :
+
+- **Supprimer** (icône corbeille) — supprime la section et tous ses éléments après confirmation
+- **Renommer** (icône crayon) — ouvre une petite boîte de dialogue pour modifier le titre de la section
+- **Visibilité** (icône œil) — active ou désactive l'affichage de la section dans le CV en ligne
+
+Le type de mise en page d'une section est choisi à sa création et ne peut plus être modifié ensuite — si vous avez besoin d'une autre mise en page, créez une nouvelle section et déplacez-y les éléments.
 
 ## Types de mise en page
 
@@ -59,4 +68,4 @@ Pour les mises en page grille, liste, cartes et puces, chaque élément dispose 
 Cliquez sur **Gérer les éléments** sur n'importe quelle section personnalisée pour ajouter, modifier, réordonner ou supprimer des éléments au sein de cette section.
 
 !!! note "Remarque"
-    Il n'y a pas de limite stricte sur les sections personnalisées. Créez-en autant que nécessaire. Vous pouvez également changer le type de mise en page d'une section personnalisée après l'avoir créée — il suffit de modifier la section et de sélectionner une mise en page différente.
+    Il n'y a pas de limite stricte sur les sections personnalisées. Créez-en autant que nécessaire.

@@ -4,12 +4,21 @@ Met aangepaste secties kunt u inhoud toevoegen die niet past bij de ingebouwde s
 
 ## Een aangepaste sectie aanmaken
 
-1. Open **Instellingen** → tabblad **Aangepaste secties**
-2. Klik op **Aangepaste sectie toevoegen**
+1. Beweeg de muis net onder een bestaande sectie in uw CV — er verschijnt een gestippelde placeholder **+ Aangepaste sectie aanmaken**
+2. Klik op de placeholder om het aanmaakdialoogvenster te openen
 3. Voer een sectienaam in
 4. Kies een lay-outtype (zie hieronder)
-5. Kies optioneel een **sectiepictogram** (ster, boek, link, wereldbol, hart, onderscheiding, aktentas) — weergegeven naast de kop
-6. Sla op — de nieuwe sectie verschijnt in uw CV
+5. Sla op — de nieuwe sectie wordt direct onder de sectie die u aanwees ingevoegd
+
+## Een aangepaste sectie beheren
+
+Elke aangepaste sectie heeft drie pictogramknoppen in de kop:
+
+- **Verwijderen** (prullenbakpictogram) — verwijdert de sectie en al haar items na bevestiging
+- **Hernoemen** (potloodpictogram) — opent een klein dialoogvenster om de titel van de sectie te wijzigen
+- **Zichtbaarheid** (oogpictogram) — bepaalt of de sectie in de live CV wordt weergegeven
+
+Het lay-outtype van een sectie wordt bij het aanmaken gekozen en kan daarna niet meer worden gewijzigd — als u een andere lay-out nodig heeft, maak dan een nieuwe sectie aan en verplaats de items daarheen.
 
 ## Lay-outtypen
 
@@ -59,4 +68,4 @@ Voor raster-, lijst-, kaart- en opsommingslay-outs heeft elk item een selectieva
 Klik op **Items beheren** bij een aangepaste sectie om items toe te voegen, te bewerken, te herschikken of te verwijderen binnen die sectie.
 
 !!! note "Opmerking"
-    Er is geen harde limiet voor het aantal aangepaste secties. Maak er zoveel aan als u nodig heeft. U kunt ook het lay-outtype van een aangepaste sectie wijzigen nadat u deze heeft aangemaakt — bewerk simpelweg de sectie en selecteer een andere lay-out.
+    Er is geen harde limiet voor het aantal aangepaste secties. Maak er zoveel aan als u nodig heeft.

@@ -675,8 +675,44 @@ function reorderSectionElements() {
             }
         }
     });
-    
+
     applySectionTitles(sectionOrder);
+    injectPhantomSections();
+}
+
+// Insert a "+ Create custom section" phantom element after every .section in the container.
+// Clicking one opens the create-custom-section modal with an anchor so the new section
+// is inserted immediately after the hovered section in the order.
+function injectPhantomSections() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+
+    // Remove any stale phantoms first
+    container.querySelectorAll('.phantom-section').forEach(el => el.remove());
+
+    const sections = container.querySelectorAll(':scope > .section');
+    sections.forEach(sectionEl => {
+        // Derive the section key from its id (e.g. "section-about" -> "about", "section-custom_123" -> "custom_123")
+        const id = sectionEl.id || '';
+        const key = id.startsWith('section-') ? id.slice('section-'.length) : '';
+        if (!key) return;
+
+        const phantom = document.createElement('div');
+        phantom.className = 'phantom-section no-print';
+        phantom.dataset.afterSectionKey = key;
+        phantom.setAttribute('role', 'button');
+        phantom.setAttribute('tabindex', '0');
+        phantom.setAttribute('aria-label', t('custom_section.create_phantom'));
+        phantom.innerHTML = `<span class="material-symbols-outlined">add</span><span>${t('custom_section.create_phantom')}</span>`;
+        phantom.addEventListener('click', () => openCreateCustomSectionAt(key));
+        phantom.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openCreateCustomSectionAt(key);
+            }
+        });
+        sectionEl.after(phantom);
+    });
 }
 
 // Render sections in the correct order
@@ -762,7 +798,13 @@ function renderCustomSection(section) {
             <div class="section-header">
                 <h2 class="section-title">${escapeHtml(section.name)}</h2>
                 <div class="section-actions no-print">
-                    <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="Toggle Visibility" id="toggle-${section.section_key}">
+                    <button class="icon-btn" onclick="deleteCustomSectionById(${section.id})" title="${t('btn.delete')}" aria-label="${t('btn.delete')}">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                    <button class="icon-btn" onclick="openCustomSectionRenameModal(${section.id})" title="${t('custom_section.rename_title')}" aria-label="${t('custom_section.rename_title')}">
+                        <span class="material-symbols-outlined">edit</span>
+                    </button>
+                    <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="${t('action.toggle_visibility')}" id="toggle-${section.section_key}">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
@@ -3924,6 +3966,9 @@ let currentCustomSection = { id: null };
 let currentCustomItem = { sectionId: null, itemId: null };
 let inItemsView = false; // Track if we're in items management view
 
+// Section key to insert the next newly-created custom section after (set by phantom click, consumed by saveCustomSection).
+let pendingCreateAnchor = null;
+
 // Load custom sections data
 async function loadCustomSectionsData() {
     customSections = await api('/api/custom-sections');
@@ -3937,13 +3982,8 @@ function switchSettingsTab(tabName) {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
     });
     document.getElementById('settingsTabSections').classList.toggle('active', tabName === 'sections');
-    document.getElementById('settingsTabCustom').classList.toggle('active', tabName === 'custom');
     document.getElementById('settingsTabPublic').classList.toggle('active', tabName === 'public');
     document.getElementById('settingsTabAdvanced').classList.toggle('active', tabName === 'advanced');
-
-    if (tabName === 'custom') {
-        loadCustomSectionsList();
-    }
 }
 
 // Language picker toggle (toolbar dropdown)
@@ -4011,46 +4051,11 @@ async function selectLanguage(code) {
     document.getElementById('languagePickerDropdown').classList.remove('active');
 }
 
-// Render custom sections list
-async function loadCustomSectionsList() {
-    await loadCustomSectionsData();
-    const container = document.getElementById('customSectionsList');
-    
-    // Restore the Save button (it may have been changed by manageCustomSectionItems)
-    const saveBtn = document.querySelector('#customSectionModalOverlay .modal-footer-right .btn-primary');
-    if (saveBtn) {
-        saveBtn.textContent = t('btn.save');
-        saveBtn.setAttribute('onclick', 'saveCustomSection()');
-        saveBtn.style.display = '';
-    }
-
-    if (customSections.length === 0) {
-        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No custom sections yet.<br>Click "Add Custom Section" to create one.</p>';
-        return;
-    }
-    
-    container.innerHTML = customSections.map(section => {
-        const layoutType = layoutTypes.find(l => l.id === section.layout_type) || { name: section.layout_type };
-        return `
-            <div class="custom-section-item" data-id="${section.id}">
-                <div class="custom-section-info">
-                    <div class="custom-section-name">${escapeHtml(section.name)}</div>
-                    <div class="custom-section-meta">
-                        <span class="custom-section-layout">${layoutType.name}</span>
-                        <span class="custom-section-count">${section.items?.length || 0} items</span>
-                    </div>
-                </div>
-                <div class="custom-section-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="openCustomSectionModal(${section.id})" title="Edit Section">
-                        <span class="material-symbols-outlined" style="font-size:14px">edit</span>
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="manageCustomSectionItems(${section.id})" title="Manage Items">
-                        <span class="material-symbols-outlined" style="font-size:14px">list</span>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
+// Open a create-custom-section modal with an anchor so the new section is inserted
+// immediately after `afterSectionKey` in the section order when saved.
+function openCreateCustomSectionAt(afterSectionKey) {
+    pendingCreateAnchor = afterSectionKey || null;
+    openCustomSectionModal();
 }
 
 // Open custom section modal
@@ -4219,6 +4224,7 @@ async function saveCustomSection() {
     }
 
     try {
+        let createdKey = null;
         if (currentCustomSection.id) {
             await api(`/api/custom-sections/${currentCustomSection.id}`, {
                 method: 'PUT',
@@ -4226,15 +4232,22 @@ async function saveCustomSection() {
             });
             toast(t('toast.section_updated'));
         } else {
-            await api('/api/custom-sections', {
+            const created = await api('/api/custom-sections', {
                 method: 'POST',
                 body: { name, layout_type, metadata }
             });
+            createdKey = created?.section_key || null;
             toast(t('toast.section_created'));
         }
-        
+
+        // If the section was created from a phantom click, position it right after the anchor.
+        const anchor = pendingCreateAnchor;
+        pendingCreateAnchor = null;
+        if (createdKey && anchor) {
+            await positionSectionAfter(createdKey, anchor);
+        }
+
         closeCustomSectionModal();
-        await loadCustomSectionsList();
         // Refresh section order since custom sections affect it
         settingsSectionOrder = await api('/api/sections/order');
         renderSettingsSections();
@@ -4248,25 +4261,91 @@ async function saveCustomSection() {
     }
 }
 
+// Rebuild the section order so `movedKey` sits immediately after `anchorKey`, then persist.
+async function positionSectionAfter(movedKey, anchorKey) {
+    const current = await api('/api/sections/order');
+    const remaining = current.filter(s => s.key !== movedKey);
+    const moved = current.find(s => s.key === movedKey);
+    if (!moved) return;
+    const anchorIdx = remaining.findIndex(s => s.key === anchorKey);
+    if (anchorIdx === -1) {
+        remaining.push(moved);
+    } else {
+        remaining.splice(anchorIdx + 1, 0, moved);
+    }
+    const payload = remaining.map((s, i) => ({
+        key: s.key,
+        visible: !!s.visible,
+        print_visible: s.print_visible !== false,
+        sort_order: i + 1,
+        display_name: s.name && s.name !== s.default_name ? s.name : null
+    }));
+    await api('/api/sections/order', { method: 'PUT', body: { sections: payload } });
+}
+
 async function deleteCustomSection() {
     if (!currentCustomSection.id) return;
-    
     if (!confirm(t('confirm.delete_section'))) return;
-    
+    const id = currentCustomSection.id;
+    closeCustomSectionModal();
+    await deleteCustomSectionById(id, { skipConfirm: true });
+}
+
+// Delete a custom section by id (called from the inline trash icon in the section header).
+async function deleteCustomSectionById(id, opts = {}) {
+    if (!id) return;
+    if (!opts.skipConfirm && !confirm(t('confirm.delete_section'))) return;
     try {
-        await api(`/api/custom-sections/${currentCustomSection.id}`, { method: 'DELETE' });
+        await api(`/api/custom-sections/${id}`, { method: 'DELETE' });
         toast(t('toast.section_deleted'));
-        closeCustomSectionModal();
-        await loadCustomSectionsList();
         settingsSectionOrder = await api('/api/sections/order');
         renderSettingsSections();
-        // Refresh main page sections
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
         autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.section_delete_failed'), 'error');
+    }
+}
+
+// Open a lightweight modal to rename a custom section (title only — layout is fixed once created).
+function openCustomSectionRenameModal(id) {
+    const section = customSections.find(s => s.id === id);
+    if (!section) return;
+    currentCustomSection.id = id;
+    const input = document.getElementById('cs-rename-input');
+    if (input) input.value = section.name || '';
+    document.getElementById('customSectionRenameModalOverlay').classList.add('active');
+    // Focus the input so the user can start typing immediately.
+    setTimeout(() => input?.focus(), 0);
+}
+
+function closeCustomSectionRenameModal() {
+    document.getElementById('customSectionRenameModalOverlay').classList.remove('active');
+    currentCustomSection.id = null;
+}
+
+async function saveCustomSectionRename() {
+    const id = currentCustomSection.id;
+    if (!id) return;
+    const input = document.getElementById('cs-rename-input');
+    const name = (input?.value || '').trim();
+    if (!name) {
+        toast(t('toast.enter_section_name'), 'error');
+        return;
+    }
+    try {
+        await api(`/api/custom-sections/${id}`, { method: 'PUT', body: { name } });
+        toast(t('toast.section_updated'));
+        closeCustomSectionRenameModal();
+        settingsSectionOrder = await api('/api/sections/order');
+        renderSettingsSections();
+        sectionOrder = await loadSectionOrder();
+        await renderSectionsInOrder();
+        autoSaveActiveDataset();
+    } catch (err) {
+        toast(t('toast.section_save_failed'), 'error');
     }
 }
 

@@ -4,12 +4,21 @@ Mit benutzerdefinierten Abschnitten können Sie beliebige Inhalte hinzufügen, d
 
 ## Einen benutzerdefinierten Abschnitt erstellen
 
-1. Öffnen Sie **Einstellungen** → Tab **Benutzerdefinierte Abschnitte**
-2. Klicken Sie auf **Benutzerdefinierten Abschnitt hinzufügen**
+1. Bewegen Sie den Mauszeiger direkt unter einen vorhandenen Abschnitt in Ihrem Lebenslauf — ein gestrichelter Platzhalter **+ Eigenen Abschnitt erstellen** erscheint
+2. Klicken Sie auf den Platzhalter, um den Erstellungsdialog zu öffnen
 3. Geben Sie einen Abschnittsnamen ein
 4. Wählen Sie einen Layout-Typ (siehe unten)
-5. Wählen Sie optional ein **Abschnittssymbol** (Stern, Buch, Link, Globus, Herz, Auszeichnung, Aktentasche) — wird neben der Überschrift angezeigt
-6. Speichern — der neue Abschnitt erscheint in Ihrem Lebenslauf
+5. Speichern — der neue Abschnitt wird direkt unter dem Abschnitt eingefügt, über dem Sie den Platzhalter geöffnet haben
+
+## Einen benutzerdefinierten Abschnitt verwalten
+
+Jeder benutzerdefinierte Abschnitt hat drei Symbolschaltflächen in seiner Überschrift:
+
+- **Löschen** (Papierkorb-Symbol) — entfernt den Abschnitt und alle seine Elemente nach Bestätigung
+- **Umbenennen** (Stift-Symbol) — öffnet einen kleinen Dialog, um den Titel des Abschnitts zu ändern
+- **Sichtbarkeit** (Augen-Symbol) — schaltet ein, ob der Abschnitt im Lebenslauf angezeigt wird
+
+Der Layout-Typ eines Abschnitts wird bei der Erstellung gewählt und kann danach nicht mehr geändert werden — wenn Sie ein anderes Layout benötigen, erstellen Sie einen neuen Abschnitt und verschieben Sie die Elemente dorthin.
 
 ## Layout-Typen
 
@@ -59,4 +68,4 @@ Für Raster-, Listen-, Karten- und Aufzählungs-Layouts hat jedes Element ein Ko
 Klicken Sie auf **Elemente verwalten** bei einem beliebigen benutzerdefinierten Abschnitt, um Elemente innerhalb dieses Abschnitts hinzuzufügen, zu bearbeiten, neu anzuordnen oder zu löschen.
 
 !!! note "Hinweis"
-    Es gibt keine feste Obergrenze für benutzerdefinierte Abschnitte. Erstellen Sie so viele, wie Sie benötigen. Sie können auch den Layout-Typ eines benutzerdefinierten Abschnitts nachträglich ändern — bearbeiten Sie einfach den Abschnitt und wählen Sie ein anderes Layout.
+    Es gibt keine feste Obergrenze für benutzerdefinierte Abschnitte. Erstellen Sie so viele, wie Sie benötigen.

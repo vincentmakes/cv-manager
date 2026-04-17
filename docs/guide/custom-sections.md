@@ -4,12 +4,21 @@ Custom sections let you add any content that doesn't fit the built-in sections.
 
 ## Creating a Custom Section
 
-1. Open **Settings** → **Custom Sections** tab
-2. Click **Add Custom Section**
+1. Hover just below any existing section in your CV — a dashed **+ Create custom section** placeholder appears
+2. Click the placeholder to open the creation dialog
 3. Enter a section name
 4. Choose a layout type (see below)
-5. Optionally choose a **section icon** (star, book, link, globe, heart, award, briefcase) — displayed next to the heading
-6. Save — the new section appears in your CV
+5. Save — the new section is inserted directly below the section you hovered over
+
+## Managing a Custom Section
+
+Each custom section has three icon buttons in its header:
+
+- **Delete** (trash icon) — removes the section and all of its items after confirmation
+- **Rename** (pencil icon) — opens a small dialog to change the section's title
+- **Visibility** (eye icon) — toggles whether the section is shown on the live CV
+
+The section's layout type is chosen when you create it and cannot be changed afterwards — if you need a different layout, create a new section and move the items over.
 
 ## Layout Types
 
@@ -59,4 +68,4 @@ For grid, list, card, and bullet layouts, each item has a **"Hide title"** check
 Click **Manage Items** on any custom section to add, edit, reorder, or delete items within that section.
 
 !!! note
-    There's no hard limit on custom sections. Create as many as you need. You can also change a custom section's layout type after creating it — just edit the section and select a different layout.
+    There's no hard limit on custom sections. Create as many as you need.

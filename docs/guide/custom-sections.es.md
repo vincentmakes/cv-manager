@@ -4,12 +4,21 @@ Las secciones personalizadas le permiten agregar cualquier contenido que no enca
 
 ## Crear una sección personalizada
 
-1. Abra **Settings** → pestaña **Custom Sections**
-2. Haga clic en **Add Custom Section**
+1. Pase el ratón justo debajo de cualquier sección existente de su CV — aparecerá un marcador discontinuo **+ Crear sección personalizada**
+2. Haga clic en el marcador para abrir el cuadro de diálogo de creación
 3. Introduzca un nombre para la sección
 4. Elija un tipo de diseño (ver más abajo)
-5. Opcionalmente elija un **ícono de sección** (star, book, link, globe, heart, award, briefcase) — se muestra junto al encabezado
-6. Guarde — la nueva sección aparecerá en su CV
+5. Guarde — la nueva sección se insertará directamente debajo de la sección sobre la que pasó el ratón
+
+## Gestionar una sección personalizada
+
+Cada sección personalizada tiene tres botones con icono en su encabezado:
+
+- **Eliminar** (icono de papelera) — elimina la sección y todos sus elementos tras una confirmación
+- **Renombrar** (icono de lápiz) — abre un pequeño diálogo para cambiar el título de la sección
+- **Visibilidad** (icono de ojo) — activa o desactiva que la sección aparezca en el CV publicado
+
+El tipo de diseño de una sección se elige al crearla y no puede cambiarse después — si necesita un diseño distinto, cree una nueva sección y mueva los elementos allí.
 
 ## Tipos de diseño
 
@@ -59,4 +68,4 @@ Para los diseños de cuadrícula, lista, tarjeta y viñetas, cada elemento tiene
 Haga clic en **Manage Items** en cualquier sección personalizada para agregar, editar, reordenar o eliminar elementos dentro de esa sección.
 
 !!! note
-    No hay un límite estricto de secciones personalizadas. Cree tantas como necesite. También puede cambiar el tipo de diseño de una sección personalizada después de crearla — simplemente edite la sección y seleccione un diseño diferente.
+    No hay un límite estricto de secciones personalizadas. Cree tantas como necesite.
