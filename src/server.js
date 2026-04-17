@@ -1889,21 +1889,7 @@ if (PUBLIC_ONLY) {
         })));
     });
     app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { const displayName = section.display_name || null; db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible != false ? 1 : 0, section.sort_order, displayName, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
-    app.put('/api/sections/:name', (req, res) => {
-        const sectionName = req.params.name;
-        if (req.body.visible !== undefined) {
-            const visible = req.body.visible ? 1 : 0;
-            db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName);
-            if (sectionName.startsWith('custom_')) {
-                db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName);
-            }
-        }
-        if (req.body.print_visible !== undefined) {
-            const printVisible = req.body.print_visible ? 1 : 0;
-            db.prepare('UPDATE section_visibility SET print_visible = ? WHERE section_name = ?').run(printVisible, sectionName);
-        }
-        res.json({ success: true });
-    });
+    app.put('/api/sections/:name', (req, res) => { const sectionName = req.params.name; const visible = req.body.visible ? 1 : 0; db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName); if (sectionName.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName); } res.json({ success: true }); });
 
     app.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible }))); });
     app.get('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT * FROM experiences WHERE id = ?').get(req.params.id); if (!exp) return res.status(404).json({ error: 'Not found' }); res.json({ ...exp, highlights: exp.highlights ? JSON.parse(exp.highlights) : [], visible: !!exp.visible }); });

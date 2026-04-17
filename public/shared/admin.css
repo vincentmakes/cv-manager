@@ -70,7 +70,6 @@
 
 .icon-btn:hover { background: var(--primary); color: var(--white); }
 .icon-btn.active { background: var(--primary); color: var(--white); }
-.icon-btn:disabled, .icon-btn[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 .icon-btn svg { width: 16px; height: 16px; }
 .icon-btn .material-symbols-outlined { font-size: 16px; }
 
