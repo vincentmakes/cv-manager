@@ -2,14 +2,30 @@
 
 Les sections personnalisées vous permettent d'ajouter tout contenu qui ne correspond pas aux sections intégrées.
 
-## Créer une section personnalisée
+Les sections personnalisées se créent directement dans le CV — il n'y a plus d'onglet dédié dans les Paramètres.
 
-1. Ouvrez **Paramètres** → onglet **Sections personnalisées**
-2. Cliquez sur **Ajouter une section personnalisée**
-3. Entrez un nom de section
-4. Choisissez un type de mise en page (voir ci-dessous)
-5. Choisissez éventuellement une **icône de section** (étoile, livre, lien, globe, cœur, récompense, mallette) — affichée à côté du titre
-6. Enregistrez — la nouvelle section apparaît dans votre CV
+## Ajouter une section personnalisée
+
+Deux points d'entrée équivalents :
+
+- **Entre deux sections** — survolez l'espace juste en dessous d'une section existante. Une pastille en pointillés **+ Ajouter une section personnalisée** apparaît ; cliquez dessus pour ouvrir la boîte de dialogue de création. La nouvelle section est insérée directement sous la section survolée.
+- **Au bas du CV** — la même pastille **+ Ajouter une section personnalisée** est toujours visible sous la dernière section, pour faciliter la découverte. Un clic ajoute une nouvelle section à la fin.
+
+Dans la boîte de dialogue :
+
+1. Saisissez un nom de section
+2. Choisissez un type de mise en page (voir ci-dessous)
+3. Enregistrez — la nouvelle section apparaît dans votre CV et est enregistrée automatiquement dans le jeu de données actif
+
+## Gérer une section personnalisée
+
+Chaque section personnalisée dispose de trois boutons d'icône dans son en-tête :
+
+- **Supprimer** (icône corbeille) — supprime la section et tous ses éléments après confirmation
+- **Renommer** (icône crayon) — ouvre une petite boîte de dialogue pour modifier le titre de la section
+- **Visibilité** (icône œil) — active ou désactive l'affichage de la section dans le CV en ligne
+
+Le type de mise en page est choisi une fois, à la création, et ne peut plus être modifié ensuite. Si vous avez besoin d'une autre mise en page, créez une nouvelle section et déplacez-y les éléments.
 
 ## Types de mise en page
 
@@ -59,4 +75,4 @@ Pour les mises en page grille, liste, cartes et puces, chaque élément dispose 
 Cliquez sur **Gérer les éléments** sur n'importe quelle section personnalisée pour ajouter, modifier, réordonner ou supprimer des éléments au sein de cette section.
 
 !!! note "Remarque"
-    Il n'y a pas de limite stricte sur les sections personnalisées. Créez-en autant que nécessaire. Vous pouvez également changer le type de mise en page d'une section personnalisée après l'avoir créée — il suffit de modifier la section et de sélectionner une mise en page différente.
+    Il n'y a pas de limite stricte sur les sections personnalisées. Créez-en autant que nécessaire.

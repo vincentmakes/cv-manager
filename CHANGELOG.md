@@ -4,6 +4,16 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.34.0] - 2026-04-17
+
+### Added
+- Inline custom section creation: a dashed "+ Create custom section" placeholder appears when hovering the gap between two sections (and stays visible below the last section as a discoverability hint). Clicking it opens the creation dialog and inserts the new section directly after the one above it. No more round-trip through Settings.
+- Inline rename and delete controls on every custom section header (pencil + trash icons), alongside the existing visibility toggle.
+
+### Removed
+- Custom Sections tab in Settings — the inline placeholder and header controls cover every path that tab used to provide.
+- Ability to change a custom section's layout type after creation. Layout is chosen once on creation; if a different layout is needed, create a new section and move the items over.
+
 ## [1.33.3] - 2026-04-17
 
 ### Changed

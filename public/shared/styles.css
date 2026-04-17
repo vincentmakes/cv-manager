@@ -179,6 +179,96 @@ body {
     position: relative;
 }
 
+/* Phantom "create custom section" placeholder.
+   Outer `.phantom-section` is the hit target; it sits in the 16px inter-section gap
+   invisibly and reveals the dashed pill (`.phantom-box`) on hover. The phantom after
+   the final section carries `.phantom-last` and shows the pill always as a
+   discoverability affordance. Baseline has a small vertical hit area via padding, and
+   the outer grows on hover so the pill has breathing room from the surrounding sections. */
+.phantom-section {
+    margin-top: -16px;        /* overlap the section's 16px margin-bottom so baseline adds no visible space between sections */
+    padding: 8px 0;           /* 16px hit area filling the inter-section gap */
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    background: transparent;
+    box-sizing: content-box;
+    transition: padding 0.15s ease;
+}
+
+/* On hover, grow the outer so the 44px pill has ~12px of clearance from the surrounding sections.
+   Padding alone isn't enough — with no content inside, padding 24+24 = 48px leaves only 2px around
+   the pill. The `min-height` gives the content area the height the removed hint used to provide. */
+.phantom-section:hover {
+    padding: 24px 0;
+    min-height: 20px;
+}
+
+/* Last phantom: sit fully below the last section with generous breathing room both above and below the always-visible pill */
+.phantom-section.phantom-last {
+    margin-top: 16px;         /* push below the last section's margin-bottom */
+    padding: 36px 0 28px 0;    /* extra top padding — you asked for a bit more space between the last section and the pill */
+    min-height: 20px;          /* content area so the pill has clearance from the outer edges (since the hint that used to fill it is gone) */
+}
+
+/* The dashed pill — positioned absolutely so the outer can resize without layout jumps */
+.phantom-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 260px;
+    justify-content: center;
+    padding: 10px 24px;
+    border: 2px dashed transparent;
+    border-radius: var(--radius-md);
+    color: var(--gray-500);
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--white);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;     /* hover always resolved on the outer element */
+    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.phantom-box-plus {
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.phantom-section:hover .phantom-box {
+    opacity: 1;
+    border-color: var(--primary);
+    background: var(--very-light);
+    color: var(--primary);
+}
+
+.phantom-section.phantom-last .phantom-box {
+    opacity: 0.7;
+    border-color: var(--gray-400);
+    color: var(--gray-600);
+    background: var(--white);
+}
+
+.phantom-section.phantom-last:hover .phantom-box {
+    opacity: 1;
+    border-color: var(--primary);
+    background: var(--very-light);
+    color: var(--primary);
+}
+
+@media print {
+    .phantom-section { display: none !important; }
+}
+
 .section-header {
     display: flex;
     align-items: center;

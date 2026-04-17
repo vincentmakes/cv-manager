@@ -34,7 +34,7 @@
     Es gibt kein festes Limit. Erstellen Sie so viele, wie Sie benötigen.
 
 ??? question "Kann ich den Layout-Typ eines benutzerdefinierten Abschnitts nachträglich ändern?"
-    Ja. Bearbeiten Sie den Abschnitt und wählen Sie ein anderes Layout. Beachten Sie, dass einige Felder möglicherweise nicht zwischen Layout-Typen übertragen werden (z. B. beim Wechsel von Karten zu Social Links).
+    Nein. Der Layout-Typ wird bei der Erstellung festgelegt und danach gesperrt. Wenn Sie ein anderes Layout benötigen, fügen Sie einen neuen benutzerdefinierten Abschnitt mit dem gewünschten Layout hinzu, verschieben Sie die Elemente dorthin und löschen Sie den alten Abschnitt. Die Umbenennen-Schaltfläche (Stift) im Abschnittskopf ändert nur den Titel.
 
 ??? question "Was ist der Unterschied zwischen den Layouts 'Aufzählungspunkte' und 'Freitext'?"
     **Aufzählungspunkte** stellt jede Zeile als Aufzählungspunkt mit einem Gruppentitel dar. **Freitext** zeigt reinen Text mit beibehaltenen Zeilenumbrüchen und ohne Titel an — ähnlich dem Über-mich-/Bio-Abschnitt.

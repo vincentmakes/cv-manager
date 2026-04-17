@@ -34,7 +34,7 @@
     Non esiste un limite rigido. Createne quante ne avete bisogno.
 
 ??? question "Posso cambiare il tipo di layout di una sezione personalizzata dopo averla creata?"
-    Sì. Modificate la sezione e selezionate un layout diverso. Tenete presente che alcuni campi potrebbero non essere trasferiti tra i tipi di layout (ad esempio, passando da cards a social links).
+    No. Il tipo di layout viene scelto una sola volta al momento della creazione e poi bloccato. Se vi serve un layout diverso, aggiungete una nuova sezione personalizzata con il layout desiderato, spostate gli elementi lì ed eliminate la vecchia sezione. Il pulsante Rinomina (matita) nell'intestazione della sezione modifica solo il titolo.
 
 ??? question "Qual è la differenza tra i layout 'Punti elenco' e 'Testo libero'?"
     **Punti elenco** visualizza ogni riga come elemento di un elenco puntato con un titolo di gruppo. **Testo libero** visualizza testo semplice con interruzioni di riga preservate e senza titolo — simile alla sezione Informazioni personali/Bio.

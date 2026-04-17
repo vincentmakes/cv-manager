@@ -2,14 +2,30 @@
 
 Met aangepaste secties kunt u inhoud toevoegen die niet past bij de ingebouwde secties.
 
-## Een aangepaste sectie aanmaken
+Aangepaste secties worden direct in het CV aangemaakt — er is geen apart tabblad meer in de Instellingen.
 
-1. Open **Instellingen** → tabblad **Aangepaste secties**
-2. Klik op **Aangepaste sectie toevoegen**
-3. Voer een sectienaam in
-4. Kies een lay-outtype (zie hieronder)
-5. Kies optioneel een **sectiepictogram** (ster, boek, link, wereldbol, hart, onderscheiding, aktentas) — weergegeven naast de kop
-6. Sla op — de nieuwe sectie verschijnt in uw CV
+## Een aangepaste sectie toevoegen
+
+Twee gelijkwaardige ingangen:
+
+- **Tussen twee secties** — beweeg de muis naar de ruimte vlak onder een bestaande sectie. Er verschijnt een gestippelde knop **+ Aangepaste sectie toevoegen**; klik erop om het aanmaakdialoogvenster te openen. De nieuwe sectie wordt direct onder de sectie die u aanwees ingevoegd.
+- **Onderaan het CV** — dezelfde knop **+ Aangepaste sectie toevoegen** is altijd zichtbaar onder de laatste sectie. Klikken voegt een nieuwe sectie onderaan toe.
+
+In het dialoogvenster:
+
+1. Voer een sectienaam in
+2. Kies een lay-outtype (zie hieronder)
+3. Sla op — de nieuwe sectie verschijnt in uw CV en wordt automatisch opgeslagen in de actieve dataset
+
+## Een aangepaste sectie beheren
+
+Elke aangepaste sectie heeft drie pictogramknoppen in de kop:
+
+- **Verwijderen** (prullenbakpictogram) — verwijdert de sectie en al haar items na bevestiging
+- **Hernoemen** (potloodpictogram) — opent een klein dialoogvenster om de titel van de sectie te wijzigen
+- **Zichtbaarheid** (oogpictogram) — bepaalt of de sectie in de live CV wordt weergegeven
+
+Het lay-outtype wordt eenmalig bij het aanmaken gekozen en kan daarna niet meer worden gewijzigd. Als u een andere lay-out nodig heeft, maak dan een nieuwe sectie aan en verplaats de items daarheen.
 
 ## Lay-outtypen
 
@@ -59,4 +75,4 @@ Voor raster-, lijst-, kaart- en opsommingslay-outs heeft elk item een selectieva
 Klik op **Items beheren** bij een aangepaste sectie om items toe te voegen, te bewerken, te herschikken of te verwijderen binnen die sectie.
 
 !!! note "Opmerking"
-    Er is geen harde limiet voor het aantal aangepaste secties. Maak er zoveel aan als u nodig heeft. U kunt ook het lay-outtype van een aangepaste sectie wijzigen nadat u deze heeft aangemaakt — bewerk simpelweg de sectie en selecteer een andere lay-out.
+    Er is geen harde limiet voor het aantal aangepaste secties. Maak er zoveel aan als u nodig heeft.

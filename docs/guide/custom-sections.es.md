@@ -2,14 +2,30 @@
 
 Las secciones personalizadas le permiten agregar cualquier contenido que no encaje en las secciones predefinidas.
 
-## Crear una sección personalizada
+Las secciones personalizadas se crean directamente en el CV — ya no hay una pestaña separada en Configuración.
 
-1. Abra **Settings** → pestaña **Custom Sections**
-2. Haga clic en **Add Custom Section**
-3. Introduzca un nombre para la sección
-4. Elija un tipo de diseño (ver más abajo)
-5. Opcionalmente elija un **ícono de sección** (star, book, link, globe, heart, award, briefcase) — se muestra junto al encabezado
-6. Guarde — la nueva sección aparecerá en su CV
+## Añadir una sección personalizada
+
+Dos puntos de entrada equivalentes:
+
+- **Entre dos secciones** — pase el ratón por el hueco justo debajo de cualquier sección existente. Aparece una píldora discontinua **+ Añadir sección personalizada**; haga clic para abrir el cuadro de diálogo de creación. La nueva sección se inserta directamente debajo de la sección sobre la que pasó el ratón.
+- **Al final del CV** — la misma píldora **+ Añadir sección personalizada** está siempre visible bajo la última sección, como ayuda para descubrir la función. Al hacer clic se añade una nueva sección al final.
+
+En el cuadro de diálogo:
+
+1. Introduzca un nombre para la sección
+2. Elija un tipo de diseño (ver más abajo)
+3. Guarde — la nueva sección aparece en su CV y se guarda automáticamente en el conjunto de datos activo
+
+## Gestionar una sección personalizada
+
+Cada sección personalizada tiene tres botones con icono en su encabezado:
+
+- **Eliminar** (icono de papelera) — elimina la sección y todos sus elementos tras una confirmación
+- **Renombrar** (icono de lápiz) — abre un pequeño diálogo para cambiar el título de la sección
+- **Visibilidad** (icono de ojo) — activa o desactiva que la sección aparezca en el CV publicado
+
+El tipo de diseño se elige una sola vez al crear la sección y no puede cambiarse después. Si necesita un diseño distinto, cree una nueva sección y mueva los elementos allí.
 
 ## Tipos de diseño
 
@@ -59,4 +75,4 @@ Para los diseños de cuadrícula, lista, tarjeta y viñetas, cada elemento tiene
 Haga clic en **Manage Items** en cualquier sección personalizada para agregar, editar, reordenar o eliminar elementos dentro de esa sección.
 
 !!! note
-    No hay un límite estricto de secciones personalizadas. Cree tantas como necesite. También puede cambiar el tipo de diseño de una sección personalizada después de crearla — simplemente edite la sección y seleccione un diseño diferente.
+    No hay un límite estricto de secciones personalizadas. Cree tantas como necesite.

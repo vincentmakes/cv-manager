@@ -385,11 +385,10 @@
             <div class="modal-body">
                 <div class="settings-tabs">
                     <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections" data-i18n="settings.tab.sections">Sections & Headlines</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('custom')" data-tab="custom" data-i18n="settings.tab.custom">Custom Sections</button>
                     <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public" data-i18n="settings.tab.print">Print & Export</button>
                     <button class="settings-tab" onclick="switchSettingsTab('advanced')" data-tab="advanced" data-i18n="settings.tab.advanced">Advanced</button>
                 </div>
-                
+
                 <!-- Sections & Headlines Tab -->
                 <div class="settings-tab-content active" id="settingsTabSections">
                     <div class="settings-info" data-i18n="settings.sections.info">
@@ -397,19 +396,7 @@
                     </div>
                     <div id="settingsSectionsList"></div>
                 </div>
-                
-                <!-- Custom Sections Tab -->
-                <div class="settings-tab-content" id="settingsTabCustom">
-                    <div class="settings-info" data-i18n="settings.custom.info">
-                        Create custom sections with different layouts. Custom sections appear in the section order list above.
-                    </div>
-                    <button class="add-btn" onclick="openCustomSectionModal()" style="margin-top: 0; margin-bottom: 16px;">
-                        <span class="material-symbols-outlined">add</span>
-                        <span data-i18n="settings.custom.add">Add Custom Section</span>
-                    </button>
-                    <div id="customSectionsList"></div>
-                </div>
-                
+
                 <!-- Print & Export Tab -->
                 <div class="settings-tab-content" id="settingsTabPublic">
                     <!-- Print Button Setting -->
@@ -667,6 +654,30 @@
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeCustomSectionModal()" data-i18n="btn.cancel">Cancel</button>
                     <button class="btn btn-primary" onclick="saveCustomSection()" data-i18n="btn.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Section Rename Modal (title-only edit) -->
+    <div class="modal-overlay" id="customSectionRenameModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="custom_section.rename_title">Rename Section</h3>
+                <button class="modal-close" onclick="closeCustomSectionRenameModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="custom_section.section_name">Section Name</label>
+                    <input type="text" class="form-input" id="cs-rename-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeCustomSectionRenameModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveCustomSectionRename()" data-i18n="btn.save">Save</button>
                 </div>
             </div>
         </div>

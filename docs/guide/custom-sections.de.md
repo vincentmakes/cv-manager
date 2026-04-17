@@ -2,14 +2,30 @@
 
 Mit benutzerdefinierten Abschnitten können Sie beliebige Inhalte hinzufügen, die nicht in die integrierten Abschnitte passen.
 
-## Einen benutzerdefinierten Abschnitt erstellen
+Benutzerdefinierte Abschnitte werden direkt im Lebenslauf inline erstellt — es gibt keinen separaten Einstellungen-Tab mehr dafür.
 
-1. Öffnen Sie **Einstellungen** → Tab **Benutzerdefinierte Abschnitte**
-2. Klicken Sie auf **Benutzerdefinierten Abschnitt hinzufügen**
-3. Geben Sie einen Abschnittsnamen ein
-4. Wählen Sie einen Layout-Typ (siehe unten)
-5. Wählen Sie optional ein **Abschnittssymbol** (Stern, Buch, Link, Globus, Herz, Auszeichnung, Aktentasche) — wird neben der Überschrift angezeigt
-6. Speichern — der neue Abschnitt erscheint in Ihrem Lebenslauf
+## Einen benutzerdefinierten Abschnitt hinzufügen
+
+Zwei gleichwertige Einstiegspunkte:
+
+- **Zwischen zwei Abschnitten** — bewegen Sie den Mauszeiger auf die Lücke direkt unter einem vorhandenen Abschnitt. Ein gestricheltes Feld **+ Eigenen Abschnitt hinzufügen** erscheint; ein Klick öffnet den Erstellungsdialog. Der neue Abschnitt wird direkt unter dem Abschnitt eingefügt, über dem Sie den Platzhalter geöffnet haben.
+- **Am Ende des Lebenslaufs** — dasselbe Feld **+ Eigenen Abschnitt hinzufügen** ist unter dem letzten Abschnitt dauerhaft sichtbar. Ein Klick fügt einen neuen Abschnitt am Ende hinzu.
+
+Im Dialog:
+
+1. Abschnittsname eingeben
+2. Layout-Typ wählen (siehe unten)
+3. Speichern — der neue Abschnitt erscheint in Ihrem Lebenslauf und wird automatisch im aktiven Datensatz gespeichert
+
+## Einen benutzerdefinierten Abschnitt verwalten
+
+Jeder benutzerdefinierte Abschnitt hat drei Symbolschaltflächen in seiner Überschrift:
+
+- **Löschen** (Papierkorb-Symbol) — entfernt den Abschnitt und alle seine Elemente nach Bestätigung
+- **Umbenennen** (Stift-Symbol) — öffnet einen kleinen Dialog, um den Titel des Abschnitts zu ändern
+- **Sichtbarkeit** (Augen-Symbol) — schaltet ein, ob der Abschnitt im Lebenslauf angezeigt wird
+
+Der Layout-Typ wird einmalig bei der Erstellung gewählt und kann danach nicht mehr geändert werden. Wenn Sie ein anderes Layout benötigen, erstellen Sie einen neuen Abschnitt und verschieben Sie die Elemente dorthin.
 
 ## Layout-Typen
 
@@ -59,4 +75,4 @@ Für Raster-, Listen-, Karten- und Aufzählungs-Layouts hat jedes Element ein Ko
 Klicken Sie auf **Elemente verwalten** bei einem beliebigen benutzerdefinierten Abschnitt, um Elemente innerhalb dieses Abschnitts hinzuzufügen, zu bearbeiten, neu anzuordnen oder zu löschen.
 
 !!! note "Hinweis"
-    Es gibt keine feste Obergrenze für benutzerdefinierte Abschnitte. Erstellen Sie so viele, wie Sie benötigen. Sie können auch den Layout-Typ eines benutzerdefinierten Abschnitts nachträglich ändern — bearbeiten Sie einfach den Abschnitt und wählen Sie ein anderes Layout.
+    Es gibt keine feste Obergrenze für benutzerdefinierte Abschnitte. Erstellen Sie so viele, wie Sie benötigen.

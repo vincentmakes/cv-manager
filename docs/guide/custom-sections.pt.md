@@ -2,14 +2,30 @@
 
 Seções personalizadas permitem que você adicione qualquer conteúdo que não se encaixe nas seções integradas.
 
-## Criando uma Seção Personalizada
+As secções personalizadas são criadas diretamente no CV — já não existe um separador dedicado nas Configurações.
 
-1. Abra **Configurações** → aba **Seções Personalizadas**
-2. Clique em **Adicionar Seção Personalizada**
-3. Digite um nome para a seção
-4. Escolha um tipo de layout (veja abaixo)
-5. Opcionalmente, escolha um **ícone de seção** (estrela, livro, link, globo, coração, prêmio, maleta) — exibido ao lado do título
-6. Salve — a nova seção aparece no seu CV
+## Adicionar uma Secção Personalizada
+
+Dois pontos de entrada equivalentes:
+
+- **Entre duas secções** — passe o cursor pelo espaço logo abaixo de qualquer secção existente. Aparece uma pílula tracejada **+ Adicionar secção personalizada**; clique para abrir a caixa de diálogo de criação. A nova secção é inserida logo abaixo da secção sobre a qual passou o cursor.
+- **No fundo do CV** — a mesma pílula **+ Adicionar secção personalizada** está sempre visível sob a última secção, como ajuda para descobrir a funcionalidade. Ao clicar, adiciona uma nova secção no fim.
+
+Na caixa de diálogo:
+
+1. Digite um nome para a secção
+2. Escolha um tipo de layout (ver abaixo)
+3. Guarde — a nova secção aparece no CV e é guardada automaticamente no conjunto de dados ativo
+
+## Gerir uma Secção Personalizada
+
+Cada secção personalizada tem três botões de ícone no seu cabeçalho:
+
+- **Eliminar** (ícone de lixo) — remove a secção e todos os seus itens após confirmação
+- **Renomear** (ícone de lápis) — abre uma pequena caixa de diálogo para alterar o título da secção
+- **Visibilidade** (ícone de olho) — ativa ou desativa a exibição da secção no CV publicado
+
+O tipo de layout é escolhido uma única vez no momento da criação e não pode ser alterado depois. Se precisar de um layout diferente, crie uma nova secção e mova os itens para lá.
 
 ## Tipos de Layout
 
@@ -59,4 +75,4 @@ Para layouts de grade, lista, cartão e marcadores, cada item possui uma caixa d
 Clique em **Gerenciar Itens** em qualquer seção personalizada para adicionar, editar, reordenar ou excluir itens dentro dessa seção.
 
 !!! note "Nota"
-    Não há limite fixo para seções personalizadas. Crie quantas precisar. Você também pode alterar o tipo de layout de uma seção personalizada após criá-la — basta editar a seção e selecionar um layout diferente.
+    Não há limite fixo para seções personalizadas. Crie quantas precisar.

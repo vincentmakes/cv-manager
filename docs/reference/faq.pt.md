@@ -34,7 +34,7 @@
     Não existe limite rígido. Crie quantas precisar.
 
 ??? question "Posso alterar o tipo de layout de uma secção personalizada após criá-la?"
-    Sim. Edite a secção e selecione um layout diferente. Note que alguns campos podem não ser transferidos entre tipos de layout (por exemplo, mudar de cartões para links sociais).
+    Não. O tipo de layout é escolhido uma única vez na criação e depois fica bloqueado. Se precisar de um layout diferente, adicione uma nova secção personalizada com o layout pretendido, mova os itens para lá e elimine a secção antiga. O botão Renomear (lápis) no cabeçalho da secção apenas altera o título.
 
 ??? question "Qual a diferença entre os layouts 'Marcadores' e 'Texto livre'?"
     **Marcadores** apresenta cada linha como um item de lista com marcador e um título de grupo. **Texto livre** apresenta texto simples com quebras de linha preservadas e sem título — semelhante à secção Sobre/Bio.
