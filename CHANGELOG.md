@@ -4,6 +4,18 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.31.0] - 2026-04-17
+
+### Added
+- Active dataset banner surfaces sibling language variants as right-aligned clickable pill chips with circular flag images, loading the sibling on click.
+- Dedicated "Add language" button (filled primary pill) opens a dropdown listing languages not yet present in the group, pre-fills and locks the Save As flow for the chosen language.
+- Current-language pill is always visible when a dataset is open, with the same pill shape and circular flag as the sibling chips.
+- Version pill shows `v{N}` in a high-contrast amber pill when the dataset has multiple versions in its `version_group`.
+- Intro label "Switch other variants of this CV:" precedes the sibling chips when siblings exist.
+
+### Fixed
+- Defensive fallback: if a loaded dataset has no `language` value, the current UI locale is used and persisted back to the dataset via the existing language API.
+
 ## [1.30.1] - 2026-04-16
 
 ### Changed

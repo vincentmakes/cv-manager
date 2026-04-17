@@ -1253,35 +1253,130 @@ body {
 }
 .public-lang-name { flex: 1; }
 
-/* Admin dataset language switcher */
-.dataset-lang-switcher {
-    position: relative;
-    margin-left: 8px;
-}
-.dataset-lang-switch-btn {
-    display: flex;
+/* Admin dataset version badge — soft purple outlined pill (subtle but distinct) */
+.active-dataset-version-badge {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(139, 92, 246, 0.1);
+    color: #6d28d9;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
-.dataset-lang-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    min-width: 180px;
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-    z-index: 1001;
-}
-.dataset-lang-dropdown.active { display: block; }
-.dataset-lang-option {
+
+/* Right-aligned variants group (intro label + sibling chips + add-language button) */
+.active-dataset-variants-group {
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
+}
+.active-dataset-variants-label {
+    color: var(--gray-500);
+    font-weight: 400;
+    letter-spacing: 0.2px;
+}
+
+/* Current-language badge in the active dataset banner — flag + code pill.
+   Scoped by id so we don't override the compact badges in the CV Manager list.
+   Shape matches the sibling chips for visual consistency. */
+#activeDatasetLangBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 3px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--white, #fff);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+    text-transform: none;
+}
+#activeDatasetLangBadge .dataset-lang-badge-code {
+    letter-spacing: 0.6px;
+}
+
+/* Sibling chips — bigger, brighter, with round flag */
+.active-dataset-lang-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.dataset-lang-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 3px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--white, #fff);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.dataset-lang-chip:hover {
+    background: var(--primary-dark, #0048b8);
+    box-shadow: 0 2px 6px rgba(0, 102, 255, 0.25);
+    transform: translateY(-1px);
+}
+.dataset-lang-chip-code {
+    letter-spacing: 0.6px;
+}
+
+/* Add-language button — filled primary pill with icon + label */
+.dataset-add-lang-wrapper {
+    position: relative;
+}
+.dataset-add-lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px 4px 7px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--white, #fff);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+    box-shadow: 0 1px 2px rgba(0, 102, 255, 0.25);
+}
+.dataset-add-lang-btn:hover {
+    background: var(--primary-dark, #0048b8);
+    box-shadow: 0 2px 8px rgba(0, 102, 255, 0.35);
+    transform: translateY(-1px);
+}
+.active-dataset-banner-content .dataset-add-lang-btn .material-symbols-outlined { color: inherit; }
+.dataset-add-lang-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    z-index: 1001;
+}
+.dataset-add-lang-dropdown.active { display: block; }
+.dataset-lang-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 8px 12px;
     font-size: 13px;
     color: var(--gray-700);
@@ -1289,18 +1384,12 @@ body {
     transition: background 0.15s;
 }
 .dataset-lang-option:hover { background: var(--gray-50); }
-.dataset-lang-option.active {
-    background: var(--primary);
-    color: var(--white, #fff);
-    font-weight: 600;
+.dataset-lang-option.disabled {
+    color: var(--gray-400);
+    cursor: default;
+    font-style: italic;
 }
-.dataset-lang-option.active:hover { background: var(--primary); }
-.dataset-lang-option.add-lang {
-    cursor: pointer;
-    border-top: 1px solid var(--gray-100);
-    opacity: 0.8;
-}
-.dataset-lang-option.add-lang:hover { opacity: 1; background: var(--gray-50); }
+.dataset-lang-option.disabled:hover { background: transparent; }
 .dataset-lang-code {
     font-weight: 700;
     font-size: 11px;

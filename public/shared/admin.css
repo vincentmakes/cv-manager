@@ -720,26 +720,60 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    max-width: 1200px;
-    margin: 0 auto;
     font-size: 13px;
     color: var(--gray-700);
 }
 .active-dataset-banner-content svg, .active-dataset-banner-content .material-symbols-outlined { flex-shrink: 0; color: var(--primary); }
 .active-dataset-label { color: var(--gray-500); font-weight: 400; }
 .active-dataset-name { font-weight: 600; color: var(--primary-dark); }
-.active-dataset-default-badge {
-    font-size: 10px;
-    font-weight: 600;
+.active-dataset-public-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--primary);
     background: rgba(0, 102, 255, 0.1);
-    padding: 1px 6px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(0, 102, 255, 0.25);
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 102, 255, 0.3);
 }
-.active-dataset-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.active-dataset-make-public-btn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    background: transparent;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px dashed var(--gray-400);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    font-family: inherit;
+}
+.active-dataset-make-public-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    border-style: solid;
+    background: rgba(0, 102, 255, 0.08);
+}
+.active-dataset-shared-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(0, 102, 255, 0.1);
+    border: 1px solid rgba(0, 102, 255, 0.3);
+    color: var(--primary);
+}
+.active-dataset-banner-content .active-dataset-shared-badge .material-symbols-outlined { color: inherit; }
+.active-dataset-actions { display: flex; gap: 6px; align-items: center; }
 .active-dataset-status {
     font-size: 11px;
     color: var(--gray-500);
@@ -828,6 +862,26 @@
     padding: 1px 6px;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(0, 102, 255, 0.25);
+}
+
+.dataset-make-public-btn {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    background: transparent;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--gray-300);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.dataset-make-public-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    border-style: solid;
+    background: rgba(0, 102, 255, 0.05);
 }
 
 .dataset-active-badge {
