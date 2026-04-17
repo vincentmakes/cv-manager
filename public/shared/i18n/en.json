@@ -275,6 +275,9 @@
     "datasets.language_variant": "{{lang}} variant",
     "datasets.lang_badge_tooltip": "Content language: {{lang}}",
     "datasets.languages_count": "{{count}} languages",
+    "datasets.switch_to_lang": "Switch to {{lang}}",
+    "datasets.add_language_title": "Add a new language variant",
+    "datasets.version_badge_tooltip": "Version {{version}}",
 
     "lang_switcher.label": "Language",
     "lang_switcher.switch_to": "Switch to {{lang}}",

@@ -10,6 +10,9 @@ let activeDatasetIsDefault = false;
 let activeDatasetLanguage = null;
 let activeDatasetLanguageGroup = null;
 let activeDatasetSiblings = [];
+let activeDatasetVersion = null;
+let activeDatasetVersionGroup = null;
+let activeDatasetVersionCount = 1;
 let adminInitialized = false; // tracks whether first init has completed
 
 // Mobile menu toggle
@@ -203,12 +206,7 @@ async function loadDefaultDatasetOnStartup() {
             try {
                 const result = await api(`/api/datasets/${lastId}/load`, { method: 'POST' });
                 if (result.success) {
-                    activeDatasetId = result.id;
-                    activeDatasetName = result.name;
-                    activeDatasetIsDefault = !!result.is_default;
-                    activeDatasetLanguage = result.language || 'en';
-                    activeDatasetLanguageGroup = result.language_group || null;
-                    await loadActiveDatasetSiblings();
+                    await applyLoadedDatasetResult(result);
                     // Sync UI locale to match
                     if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
                         await I18n.setLocale(activeDatasetLanguage);
@@ -224,12 +222,7 @@ async function loadDefaultDatasetOnStartup() {
         if (defaultDs && defaultDs.exists) {
             const result = await api(`/api/datasets/${defaultDs.id}/load`, { method: 'POST' });
             if (result.success) {
-                activeDatasetId = result.id;
-                activeDatasetName = result.name;
-                activeDatasetIsDefault = !!result.is_default;
-                activeDatasetLanguage = result.language || 'en';
-                activeDatasetLanguageGroup = result.language_group || null;
-                await loadActiveDatasetSiblings();
+                await applyLoadedDatasetResult(result);
                 persistActiveDataset();
                 await renderAdminUI();
                 showActiveDatasetBanner(activeDatasetId, activeDatasetName, activeDatasetIsDefault);
@@ -249,6 +242,33 @@ function persistActiveDataset() {
     }
 }
 
+// Apply a dataset load/save API result to active dataset state.
+// Normalizes the language (using I18n.locale as fallback if missing) and
+// persists the fallback back to the DB so the row has a language value.
+async function applyLoadedDatasetResult(result) {
+    activeDatasetId = result.id;
+    activeDatasetName = result.name;
+    activeDatasetIsDefault = !!result.is_default;
+    activeDatasetLanguageGroup = result.language_group || null;
+    activeDatasetVersion = result.version || 1;
+    activeDatasetVersionGroup = result.version_group || null;
+
+    let language = result.language;
+    if (!language) {
+        language = (typeof I18n !== 'undefined' && I18n.locale) ? I18n.locale : 'en';
+        try {
+            await api(`/api/datasets/${result.id}/language`, {
+                method: 'PUT',
+                body: JSON.stringify({ language })
+            });
+        } catch (err) { /* best-effort; state still reflects resolved language */ }
+    }
+    activeDatasetLanguage = language;
+
+    await loadActiveDatasetSiblings();
+    await loadActiveDatasetVersionCount();
+}
+
 // Load siblings for the active dataset
 async function loadActiveDatasetSiblings() {
     activeDatasetSiblings = [];
@@ -256,6 +276,16 @@ async function loadActiveDatasetSiblings() {
     try {
         const siblings = await api(`/api/datasets/${activeDatasetId}/siblings`);
         activeDatasetSiblings = (siblings || []).filter(s => s.id !== activeDatasetId);
+    } catch (err) { /* ignore */ }
+}
+
+// Count datasets sharing our version_group (used to decide whether to show the version chip)
+async function loadActiveDatasetVersionCount() {
+    activeDatasetVersionCount = 1;
+    if (!activeDatasetVersionGroup) return;
+    try {
+        const all = await api('/api/datasets');
+        activeDatasetVersionCount = (all || []).filter(d => d.version_group === activeDatasetVersionGroup).length || 1;
     } catch (err) { /* ignore */ }
 }
 
@@ -270,20 +300,29 @@ function showActiveDatasetBanner(id, name, isDefault) {
     defaultBadge.style.display = isDefault ? '' : 'none';
     banner.style.display = '';
 
-    // Language badge
+    // Language badge — always show when a dataset is active
     const langBadge = document.getElementById('activeDatasetLangBadge');
     if (langBadge) {
-        if (activeDatasetLanguage && activeDatasetSiblings.length > 0) {
-            langBadge.textContent = activeDatasetLanguage.toUpperCase();
-            langBadge.title = t('datasets.lang_badge_tooltip', { lang: activeDatasetLanguage.toUpperCase() });
-            langBadge.style.display = '';
+        const lang = (activeDatasetLanguage || 'en').toUpperCase();
+        langBadge.textContent = lang;
+        langBadge.title = t('datasets.lang_badge_tooltip', { lang });
+        langBadge.style.display = '';
+    }
+
+    // Version badge — only when multiple versions exist in this version_group
+    const versionBadge = document.getElementById('activeDatasetVersionBadge');
+    if (versionBadge) {
+        if (activeDatasetVersion && activeDatasetVersionCount > 1) {
+            versionBadge.textContent = `v${activeDatasetVersion}`;
+            versionBadge.title = t('datasets.version_badge_tooltip', { version: activeDatasetVersion });
+            versionBadge.style.display = '';
         } else {
-            langBadge.style.display = 'none';
+            versionBadge.style.display = 'none';
         }
     }
 
-    // Language switcher
-    renderDatasetLangSwitcher();
+    renderActiveDatasetLangChips();
+    renderAddLangDropdown();
 
     updateBannerMargins();
 }
@@ -298,97 +337,135 @@ function hideActiveDatasetBanner() {
     activeDatasetLanguage = null;
     activeDatasetLanguageGroup = null;
     activeDatasetSiblings = [];
+    activeDatasetVersion = null;
+    activeDatasetVersionGroup = null;
+    activeDatasetVersionCount = 1;
     persistActiveDataset();
     updateBannerMargins();
 }
 
-// Render the admin language switcher dropdown
-function renderDatasetLangSwitcher() {
-    const switcher = document.getElementById('datasetLangSwitcher');
-    const label = document.getElementById('datasetLangSwitchLabel');
-    const dropdown = document.getElementById('datasetLangDropdown');
-    if (!switcher || !dropdown) return;
-
-    if (activeDatasetSiblings.length === 0) {
-        switcher.style.display = 'none';
-        return;
-    }
-
-    switcher.style.display = '';
-    if (label) label.textContent = (activeDatasetLanguage || 'en').toUpperCase();
+// Render the sibling language chips inline in the banner
+function renderActiveDatasetLangChips() {
+    const container = document.getElementById('activeDatasetLangChips');
+    if (!container) return;
 
     const langNames = {};
     (typeof I18n !== 'undefined' ? I18n.languages : []).forEach(l => { langNames[l.code] = l.native; });
 
-    let html = '';
-    // Current language (highlighted)
-    html += `<div class="dataset-lang-option active">
-        <span class="dataset-lang-code">${(activeDatasetLanguage || 'en').toUpperCase()}</span>
-        <span class="dataset-lang-name">${escapeHtml(langNames[activeDatasetLanguage] || activeDatasetLanguage)}</span>
-        <span class="material-symbols-outlined" style="font-size:14px;margin-left:auto">check</span>
-    </div>`;
-    // Siblings
-    for (const sib of activeDatasetSiblings) {
-        html += `<div class="dataset-lang-option" onclick="switchDatasetLanguage(${sib.id}, '${escapeHtml(sib.name || '')}', '${sib.language}')">
-            <span class="dataset-lang-code">${sib.language.toUpperCase()}</span>
-            <span class="dataset-lang-name">${escapeHtml(langNames[sib.language] || sib.language)}</span>
-        </div>`;
-    }
-    // Add language option
-    html += `<div class="dataset-lang-option add-lang" onclick="addLanguageFromSwitcher()">
-        <span class="material-symbols-outlined" style="font-size:14px">add</span>
-        <span class="dataset-lang-name">${escapeHtml(t('datasets.add_language'))}</span>
-    </div>`;
+    container.innerHTML = activeDatasetSiblings.map(sib => {
+        const code = (sib.language || '').toUpperCase();
+        const name = langNames[sib.language] || sib.language;
+        const tooltip = t('datasets.switch_to_lang', { lang: name });
+        const attr = s => escapeHtml(s).replace(/"/g, '&quot;');
+        return `<button type="button" class="dataset-lang-chip" title="${attr(tooltip)}" data-sibling-id="${sib.id}" data-sibling-name="${attr(sib.name || '')}" data-sibling-lang="${attr(sib.language)}">
+            <span class="dataset-lang-chip-code">${escapeHtml(code)}</span>
+            <span class="dataset-lang-chip-name">${escapeHtml(name)}</span>
+        </button>`;
+    }).join('');
 
-    dropdown.innerHTML = html;
+    container.querySelectorAll('.dataset-lang-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sid = parseInt(btn.getAttribute('data-sibling-id'), 10);
+            const sname = btn.getAttribute('data-sibling-name') || '';
+            const slang = btn.getAttribute('data-sibling-lang') || '';
+            switchDatasetLanguage(sid, sname, slang);
+        });
+    });
 }
 
-// Toggle the language switcher dropdown
-function toggleDatasetLangSwitcher() {
-    const dropdown = document.getElementById('datasetLangDropdown');
+// Populate and show/hide the add-language dropdown next to the chips
+function renderAddLangDropdown() {
+    const wrapper = document.getElementById('datasetAddLangWrapper');
+    const dropdown = document.getElementById('datasetAddLangDropdown');
+    if (!wrapper || !dropdown) return;
+
+    // Always visible when a dataset is loaded
+    wrapper.style.display = activeDatasetId ? '' : 'none';
+
+    if (typeof I18n === 'undefined') {
+        dropdown.innerHTML = '';
+        return;
+    }
+
+    const used = new Set();
+    used.add(activeDatasetLanguage || 'en');
+    activeDatasetSiblings.forEach(s => used.add(s.language));
+    const available = I18n.languages.filter(l => !used.has(l.code));
+
+    if (available.length === 0) {
+        dropdown.innerHTML = `<div class="dataset-lang-option disabled">
+            <span class="dataset-lang-name">${escapeHtml(t('datasets.no_languages_available'))}</span>
+        </div>`;
+        return;
+    }
+
+    dropdown.innerHTML = available.map(l => `<div class="dataset-lang-option" onclick="addDatasetLanguage('${escapeHtml(l.code)}')">
+        <span class="dataset-lang-code">${escapeHtml(l.code.toUpperCase())}</span>
+        <span class="dataset-lang-name">${escapeHtml(l.native)}</span>
+    </div>`).join('');
+}
+
+// Toggle the add-language dropdown
+function toggleDatasetAddLangDropdown() {
+    const dropdown = document.getElementById('datasetAddLangDropdown');
     if (dropdown) dropdown.classList.toggle('active');
 }
 
-// Open Save As modal pre-filled for adding a new language to the current language group
-async function addLanguageFromSwitcher() {
-    const dropdown = document.getElementById('datasetLangDropdown');
+// Open Save As modal pre-filled for adding a specific new language variant
+async function addDatasetLanguage(code) {
+    const dropdown = document.getElementById('datasetAddLangDropdown');
     if (dropdown) dropdown.classList.remove('active');
-    if (!activeDatasetLanguageGroup) return;
-    // Open Save As modal, then override fields for add-language mode
+    if (!activeDatasetId) return;
+
+    // Ensure the active dataset is part of a language group before creating a sibling
+    if (!activeDatasetLanguageGroup) {
+        try {
+            const refreshed = await api(`/api/datasets/id/${activeDatasetId}`);
+            if (refreshed && refreshed.language_group) {
+                activeDatasetLanguageGroup = refreshed.language_group;
+            }
+        } catch (err) { /* fall through; Save As will still create a group via new dataset flow */ }
+    }
+
     await saveAsDataset();
     const input = document.getElementById('saveAsNameInput');
     const langGroupInput = document.getElementById('saveAsLangGroup');
     const langSelect = document.getElementById('saveAsLangSelect');
     if (input) input.value = activeDatasetName || '';
-    if (langGroupInput) langGroupInput.value = activeDatasetLanguageGroup;
-    // Filter language dropdown to only languages not already in this group
+    if (langGroupInput && activeDatasetLanguageGroup) langGroupInput.value = activeDatasetLanguageGroup;
+
     if (langSelect && typeof I18n !== 'undefined') {
-        const existingLangs = new Set();
-        existingLangs.add(activeDatasetLanguage || 'en');
-        activeDatasetSiblings.forEach(s => existingLangs.add(s.language));
-        const available = I18n.languages.filter(l => !existingLangs.has(l.code));
+        const used = new Set();
+        used.add(activeDatasetLanguage || 'en');
+        activeDatasetSiblings.forEach(s => used.add(s.language));
+        const available = I18n.languages.filter(l => !used.has(l.code));
         if (available.length > 0) {
             langSelect.innerHTML = available.map(l =>
-                `<option value="${l.code}">${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
+                `<option value="${l.code}"${l.code === code ? ' selected' : ''}>${escapeHtml(l.native)} (${l.code.toUpperCase()})</option>`
             ).join('');
+            langSelect.value = code;
         }
     }
     updateSaveAsSubmitState();
 }
 
-// Close language switcher when clicking outside
+// Back-compat alias: old callers may still reference addLanguageFromSwitcher
+async function addLanguageFromSwitcher() {
+    // No preselection — picks the first available language in Save As
+    await addDatasetLanguage('');
+}
+
+// Close add-language dropdown when clicking outside
 document.addEventListener('click', (e) => {
-    const switcher = document.getElementById('datasetLangSwitcher');
-    if (switcher && !switcher.contains(e.target)) {
-        const dropdown = document.getElementById('datasetLangDropdown');
+    const wrapper = document.getElementById('datasetAddLangWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        const dropdown = document.getElementById('datasetAddLangDropdown');
         if (dropdown) dropdown.classList.remove('active');
     }
 });
 
 // Switch to a different language variant in admin
 async function switchDatasetLanguage(id, name, language) {
-    const dropdown = document.getElementById('datasetLangDropdown');
-    if (dropdown) dropdown.classList.remove('active');
     // Auto-save current dataset first
     if (activeDatasetId) {
         try {
@@ -3152,12 +3229,15 @@ async function submitSaveAs() {
         if (versionGroup) body.version_group = versionGroup;
         const result = await api('/api/datasets', { method: 'POST', body });
         if (result.success) {
-            activeDatasetId = result.id;
-            activeDatasetName = name;
-            activeDatasetIsDefault = !!result.is_default;
-            activeDatasetLanguage = result.language || language;
-            activeDatasetLanguageGroup = result.language_group || null;
-            await loadActiveDatasetSiblings();
+            await applyLoadedDatasetResult({
+                id: result.id,
+                name,
+                is_default: result.is_default,
+                language: result.language || language,
+                language_group: result.language_group,
+                version: result.version,
+                version_group: result.version_group
+            });
             persistActiveDataset();
             if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {
                 await I18n.setLocale(activeDatasetLanguage);
@@ -3429,12 +3509,7 @@ async function loadDataset(id, name) {
         const result = await api(`/api/datasets/${id}/load`, { method: 'POST' });
         if (result.success) {
             // Set active dataset state BEFORE initAdmin (so initAdmin skips auto-load)
-            activeDatasetId = result.id;
-            activeDatasetName = result.name;
-            activeDatasetIsDefault = !!result.is_default;
-            activeDatasetLanguage = result.language || 'en';
-            activeDatasetLanguageGroup = result.language_group || null;
-            await loadActiveDatasetSiblings();
+            await applyLoadedDatasetResult(result);
             persistActiveDataset();
             // Sync UI locale to match dataset language
             if (typeof I18n !== 'undefined' && activeDatasetLanguage && I18n.locale !== activeDatasetLanguage) {

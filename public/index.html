@@ -118,15 +118,17 @@
             <span class="active-dataset-label" data-i18n="banner.editing">Editing:</span>
             <span id="activeDatasetName" class="active-dataset-name"></span>
             <span id="activeDatasetLangBadge" class="dataset-lang-badge" style="display: none;"></span>
+            <span id="activeDatasetVersionBadge" class="active-dataset-version-badge" style="display: none;"></span>
             <span id="activeDatasetDefaultBadge" class="active-dataset-default-badge" style="display: none;" data-i18n="banner.default">Default</span>
-            <!-- Language switcher (admin) -->
-            <div class="dataset-lang-switcher" id="datasetLangSwitcher" style="display: none;">
-                <button class="btn btn-ghost btn-sm dataset-lang-switch-btn" id="datasetLangSwitchBtn" onclick="toggleDatasetLangSwitcher()">
+            <!-- Sibling language chips (admin) -->
+            <div class="active-dataset-lang-chips" id="activeDatasetLangChips"></div>
+            <!-- Add language dropdown (admin) -->
+            <div class="dataset-add-lang-wrapper" id="datasetAddLangWrapper" style="display: none;">
+                <button class="btn btn-ghost btn-sm dataset-add-lang-btn" id="datasetAddLangBtn" onclick="toggleDatasetAddLangDropdown()" data-i18n-title="datasets.add_language_title" title="Add a new language variant">
+                    <span class="material-symbols-outlined" style="font-size:14px">add</span>
                     <span class="material-symbols-outlined" style="font-size:14px">translate</span>
-                    <span id="datasetLangSwitchLabel"></span>
-                    <span class="material-symbols-outlined" style="font-size:12px">expand_more</span>
                 </button>
-                <div class="dataset-lang-dropdown" id="datasetLangDropdown"></div>
+                <div class="dataset-add-lang-dropdown" id="datasetAddLangDropdown"></div>
             </div>
             <div class="active-dataset-actions">
                 <span id="activeDatasetStatus" class="active-dataset-status"></span>

@@ -4,6 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.31.0] - 2026-04-17
+
+### Added
+- Active dataset banner now surfaces sibling language variants as inline clickable chips, loading the sibling on click.
+- Dedicated `+` icon with dropdown to add a new language variant directly from the banner, listing only languages not yet present in the group.
+- Current language badge is always visible when a dataset is open.
+- Version chip in the banner shows `v{N}` when the dataset has multiple versions in its `version_group`.
+
+### Fixed
+- Defensive fallback: if a loaded dataset has no `language` value, the current UI locale is used and persisted back to the dataset via the existing language API.
+
 ## [1.30.1] - 2026-04-16
 
 ### Changed
