@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.33.3] - 2026-04-17
+
+### Changed
+- Section reorder overlay: when a drag is started from a section-heading handle, the floating pill now snaps under the cursor (centered on the pointer) instead of preserving the pointer→pill offset. The handle can be far from the overlay's center, which previously required dragging the cursor a long way before the pill caught up — painful on small trackpads.
+
 ## [1.33.2] - 2026-04-17
 
 ### Fixed

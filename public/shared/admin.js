@@ -4948,10 +4948,12 @@ function openReorderOverlay(grabbedKey, pointerEvent) {
 
     // If a handle triggered the open, kick off a drag on that pill immediately.
     // Suppress the pill's entrance animation so getBoundingClientRect matches final layout.
+    // Snap the pill under the cursor so the user doesn't have to chase it from
+    // the section heading handle (potentially far from the overlay center).
     if (grabbedKey && pointerEvent) {
         const pill = document.querySelector(`#reorderList .reorder-pill[data-key="${grabbedKey}"]`);
         if (pill) pill.style.animation = 'none';
-        beginReorderDrag(grabbedKey, pointerEvent);
+        beginReorderDrag(grabbedKey, pointerEvent, { snapPillToCursor: true });
     }
 }
 
@@ -4968,7 +4970,7 @@ function onReorderKeyDown(e) {
     }
 }
 
-function beginReorderDrag(key, pointerEvent) {
+function beginReorderDrag(key, pointerEvent, opts = {}) {
     if (!reorderState) return;
     const pill = document.querySelector(`#reorderList .reorder-pill[data-key="${key}"]`);
     if (!pill) return;
@@ -4979,6 +4981,16 @@ function beginReorderDrag(key, pointerEvent) {
     const rect = pill.getBoundingClientRect();
     const pointerX = pointerEvent.clientX ?? (rect.left + rect.width / 2);
     const pointerY = pointerEvent.clientY ?? (rect.top + rect.height / 2);
+
+    // If the pointer is outside the pill (e.g. drag initiated from the
+    // section-heading handle on the left of the page), center the pill on
+    // the cursor instead of preserving the pointer→pill offset. Otherwise
+    // the pill floats far from the cursor and is hard to reach on a small
+    // trackpad. Caller can also force this via opts.snapPillToCursor.
+    const pointerOutsidePill =
+        pointerX < rect.left || pointerX > rect.right ||
+        pointerY < rect.top || pointerY > rect.bottom;
+    const snap = opts.snapPillToCursor || pointerOutsidePill;
 
     // Placeholder keeps the slot while the pill floats
     const placeholder = document.createElement('div');
@@ -4999,8 +5011,8 @@ function beginReorderDrag(key, pointerEvent) {
         key,
         pill,
         placeholder,
-        offsetX: pointerX - rect.left,
-        offsetY: pointerY - rect.top,
+        offsetX: snap ? rect.width / 2 : pointerX - rect.left,
+        offsetY: snap ? rect.height / 2 : pointerY - rect.top,
         pointerId: pointerEvent.pointerId
     };
 
