@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.33.0] - 2026-04-17
+
+### Added
+- In-place section reorder overlay. A drag handle now appears next to every section heading; activating it opens a floating overlay with each section's title over a dimmed, blurred CV. Drag pills to reorder with animated transitions, then click OK to save or Cancel to revert. Hidden sections appear dimmed so their position can still be adjusted. The Settings → Sections & Headlines panel is unchanged and remains available.
+
 ## [1.32.0] - 2026-04-17
 
 ### Added

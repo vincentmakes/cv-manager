@@ -168,6 +168,9 @@
 
         <!-- About Section -->
         <section class="section" id="section-about">
+            <button class="section-reorder-handle no-print" data-section-key="about" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.about">Professional Summary</h2>
                 <div class="section-actions no-print">
@@ -184,6 +187,9 @@
 
         <!-- Timeline Section -->
         <section class="section" id="section-timeline">
+            <button class="section-reorder-handle no-print" data-section-key="timeline" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.timeline">Career Timeline</h2>
                 <div class="section-actions no-print">
@@ -200,6 +206,9 @@
 
         <!-- Experience Section -->
         <section class="section" id="section-experience">
+            <button class="section-reorder-handle no-print" data-section-key="experience" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.experience">Work Experience</h2>
                 <div class="section-actions no-print">
@@ -217,6 +226,9 @@
 
         <!-- Certifications Section -->
         <section class="section" id="section-certifications">
+            <button class="section-reorder-handle no-print" data-section-key="certifications" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.certifications">Certifications</h2>
                 <div class="section-actions no-print">
@@ -234,6 +246,9 @@
 
         <!-- Education Section -->
         <section class="section" id="section-education">
+            <button class="section-reorder-handle no-print" data-section-key="education" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.education">Education</h2>
                 <div class="section-actions no-print">
@@ -251,6 +266,9 @@
 
         <!-- Skills Section -->
         <section class="section" id="section-skills">
+            <button class="section-reorder-handle no-print" data-section-key="skills" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.skills">Skills & Expertise</h2>
                 <div class="section-actions no-print">
@@ -268,6 +286,9 @@
 
         <!-- Projects Section -->
         <section class="section" id="section-projects">
+            <button class="section-reorder-handle no-print" data-section-key="projects" data-i18n-title="action.reorder_sections" title="Reorder sections" aria-label="Reorder sections">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.projects">Featured Projects</h2>
                 <div class="section-actions no-print">
@@ -722,6 +743,18 @@
                     </div>
                     <iframe id="atsPdfPreview" class="ats-pdf-preview"></iframe>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Reorder Overlay -->
+    <div class="reorder-overlay" id="reorderOverlay" aria-hidden="true">
+        <div class="reorder-dialog">
+            <div class="reorder-hint" data-i18n="reorder.hint">Drag sections to reorder. Click OK to save.</div>
+            <div class="reorder-list" id="reorderList"></div>
+            <div class="reorder-footer">
+                <button class="btn btn-ghost" id="reorderCancelBtn" data-i18n="btn.cancel">Cancel</button>
+                <button class="btn btn-primary" id="reorderOkBtn" data-i18n="btn.ok">OK</button>
             </div>
         </div>
     </div>
