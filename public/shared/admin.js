@@ -704,15 +704,10 @@ function injectPhantomSections() {
         phantom.setAttribute('role', 'button');
         phantom.setAttribute('tabindex', '0');
         phantom.setAttribute('aria-label', t('custom_section.create_phantom'));
-        // Two children overlap inside the outer hit target:
-        //   .phantom-hint  — the default "⎯ (+) ⎯" affordance shown between sections
-        //   .phantom-box   — the dashed pill shown on hover (or always, for .phantom-last)
-        // Both have pointer-events: none so hover is resolved on the outer element, which
-        // carries the breathing-room padding.
+        // The inner `.phantom-box` is the visible dashed pill (shown on hover, or
+        // always for `.phantom-last`). It has `pointer-events: none` so hover is
+        // always resolved on the outer element, which carries the breathing-room padding.
         phantom.innerHTML = `<span class="phantom-box"><span class="material-symbols-outlined phantom-box-plus">add_circle</span><span>${t('custom_section.create_phantom')}</span></span>`;
-        if (!isLast) {
-            phantom.insertAdjacentHTML('afterbegin', '<span class="phantom-hint" aria-hidden="true"><span class="phantom-hint-line"></span><span class="material-symbols-outlined phantom-hint-circle">add_circle</span><span class="phantom-hint-line"></span></span>');
-        }
         phantom.addEventListener('click', () => openCreateCustomSectionAt(key));
         phantom.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
