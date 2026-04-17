@@ -180,61 +180,76 @@ body {
 }
 
 /* Phantom "create custom section" placeholder.
-   Between sections: invisible but occupies the whole inter-section gap as a hit target;
-   revealed only when the cursor is inside the gap (no flicker from the section above).
-   The last phantom (after the final section) gets `.phantom-last` and stays visible as
+   Structure: outer `.phantom-section` is the hit target (invisible, extends vertically
+   via padding so the cursor can move around the dashed box without losing hover).
+   Inner `.phantom-box` is the visible dashed UI.
+   Between sections, the outer starts collapsed (overlapping the 16px inter-section
+   margin); hovering the gap expands it with ~16px of breathing-room padding top and
+   bottom. The last phantom carries `.phantom-last` and stays in the expanded state as
    a discoverability affordance. */
 .phantom-section {
-    margin-top: -16px;        /* pull phantom's top up to section's bottom border; the 16px margin-bottom becomes a hit target */
-    padding: 6px 0;           /* 2px border + 6px pad + 0 content + 6px pad + 2px border = 16px total, exactly fills the gap */
+    margin-top: -16px;        /* pull top up to section's bottom border; the 16px margin-bottom becomes baseline hit area */
+    padding: 8px 0;           /* 16px hit area exactly fills the inter-section gap */
     height: 0;                /* content collapsed */
     box-sizing: content-box;
-    opacity: 0;
     overflow: hidden;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    user-select: none;
+    background: transparent;
+    /* Only padding/height animate; top edge stays fixed so the cursor never loses hover mid-resize. */
+    transition: padding 0.15s ease, height 0.15s ease;
+}
+
+.phantom-section:hover,
+.phantom-section.phantom-last {
+    padding: 16px 0;          /* breathing-room padding ≈ section gap; hovering it keeps the phantom open */
+    height: 32px;              /* room for the inner dashed box */
+    overflow: visible;         /* let the box's shadow/border show through */
+}
+
+.phantom-box {
+    display: inline-flex;
+    align-items: center;
     gap: 6px;
+    padding: 4px 12px;
     border: 2px dashed transparent;
     border-radius: var(--radius-md);
     color: var(--gray-500);
     font-size: 13px;
     font-weight: 500;
-    user-select: none;
     background: transparent;
-    /* Only height/padding animate, keeping the top edge fixed at the section's bottom border
-       so the cursor never loses hover as the element resizes. */
-    transition: opacity 0.15s ease, height 0.15s ease, padding 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;     /* hover always evaluated on the outer element */
+    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.phantom-section:hover {
+.phantom-section:hover .phantom-box {
     opacity: 1;
-    height: 28px;
-    padding: 8px 12px;
     border-color: var(--primary);
     background: var(--very-light);
     color: var(--primary);
 }
 
-/* Last phantom: always visible at the bottom of the CV as a discoverability hint */
-.phantom-section.phantom-last {
+/* Always-visible at the bottom of the CV as a discoverability hint */
+.phantom-section.phantom-last .phantom-box {
     opacity: 0.55;
-    height: 28px;
-    padding: 8px 12px;
     border-color: var(--gray-300);
     color: var(--gray-500);
     background: transparent;
 }
 
-.phantom-section.phantom-last:hover {
+.phantom-section.phantom-last:hover .phantom-box {
     opacity: 1;
     border-color: var(--primary);
     background: var(--very-light);
     color: var(--primary);
 }
 
-.phantom-section .material-symbols-outlined {
+.phantom-box .material-symbols-outlined {
     font-size: 18px;
 }
 

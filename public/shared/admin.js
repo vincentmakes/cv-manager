@@ -704,7 +704,9 @@ function injectPhantomSections() {
         phantom.setAttribute('role', 'button');
         phantom.setAttribute('tabindex', '0');
         phantom.setAttribute('aria-label', t('custom_section.create_phantom'));
-        phantom.innerHTML = `<span class="material-symbols-outlined">add</span><span>${t('custom_section.create_phantom')}</span>`;
+        // Inner .phantom-box is the visible dashed UI; the outer element is a larger
+        // hit target so the cursor can sit in its padding without dismissing the phantom.
+        phantom.innerHTML = `<span class="phantom-box"><span class="material-symbols-outlined">add</span><span>${t('custom_section.create_phantom')}</span></span>`;
         phantom.addEventListener('click', () => openCreateCustomSectionAt(key));
         phantom.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
