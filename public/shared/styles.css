@@ -199,15 +199,19 @@ body {
     transition: padding 0.15s ease;
 }
 
-/* On hover, bump padding so the 44px pill has ~12px of gap to the surrounding sections */
+/* On hover, grow the outer so the 44px pill has ~12px of clearance from the surrounding sections.
+   Padding alone isn't enough — with no content inside, padding 24+24 = 48px leaves only 2px around
+   the pill. The `min-height` gives the content area the height the removed hint used to provide. */
 .phantom-section:hover {
     padding: 24px 0;
+    min-height: 20px;
 }
 
 /* Last phantom: sit fully below the last section with generous breathing room both above and below the always-visible pill */
 .phantom-section.phantom-last {
     margin-top: 16px;         /* push below the last section's margin-bottom */
-    padding: 36px 0 28px 0;    /* 36px top + 28px bottom so the pill isn't crowded against the last section */
+    padding: 36px 0 28px 0;    /* extra top padding — you asked for a bit more space between the last section and the pill */
+    min-height: 20px;          /* content area so the pill has clearance from the outer edges (since the hint that used to fill it is gone) */
 }
 
 /* The dashed pill — positioned absolutely so the outer can resize without layout jumps */
