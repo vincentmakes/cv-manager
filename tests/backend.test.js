@@ -1400,6 +1400,240 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Profile Picture Library', () => {
+        // A 1x1 PNG — smallest valid image payload for the upload test.
+        const tinyPngBytes = Buffer.from([
+            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+            0x89, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41,
+            0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+            0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+            0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+            0x42, 0x60, 0x82
+        ]);
+
+        async function uploadPicture() {
+            const formData = new FormData();
+            formData.append('picture', new Blob([tinyPngBytes], { type: 'image/png' }), 'test.png');
+            const res = await fetch(`${BASE_URL}/api/profile/picture`, { method: 'POST', body: formData });
+            assert.strictEqual(res.status, 200);
+            return (await res.json()).filename;
+        }
+
+        async function setPropagate(enabled) {
+            const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            const res = await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...profile, picture_propagate: enabled }),
+            });
+            assert.strictEqual(res.status, 200);
+        }
+
+        it('public /api/cv exposes profile_picture_enabled and picture_filename', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/cv`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(data.profile, 'profile must be present');
+            assert.ok(Object.prototype.hasOwnProperty.call(data.profile, 'profile_picture_enabled'), 'profile_picture_enabled must be returned');
+            assert.ok(Object.prototype.hasOwnProperty.call(data.profile, 'picture_filename'), 'picture_filename must be returned');
+        });
+
+        it('public /api/profile exposes picture fields', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/profile`);
+            const data = await res.json();
+            assert.ok(Object.prototype.hasOwnProperty.call(data, 'profile_picture_enabled'));
+            assert.ok(Object.prototype.hasOwnProperty.call(data, 'picture_filename'));
+            // Sensitive fields must still be filtered out.
+            assert.strictEqual(data.email, undefined);
+            assert.strictEqual(data.phone, undefined);
+        });
+
+        it('dataset save+load preserves profile_picture_enabled, picture_filename, picture_propagate', async () => {
+            const filename = await uploadPicture();
+            // Disable toggle, keep propagate on
+            const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...profile, profile_picture_enabled: false, picture_propagate: true }),
+            });
+
+            const createRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Picture Snapshot ${Date.now()}` }),
+            });
+            const created = await createRes.json();
+            assert.ok(created.id);
+
+            // Flip the live profile so load has something to restore
+            await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...profile, profile_picture_enabled: true, picture_propagate: true }),
+            });
+
+            const loadRes = await fetch(`${BASE_URL}/api/datasets/${created.id}/load`, { method: 'POST' });
+            assert.strictEqual(loadRes.status, 200);
+
+            const after = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.strictEqual(after.profile_picture_enabled, 0, 'disabled toggle must be restored');
+            assert.strictEqual(after.picture_filename, filename, 'picture_filename must be restored');
+        });
+
+        it('upload with picture_propagate=1 mirrors filename into saved datasets', async () => {
+            await setPropagate(true);
+            const createRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Propagate On ${Date.now()}` }),
+            });
+            const created = await createRes.json();
+            const filename = await uploadPicture();
+
+            const listRes = await fetch(`${BASE_URL}/api/datasets`);
+            const datasets = await listRes.json();
+            const target = datasets.find(d => d.id === created.id);
+            assert.ok(target, 'created dataset must be in the list');
+            // Re-fetch dataset data to inspect the snapshot
+            const dsRes = await fetch(`${BASE_URL}/api/datasets/id/${created.id}`);
+            const dsData = await dsRes.json();
+            assert.strictEqual(dsData.profile.picture_filename, filename, 'dataset snapshot must carry the new filename');
+        });
+
+        it('upload with picture_propagate=0 does NOT mutate existing datasets', async () => {
+            await setPropagate(true);
+            const firstFilename = await uploadPicture();
+            const createRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Propagate Off ${Date.now()}` }),
+            });
+            const created = await createRes.json();
+
+            await setPropagate(false);
+            const secondFilename = await uploadPicture();
+
+            const dsRes = await fetch(`${BASE_URL}/api/datasets/id/${created.id}`);
+            const dsData = await dsRes.json();
+            assert.strictEqual(dsData.profile.picture_filename, firstFilename, 'dataset snapshot must stay on the pre-upload filename');
+            assert.notStrictEqual(dsData.profile.picture_filename, secondFilename);
+        });
+
+        it('GET /api/profile-pictures returns library with in_use flag', async () => {
+            await setPropagate(true);
+            const filename = await uploadPicture();
+            const res = await fetch(`${BASE_URL}/api/profile-pictures`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.ok(Array.isArray(data));
+            const entry = data.find(p => p.filename === filename);
+            assert.ok(entry, 'uploaded picture must appear in the library');
+            assert.strictEqual(entry.in_use, true, 'active picture must be marked in use');
+        });
+
+        it('DELETE /api/profile-pictures/:filename returns 409 when in use', async () => {
+            const filename = await uploadPicture();
+            const res = await fetch(`${BASE_URL}/api/profile-pictures/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+            assert.strictEqual(res.status, 409);
+        });
+
+        it('DELETE /api/profile-pictures/:filename succeeds for orphan files', async () => {
+            const keep = await uploadPicture(); // stays active
+            const orphan = await uploadPicture(); // becomes active immediately after second upload — swap back
+            // Reinstate the first picture so the second is no longer referenced
+            const reselect = await fetch(`${BASE_URL}/api/profile/picture/select`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: keep }),
+            });
+            assert.strictEqual(reselect.status, 200);
+            const res = await fetch(`${BASE_URL}/api/profile-pictures/${encodeURIComponent(orphan)}`, { method: 'DELETE' });
+            assert.strictEqual(res.status, 200);
+            const list = await (await fetch(`${BASE_URL}/api/profile-pictures`)).json();
+            assert.ok(!list.some(p => p.filename === orphan), 'orphan must be removed from the library');
+        });
+
+        it('PUT /api/profile/picture/select switches live picture', async () => {
+            const a = await uploadPicture();
+            const b = await uploadPicture();
+            const res = await fetch(`${BASE_URL}/api/profile/picture/select`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: a }),
+            });
+            assert.strictEqual(res.status, 200);
+            const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.strictEqual(profile.picture_filename, a);
+            assert.notStrictEqual(a, b);
+        });
+
+        it('PUT /api/profile/picture/select rejects path traversal', async () => {
+            const res = await fetch(`${BASE_URL}/api/profile/picture/select`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: '../../etc/passwd' }),
+            });
+            assert.strictEqual(res.status, 400);
+        });
+
+        it('upload with propagate=0 syncs language siblings of the active dataset only', async () => {
+            // Build two datasets in the SAME language_group (en) + (fr) and one unrelated.
+            await setPropagate(true);
+            const first = await uploadPicture(); // gives us a starting filename for seeding dataset snapshots
+
+            const baseName = `Sibling Test ${Date.now()}`;
+            const enCreate = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: baseName, language: 'en' }),
+            });
+            const enDs = await enCreate.json();
+            assert.ok(enDs.language_group, 'dataset must have a language_group');
+
+            const frCreate = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: baseName, language: 'fr', language_group: enDs.language_group }),
+            });
+            const frDs = await frCreate.json();
+            assert.strictEqual(frDs.language_group, enDs.language_group, 'sibling shares language_group');
+
+            const unrelatedCreate = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Unrelated ${Date.now()}` }),
+            });
+            const unrelatedDs = await unrelatedCreate.json();
+            assert.notStrictEqual(unrelatedDs.language_group, enDs.language_group);
+
+            // Flip the flag OFF so only the sibling path should propagate.
+            await setPropagate(false);
+
+            // Upload a new picture while editing the en dataset.
+            const formData = new FormData();
+            formData.append('picture', new Blob([tinyPngBytes], { type: 'image/png' }), 'test.png');
+            formData.append('current_dataset_id', String(enDs.id));
+            const uploadRes = await fetch(`${BASE_URL}/api/profile/picture`, { method: 'POST', body: formData });
+            assert.strictEqual(uploadRes.status, 200);
+            const { filename: newPic } = await uploadRes.json();
+            assert.notStrictEqual(newPic, first, 'a fresh filename is generated per upload');
+
+            // Both siblings must carry the new picture…
+            const enData = await (await fetch(`${BASE_URL}/api/datasets/id/${enDs.id}`)).json();
+            const frData = await (await fetch(`${BASE_URL}/api/datasets/id/${frDs.id}`)).json();
+            assert.strictEqual(enData.profile.picture_filename, newPic, 'active dataset updated');
+            assert.strictEqual(frData.profile.picture_filename, newPic, 'sibling updated even with propagate off');
+
+            // …but the unrelated dataset must NOT have been touched by the sibling sync.
+            const unrelatedData = await (await fetch(`${BASE_URL}/api/datasets/id/${unrelatedDs.id}`)).json();
+            assert.notStrictEqual(unrelatedData.profile.picture_filename, newPic, 'unrelated dataset stays on its prior filename');
+        });
+    });
+
     describe('Security', () => {
         it('public /api/profile does not expose email or phone', async () => {
             // Store profile with sensitive data via admin
@@ -1578,4 +1812,5 @@ describe('Backend API', () => {
             assert.ok(res.status !== 500, 'Path traversal should not cause server error');
         });
     });
+
 });

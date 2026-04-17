@@ -1263,7 +1263,7 @@ function profileForm(d) {
             <label class="form-label">${t('form.profile_picture')}</label>
             <div class="profile-upload-container">
                 <div class="profile-upload-preview" id="profileUploadPreview">
-                    <img src="/uploads/picture.jpeg?${Date.now()}" alt="" id="profilePreviewImg" onerror="this.style.display='none';document.getElementById('profilePreviewInitials').style.display='flex';">
+                    <img src="${d.picture_filename ? '/uploads/' + encodeURIComponent(d.picture_filename) : '/uploads/picture.jpeg'}?${Date.now()}" alt="" id="profilePreviewImg" onerror="this.style.display='none';document.getElementById('profilePreviewInitials').style.display='flex';">
                     <div class="profile-preview-initials" id="profilePreviewInitials" style="display:none;">${escapeHtml(d.initials || 'CV')}</div>
                 </div>
                 <div class="profile-upload-actions">
@@ -1279,11 +1279,23 @@ function profileForm(d) {
                         <span class="material-symbols-outlined" style="font-size:14px">image</span>
                         ${t('form.choose_image')}
                     </button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="showPicturePicker()">
+                        <span class="material-symbols-outlined" style="font-size:14px">inventory_2</span>
+                        ${t('form.use_existing')}
+                    </button>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="removeProfilePicture()">
                         <span class="material-symbols-outlined" style="font-size:14px">delete</span>
                         ${t('form.remove')}
                     </button>
                 </div>
+            </div>
+            <div class="logo-picker-grid" id="picturePickerGrid" style="display:none;"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-picturePropagate" ${d.picture_propagate == 0 ? '' : 'checked'}>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="form-hint" style="margin:0">${t('form.apply_picture_globally')}</span>
             </div>
             <div class="form-hint">${t('form.picture_hint')}</div>
         </div>
@@ -1605,7 +1617,8 @@ async function saveItem() {
     let data = {};
 
     switch (type) {
-        case 'profile':
+        case 'profile': {
+            const propagate = checked('f-picturePropagate');
             data = {
                 name: val('f-name'),
                 initials: val('f-initials'),
@@ -1619,12 +1632,19 @@ async function saveItem() {
                 phone: val('f-phone'),
                 visible: true,
                 profile_picture_enabled: checked('f-profilePictureEnabled'),
+                picture_propagate: propagate,
                 open_to_work: checked('f-openToWork')
             };
             await api('/api/profile', { method: 'PUT', body: data });
-            await uploadProfilePicture();
+            const pictureResult = await uploadProfilePicture();
+            if (propagate) {
+                // After the picture save, mirror the current picture filename across all datasets.
+                const current = await api('/api/profile');
+                await api('/api/profile-pictures/apply-global', { method: 'POST', body: { picture_filename: current.picture_filename || null } });
+            }
             await loadProfile(true);
             break;
+        }
 
         case 'experience':
             // Normalize dates
@@ -2016,22 +2036,93 @@ function removeProfilePicture() {
 }
 
 async function uploadProfilePicture() {
+    // Siblings of a localized dataset should share the picture even when "Apply to all datasets" is off.
+    // The server uses this to look up the language_group and sync the siblings.
+    const ctxId = activeDatasetId || '';
     if (pendingProfilePicture === 'remove') {
-        try { await fetch('/api/profile/picture', { method: 'DELETE' }); } catch (err) {}
+        const url = ctxId ? `/api/profile/picture?current_dataset_id=${encodeURIComponent(ctxId)}` : '/api/profile/picture';
+        try { await fetch(url, { method: 'DELETE' }); } catch (err) {}
         pendingProfilePicture = null;
-        return;
+        return null;
+    }
+    if (pendingProfilePicture && typeof pendingProfilePicture === 'object' && pendingProfilePicture.reuse) {
+        const filename = pendingProfilePicture.reuse;
+        try {
+            await api('/api/profile/picture/select', { method: 'PUT', body: { filename, current_dataset_id: ctxId || undefined } });
+        } catch (err) {
+            toast(t('toast.upload_failed'), 'error');
+        }
+        pendingProfilePicture = null;
+        return filename;
     }
     if (pendingProfilePicture && pendingProfilePicture instanceof File) {
         const formData = new FormData();
         formData.append('picture', pendingProfilePicture);
+        if (ctxId) formData.append('current_dataset_id', String(ctxId));
         try {
             const response = await fetch('/api/profile/picture', { method: 'POST', body: formData });
             if (!response.ok) throw new Error('Upload failed');
+            const result = await response.json();
+            pendingProfilePicture = null;
+            return result.filename || null;
         } catch (err) {
             toast(t('toast.upload_failed'), 'error');
         }
         pendingProfilePicture = null;
     }
+    return null;
+}
+
+async function showPicturePicker() {
+    const grid = document.getElementById('picturePickerGrid');
+    if (!grid) return;
+    if (grid.style.display !== 'none') { grid.style.display = 'none'; return; }
+    try {
+        const pictures = await api('/api/profile-pictures');
+        if (!pictures.length) { toast(t('form.no_pictures_available'), 'info'); return; }
+        grid.innerHTML = pictures.map(p => {
+            const label = p.in_use ? `<span class="logo-picker-in-use">${t('form.in_use')}</span>` : '';
+            const del = !p.in_use ? `<button type="button" class="logo-picker-delete" onclick="event.stopPropagation();deleteUnusedPicture('${escapeHtml(p.filename)}')" title="${t('form.delete_picture')}">×</button>` : '';
+            return `<div class="logo-picker-item">
+                <div class="logo-picker-img" onclick="selectExistingPicture('${escapeHtml(p.filename)}')">
+                    <img src="/uploads/${encodeURIComponent(p.filename)}?${Date.now()}" alt="">
+                </div>
+                ${label}${del}
+            </div>`;
+        }).join('');
+        grid.style.display = 'flex';
+    } catch (err) {
+        toast(t('toast.upload_failed'), 'error');
+    }
+}
+
+async function deleteUnusedPicture(filename) {
+    if (!confirm(t('confirm.delete_picture'))) return;
+    try {
+        const res = await api(`/api/profile-pictures/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        if (res.error) { toast(t('toast.picture_in_use'), 'error'); return; }
+        toast(t('toast.picture_deleted'), 'success');
+        const grid = document.getElementById('picturePickerGrid');
+        if (grid) grid.style.display = 'none';
+        showPicturePicker();
+    } catch (err) {
+        toast(t('toast.cannot_delete_picture'), 'error');
+    }
+}
+
+function selectExistingPicture(filename) {
+    pendingProfilePicture = { reuse: filename };
+    const img = document.getElementById('profilePreviewImg');
+    const initials = document.getElementById('profilePreviewInitials');
+    if (img) {
+        img.src = `/uploads/${encodeURIComponent(filename)}?${Date.now()}`;
+        img.style.display = 'block';
+    }
+    if (initials) initials.style.display = 'none';
+    const grid = document.getElementById('picturePickerGrid');
+    if (grid) grid.style.display = 'none';
+    const fileInput = document.getElementById('f-picture');
+    if (fileInput) fileInput.value = '';
 }
 
 // Company logo upload
