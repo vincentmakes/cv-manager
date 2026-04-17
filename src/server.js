@@ -1024,6 +1024,32 @@ function propagateProfilePictureToDatasets(filename) {
     } catch (e) {}
 }
 
+// Mirror the filename into every language sibling of the given dataset (same language_group).
+// Used when the user is editing a localized variant: uploading/selecting/removing a picture
+// should keep the language siblings in sync even if the global "apply to all datasets" flag is off.
+// The current dataset is included so its snapshot reflects the change before the user hits Save.
+function propagateProfilePictureToSiblings(filename, datasetId) {
+    if (!datasetId) return;
+    try {
+        const anchor = db.prepare('SELECT id, language_group FROM saved_datasets WHERE id = ?').get(datasetId);
+        if (!anchor) return;
+        const rows = anchor.language_group
+            ? db.prepare('SELECT id, data FROM saved_datasets WHERE language_group = ?').all(anchor.language_group)
+            : db.prepare('SELECT id, data FROM saved_datasets WHERE id = ?').all(anchor.id);
+        for (const ds of rows) {
+            try {
+                const data = JSON.parse(ds.data);
+                if (!data.profile) continue;
+                const target = filename || null;
+                if ((data.profile.picture_filename || null) !== target) {
+                    data.profile.picture_filename = target;
+                    db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                }
+            } catch (e) {}
+        }
+    } catch (e) {}
+}
+
 // Gather current CV data from live DB into a JSON-serializable snapshot
 function gatherCvData() {
     const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get();
@@ -1483,32 +1509,38 @@ if (PUBLIC_ONLY) {
     app.post('/api/profile/picture', pictureUpload.single('picture'), (req, res) => {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
         const filename = req.file.filename;
+        const currentDatasetId = req.body && req.body.current_dataset_id ? Number(req.body.current_dataset_id) : null;
         const runUpdate = db.transaction(() => {
             db.prepare('UPDATE profile SET picture_filename = ? WHERE id = 1').run(filename);
             const prof = db.prepare('SELECT picture_propagate FROM profile WHERE id = 1').get();
             if (prof && prof.picture_propagate == 1) propagateProfilePictureToDatasets(filename);
+            else propagateProfilePictureToSiblings(filename, currentDatasetId);
         });
         try { runUpdate(); } catch (err) { return res.status(500).json({ error: err.message }); }
         res.json({ success: true, filename });
     });
     app.delete('/api/profile/picture', (req, res) => {
+        const currentDatasetId = req.query.current_dataset_id ? Number(req.query.current_dataset_id) : null;
         const runUpdate = db.transaction(() => {
             db.prepare('UPDATE profile SET picture_filename = NULL WHERE id = 1').run();
             const prof = db.prepare('SELECT picture_propagate FROM profile WHERE id = 1').get();
             if (prof && prof.picture_propagate == 1) propagateProfilePictureToDatasets(null);
+            else propagateProfilePictureToSiblings(null, currentDatasetId);
         });
         try { runUpdate(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); }
     });
     // Reuse an existing picture from the library without re-uploading
     app.put('/api/profile/picture/select', express.json(), (req, res) => {
-        const { filename } = req.body;
+        const { filename, current_dataset_id } = req.body;
         if (!filename) return res.status(400).json({ error: 'filename is required' });
         if (!isValidProfilePictureName(filename)) return res.status(400).json({ error: 'Invalid filename' });
         if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Picture file not found' });
+        const currentDatasetId = current_dataset_id ? Number(current_dataset_id) : null;
         const runUpdate = db.transaction(() => {
             db.prepare('UPDATE profile SET picture_filename = ? WHERE id = 1').run(filename);
             const prof = db.prepare('SELECT picture_propagate FROM profile WHERE id = 1').get();
             if (prof && prof.picture_propagate == 1) propagateProfilePictureToDatasets(filename);
+            else propagateProfilePictureToSiblings(filename, currentDatasetId);
         });
         try { runUpdate(); res.json({ success: true, filename }); } catch (err) { res.status(500).json({ error: err.message }); }
     });

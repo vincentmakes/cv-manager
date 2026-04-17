@@ -2036,15 +2036,19 @@ function removeProfilePicture() {
 }
 
 async function uploadProfilePicture() {
+    // Siblings of a localized dataset should share the picture even when "Apply to all datasets" is off.
+    // The server uses this to look up the language_group and sync the siblings.
+    const ctxId = activeDatasetId || '';
     if (pendingProfilePicture === 'remove') {
-        try { await fetch('/api/profile/picture', { method: 'DELETE' }); } catch (err) {}
+        const url = ctxId ? `/api/profile/picture?current_dataset_id=${encodeURIComponent(ctxId)}` : '/api/profile/picture';
+        try { await fetch(url, { method: 'DELETE' }); } catch (err) {}
         pendingProfilePicture = null;
         return null;
     }
     if (pendingProfilePicture && typeof pendingProfilePicture === 'object' && pendingProfilePicture.reuse) {
         const filename = pendingProfilePicture.reuse;
         try {
-            await api('/api/profile/picture/select', { method: 'PUT', body: { filename } });
+            await api('/api/profile/picture/select', { method: 'PUT', body: { filename, current_dataset_id: ctxId || undefined } });
         } catch (err) {
             toast(t('toast.upload_failed'), 'error');
         }
@@ -2054,6 +2058,7 @@ async function uploadProfilePicture() {
     if (pendingProfilePicture && pendingProfilePicture instanceof File) {
         const formData = new FormData();
         formData.append('picture', pendingProfilePicture);
+        if (ctxId) formData.append('current_dataset_id', String(ctxId));
         try {
             const response = await fetch('/api/profile/picture', { method: 'POST', body: formData });
             if (!response.ok) throw new Error('Upload failed');

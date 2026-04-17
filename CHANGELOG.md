@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.32.1] - 2026-04-17
+
+### Fixed
+- Uploading, selecting, or removing a profile picture while editing a localized dataset now also syncs every language sibling in the same `language_group`, even when "Apply to all datasets" is off. Unrelated datasets remain untouched. The admin sends the active dataset id with each picture operation so the server can resolve the siblings.
+
 ## [1.32.0] - 2026-04-17
 
 ### Added

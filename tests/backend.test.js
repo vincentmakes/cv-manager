@@ -1579,6 +1579,59 @@ describe('Backend API', () => {
             });
             assert.strictEqual(res.status, 400);
         });
+
+        it('upload with propagate=0 syncs language siblings of the active dataset only', async () => {
+            // Build two datasets in the SAME language_group (en) + (fr) and one unrelated.
+            await setPropagate(true);
+            const first = await uploadPicture(); // gives us a starting filename for seeding dataset snapshots
+
+            const baseName = `Sibling Test ${Date.now()}`;
+            const enCreate = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: baseName, language: 'en' }),
+            });
+            const enDs = await enCreate.json();
+            assert.ok(enDs.language_group, 'dataset must have a language_group');
+
+            const frCreate = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: baseName, language: 'fr', language_group: enDs.language_group }),
+            });
+            const frDs = await frCreate.json();
+            assert.strictEqual(frDs.language_group, enDs.language_group, 'sibling shares language_group');
+
+            const unrelatedCreate = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Unrelated ${Date.now()}` }),
+            });
+            const unrelatedDs = await unrelatedCreate.json();
+            assert.notStrictEqual(unrelatedDs.language_group, enDs.language_group);
+
+            // Flip the flag OFF so only the sibling path should propagate.
+            await setPropagate(false);
+
+            // Upload a new picture while editing the en dataset.
+            const formData = new FormData();
+            formData.append('picture', new Blob([tinyPngBytes], { type: 'image/png' }), 'test.png');
+            formData.append('current_dataset_id', String(enDs.id));
+            const uploadRes = await fetch(`${BASE_URL}/api/profile/picture`, { method: 'POST', body: formData });
+            assert.strictEqual(uploadRes.status, 200);
+            const { filename: newPic } = await uploadRes.json();
+            assert.notStrictEqual(newPic, first, 'a fresh filename is generated per upload');
+
+            // Both siblings must carry the new picture…
+            const enData = await (await fetch(`${BASE_URL}/api/datasets/id/${enDs.id}`)).json();
+            const frData = await (await fetch(`${BASE_URL}/api/datasets/id/${frDs.id}`)).json();
+            assert.strictEqual(enData.profile.picture_filename, newPic, 'active dataset updated');
+            assert.strictEqual(frData.profile.picture_filename, newPic, 'sibling updated even with propagate off');
+
+            // …but the unrelated dataset must NOT have been touched by the sibling sync.
+            const unrelatedData = await (await fetch(`${BASE_URL}/api/datasets/id/${unrelatedDs.id}`)).json();
+            assert.notStrictEqual(unrelatedData.profile.picture_filename, newPic, 'unrelated dataset stays on its prior filename');
+        });
     });
 
     describe('Security', () => {
