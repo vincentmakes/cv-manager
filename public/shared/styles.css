@@ -227,17 +227,10 @@ body {
 }
 
 .phantom-hint-circle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--gray-400);
-    border-radius: 50%;
+    font-size: 22px;
     color: var(--gray-500);
-    font-size: 16px;
-    font-weight: 500;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .phantom-section:hover .phantom-hint,
@@ -270,17 +263,9 @@ body {
     transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-/* Circled "+" inside the pill, mirroring the hint's affordance */
+/* Icon inside the pill, mirroring the hint's affordance */
 .phantom-box-plus {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border: 1.5px solid currentColor;
-    border-radius: 50%;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 22px;
     line-height: 1;
     flex-shrink: 0;
 }
