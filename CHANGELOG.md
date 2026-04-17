@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.32.2] - 2026-04-17
+
+### Fixed
+- Turning off "Show profile picture" now truly hides the profile picture circle on both admin and public views, even when "Open to Work" is enabled. The OTW overlay was forcing the container visible (which shows the colored gradient circle) to give the badge a host; the badge is now suppressed together with the picture so disabling the picture actually removes it from the header.
+
 ## [1.32.1] - 2026-04-17
 
 ### Fixed

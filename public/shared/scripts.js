@@ -472,16 +472,15 @@ async function loadProfile(includePrivate = false) {
         initials.style.display = 'block';
         profileImg.style.display = 'none';
     }
-    
-    // Open to Work overlay on profile picture
+
+    // Open to Work overlay on profile picture — only when the picture is shown,
+    // since the overlay has no host circle to sit on otherwise.
     const existingOtw = document.querySelector('.open-to-work-overlay');
     if (existingOtw) existingOtw.remove();
-    if (p.open_to_work == 1) {
-        const profileEl = document.getElementById('profileImage');
+    if (p.open_to_work == 1 && p.profile_picture_enabled == 1) {
         const overlay = document.createElement('div');
         overlay.className = 'open-to-work-overlay';
-        profileEl.appendChild(overlay);
-        if (p.profile_picture_enabled != 1) profileEl.style.display = 'flex';
+        profileImg.appendChild(overlay);
     }
 
     // Build contact badges
