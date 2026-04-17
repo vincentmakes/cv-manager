@@ -42,6 +42,7 @@
     "action.edit_profile": "Modifica profilo",
     "action.edit_about": "Modifica informazioni",
     "action.toggle_visibility": "Cambia visibilità",
+    "action.toggle_print_visibility": "Cambia visibilità di stampa",
     "action.add_experience": "Aggiungi esperienza",
     "action.add_certification": "Aggiungi certificazione",
     "action.add_education": "Aggiungi formazione",

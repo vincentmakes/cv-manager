@@ -47,6 +47,7 @@
     "action.edit_profile": "Edit Profile",
     "action.edit_about": "Edit About",
     "action.toggle_visibility": "Toggle Visibility",
+    "action.toggle_print_visibility": "Toggle Print Visibility",
     "action.add_experience": "Add Experience",
     "action.add_certification": "Add Certification",
     "action.add_education": "Add Education",

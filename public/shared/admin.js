@@ -674,6 +674,8 @@ function reorderSectionElements() {
                 el.classList.remove('hidden-print');
             }
         }
+        // Sync the inline print toggle button's state (active / disabled / icon)
+        syncSectionPrintButton(section.key);
     });
 
     applySectionTitles(sectionOrder);
@@ -810,6 +812,9 @@ function renderCustomSection(section) {
                     </button>
                     <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="${t('action.toggle_visibility')}" id="toggle-${section.section_key}">
                         <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleSectionPrint('${section.section_key}')" title="${t('action.toggle_print_visibility')}" id="toggle-print-${section.section_key}">
+                        <span class="material-symbols-outlined">print</span>
                     </button>
                 </div>
             </div>
@@ -1204,7 +1209,7 @@ async function toggleSection(section) {
     const newValue = !sectionVisibility[section];
     await api(`/api/sections/${section}`, { method: 'PUT', body: { visible: newValue } });
     sectionVisibility = await loadSectionsAdmin();
-    
+
     // For custom sections, also update the customSections data
     if (section.startsWith('custom_')) {
         const customSection = customSections.find(cs => cs.section_key === section);
@@ -1212,8 +1217,43 @@ async function toggleSection(section) {
             customSection.visible = newValue;
         }
     }
+    // Keep the print-visibility button in sync: a hidden section is also hidden from print,
+    // and the inline print button is disabled while the section is hidden (matches Settings).
+    syncSectionPrintButton(section);
     toast('Section visibility updated');
     autoSaveActiveDataset();
+}
+
+// Toggle Section Print Visibility (inline — mirrors the one in Settings)
+async function toggleSectionPrint(section) {
+    const entry = sectionOrder.find(s => s.key === section);
+    const currentVisible = entry ? entry.visible : !!sectionVisibility[section];
+    if (!currentVisible) return; // can't toggle print on a hidden section
+    const currentPrint = entry ? entry.print_visible !== false : true;
+    const newValue = !currentPrint;
+    await api(`/api/sections/${section}`, { method: 'PUT', body: { print_visible: newValue } });
+    if (entry) entry.print_visible = newValue;
+    // Reflect in the DOM: `.hidden-print` hides the section in print when either flag is off.
+    const el = document.getElementById(`section-${section}`);
+    if (el) el.classList.toggle('hidden-print', !newValue);
+    syncSectionPrintButton(section);
+    toast('Section print visibility updated');
+    autoSaveActiveDataset();
+}
+
+// Update the inline print button's active/disabled state and icon for a given section
+function syncSectionPrintButton(section) {
+    const btn = document.getElementById(`toggle-print-${section}`);
+    if (!btn) return;
+    const entry = sectionOrder.find(s => s.key === section);
+    const visible = entry ? entry.visible : !!sectionVisibility[section];
+    const printVisible = entry ? entry.print_visible !== false : true;
+    btn.classList.toggle('active', visible && printVisible);
+    btn.classList.toggle('disabled', !visible);
+    btn.disabled = !visible;
+    const iconName = printVisible ? 'print' : 'print_disabled';
+    const iconEl = btn.querySelector('.material-symbols-outlined');
+    if (iconEl) iconEl.textContent = iconName;
 }
 
 // Toggle Item Visibility

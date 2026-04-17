@@ -42,6 +42,7 @@
     "action.edit_profile": "编辑个人资料",
     "action.edit_about": "编辑简介",
     "action.toggle_visibility": "切换可见性",
+    "action.toggle_print_visibility": "切换打印可见性",
     "action.add_experience": "添加工作经历",
     "action.add_certification": "添加资格认证",
     "action.add_education": "添加教育经历",

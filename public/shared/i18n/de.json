@@ -42,6 +42,7 @@
     "action.edit_profile": "Profil bearbeiten",
     "action.edit_about": "Über mich bearbeiten",
     "action.toggle_visibility": "Sichtbarkeit umschalten",
+    "action.toggle_print_visibility": "Drucksichtbarkeit umschalten",
     "action.add_experience": "Erfahrung hinzufügen",
     "action.add_certification": "Zertifizierung hinzufügen",
     "action.add_education": "Ausbildung hinzufügen",
