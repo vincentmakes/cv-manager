@@ -5177,6 +5177,9 @@ async function confirmReorder() {
         sectionOrder = newOrder.map(s => ({ ...s }));
         settingsSectionOrder = newOrder.map(s => ({ ...s }));
         reorderSectionElements();
+        // Persist into the active dataset snapshot; otherwise a page reload
+        // restores the dataset's saved order and the change appears lost.
+        autoSaveActiveDataset();
         toast(t('toast.settings_saved'), 'success');
     } catch (err) {
         toast(t('toast.settings_failed'), 'error');

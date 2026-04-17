@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.33.2] - 2026-04-17
+
+### Fixed
+- Section reorder overlay: the new order is now also synced into the active dataset snapshot, matching how the Settings → Sections Save button behaves. Without this, the live `section_visibility` table was updated but the active dataset kept the old order, and a page reload restored it — making the reorder appear not to persist.
+
 ## [1.33.1] - 2026-04-17
 
 ### Fixed
