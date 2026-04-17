@@ -180,37 +180,69 @@ body {
 }
 
 /* Phantom "create custom section" placeholder.
-   Structure: outer `.phantom-section` is the hit target (invisible, extends vertically
-   via padding so the cursor can move around the dashed box without losing hover).
-   Inner `.phantom-box` is the visible dashed UI.
-   Between sections, the outer starts collapsed (overlapping the 16px inter-section
-   margin); hovering the gap expands it with ~16px of breathing-room padding top and
-   bottom. The last phantom carries `.phantom-last` and stays in the expanded state as
-   a discoverability affordance. */
+   Structure: outer `.phantom-section` is the hit target. It holds two overlapping
+   children that swap on hover:
+     - `.phantom-hint` — a thin "⎯⎯ (+) ⎯⎯" separator shown by default between
+       sections as a visual affordance that you can add something there.
+     - `.phantom-box`  — the visible dashed pill revealed on hover (or always, for
+       the phantom after the final section, which carries `.phantom-last`).
+   The outer keeps breathing-room padding so the cursor can leave the pill and move
+   through the padding without dismissing the phantom. */
 .phantom-section {
-    margin-top: -16px;        /* pull top up to section's bottom border; the 16px margin-bottom becomes baseline hit area */
-    padding: 8px 0;           /* 16px hit area exactly fills the inter-section gap */
-    height: 0;                /* content collapsed */
-    box-sizing: content-box;
-    overflow: hidden;
+    margin-top: -16px;        /* overlap the section's 16px margin-bottom so baseline gap stays visually consistent */
+    padding: 16px 0;          /* breathing-room padding ≈ the inter-section gap */
+    position: relative;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
     background: transparent;
-    /* Only padding/height animate; top edge stays fixed so the cursor never loses hover mid-resize. */
-    transition: padding 0.15s ease, height 0.15s ease;
 }
 
-.phantom-section:hover,
-.phantom-section.phantom-last {
-    padding: 16px 0;          /* breathing-room padding ≈ section gap; hovering it keeps the phantom open */
-    height: 32px;              /* room for the inner dashed box */
-    overflow: visible;         /* let the box's shadow/border show through */
+/* Default-visible "⎯ (+) ⎯" separator between sections. Replaced by the dashed pill
+   on hover (and hidden entirely for `.phantom-last`, which shows the pill always). */
+.phantom-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
+.phantom-hint-line {
+    flex: 1;
+    height: 1px;
+    background: var(--gray-300);
+}
+
+.phantom-hint-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--gray-400);
+    border-radius: 50%;
+    color: var(--gray-500);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.phantom-section:hover .phantom-hint,
+.phantom-section.phantom-last .phantom-hint {
+    opacity: 0;
+}
+
+/* The dashed pill — positioned absolutely so switching between hint and box is a
+   pure crossfade with no layout shift. */
 .phantom-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -220,10 +252,10 @@ body {
     color: var(--gray-500);
     font-size: 13px;
     font-weight: 500;
-    background: transparent;
+    background: var(--white);
     white-space: nowrap;
     opacity: 0;
-    pointer-events: none;     /* hover always evaluated on the outer element */
+    pointer-events: none;     /* hover always resolved on the outer element */
     transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
@@ -234,12 +266,11 @@ body {
     color: var(--primary);
 }
 
-/* Always-visible at the bottom of the CV as a discoverability hint */
 .phantom-section.phantom-last .phantom-box {
     opacity: 0.55;
     border-color: var(--gray-300);
     color: var(--gray-500);
-    background: transparent;
+    background: var(--white);
 }
 
 .phantom-section.phantom-last:hover .phantom-box {
