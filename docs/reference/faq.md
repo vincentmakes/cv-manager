@@ -34,7 +34,7 @@
     There's no hard limit. Create as many as you need.
 
 ??? question "Can I change a custom section's layout type after creating it?"
-    Yes. Edit the section and select a different layout. Note that some fields may not carry over between layout types (e.g., switching from cards to social links).
+    No. The layout is chosen once at creation and locked after that. If you need a different layout, add a new custom section with the layout you want and move the items over, then delete the old section. The only thing the section's inline **Rename** (pencil) button changes is the title.
 
 ??? question "What's the difference between 'Bullet Points' and 'Free Text' layouts?"
     **Bullet Points** renders each line as a bulleted list item with a group title. **Free Text** renders plain text with preserved line breaks and no title — similar to the About/Bio section.

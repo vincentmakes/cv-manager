@@ -266,7 +266,7 @@
     "custom_section.edit_title": "编辑自定义板块",
     "custom_section.add_title": "添加自定义板块",
     "custom_section.rename_title": "重命名板块",
-    "custom_section.create_phantom": "创建自定义板块",
+    "custom_section.create_phantom": "添加自定义板块",
     "custom_section.section_name": "板块名称",
     "custom_section.section_name_placeholder": "例如：社交链接、获奖情况、发表论文",
     "custom_section.layout_type": "布局类型",

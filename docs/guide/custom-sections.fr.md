@@ -2,13 +2,20 @@
 
 Les sections personnalisées vous permettent d'ajouter tout contenu qui ne correspond pas aux sections intégrées.
 
-## Créer une section personnalisée
+Les sections personnalisées se créent directement dans le CV — il n'y a plus d'onglet dédié dans les Paramètres.
 
-1. Survolez juste en dessous d'une section existante de votre CV — un espace réservé en pointillés **+ Créer une section personnalisée** apparaît
-2. Cliquez sur l'espace réservé pour ouvrir la boîte de dialogue de création
-3. Entrez un nom de section
-4. Choisissez un type de mise en page (voir ci-dessous)
-5. Enregistrez — la nouvelle section est insérée directement sous la section que vous avez survolée
+## Ajouter une section personnalisée
+
+Deux points d'entrée équivalents :
+
+- **Entre deux sections** — survolez l'espace juste en dessous d'une section existante. Une pastille en pointillés **+ Ajouter une section personnalisée** apparaît ; cliquez dessus pour ouvrir la boîte de dialogue de création. La nouvelle section est insérée directement sous la section survolée.
+- **Au bas du CV** — la même pastille **+ Ajouter une section personnalisée** est toujours visible sous la dernière section, pour faciliter la découverte. Un clic ajoute une nouvelle section à la fin.
+
+Dans la boîte de dialogue :
+
+1. Saisissez un nom de section
+2. Choisissez un type de mise en page (voir ci-dessous)
+3. Enregistrez — la nouvelle section apparaît dans votre CV et est enregistrée automatiquement dans le jeu de données actif
 
 ## Gérer une section personnalisée
 
@@ -18,7 +25,7 @@ Chaque section personnalisée dispose de trois boutons d'icône dans son en-têt
 - **Renommer** (icône crayon) — ouvre une petite boîte de dialogue pour modifier le titre de la section
 - **Visibilité** (icône œil) — active ou désactive l'affichage de la section dans le CV en ligne
 
-Le type de mise en page d'une section est choisi à sa création et ne peut plus être modifié ensuite — si vous avez besoin d'une autre mise en page, créez une nouvelle section et déplacez-y les éléments.
+Le type de mise en page est choisi une fois, à la création, et ne peut plus être modifié ensuite. Si vous avez besoin d'une autre mise en page, créez une nouvelle section et déplacez-y les éléments.
 
 ## Types de mise en page
 

@@ -266,7 +266,7 @@
     "custom_section.edit_title": "Modifier la section personnalisée",
     "custom_section.add_title": "Ajouter une section personnalisée",
     "custom_section.rename_title": "Renommer la section",
-    "custom_section.create_phantom": "Créer une section personnalisée",
+    "custom_section.create_phantom": "Ajouter une section personnalisée",
     "custom_section.section_name": "Nom de la section",
     "custom_section.section_name_placeholder": "ex. Réseaux sociaux, Prix, Publications",
     "custom_section.layout_type": "Type de mise en page",

@@ -34,7 +34,7 @@
     Er is geen vaste limiet. U kunt er zoveel aanmaken als u nodig heeft.
 
 ??? question "Kan ik het lay-outtype van een aangepaste sectie wijzigen nadat ik deze heb aangemaakt?"
-    Ja. Bewerk de sectie en selecteer een andere lay-out. Houd er rekening mee dat sommige velden mogelijk niet behouden blijven bij het wisselen van lay-outtype (bijv. bij het overschakelen van kaarten naar sociale links).
+    Nee. Het lay-outtype wordt eenmalig bij het aanmaken gekozen en daarna vergrendeld. Als u een andere lay-out nodig heeft, maak een nieuwe aangepaste sectie aan met de gewenste lay-out, verplaats de items daarheen en verwijder daarna de oude sectie. De knop Hernoemen (potlood) in de sectiekop wijzigt alleen de titel.
 
 ??? question "Wat is het verschil tussen de layouts 'Opsommingstekens' en 'Vrije tekst'?"
     **Opsommingstekens** geeft elke regel weer als een lijstitem met opsommingsteken en een groepstitel. **Vrije tekst** geeft platte tekst weer met behouden regelafbrekingen en zonder titel — vergelijkbaar met de sectie Over mij/Bio.

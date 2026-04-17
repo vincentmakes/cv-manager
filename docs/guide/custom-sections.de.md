@@ -2,13 +2,20 @@
 
 Mit benutzerdefinierten Abschnitten können Sie beliebige Inhalte hinzufügen, die nicht in die integrierten Abschnitte passen.
 
-## Einen benutzerdefinierten Abschnitt erstellen
+Benutzerdefinierte Abschnitte werden direkt im Lebenslauf inline erstellt — es gibt keinen separaten Einstellungen-Tab mehr dafür.
 
-1. Bewegen Sie den Mauszeiger direkt unter einen vorhandenen Abschnitt in Ihrem Lebenslauf — ein gestrichelter Platzhalter **+ Eigenen Abschnitt erstellen** erscheint
-2. Klicken Sie auf den Platzhalter, um den Erstellungsdialog zu öffnen
-3. Geben Sie einen Abschnittsnamen ein
-4. Wählen Sie einen Layout-Typ (siehe unten)
-5. Speichern — der neue Abschnitt wird direkt unter dem Abschnitt eingefügt, über dem Sie den Platzhalter geöffnet haben
+## Einen benutzerdefinierten Abschnitt hinzufügen
+
+Zwei gleichwertige Einstiegspunkte:
+
+- **Zwischen zwei Abschnitten** — bewegen Sie den Mauszeiger auf die Lücke direkt unter einem vorhandenen Abschnitt. Ein gestricheltes Feld **+ Eigenen Abschnitt hinzufügen** erscheint; ein Klick öffnet den Erstellungsdialog. Der neue Abschnitt wird direkt unter dem Abschnitt eingefügt, über dem Sie den Platzhalter geöffnet haben.
+- **Am Ende des Lebenslaufs** — dasselbe Feld **+ Eigenen Abschnitt hinzufügen** ist unter dem letzten Abschnitt dauerhaft sichtbar. Ein Klick fügt einen neuen Abschnitt am Ende hinzu.
+
+Im Dialog:
+
+1. Abschnittsname eingeben
+2. Layout-Typ wählen (siehe unten)
+3. Speichern — der neue Abschnitt erscheint in Ihrem Lebenslauf und wird automatisch im aktiven Datensatz gespeichert
 
 ## Einen benutzerdefinierten Abschnitt verwalten
 
@@ -18,7 +25,7 @@ Jeder benutzerdefinierte Abschnitt hat drei Symbolschaltflächen in seiner Über
 - **Umbenennen** (Stift-Symbol) — öffnet einen kleinen Dialog, um den Titel des Abschnitts zu ändern
 - **Sichtbarkeit** (Augen-Symbol) — schaltet ein, ob der Abschnitt im Lebenslauf angezeigt wird
 
-Der Layout-Typ eines Abschnitts wird bei der Erstellung gewählt und kann danach nicht mehr geändert werden — wenn Sie ein anderes Layout benötigen, erstellen Sie einen neuen Abschnitt und verschieben Sie die Elemente dorthin.
+Der Layout-Typ wird einmalig bei der Erstellung gewählt und kann danach nicht mehr geändert werden. Wenn Sie ein anderes Layout benötigen, erstellen Sie einen neuen Abschnitt und verschieben Sie die Elemente dorthin.
 
 ## Layout-Typen
 

@@ -34,7 +34,7 @@
     Il n'y a pas de limite fixe. Creez autant de sections que necessaire.
 
 ??? question "Puis-je changer le type de mise en page d'une section personnalisee apres sa creation ?"
-    Oui. Modifiez la section et selectionnez une mise en page differente. Notez que certains champs peuvent ne pas etre conserves entre les types de mise en page (par exemple, en passant de cartes a liens sociaux).
+    Non. Le type de mise en page est choisi une fois a la creation et verrouille ensuite. Si vous avez besoin d'une autre mise en page, ajoutez une nouvelle section personnalisee avec le layout souhaite, deplacez-y les elements, puis supprimez l'ancienne section. Le bouton Renommer (crayon) dans l'en-tete de la section ne modifie que le titre.
 
 ??? question "Quelle est la difference entre les mises en page « Puces » et « Texte libre » ?"
     **Puces** affiche chaque ligne sous forme d'element de liste a puces avec un titre de groupe. **Texte libre** affiche du texte brut avec des retours a la ligne preserves et sans titre — similaire a la section A propos / Bio.

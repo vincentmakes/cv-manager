@@ -34,7 +34,7 @@
     No hay un límite estricto. Cree tantas como necesite.
 
 ??? question "¿Puedo cambiar el tipo de diseño de una sección personalizada después de crearla?"
-    Sí. Edite la sección y seleccione un diseño diferente. Tenga en cuenta que algunos campos pueden no transferirse entre tipos de diseño (por ejemplo, al cambiar de tarjetas a enlaces sociales).
+    No. El tipo de diseño se elige una sola vez al crear la sección y luego queda bloqueado. Si necesita un diseño diferente, añada una nueva sección personalizada con el diseño deseado, mueva los elementos allí y elimine la sección antigua. El botón Renombrar (lápiz) del encabezado de la sección solo cambia el título.
 
 ??? question "¿Cuál es la diferencia entre los diseños 'Bullet Points' y 'Free Text'?"
     **Bullet Points** muestra cada línea como un elemento de lista con viñeta con un título de grupo. **Free Text** muestra texto plano con saltos de línea preservados y sin título — similar a la sección About/Bio.

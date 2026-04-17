@@ -294,7 +294,7 @@
     "custom_section.edit_title": "Edit Custom Section",
     "custom_section.add_title": "Add Custom Section",
     "custom_section.rename_title": "Rename Section",
-    "custom_section.create_phantom": "Create custom section",
+    "custom_section.create_phantom": "Add custom section",
     "custom_section.section_name": "Section Name",
     "custom_section.section_name_placeholder": "e.g., Social Links, Awards, Publications",
     "custom_section.layout_type": "Layout Type",

@@ -2,13 +2,20 @@
 
 Met aangepaste secties kunt u inhoud toevoegen die niet past bij de ingebouwde secties.
 
-## Een aangepaste sectie aanmaken
+Aangepaste secties worden direct in het CV aangemaakt — er is geen apart tabblad meer in de Instellingen.
 
-1. Beweeg de muis net onder een bestaande sectie in uw CV — er verschijnt een gestippelde placeholder **+ Aangepaste sectie aanmaken**
-2. Klik op de placeholder om het aanmaakdialoogvenster te openen
-3. Voer een sectienaam in
-4. Kies een lay-outtype (zie hieronder)
-5. Sla op — de nieuwe sectie wordt direct onder de sectie die u aanwees ingevoegd
+## Een aangepaste sectie toevoegen
+
+Twee gelijkwaardige ingangen:
+
+- **Tussen twee secties** — beweeg de muis naar de ruimte vlak onder een bestaande sectie. Er verschijnt een gestippelde knop **+ Aangepaste sectie toevoegen**; klik erop om het aanmaakdialoogvenster te openen. De nieuwe sectie wordt direct onder de sectie die u aanwees ingevoegd.
+- **Onderaan het CV** — dezelfde knop **+ Aangepaste sectie toevoegen** is altijd zichtbaar onder de laatste sectie. Klikken voegt een nieuwe sectie onderaan toe.
+
+In het dialoogvenster:
+
+1. Voer een sectienaam in
+2. Kies een lay-outtype (zie hieronder)
+3. Sla op — de nieuwe sectie verschijnt in uw CV en wordt automatisch opgeslagen in de actieve dataset
 
 ## Een aangepaste sectie beheren
 
@@ -18,7 +25,7 @@ Elke aangepaste sectie heeft drie pictogramknoppen in de kop:
 - **Hernoemen** (potloodpictogram) — opent een klein dialoogvenster om de titel van de sectie te wijzigen
 - **Zichtbaarheid** (oogpictogram) — bepaalt of de sectie in de live CV wordt weergegeven
 
-Het lay-outtype van een sectie wordt bij het aanmaken gekozen en kan daarna niet meer worden gewijzigd — als u een andere lay-out nodig heeft, maak dan een nieuwe sectie aan en verplaats de items daarheen.
+Het lay-outtype wordt eenmalig bij het aanmaken gekozen en kan daarna niet meer worden gewijzigd. Als u een andere lay-out nodig heeft, maak dan een nieuwe sectie aan en verplaats de items daarheen.
 
 ## Lay-outtypen
 
