@@ -417,7 +417,7 @@
     "view_credential": "查看证书",
     "toolbar.cv_manager": "CV管理器",
     "datasets.cv_manager_title": "CV管理器",
-    "datasets.default_hint_short": "默认",
+    "datasets.default_hint_short": "公开",
     "datasets.make_private": "设为私密",
     "datasets.make_shared": "设为共享",
     "datasets.preview": "预览",

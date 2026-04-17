@@ -18,7 +18,8 @@
     box-shadow: var(--shadow-lg);
 }
 
-.toolbar-title { font-size: 18px; font-weight: 600; color: var(--white); }
+.toolbar-title { font-size: 18px; font-weight: 600; color: var(--white); display: flex; align-items: center; }
+.toolbar-title-icon { height: 44px; width: auto; display: block; }
 .toolbar-actions { display: flex; gap: 8px; }
 .toolbar-end { display: none; gap: 8px; align-items: center; }
 .btn-icon-only span:not(.material-symbols-outlined) { display: none; }
@@ -2121,6 +2122,7 @@
     .toolbar-actions .btn svg { width: 18px; height: 18px; }
     .toolbar-actions .btn .material-symbols-outlined { font-size: 18px; }
     .toolbar-title { font-size: 15px; }
+    .toolbar-title-icon { height: 36px; }
 }
 
 /* Phone: hamburger menu */

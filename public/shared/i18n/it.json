@@ -417,7 +417,7 @@
     "view_credential": "Vedi credenziale",
     "toolbar.cv_manager": "Gestore CV",
     "datasets.cv_manager_title": "Gestore CV",
-    "datasets.default_hint_short": "Predefinito",
+    "datasets.default_hint_short": "Pubblico",
     "datasets.make_private": "Rendi privato",
     "datasets.make_shared": "Condividi",
     "datasets.preview": "Anteprima",

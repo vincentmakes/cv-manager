@@ -3042,7 +3042,7 @@ function renderCvManagerList(datasets) {
                 <span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>
                 ${opts.versionBadge ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>` : ''}
                 <span class="cvm-name">${escapeHtml(ds.name)}${ds.is_public && !isDefault && !isDefSib ? ` <span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>` : ''}</span>
-                ${isDefault ? '<span class="dataset-default-badge">Default</span>' : ''}
+                ${isDefault ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>` : ''}
                 ${isActive ? '<span class="dataset-active-badge">Editing</span>' : ''}
                 ${urlHtml}
                 <span class="cvm-date">${formatDateTime(ds.updated_at)}</span>

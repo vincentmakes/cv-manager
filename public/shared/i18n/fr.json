@@ -417,7 +417,7 @@
     "view_credential": "Voir le certificat",
     "toolbar.cv_manager": "Gestionnaire CV",
     "datasets.cv_manager_title": "Gestionnaire CV",
-    "datasets.default_hint_short": "Par défaut",
+    "datasets.default_hint_short": "Public",
     "datasets.make_private": "Rendre privé",
     "datasets.make_shared": "Partager",
     "datasets.preview": "Aperçu",

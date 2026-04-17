@@ -236,7 +236,7 @@
 
     "datasets.title": "Saved Datasets",
     "datasets.cv_manager_title": "CV Manager",
-    "datasets.default_hint_short": "Default",
+    "datasets.default_hint_short": "Public",
     "datasets.legend_default": "Served on public site",
     "datasets.legend_shared": "Shared at /v/ URL",
     "datasets.make_private": "Make private",
