@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.33.1] - 2026-04-17
+
+### Fixed
+- Section reorder overlay: the drop-position indicator now tracks the floating pill's midpoint instead of the cursor, so grabbing a pill near its top or bottom edge no longer puts the placeholder one slot off from where the pill is actually shown.
+
 ## [1.33.0] - 2026-04-17
 
 ### Added

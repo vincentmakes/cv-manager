@@ -5038,11 +5038,16 @@ function onReorderPointerMove(e) {
         el.classList.contains('reorder-placeholder')
     );
 
+    // Target index follows the floating pill's midpoint, not the cursor's Y
+    // (the pointer typically grabs the pill off-center).
+    const pillRect = d.pill.getBoundingClientRect();
+    const pillMidY = pillRect.top + pillRect.height / 2;
+
     let insertBefore = null;
     for (const sib of siblings) {
         if (sib === d.placeholder) continue;
         const rect = sib.getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) {
+        if (pillMidY < rect.top + rect.height / 2) {
             insertBefore = sib;
             break;
         }
