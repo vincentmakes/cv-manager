@@ -409,7 +409,7 @@ const SOCIAL_PLATFORMS = [
 if (!PUBLIC_ONLY) {
     // Step 1: Create tables (without sort_order in section_visibility for compatibility)
     db.exec(`
-        CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, profile_picture_enabled INTEGER DEFAULT 1, open_to_work INTEGER DEFAULT 0, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY CHECK (id = 1), name TEXT NOT NULL DEFAULT 'Your Name', initials TEXT DEFAULT 'YN', title TEXT DEFAULT 'Your Title', subtitle TEXT DEFAULT '', bio TEXT DEFAULT '', location TEXT DEFAULT '', linkedin TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', languages TEXT DEFAULT '', visible INTEGER DEFAULT 1, profile_picture_enabled INTEGER DEFAULT 1, picture_filename TEXT, picture_propagate INTEGER DEFAULT 1, open_to_work INTEGER DEFAULT 0, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
         CREATE TABLE IF NOT EXISTS experiences (id INTEGER PRIMARY KEY AUTOINCREMENT, job_title TEXT NOT NULL, company_name TEXT NOT NULL, start_date TEXT, end_date TEXT, location TEXT, country_code TEXT DEFAULT '', highlights TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS certifications (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, provider TEXT, issue_date TEXT, expiry_date TEXT, credential_id TEXT, sort_order INTEGER DEFAULT 0, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
@@ -553,6 +553,25 @@ if (!PUBLIC_ONLY) {
             db.exec('ALTER TABLE profile ADD COLUMN open_to_work INTEGER DEFAULT 0');
         }
     } catch (err) { console.log('Migration check (open_to_work):', err.message); }
+
+    // Step 2f3: Migration - add picture_filename column to profile if missing
+    try {
+        const profilePicFileInfo = db.prepare("PRAGMA table_info(profile)").all();
+        if (!profilePicFileInfo.some(col => col.name === 'picture_filename')) {
+            console.log('Migrating profile table: adding picture_filename');
+            db.exec('ALTER TABLE profile ADD COLUMN picture_filename TEXT');
+        }
+    } catch (err) { console.log('Migration check (picture_filename):', err.message); }
+
+    // Step 2f4: Migration - add picture_propagate column to profile if missing
+    try {
+        const profilePicPropInfo = db.prepare("PRAGMA table_info(profile)").all();
+        if (!profilePicPropInfo.some(col => col.name === 'picture_propagate')) {
+            console.log('Migrating profile table: adding picture_propagate');
+            db.exec('ALTER TABLE profile ADD COLUMN picture_propagate INTEGER DEFAULT 1');
+        }
+    } catch (err) { console.log('Migration check (picture_propagate):', err.message); }
+
 
     // Step 2g: Migration - add is_default column to saved_datasets if missing
     try {
@@ -887,6 +906,22 @@ if (!PUBLIC_ONLY) {
         db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, 1, ?)').run(section, index);
     });
 
+    // Step 3b: Promote legacy picture.jpeg into the new library format.
+    // Runs after the profile row exists so the UPDATE actually has something to set.
+    try {
+        const legacyPicPath = path.join(uploadsPath, 'picture.jpeg');
+        const current = db.prepare('SELECT picture_filename FROM profile WHERE id = 1').get();
+        if ((!current || !current.picture_filename) && fs.existsSync(legacyPicPath)) {
+            const legacyName = `profile_${Date.now()}.jpg`;
+            const legacyDest = path.join(uploadsPath, legacyName);
+            try {
+                fs.copyFileSync(legacyPicPath, legacyDest);
+                db.prepare('UPDATE profile SET picture_filename = ? WHERE id = 1').run(legacyName);
+                console.log(`Migrated legacy picture.jpeg to ${legacyName}`);
+            } catch (copyErr) { console.log('Legacy picture migration skipped:', copyErr.message); }
+        }
+    } catch (err) { console.log('Migration check (legacy picture):', err.message); }
+
     // Step 4: Auto-create "Default" dataset from live DB if no default exists
     // Runs AFTER Step 3 so that profile and section_visibility rows are guaranteed to exist.
     // Creates a Default dataset on every install (fresh or existing) so the Open modal is never empty.
@@ -959,6 +994,34 @@ function formatDateShort(dateStr) {
     }
     const yearMatch = dateStr.match(/(\d{4})/);
     return yearMatch ? yearMatch[1] : dateStr;
+}
+
+// Profile picture filenames must either be a library entry (profile_*) or the legacy single file.
+function isValidProfilePictureName(filename) {
+    if (!filename || typeof filename !== 'string') return false;
+    if (filename.includes('/') || filename.includes('\\') || filename.includes('..')) return false;
+    return filename.startsWith('profile_') || filename === 'picture.jpeg';
+}
+
+// Mirror the live profile picture filename into every saved dataset JSON snapshot.
+// Also sets data.profile.picture_propagate = 1 so the flag stays consistent across siblings.
+function propagateProfilePictureToDatasets(filename) {
+    try {
+        const datasets = db.prepare('SELECT id, data FROM saved_datasets').all();
+        for (const ds of datasets) {
+            try {
+                const data = JSON.parse(ds.data);
+                if (!data.profile) continue;
+                const current = data.profile.picture_filename || null;
+                const target = filename || null;
+                if (current !== target || data.profile.picture_propagate != 1) {
+                    data.profile.picture_filename = target;
+                    data.profile.picture_propagate = 1;
+                    db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(data), ds.id);
+                }
+            } catch (e) {}
+        }
+    } catch (e) {}
 }
 
 // Gather current CV data from live DB into a JSON-serializable snapshot
@@ -1324,7 +1387,7 @@ if (PUBLIC_ONLY) {
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
 
-    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, open_to_work FROM profile WHERE id = 1').get() || {}); });
+    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename, open_to_work FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => {
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
@@ -1378,7 +1441,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
     publicApp.get('/api/cv', (req, res) => {
-        const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get();
+        const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename, open_to_work FROM profile WHERE id = 1').get();
         const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all();
         const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
         const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
@@ -1404,12 +1467,101 @@ if (PUBLIC_ONLY) {
 } else {
     // ADMIN Mode
     app.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT * FROM profile WHERE id = 1').get()); });
-    app.put('/api/profile', (req, res) => { const { name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible, profile_picture_enabled, open_to_work } = req.body; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, visible = ?, profile_picture_enabled = ?, open_to_work = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`).run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0, profile_picture_enabled ? 1 : 0, open_to_work ? 1 : 0); res.json({ success: true }); });
+    app.put('/api/profile', (req, res) => {
+        const { name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible, profile_picture_enabled, picture_propagate, open_to_work } = req.body;
+        db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, visible = ?, profile_picture_enabled = ?, picture_propagate = ?, open_to_work = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`).run(name, initials, title, subtitle, bio, location, linkedin, email, phone, languages, visible ? 1 : 0, profile_picture_enabled ? 1 : 0, picture_propagate === undefined ? 1 : (picture_propagate ? 1 : 0), open_to_work ? 1 : 0);
+        res.json({ success: true });
+    });
 
-    const storage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => cb(null, 'picture.jpeg') });
-    const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
-    app.post('/api/profile/picture', upload.single('picture'), (req, res) => { if (!req.file) return res.status(400).json({ error: 'No file uploaded' }); res.json({ success: true, filename: req.file.filename }); });
-    app.delete('/api/profile/picture', (req, res) => { const picturePath = path.join(uploadsPath, 'picture.jpeg'); try { if (fs.existsSync(picturePath)) fs.unlinkSync(picturePath); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    // Profile picture upload — stores as profile_<timestamp>.<ext> in the library.
+    // When profile.picture_propagate is on, the new filename is mirrored into every saved dataset snapshot.
+    const pictureStorage = multer.diskStorage({
+        destination: (req, file, cb) => cb(null, uploadsPath),
+        filename: (req, file, cb) => { const ext = path.extname(file.originalname).toLowerCase() || '.jpg'; cb(null, `profile_${Date.now()}${ext}`); }
+    });
+    const pictureUpload = multer({ storage: pictureStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { const allowed = ['image/jpeg', 'image/png', 'image/webp']; cb(null, allowed.includes(file.mimetype)); } });
+    app.post('/api/profile/picture', pictureUpload.single('picture'), (req, res) => {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const filename = req.file.filename;
+        const runUpdate = db.transaction(() => {
+            db.prepare('UPDATE profile SET picture_filename = ? WHERE id = 1').run(filename);
+            const prof = db.prepare('SELECT picture_propagate FROM profile WHERE id = 1').get();
+            if (prof && prof.picture_propagate == 1) propagateProfilePictureToDatasets(filename);
+        });
+        try { runUpdate(); } catch (err) { return res.status(500).json({ error: err.message }); }
+        res.json({ success: true, filename });
+    });
+    app.delete('/api/profile/picture', (req, res) => {
+        const runUpdate = db.transaction(() => {
+            db.prepare('UPDATE profile SET picture_filename = NULL WHERE id = 1').run();
+            const prof = db.prepare('SELECT picture_propagate FROM profile WHERE id = 1').get();
+            if (prof && prof.picture_propagate == 1) propagateProfilePictureToDatasets(null);
+        });
+        try { runUpdate(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+    // Reuse an existing picture from the library without re-uploading
+    app.put('/api/profile/picture/select', express.json(), (req, res) => {
+        const { filename } = req.body;
+        if (!filename) return res.status(400).json({ error: 'filename is required' });
+        if (!isValidProfilePictureName(filename)) return res.status(400).json({ error: 'Invalid filename' });
+        if (!fs.existsSync(path.join(uploadsPath, filename))) return res.status(404).json({ error: 'Picture file not found' });
+        const runUpdate = db.transaction(() => {
+            db.prepare('UPDATE profile SET picture_filename = ? WHERE id = 1').run(filename);
+            const prof = db.prepare('SELECT picture_propagate FROM profile WHERE id = 1').get();
+            if (prof && prof.picture_propagate == 1) propagateProfilePictureToDatasets(filename);
+        });
+        try { runUpdate(); res.json({ success: true, filename }); } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    // List all profile pictures available for reuse (scans filesystem + cross-references live + datasets)
+    app.get('/api/profile-pictures', (req, res) => {
+        let files = [];
+        try { files = fs.readdirSync(uploadsPath).filter(f => f.startsWith('profile_')); } catch (e) {}
+        const inUseSet = new Set();
+        const live = db.prepare('SELECT picture_filename FROM profile WHERE id = 1').get();
+        if (live && live.picture_filename) inUseSet.add(live.picture_filename);
+        try {
+            const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.profile && data.profile.picture_filename) inUseSet.add(data.profile.picture_filename);
+                } catch (e) {}
+            }
+        } catch (e) {}
+        res.json(files.map(f => ({ filename: f, in_use: inUseSet.has(f) })));
+    });
+    // Delete an unused profile picture file
+    app.delete('/api/profile-pictures/:filename', (req, res) => {
+        const filename = req.params.filename;
+        if (!isValidProfilePictureName(filename)) return res.status(400).json({ error: 'Invalid filename' });
+        const filePath = path.join(uploadsPath, filename);
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+        const live = db.prepare('SELECT picture_filename FROM profile WHERE id = 1').get();
+        if (live && live.picture_filename === filename) return res.status(409).json({ error: 'Picture is in use by the current profile' });
+        try {
+            const datasets = db.prepare('SELECT data FROM saved_datasets').all();
+            for (const ds of datasets) {
+                try {
+                    const data = JSON.parse(ds.data);
+                    if (data.profile && data.profile.picture_filename === filename) return res.status(409).json({ error: 'Picture is in use by a saved dataset' });
+                } catch (e) {}
+            }
+        } catch (e) {}
+        try { fs.unlinkSync(filePath); } catch (e) { return res.status(500).json({ error: 'Failed to delete file' }); }
+        res.json({ success: true });
+    });
+    // Apply a picture to all saved datasets + enable propagation flag
+    app.post('/api/profile-pictures/apply-global', express.json(), (req, res) => {
+        const { picture_filename } = req.body;
+        if (picture_filename && !isValidProfilePictureName(picture_filename)) return res.status(400).json({ error: 'Invalid filename' });
+        if (picture_filename && !fs.existsSync(path.join(uploadsPath, picture_filename))) return res.status(404).json({ error: 'Picture file not found' });
+        const runUpdate = db.transaction(() => {
+            db.prepare('UPDATE profile SET picture_filename = ?, picture_propagate = 1 WHERE id = 1').run(picture_filename || null);
+            propagateProfilePictureToDatasets(picture_filename || null);
+        });
+        try { runUpdate(); res.json({ success: true, filename: picture_filename || null }); } catch (err) { res.status(500).json({ error: err.message }); }
+    });
 
     // Company logo upload
     const logoStorage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsPath), filename: (req, file, cb) => { const ext = path.extname(file.originalname).toLowerCase() || '.jpg'; cb(null, `logo_${req.params.id}_${Date.now()}${ext}`); } });
@@ -2089,6 +2241,8 @@ if (PUBLIC_ONLY) {
                         const prevLangGroup = db.prepare('SELECT language_group FROM saved_datasets WHERE version_group = ? AND version = ? LIMIT 1').get(reqVersionGroup, prevVer);
                         if (prevLangGroup) {
                             const siblings = db.prepare('SELECT * FROM saved_datasets WHERE language_group = ? AND language != ?').all(prevLangGroup.language_group, language);
+                            // src.data is copied verbatim, so new language siblings inherit
+                            // profile.picture_filename, picture_propagate, and profile_picture_enabled.
                             for (const src of siblings) {
                                 try {
                                     db.prepare('INSERT INTO saved_datasets (name, data, language, language_group, version_group, version, slug, is_public, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)')
@@ -2142,7 +2296,7 @@ if (PUBLIC_ONLY) {
             res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, profile_picture_enabled = ?, picture_filename = ?, picture_propagate = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages, p.profile_picture_enabled == null ? 1 : (p.profile_picture_enabled ? 1 : 0), p.picture_filename || null, p.picture_propagate == null ? 1 : (p.picture_propagate ? 1 : 0)); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
@@ -3021,7 +3175,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/', (req, res) => { servePublicIndex(req, res); });
     publicApp.use(express.static(path.join(__dirname, '../public-readonly'), { index: false }));
     publicApp.use('/uploads', express.static(uploadsPath));
-    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, open_to_work FROM profile WHERE id = 1').get() || {}); });
+    publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename, open_to_work FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => {
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
@@ -3074,7 +3228,7 @@ if (PUBLIC_ONLY) {
     });
     publicApp.get('/api/layout-types', (req, res) => { res.json(LAYOUT_TYPES); });
     publicApp.get('/api/social-platforms', (req, res) => { res.json(SOCIAL_PLATFORMS); });
-    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
+    publicApp.get('/api/cv', (req, res) => { const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename, open_to_work FROM profile WHERE id = 1').get(); const experiences = db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all(); const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all(); const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all(); const skills = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all(); const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all(); const sectionOrder = db.prepare('SELECT section_name, sort_order FROM section_visibility WHERE visible = 1 ORDER BY sort_order ASC').all(); res.json({ profile, experiences: experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] })), certifications, education, skills: skillCategories.map(cat => ({ ...cat, skills: skills.filter(s => s.category_id === cat.id).map(s => s.name) })), projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] })), sectionOrder: sectionOrder.map(s => s.section_name) }); });
     // Public versioned CV routes (language-specific must come before generic)
     publicApp.get('/v/:slug/:lang', (req, res) => { serveDatasetPage(req, res, req.params.lang); });
     publicApp.get('/v/:slug', (req, res) => { serveDatasetPage(req, res); });

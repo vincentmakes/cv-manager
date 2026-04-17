@@ -456,14 +456,20 @@ async function loadProfile(includePrivate = false) {
     
     // Profile picture
     const profileImg = document.getElementById('profileImage');
-    if (p.profile_picture_enabled == 1) { 
-        const pic = document.getElementById('profilePicture');
-        const initials = document.getElementById('profileInitials');
+    const pic = document.getElementById('profilePicture');
+    const initials = document.getElementById('profileInitials');
+    if (p.profile_picture_enabled == 1) {
+        const fname = p.picture_filename || 'picture.jpeg';
         pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
         pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
-        pic.src = '/uploads/picture.jpeg?' + new Date().getTime();
+        pic.src = '/uploads/' + encodeURIComponent(fname) + '?' + new Date().getTime();
         profileImg.style.display = 'flex';
     } else {
+        pic.onload = null;
+        pic.onerror = null;
+        pic.removeAttribute('src');
+        pic.style.display = 'none';
+        initials.style.display = 'block';
         profileImg.style.display = 'none';
     }
     

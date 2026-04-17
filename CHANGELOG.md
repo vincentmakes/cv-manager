@@ -4,6 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.32.0] - 2026-04-17
+
+### Added
+- Profile picture library: upload multiple pictures, reuse any of them from a picker grid, and delete unused entries. Mirrors the company-logo library pattern.
+- "Apply this picture to all datasets" toggle in the profile modal (enabled by default). When on, uploading or selecting a picture mirrors the change into every saved dataset snapshot; when off, each dataset keeps its own picture and language siblings inherit the current picture at save time.
+- New backend endpoints: `GET /api/profile-pictures`, `DELETE /api/profile-pictures/:filename`, `PUT /api/profile/picture/select`, `POST /api/profile-pictures/apply-global`.
+- Legacy `uploads/picture.jpeg` is promoted into the new library format on first run so existing installs keep their picture.
+
+### Fixed
+- Public site now honors the "Show profile picture" toggle. The picture was previously always rendered on `/`, `/<lang>`, and `/v/<slug>` regardless of the setting. Public `/api/cv`, `/api/profile`, and the dataset-load endpoint now carry the toggle and filename, and the public renderer respects both.
+
 ## [1.31.0] - 2026-04-17
 
 ### Added
