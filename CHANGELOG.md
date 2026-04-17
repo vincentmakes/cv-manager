@@ -4,6 +4,26 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.33.3] - 2026-04-17
+
+### Changed
+- Section reorder overlay: when a drag is started from a section-heading handle, the floating pill now snaps under the cursor (centered on the pointer) instead of preserving the pointer→pill offset. The handle can be far from the overlay's center, which previously required dragging the cursor a long way before the pill caught up — painful on small trackpads.
+
+## [1.33.2] - 2026-04-17
+
+### Fixed
+- Section reorder overlay: the new order is now also synced into the active dataset snapshot, matching how the Settings → Sections Save button behaves. Without this, the live `section_visibility` table was updated but the active dataset kept the old order, and a page reload restored it — making the reorder appear not to persist.
+
+## [1.33.1] - 2026-04-17
+
+### Fixed
+- Section reorder overlay: the drop-position indicator now tracks the floating pill's midpoint instead of the cursor, so grabbing a pill near its top or bottom edge no longer puts the placeholder one slot off from where the pill is actually shown.
+
+## [1.33.0] - 2026-04-17
+
+### Added
+- In-place section reorder overlay. A drag handle now appears next to every section heading; activating it opens a floating overlay with each section's title over a dimmed, blurred CV. Drag pills to reorder with animated transitions, then click OK to save or Cancel to revert. Hidden sections appear dimmed so their position can still be adjusted. The Settings → Sections & Headlines panel is unchanged and remains available.
+
 ## [1.32.0] - 2026-04-17
 
 ### Added

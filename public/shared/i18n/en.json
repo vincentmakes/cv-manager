@@ -54,6 +54,7 @@
     "action.add_project": "Add Project",
     "action.move_up": "Move Up",
     "action.move_down": "Move Down",
+    "action.reorder_sections": "Reorder sections",
 
     "btn.save": "Save",
     "btn.cancel": "Cancel",
@@ -61,8 +62,11 @@
     "btn.close": "Close",
     "btn.save_changes": "Save Changes",
     "btn.done": "Done",
+    "btn.ok": "OK",
     "btn.add_item": "Add Item",
     "btn.delete_section": "Delete Section",
+
+    "reorder.hint": "Drag sections to reorder. Click OK to save.",
 
     "modal.edit": "Edit",
     "modal.edit_experience": "Edit Experience",

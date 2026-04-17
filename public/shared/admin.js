@@ -756,6 +756,9 @@ function renderCustomSection(section) {
     
     return `
         <section class="section custom-section ${visible ? '' : 'hidden-print'}" id="section-${section.section_key}">
+            <button class="section-reorder-handle no-print" data-section-key="${section.section_key}" title="${t('action.reorder_sections')}" aria-label="${t('action.reorder_sections')}">
+                <span class="material-symbols-outlined">drag_indicator</span>
+            </button>
             <div class="section-header">
                 <h2 class="section-title">${escapeHtml(section.name)}</h2>
                 <div class="section-actions no-print">
@@ -4859,3 +4862,351 @@ async function downloadAtsPdf() {
         btn.disabled = false;
     }
 }
+
+// ===========================
+// Section Reorder Overlay
+// ===========================
+
+let reorderState = null;
+
+function reorderSectionDisplayName(section) {
+    const isCustom = section.name && section.name !== section.default_name;
+    return isCustom ? section.name : getTranslatedSectionName(section.key, section.name || section.default_name);
+}
+
+function renderReorderPills() {
+    const list = document.getElementById('reorderList');
+    if (!list || !reorderState) return;
+    list.innerHTML = reorderState.order.map((section, index) => {
+        const hidden = section.visible === false;
+        const label = reorderSectionDisplayName(section);
+        const hiddenBadge = hidden
+            ? '<span class="reorder-pill-hidden-icon material-symbols-outlined" aria-hidden="true">visibility_off</span>'
+            : '';
+        return `
+            <div class="reorder-pill${hidden ? ' reorder-pill--hidden' : ''}"
+                 data-key="${section.key}"
+                 data-index="${index}"
+                 style="animation-delay: ${Math.min(index * 40, 240)}ms">
+                <span class="reorder-pill-grip material-symbols-outlined" aria-hidden="true">drag_indicator</span>
+                <span class="reorder-pill-label">${escapeHtml(label)}</span>
+                ${hiddenBadge}
+            </div>
+        `;
+    }).join('');
+    attachReorderPillListeners();
+}
+
+function attachReorderPillListeners() {
+    document.querySelectorAll('#reorderList .reorder-pill').forEach(pill => {
+        pill.addEventListener('pointerdown', onReorderPillPointerDown);
+    });
+}
+
+function onReorderPillPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const pill = e.currentTarget;
+    const key = pill.dataset.key;
+    beginReorderDrag(key, e);
+}
+
+function openReorderOverlay(grabbedKey, pointerEvent) {
+    if (!Array.isArray(sectionOrder) || sectionOrder.length === 0) return;
+    const overlay = document.getElementById('reorderOverlay');
+    if (!overlay) return;
+
+    // Snapshot so Cancel can revert
+    const snapshot = sectionOrder.map(s => ({ ...s }));
+    reorderState = {
+        order: sectionOrder.map(s => ({ ...s })),
+        snapshot,
+        dragging: null,
+        isOpen: true
+    };
+
+    renderReorderPills();
+
+    overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('reorder-active');
+
+    // Wire footer buttons once
+    const okBtn = document.getElementById('reorderOkBtn');
+    const cancelBtn = document.getElementById('reorderCancelBtn');
+    if (okBtn && !okBtn.dataset.bound) {
+        okBtn.addEventListener('click', confirmReorder);
+        okBtn.dataset.bound = '1';
+    }
+    if (cancelBtn && !cancelBtn.dataset.bound) {
+        cancelBtn.addEventListener('click', cancelReorder);
+        cancelBtn.dataset.bound = '1';
+    }
+
+    // Esc to cancel, backdrop click to cancel
+    document.addEventListener('keydown', onReorderKeyDown);
+    overlay.addEventListener('pointerdown', onReorderOverlayPointerDown);
+
+    // If a handle triggered the open, kick off a drag on that pill immediately.
+    // Suppress the pill's entrance animation so getBoundingClientRect matches final layout.
+    // Snap the pill under the cursor so the user doesn't have to chase it from
+    // the section heading handle (potentially far from the overlay center).
+    if (grabbedKey && pointerEvent) {
+        const pill = document.querySelector(`#reorderList .reorder-pill[data-key="${grabbedKey}"]`);
+        if (pill) pill.style.animation = 'none';
+        beginReorderDrag(grabbedKey, pointerEvent, { snapPillToCursor: true });
+    }
+}
+
+function onReorderOverlayPointerDown(e) {
+    // Clicking the backdrop (the overlay itself, not the dialog) cancels
+    if (e.target && e.target.id === 'reorderOverlay') {
+        cancelReorder();
+    }
+}
+
+function onReorderKeyDown(e) {
+    if (e.key === 'Escape') {
+        cancelReorder();
+    }
+}
+
+function beginReorderDrag(key, pointerEvent, opts = {}) {
+    if (!reorderState) return;
+    const pill = document.querySelector(`#reorderList .reorder-pill[data-key="${key}"]`);
+    if (!pill) return;
+
+    // End any previous drag cleanly
+    if (reorderState.dragging) endReorderDrag();
+
+    const rect = pill.getBoundingClientRect();
+    const pointerX = pointerEvent.clientX ?? (rect.left + rect.width / 2);
+    const pointerY = pointerEvent.clientY ?? (rect.top + rect.height / 2);
+
+    // If the pointer is outside the pill (e.g. drag initiated from the
+    // section-heading handle on the left of the page), center the pill on
+    // the cursor instead of preserving the pointer→pill offset. Otherwise
+    // the pill floats far from the cursor and is hard to reach on a small
+    // trackpad. Caller can also force this via opts.snapPillToCursor.
+    const pointerOutsidePill =
+        pointerX < rect.left || pointerX > rect.right ||
+        pointerY < rect.top || pointerY > rect.bottom;
+    const snap = opts.snapPillToCursor || pointerOutsidePill;
+
+    // Placeholder keeps the slot while the pill floats
+    const placeholder = document.createElement('div');
+    placeholder.className = 'reorder-placeholder';
+    placeholder.style.height = `${rect.height}px`;
+    pill.parentNode.insertBefore(placeholder, pill);
+
+    pill.classList.add('dragging');
+    pill.style.width = `${rect.width}px`;
+    pill.style.height = `${rect.height}px`;
+    pill.style.position = 'fixed';
+    pill.style.left = `${rect.left}px`;
+    pill.style.top = `${rect.top}px`;
+    pill.style.zIndex = '10';
+    pill.style.pointerEvents = 'none';
+
+    reorderState.dragging = {
+        key,
+        pill,
+        placeholder,
+        offsetX: snap ? rect.width / 2 : pointerX - rect.left,
+        offsetY: snap ? rect.height / 2 : pointerY - rect.top,
+        pointerId: pointerEvent.pointerId
+    };
+
+    updateDraggingPillPosition(pointerX, pointerY);
+
+    try {
+        if (pointerEvent.pointerId !== undefined) {
+            document.body.setPointerCapture?.(pointerEvent.pointerId);
+        }
+    } catch (_) { /* ignore */ }
+
+    document.addEventListener('pointermove', onReorderPointerMove);
+    document.addEventListener('pointerup', onReorderPointerUp);
+    document.addEventListener('pointercancel', onReorderPointerUp);
+}
+
+function updateDraggingPillPosition(clientX, clientY) {
+    const d = reorderState?.dragging;
+    if (!d) return;
+    d.pill.style.left = `${clientX - d.offsetX}px`;
+    d.pill.style.top = `${clientY - d.offsetY}px`;
+}
+
+function onReorderPointerMove(e) {
+    const d = reorderState?.dragging;
+    if (!d) return;
+    e.preventDefault();
+    updateDraggingPillPosition(e.clientX, e.clientY);
+
+    // Find the placeholder's target index based on pointer Y vs. other pills
+    const list = document.getElementById('reorderList');
+    if (!list) return;
+    const siblings = Array.from(list.children).filter(el =>
+        (el.classList.contains('reorder-pill') && el !== d.pill) ||
+        el.classList.contains('reorder-placeholder')
+    );
+
+    // Target index follows the floating pill's midpoint, not the cursor's Y
+    // (the pointer typically grabs the pill off-center).
+    const pillRect = d.pill.getBoundingClientRect();
+    const pillMidY = pillRect.top + pillRect.height / 2;
+
+    let insertBefore = null;
+    for (const sib of siblings) {
+        if (sib === d.placeholder) continue;
+        const rect = sib.getBoundingClientRect();
+        if (pillMidY < rect.top + rect.height / 2) {
+            insertBefore = sib;
+            break;
+        }
+    }
+
+    // FLIP animation: measure before mutation
+    const pills = Array.from(list.querySelectorAll('.reorder-pill')).filter(p => p !== d.pill);
+    const firstRects = new Map(pills.map(p => [p, p.getBoundingClientRect()]));
+
+    if (insertBefore) {
+        if (d.placeholder.nextSibling !== insertBefore) {
+            list.insertBefore(d.placeholder, insertBefore);
+        }
+    } else {
+        if (list.lastElementChild !== d.placeholder) {
+            list.appendChild(d.placeholder);
+        }
+    }
+
+    // Measure after, animate the delta
+    pills.forEach(p => {
+        const first = firstRects.get(p);
+        const last = p.getBoundingClientRect();
+        const dy = first.top - last.top;
+        if (dy) {
+            p.style.transition = 'none';
+            p.style.transform = `translateY(${dy}px)`;
+            requestAnimationFrame(() => {
+                p.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
+                p.style.transform = '';
+            });
+        }
+    });
+}
+
+function onReorderPointerUp(e) {
+    const d = reorderState?.dragging;
+    if (!d) return;
+
+    // Commit new position: replace placeholder with pill
+    const list = document.getElementById('reorderList');
+    if (list && d.placeholder.parentNode === list) {
+        list.insertBefore(d.pill, d.placeholder);
+    }
+    d.placeholder.remove();
+
+    // Clear inline floating styles so the pill sits back in flow
+    d.pill.classList.remove('dragging');
+    d.pill.style.position = '';
+    d.pill.style.left = '';
+    d.pill.style.top = '';
+    d.pill.style.width = '';
+    d.pill.style.height = '';
+    d.pill.style.zIndex = '';
+    d.pill.style.pointerEvents = '';
+
+    try {
+        if (d.pointerId !== undefined) {
+            document.body.releasePointerCapture?.(d.pointerId);
+        }
+    } catch (_) { /* ignore */ }
+
+    endReorderDrag();
+
+    // Rebuild reorderState.order from DOM order
+    if (list && reorderState) {
+        const keys = Array.from(list.querySelectorAll('.reorder-pill')).map(p => p.dataset.key);
+        const lookup = new Map(reorderState.order.map(s => [s.key, s]));
+        reorderState.order = keys.map(k => lookup.get(k)).filter(Boolean);
+        // Refresh data-index + animation-delay staleness by updating indices
+        Array.from(list.querySelectorAll('.reorder-pill')).forEach((p, i) => {
+            p.dataset.index = String(i);
+        });
+    }
+}
+
+function endReorderDrag() {
+    document.removeEventListener('pointermove', onReorderPointerMove);
+    document.removeEventListener('pointerup', onReorderPointerUp);
+    document.removeEventListener('pointercancel', onReorderPointerUp);
+    if (reorderState) reorderState.dragging = null;
+}
+
+function closeReorderOverlay() {
+    const overlay = document.getElementById('reorderOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('reorder-active');
+    document.removeEventListener('keydown', onReorderKeyDown);
+    overlay.removeEventListener('pointerdown', onReorderOverlayPointerDown);
+    endReorderDrag();
+    reorderState = null;
+}
+
+function cancelReorder() {
+    closeReorderOverlay();
+}
+
+async function confirmReorder() {
+    if (!reorderState) {
+        closeReorderOverlay();
+        return;
+    }
+    const newOrder = reorderState.order;
+
+    // No change — just close
+    const snap = reorderState.snapshot;
+    const unchanged = newOrder.length === snap.length &&
+        newOrder.every((s, i) => s.key === snap[i].key);
+    if (unchanged) {
+        closeReorderOverlay();
+        return;
+    }
+
+    const sections = newOrder.map((s, index) => ({
+        key: s.key,
+        visible: s.visible,
+        print_visible: s.print_visible !== false,
+        sort_order: index,
+        display_name: (s.name && s.name !== s.default_name) ? s.name : null
+    }));
+
+    try {
+        await api('/api/sections/order', { method: 'PUT', body: { sections } });
+        // Update globals so subsequent renders see the new order
+        sectionOrder = newOrder.map(s => ({ ...s }));
+        settingsSectionOrder = newOrder.map(s => ({ ...s }));
+        reorderSectionElements();
+        // Persist into the active dataset snapshot; otherwise a page reload
+        // restores the dataset's saved order and the change appears lost.
+        autoSaveActiveDataset();
+        toast(t('toast.settings_saved'), 'success');
+    } catch (err) {
+        toast(t('toast.settings_failed'), 'error');
+    } finally {
+        closeReorderOverlay();
+    }
+}
+
+// Delegated handle listener: press-and-drag on any .section-reorder-handle
+document.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest && e.target.closest('.section-reorder-handle');
+    if (!handle) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    const key = handle.dataset.sectionKey;
+    if (!key) return;
+    e.preventDefault();
+    openReorderOverlay(key, e);
+});
