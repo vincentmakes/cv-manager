@@ -7,6 +7,7 @@ let sectionOrder = [];
 let activeDatasetId = null;
 let activeDatasetName = null;
 let activeDatasetIsDefault = false;
+let activeDatasetIsPublic = false;
 let activeDatasetLanguage = null;
 let activeDatasetLanguageGroup = null;
 let activeDatasetSiblings = [];
@@ -249,6 +250,7 @@ async function applyLoadedDatasetResult(result) {
     activeDatasetId = result.id;
     activeDatasetName = result.name;
     activeDatasetIsDefault = !!result.is_default;
+    activeDatasetIsPublic = !!result.is_public;
     activeDatasetLanguageGroup = result.language_group || null;
     activeDatasetVersion = result.version || 1;
     activeDatasetVersionGroup = result.version_group || null;
@@ -293,11 +295,13 @@ async function loadActiveDatasetVersionCount() {
 function showActiveDatasetBanner(id, name, isDefault) {
     const banner = document.getElementById('activeDatasetBanner');
     const nameEl = document.getElementById('activeDatasetName');
-    const defaultBadge = document.getElementById('activeDatasetDefaultBadge');
+    const publicBadge = document.getElementById('activeDatasetPublicBadge');
+    const sharedBadge = document.getElementById('activeDatasetSharedBadge');
     if (!banner || !nameEl) return;
 
     nameEl.textContent = name;
-    defaultBadge.style.display = isDefault ? '' : 'none';
+    if (publicBadge) publicBadge.style.display = isDefault ? '' : 'none';
+    if (sharedBadge) sharedBadge.style.display = activeDatasetIsPublic ? '' : 'none';
     banner.style.display = '';
 
     // Language badge — always show when a dataset is active, with a round flag

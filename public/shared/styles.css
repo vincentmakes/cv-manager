@@ -1253,18 +1253,18 @@ body {
 }
 .public-lang-name { flex: 1; }
 
-/* Admin dataset version badge — high-contrast amber pill (matches chip pill shape) */
+/* Admin dataset version badge — soft purple outlined pill (subtle but distinct) */
 .active-dataset-version-badge {
     display: inline-flex;
     align-items: center;
-    padding: 3px 10px;
+    padding: 2px 10px;
     border-radius: 999px;
-    background: #f59e0b;
-    color: #ffffff;
-    font-size: 12px;
+    background: rgba(139, 92, 246, 0.1);
+    color: #6d28d9;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    box-shadow: 0 1px 2px rgba(245, 158, 11, 0.3);
 }
 
 /* Right-aligned variants group (intro label + sibling chips + add-language button) */
@@ -1315,19 +1315,18 @@ body {
     align-items: center;
     gap: 6px;
     padding: 3px 10px 3px 3px;
-    border: 1px solid var(--gray-200);
+    border: none;
     border-radius: 999px;
-    background: var(--white);
-    color: var(--gray-700);
+    background: var(--primary);
+    color: var(--white, #fff);
     font-size: 12px;
     font-weight: 600;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 .dataset-lang-chip:hover {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--white, #fff);
+    background: var(--primary-dark, #0048b8);
     box-shadow: 0 2px 6px rgba(0, 102, 255, 0.25);
     transform: translateY(-1px);
 }
