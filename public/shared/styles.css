@@ -179,11 +179,16 @@ body {
     position: relative;
 }
 
-/* Phantom "create custom section" placeholder — revealed on hover below each section */
+/* Phantom "create custom section" placeholder.
+   Between sections: invisible but occupies the whole inter-section gap as a hit target;
+   revealed only when the cursor is inside the gap (no flicker from the section above).
+   The last phantom (after the final section) gets `.phantom-last` and stays visible as
+   a discoverability affordance. */
 .phantom-section {
-    margin-top: -16px;
-    margin-bottom: 16px;
-    height: 0;
+    margin-top: -16px;        /* pull phantom's top up to section's bottom border; the 16px margin-bottom becomes a hit target */
+    padding: 6px 0;           /* 2px border + 6px pad + 0 content + 6px pad + 2px border = 16px total, exactly fills the gap */
+    height: 0;                /* content collapsed */
+    box-sizing: content-box;
     opacity: 0;
     overflow: hidden;
     cursor: pointer;
@@ -191,27 +196,42 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    border: 2px dashed var(--gray-300);
+    border: 2px dashed transparent;
     border-radius: var(--radius-md);
     color: var(--gray-500);
     font-size: 13px;
     font-weight: 500;
     user-select: none;
-    transition: opacity 0.15s ease, height 0.15s ease, margin-top 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    background: transparent;
+    /* Only height/padding animate, keeping the top edge fixed at the section's bottom border
+       so the cursor never loses hover as the element resizes. */
+    transition: opacity 0.15s ease, height 0.15s ease, padding 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.phantom-section:hover {
+    opacity: 1;
+    height: 28px;
+    padding: 8px 12px;
+    border-color: var(--primary);
+    background: var(--very-light);
+    color: var(--primary);
+}
+
+/* Last phantom: always visible at the bottom of the CV as a discoverability hint */
+.phantom-section.phantom-last {
+    opacity: 0.55;
+    height: 28px;
+    padding: 8px 12px;
+    border-color: var(--gray-300);
+    color: var(--gray-500);
     background: transparent;
 }
 
-.section:hover + .phantom-section,
-.phantom-section:hover {
+.phantom-section.phantom-last:hover {
     opacity: 1;
-    height: 36px;
-    margin-top: 0;
-}
-
-.phantom-section:hover {
+    border-color: var(--primary);
     background: var(--very-light);
     color: var(--primary);
-    border-color: var(--primary);
 }
 
 .phantom-section .material-symbols-outlined {

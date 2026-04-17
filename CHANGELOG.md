@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.34.1] - 2026-04-17
+
+### Changed
+- Phantom "+ Create custom section" placeholder now reveals only when the cursor is inside the inter-section gap (no longer triggered by hovering the section above), and the placeholder below the final section is always visible as a discoverability hint.
+
+### Fixed
+- Flicker when the cursor moved from a section into the gap below it: the phantom element now physically occupies the gap as a hit target (via negative margin-top + padding) and keeps its top edge fixed while expanding, so hover state never lapses mid-animation.
+
 ## [1.34.0] - 2026-04-17
 
 ### Added

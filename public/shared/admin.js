@@ -690,15 +690,16 @@ function injectPhantomSections() {
     // Remove any stale phantoms first
     container.querySelectorAll('.phantom-section').forEach(el => el.remove());
 
-    const sections = container.querySelectorAll(':scope > .section');
-    sections.forEach(sectionEl => {
+    const sections = Array.from(container.querySelectorAll(':scope > .section'));
+    sections.forEach((sectionEl, idx) => {
         // Derive the section key from its id (e.g. "section-about" -> "about", "section-custom_123" -> "custom_123")
         const id = sectionEl.id || '';
         const key = id.startsWith('section-') ? id.slice('section-'.length) : '';
         if (!key) return;
 
+        const isLast = idx === sections.length - 1;
         const phantom = document.createElement('div');
-        phantom.className = 'phantom-section no-print';
+        phantom.className = 'phantom-section no-print' + (isLast ? ' phantom-last' : '');
         phantom.dataset.afterSectionKey = key;
         phantom.setAttribute('role', 'button');
         phantom.setAttribute('tabindex', '0');
