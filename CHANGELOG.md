@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.31.2] - 2026-04-17
+
+### Changed
+- Replaced emoji flags with the existing `langFlagImg` CDN helper so language flags render as true circular images (matching the rest of the app) in the current-language pill, sibling chips, and Add-language dropdown.
+- Current-language pill is now pill-shaped (full border-radius) with flag + uppercase code, matching the sibling-chip shape for visual consistency.
+- Version pill switched to the same full-pill border-radius and slightly larger text so it aligns visually with the language chips.
+
 ## [1.31.1] - 2026-04-17
 
 ### Changed

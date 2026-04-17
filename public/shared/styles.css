@@ -1253,15 +1253,15 @@ body {
 }
 .public-lang-name { flex: 1; }
 
-/* Admin dataset version badge — high-contrast amber pill */
+/* Admin dataset version badge — high-contrast amber pill (matches chip pill shape) */
 .active-dataset-version-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px 9px;
-    border-radius: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
     background: #f59e0b;
     color: #ffffff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.5px;
     box-shadow: 0 1px 2px rgba(245, 158, 11, 0.3);
@@ -1282,35 +1282,25 @@ body {
     letter-spacing: 0.2px;
 }
 
-/* Round flag badge — circular container holding a flag emoji */
-.dataset-lang-flag {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--white);
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-    font-size: 12px;
-    line-height: 1;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
 /* Current-language badge in the active dataset banner — flag + code pill.
-   Scoped by id so we don't override the compact badges in the CV Manager list. */
+   Scoped by id so we don't override the compact badges in the CV Manager list.
+   Shape matches the sibling chips for visual consistency. */
 #activeDatasetLangBadge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 2px 8px 2px 3px;
-    font-size: 11px;
+    gap: 6px;
+    padding: 3px 10px 3px 3px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--white, #fff);
+    font-size: 12px;
+    font-weight: 600;
     line-height: 1.2;
+    letter-spacing: 0.5px;
+    text-transform: none;
 }
 #activeDatasetLangBadge .dataset-lang-badge-code {
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
 }
 
 /* Sibling chips — bigger, brighter, with round flag */
