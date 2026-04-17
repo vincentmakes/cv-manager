@@ -720,8 +720,6 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    max-width: 1200px;
-    margin: 0 auto;
     font-size: 13px;
     color: var(--gray-700);
 }

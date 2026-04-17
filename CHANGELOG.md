@@ -4,28 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.31.2] - 2026-04-17
-
-### Changed
-- Replaced emoji flags with the existing `langFlagImg` CDN helper so language flags render as true circular images (matching the rest of the app) in the current-language pill, sibling chips, and Add-language dropdown.
-- Current-language pill is now pill-shaped (full border-radius) with flag + uppercase code, matching the sibling-chip shape for visual consistency.
-- Version pill switched to the same full-pill border-radius and slightly larger text so it aligns visually with the language chips.
-
-## [1.31.1] - 2026-04-17
-
-### Changed
-- Banner version pill is now a high-contrast amber pill so it stands out next to the language and default badges.
-- Sibling language chips and the Add-language button are now right-aligned on the banner with an intro label ("Switch other variants of this CV:") so the controls feel like a cohesive group.
-- Round flag badges added to the current-language pill, sibling chips, and Add-language dropdown options for quicker visual recognition.
-- Add-language button restyled as a filled primary pill with an explicit "Add language" label.
-
 ## [1.31.0] - 2026-04-17
 
 ### Added
-- Active dataset banner now surfaces sibling language variants as inline clickable chips, loading the sibling on click.
-- Dedicated `+` icon with dropdown to add a new language variant directly from the banner, listing only languages not yet present in the group.
-- Current language badge is always visible when a dataset is open.
-- Version chip in the banner shows `v{N}` when the dataset has multiple versions in its `version_group`.
+- Active dataset banner surfaces sibling language variants as right-aligned clickable pill chips with circular flag images, loading the sibling on click.
+- Dedicated "Add language" button (filled primary pill) opens a dropdown listing languages not yet present in the group, pre-fills and locks the Save As flow for the chosen language.
+- Current-language pill is always visible when a dataset is open, with the same pill shape and circular flag as the sibling chips.
+- Version pill shows `v{N}` in a high-contrast amber pill when the dataset has multiple versions in its `version_group`.
+- Intro label "Switch other variants of this CV:" precedes the sibling chips when siblings exist.
 
 ### Fixed
 - Defensive fallback: if a loaded dataset has no `language` value, the current UI locale is used and persisted back to the dataset via the existing language API.
