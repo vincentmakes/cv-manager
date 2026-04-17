@@ -4,26 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.32.2] - 2026-04-17
-
-### Fixed
-- Turning off "Show profile picture" now truly hides the profile picture circle on both admin and public views, even when "Open to Work" is enabled. The OTW overlay was forcing the container visible (which shows the colored gradient circle) to give the badge a host; the badge is now suppressed together with the picture so disabling the picture actually removes it from the header.
-
-## [1.32.1] - 2026-04-17
-
-### Fixed
-- Uploading, selecting, or removing a profile picture while editing a localized dataset now also syncs every language sibling in the same `language_group`, even when "Apply to all datasets" is off. Unrelated datasets remain untouched. The admin sends the active dataset id with each picture operation so the server can resolve the siblings.
-
 ## [1.32.0] - 2026-04-17
 
 ### Added
 - Profile picture library: upload multiple pictures, reuse any of them from a picker grid, and delete unused entries. Mirrors the company-logo library pattern.
-- "Apply this picture to all datasets" toggle in the profile modal (enabled by default). When on, uploading or selecting a picture mirrors the change into every saved dataset snapshot; when off, each dataset keeps its own picture and language siblings inherit the current picture at save time.
-- New backend endpoints: `GET /api/profile-pictures`, `DELETE /api/profile-pictures/:filename`, `PUT /api/profile/picture/select`, `POST /api/profile-pictures/apply-global`.
+- "Apply this picture to all datasets" toggle in the profile modal (enabled by default). When on, uploading or selecting a picture mirrors the change into every saved dataset snapshot; when off, each dataset keeps its own picture and uploading/selecting/removing a picture while editing a localized dataset also syncs every language sibling in the same `language_group` (unrelated datasets remain untouched).
+- New backend endpoints: `GET /api/profile-pictures`, `DELETE /api/profile-pictures/:filename`, `PUT /api/profile/picture/select`, `POST /api/profile-pictures/apply-global`. Each picture mutation accepts an optional `current_dataset_id` so the server can resolve siblings.
 - Legacy `uploads/picture.jpeg` is promoted into the new library format on first run so existing installs keep their picture.
 
 ### Fixed
 - Public site now honors the "Show profile picture" toggle. The picture was previously always rendered on `/`, `/<lang>`, and `/v/<slug>` regardless of the setting. Public `/api/cv`, `/api/profile`, and the dataset-load endpoint now carry the toggle and filename, and the public renderer respects both.
+- Turning off "Show profile picture" now truly hides the profile picture circle on both admin and public views, even when "Open to Work" is enabled. The OTW overlay used to force the container visible (which shows the colored gradient circle) to give the badge a host; the badge is now suppressed together with the picture so disabling the picture actually removes the whole header circle.
 
 ## [1.31.0] - 2026-04-17
 
