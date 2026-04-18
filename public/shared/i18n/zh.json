@@ -258,7 +258,7 @@
     "datasets.switch_to_lang": "切换到{{lang}}",
     "datasets.add_language_title": "添加新的语言版本",
     "datasets.version_badge_tooltip": "版本 {{version}}",
-    "datasets.switch_variants": "切换此简历的其他版本：",
+    "datasets.switch_variants": "此简历的其他版本：",
     "lang_switcher.label": "语言",
     "lang_switcher.switch_to": "切换到 {{lang}}",
     "toast.language_variant_created": "语言变体已创建",

@@ -283,7 +283,7 @@
     "datasets.switch_to_lang": "Switch to {{lang}}",
     "datasets.add_language_title": "Add a new language variant",
     "datasets.version_badge_tooltip": "Version {{version}}",
-    "datasets.switch_variants": "Switch other variants of this CV:",
+    "datasets.switch_variants": "Other variants of this CV:",
 
     "lang_switcher.label": "Language",
     "lang_switcher.switch_to": "Switch to {{lang}}",

@@ -258,7 +258,7 @@
     "datasets.switch_to_lang": "Zu {{lang}} wechseln",
     "datasets.add_language_title": "Neue Sprachvariante hinzufügen",
     "datasets.version_badge_tooltip": "Version {{version}}",
-    "datasets.switch_variants": "Zu anderen Varianten dieses Lebenslaufs wechseln:",
+    "datasets.switch_variants": "Andere Varianten dieses Lebenslaufs:",
     "lang_switcher.label": "Sprache",
     "lang_switcher.switch_to": "Wechseln zu {{lang}}",
     "toast.language_variant_created": "Sprachvariante erstellt",
