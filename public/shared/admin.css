@@ -2899,7 +2899,6 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     border: 2px dashed rgba(255, 255, 255, 0.45);
     border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.08);
-    transition: height .2s ease;
 }
 
 .reorder-footer {
