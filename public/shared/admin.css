@@ -234,10 +234,30 @@
     z-index: 10;
 }
 
-/* Hidden Print Classes */
-.section.hidden-print { opacity: 0.5; border: 2px dashed var(--gray-300); }
+/* Hidden Print Classes
+   .is-hidden: section/item is hidden from the CV entirely (dim on admin, hidden on public, hidden in print).
+   .hidden-print: section/item is visible on screen (admin + public) but omitted from print output only. */
+.section.is-hidden { opacity: 0.5; border: 2px dashed var(--gray-300); }
+.item-card.is-hidden, .cert-card.is-hidden, .skill-category.is-hidden, .project-card.is-hidden { opacity: 0.5; border-left-style: dashed; }
+.timeline-item.is-hidden { opacity: 0.4; }
+/* Legacy visual treatment for item-level print hiding (items still use .hidden-print directly). */
 .item-card.hidden-print, .cert-card.hidden-print, .skill-category.hidden-print, .project-card.hidden-print { opacity: 0.5; border-left-style: dashed; }
 .timeline-item.hidden-print { opacity: 0.4; }
+/* Section-level print-only hiding shows a subtle corner hint but keeps the section fully visible on screen. */
+.section.hidden-print .section-title::after {
+    content: 'no print';
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    border-radius: 4px;
+    vertical-align: middle;
+}
 
 /* Add Button */
 .add-btn {
@@ -2702,8 +2722,8 @@
     #section-experience { page-break-inside: auto; break-inside: auto; }
     .item-card, .cert-card, .skill-category, .project-card { page-break-inside: avoid; break-inside: avoid; }
     .items-list { page-break-inside: auto; }
-    .hidden-print { display: none !important; }
-    .section.hidden-print, .item-card.hidden-print, .cert-card.hidden-print, .skill-category.hidden-print, .project-card.hidden-print { display: none !important; }
+    .hidden-print, .is-hidden { display: none !important; }
+    .section.hidden-print, .section.is-hidden, .item-card.hidden-print, .item-card.is-hidden, .cert-card.hidden-print, .cert-card.is-hidden, .skill-category.hidden-print, .skill-category.is-hidden, .project-card.hidden-print, .project-card.is-hidden { display: none !important; }
 }
 
 /* ===========================
