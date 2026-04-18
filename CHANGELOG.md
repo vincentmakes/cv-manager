@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.37.1] - 2026-04-18
+
+### Fixed
+- Section reorder overlay: the dashed placeholder renders at its full height the moment a drag starts instead of animating up from zero, so it matches the height of the floating pill again. A stale `transition: height .2s ease` on `.reorder-placeholder` was firing on insertion (the placeholder is created detached with its target height set inline, then inserted into the list), making the placeholder visibly grow over 200 ms every time a drag began. The transition served no purpose since the placeholder's height is set once at creation and never changes.
+
 ## [1.37.0] - 2026-04-18
 
 ### Removed
