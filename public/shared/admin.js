@@ -4446,16 +4446,14 @@ function openCustomSectionRenameModal(id) {
     currentCustomSection.id = id;
     const input = document.getElementById('cs-rename-input');
     const toggle = document.getElementById('cs-rename-apply-language');
-    // Prefill from sectionOrder (populated via /api/sections/order with
-    // dataset context) so per-dataset and per-language overrides land in
-    // the input. customSections[].name is only the creation-time default
-    // and doesn't reflect subsequent renames.
+    // Custom sections don't have a translated default to fall back to, so
+    // the input must always carry the current title — empty is not a valid
+    // state (saveCustomSectionRename rejects it). Prefer sectionOrder's
+    // resolved name so later renames show up, fall back to customSections.
     const orderEntry = (Array.isArray(sectionOrder) ? sectionOrder : []).find(s => s.key === section.section_key) || {};
-    const defaultName = orderEntry.default_name || section.name || '';
-    const effectiveName = orderEntry.name || section.name || '';
     if (input) {
-        input.value = (effectiveName && effectiveName !== defaultName) ? effectiveName : '';
-        input.placeholder = defaultName;
+        input.value = orderEntry.name || section.name || '';
+        input.placeholder = '';
     }
     if (toggle) toggle.checked = true;
     document.getElementById('customSectionRenameModalOverlay').classList.add('active');
