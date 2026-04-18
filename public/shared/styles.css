@@ -1448,6 +1448,9 @@ body {
     transform: translateY(-1px);
 }
 .active-dataset-banner-content .dataset-add-lang-btn .material-symbols-outlined { color: inherit; }
+/* Globe icon is mobile-only — it pairs with the + on phones where the
+   "Add language" text is hidden. Desktop shows + plus the full label. */
+.dataset-add-lang-btn .dataset-add-lang-globe { display: none; }
 .dataset-add-lang-dropdown {
     display: none;
     position: absolute;
