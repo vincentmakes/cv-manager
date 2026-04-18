@@ -315,12 +315,39 @@ function serveDatasetPage(req, res, lang) {
 }
 
 // Serve dataset data as JSON for public slug API
+// Re-resolve sectionOrder[].name on a parsed dataset blob using the dataset's
+// own language. The `.name` field inside saved_datasets.data is a snapshot
+// taken at save time, so it can fall out of sync when (a) the admin adds a
+// per-language override after the dataset was saved, (b) the i18n translation
+// for that section changes, or (c) the visitor switches languages. Calling
+// this on read means the public and admin sides always see the effective
+// title without having to re-save every dataset.
+function refreshDatasetSectionNames(data, language) {
+    if (!data || typeof data !== 'object') return data;
+    if (!Array.isArray(data.sectionOrder)) return data;
+    const customNameMap = {};
+    if (Array.isArray(data.customSections)) {
+        data.customSections.forEach(cs => { if (cs && cs.section_key) customNameMap[cs.section_key] = cs.name; });
+    }
+    data.sectionOrder = data.sectionOrder.map(entry => {
+        if (!entry || !entry.key) return entry;
+        const resolved = resolveSectionTitle(entry.key, {
+            datasetOverride: entry.display_name,
+            language,
+            locale: language,
+            customNameFallback: customNameMap[entry.key]
+        });
+        return { ...entry, name: resolved };
+    });
+    return data;
+}
+
 function serveDatasetData(req, res) {
     try {
         const lang = req.params.lang || req.query.lang;
         const dataset = resolveDatasetBySlug(req.params.slug, lang, true);
         if (!dataset) return res.status(404).json({ error: 'Not found' });
-        const data = JSON.parse(dataset.data);
+        const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
         const siblings = getDatasetSiblings(dataset);
         res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
     } catch (err) {
@@ -343,7 +370,7 @@ function serveDatasetDataById(req, res) {
             }
         }
         if (!dataset) return res.status(404).json({ error: 'Not found' });
-        const data = JSON.parse(dataset.data);
+        const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
         const siblings = getDatasetSiblings(dataset);
         res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
     } catch (err) {
@@ -2599,7 +2626,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND language = ?').get(req.params.slug, req.params.lang);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = dataset.language_group
                 ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
                 : [{ id: dataset.id, language: dataset.language || 'en' }];
@@ -2621,7 +2648,7 @@ if (PUBLIC_ONLY) {
                 dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? ORDER BY CASE WHEN language = \'en\' THEN 0 ELSE 1 END, language ASC LIMIT 1').get(req.params.slug);
             }
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = dataset.language_group
                 ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
                 : [{ id: dataset.id, language: dataset.language || 'en' }];
@@ -2641,7 +2668,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = resolveDatasetBySlug(req.params.slug, req.params.lang, false);
             if (!dataset) return res.status(404).json({ error: 'Not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = getDatasetSiblings(dataset);
             res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) { res.status(500).json({ error: err.message }); }
@@ -2650,7 +2677,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = resolveDatasetBySlug(req.params.slug, null, false);
             if (!dataset) return res.status(404).json({ error: 'Not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = getDatasetSiblings(dataset);
             res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) { res.status(500).json({ error: err.message }); }
@@ -2659,7 +2686,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!dataset) return res.status(404).json({ error: 'Not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = getDatasetSiblings(dataset);
             res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) { res.status(500).json({ error: err.message }); }

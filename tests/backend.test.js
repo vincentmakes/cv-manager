@@ -1450,6 +1450,43 @@ describe('Backend API', () => {
             });
             assert.strictEqual(res.status, 400);
         });
+
+        it('public dataset endpoint returns the per-dataset rename in sectionOrder.name', async () => {
+            const a = await createDataset('Public Rename A', 'en');
+            // Make it fetchable on the public server
+            await fetch(`${BASE_URL}/api/datasets/${a.id}/public`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_public: true })
+            });
+            await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'experience', new_name: 'Public Experience', dataset_id: a.id, apply_to_language: false })
+            });
+            const publicRes = await fetch(`${PUBLIC_URL}/api/datasets/id/${a.id}`);
+            assert.strictEqual(publicRes.status, 200);
+            const publicData = await publicRes.json();
+            const entry = publicData.sectionOrder.find(s => s.key === 'experience');
+            assert.strictEqual(entry.name, 'Public Experience', 'public side must see the rename');
+            assert.strictEqual(entry.display_name, 'Public Experience');
+            await del(a.id);
+        });
+
+        it('public dataset endpoint re-resolves section titles in the dataset language', async () => {
+            // Fresh en+fr sibling pair; fr sibling must return French section titles
+            // even if section_visibility.display_name (frozen legacy column) is null.
+            const en = await createDataset('Lang Resolve EN', 'en');
+            const fr = await createDataset('Lang Resolve FR', 'fr', en.language_group);
+            await fetch(`${BASE_URL}/api/datasets/${fr.id}/public`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_public: true })
+            });
+            const publicRes = await fetch(`${PUBLIC_URL}/api/datasets/id/${fr.id}`);
+            const publicData = await publicRes.json();
+            const expEntry = publicData.sectionOrder.find(s => s.key === 'experience');
+            // The French translation of `section.experience` in fr.json is
+            // "Expérience professionnelle". Assert it's not the English default.
+            assert.notStrictEqual(expEntry.name, 'Work Experience', 'FR sibling should not carry English title');
+            assert.match(expEntry.name, /Expérience/, 'FR sibling should show French title');
+            await del(en.id); await del(fr.id);
+        });
     });
 
     describe('Public API (port)', () => {
