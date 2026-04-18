@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.35.0] - 2026-04-18
+
+### Added
+- Inline print-visibility toggle on every section header of the active dataset. A printer icon sits next to the existing visibility eye on built-in and custom sections, mirroring the control that previously lived only inside Settings > Sections & Headlines. The icon flips to `print_disabled` when the section is excluded from print, and is disabled while the section itself is hidden.
+
+### Fixed
+- Hiding a section from print no longer dims it on the admin screen. Previously, "visible=off" and "print=off" both applied the same `.hidden-print` class, so toggling print off made the section look as if it had been hidden entirely. Print-only hiding now shows the section at full opacity with a small "no print" badge on its title; "fully hidden" keeps the existing 50% dashed treatment via the new `.is-hidden` class.
+
 ## [1.34.1] - 2026-04-18
 
 ### Fixed

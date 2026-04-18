@@ -668,11 +668,8 @@ function reorderSectionElements() {
         const el = sectionElements[section.key];
         if (el) {
             container.appendChild(el);
-            if (section.visible && section.print_visible === false) {
-                el.classList.add('hidden-print');
-            } else if (section.visible) {
-                el.classList.remove('hidden-print');
-            }
+            el.classList.toggle('is-hidden', !section.visible);
+            el.classList.toggle('hidden-print', section.visible && section.print_visible === false);
         }
     });
 
@@ -749,7 +746,7 @@ async function loadCustomSections() {
         // Apply visibility
         const el = document.getElementById(`section-${section.section_key}`);
         if (el && !section.visible) {
-            el.classList.add('hidden-print');
+            el.classList.add('is-hidden');
         }
     });
 }
@@ -795,7 +792,7 @@ function renderCustomSection(section) {
     }
     
     return `
-        <section class="section custom-section ${visible ? '' : 'hidden-print'}" id="section-${section.section_key}">
+        <section class="section custom-section ${visible ? '' : 'is-hidden'}" id="section-${section.section_key}">
             <button class="section-reorder-handle no-print" data-section-key="${section.section_key}" title="${t('action.reorder_sections')}" aria-label="${t('action.reorder_sections')}">
                 <span class="material-symbols-outlined">drag_indicator</span>
             </button>
@@ -810,6 +807,9 @@ function renderCustomSection(section) {
                     </button>
                     <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="${t('action.toggle_visibility')}" id="toggle-${section.section_key}">
                         <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleSectionPrint('${section.section_key}')" title="${t('action.toggle_print_visibility')}" id="toggle-print-${section.section_key}">
+                        <span class="material-symbols-outlined">print</span>
                     </button>
                 </div>
             </div>
@@ -995,18 +995,29 @@ function renderTimelineLayout(items) {
 
 // Load Sections with visibility toggle (admin version)
 async function loadSectionsAdmin() {
-    const sections = await api('/api/sections');
-    Object.keys(sections).forEach(section => {
-        const el = document.getElementById(`section-${section}`);
-        const toggleBtn = document.getElementById(`toggle-${section}`);
+    const order = await api('/api/sections/order');
+    const visibilityMap = {};
+    order.forEach(s => {
+        visibilityMap[s.key] = s.visible;
+        const el = document.getElementById(`section-${s.key}`);
+        const toggleBtn = document.getElementById(`toggle-${s.key}`);
+        const togglePrintBtn = document.getElementById(`toggle-print-${s.key}`);
         if (el) {
-            el.classList.toggle('hidden-print', !sections[section]);
+            el.classList.toggle('is-hidden', !s.visible);
+            el.classList.toggle('hidden-print', s.visible && s.print_visible === false);
         }
         if (toggleBtn) {
-            toggleBtn.classList.toggle('active', sections[section]);
+            toggleBtn.classList.toggle('active', s.visible);
+        }
+        if (togglePrintBtn) {
+            const printOn = s.visible && s.print_visible !== false;
+            togglePrintBtn.classList.toggle('active', printOn);
+            togglePrintBtn.disabled = !s.visible;
+            const icon = togglePrintBtn.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = printOn ? 'print' : 'print_disabled';
         }
     });
-    return sections;
+    return visibilityMap;
 }
 
 // Load Experiences (admin version with edit controls)
@@ -1204,7 +1215,7 @@ async function toggleSection(section) {
     const newValue = !sectionVisibility[section];
     await api(`/api/sections/${section}`, { method: 'PUT', body: { visible: newValue } });
     sectionVisibility = await loadSectionsAdmin();
-    
+
     // For custom sections, also update the customSections data
     if (section.startsWith('custom_')) {
         const customSection = customSections.find(cs => cs.section_key === section);
@@ -1212,7 +1223,19 @@ async function toggleSection(section) {
             customSection.visible = newValue;
         }
     }
-    toast('Section visibility updated');
+    toast(t('toast.section_visibility_updated'));
+    autoSaveActiveDataset();
+}
+
+// Toggle Section Print Visibility
+async function toggleSectionPrint(section) {
+    if (!sectionVisibility[section]) return;
+    const btn = document.getElementById(`toggle-print-${section}`);
+    const currentlyOn = btn ? btn.classList.contains('active') : true;
+    const newValue = !currentlyOn;
+    await api(`/api/sections/${section}/print`, { method: 'PUT', body: { print_visible: newValue } });
+    sectionVisibility = await loadSectionsAdmin();
+    toast(t('toast.section_print_visibility_updated'));
     autoSaveActiveDataset();
 }
 

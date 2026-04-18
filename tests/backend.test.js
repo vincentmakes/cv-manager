@@ -577,6 +577,38 @@ describe('Backend API', () => {
             });
         });
 
+        it('PUT /api/sections/:name/print toggles print visibility without affecting visibility', async () => {
+            const res = await fetch(`${BASE_URL}/api/sections/experience/print`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_visible: false }),
+            });
+            assert.strictEqual(res.status, 200);
+
+            const orderRes = await fetch(`${BASE_URL}/api/sections/order`);
+            const order = await orderRes.json();
+            const exp = order.find(s => s.key === 'experience');
+            assert.ok(exp, 'experience section present in order');
+            assert.strictEqual(exp.print_visible, false, 'print_visible persisted as false');
+            assert.strictEqual(exp.visible, true, 'visible stays true when only print was toggled');
+
+            // Restore
+            await fetch(`${BASE_URL}/api/sections/experience/print`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_visible: true }),
+            });
+        });
+
+        it('PUT /api/sections/:name/print returns 404 for unknown section', async () => {
+            const res = await fetch(`${BASE_URL}/api/sections/does_not_exist/print`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_visible: false }),
+            });
+            assert.strictEqual(res.status, 404);
+        });
+
         // --- Reorder ---
         it('PUT /api/reorder/:type reorders items', async () => {
             // Create two experiences

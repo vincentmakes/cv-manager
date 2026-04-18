@@ -1823,7 +1823,7 @@ body.has-preview-banner .container {
     .custom-picture-img { border-radius: 4px; }
     .custom-picture-caption { font-size: 10px; }
 
-    .hidden-print { display: none !important; }
+    .hidden-print, .is-hidden { display: none !important; }
 }
 
 /* Responsive */

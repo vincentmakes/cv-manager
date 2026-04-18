@@ -1283,10 +1283,10 @@ async function loadSections() {
         const el = document.getElementById(`section-${section}`);
         if (el) {
             if (!sections[section]) {
-                el.classList.add('hidden-print');
+                el.classList.add('is-hidden');
                 el.style.display = 'none';
             } else {
-                el.classList.remove('hidden-print');
+                el.classList.remove('is-hidden');
                 el.style.display = '';
             }
         }
