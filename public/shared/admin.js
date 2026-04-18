@@ -637,9 +637,13 @@ function updatePaginationSettings(key, value) {
     else if (key === 'paginationStyle') paginationSettings.style = value;
 }
 
-// Load section order from API
+// Load section order from API. Passing the active dataset id lets the server
+// resolve titles via the per-dataset → per-language → i18n → default chain so
+// every caller (section headers, reorder overlay, settings panel) sees the
+// effective name without redoing the precedence itself.
 async function loadSectionOrder() {
-    const order = await api('/api/sections/order');
+    const qs = activeDatasetId ? `?dataset_id=${activeDatasetId}` : '';
+    const order = await api('/api/sections/order' + qs);
     return order;
 }
 
@@ -1330,7 +1334,27 @@ function editProfile() {
 
 // Form Templates
 function profileForm(d) {
+    // The About section's title is edited here too (the About header doubles as
+    // the profile header on the CV, so the pencil button would duplicate the
+    // existing "Edit About" icon). Find the current override and the translated
+    // default so the input can prefill / placeholder correctly.
+    const aboutEntry = (Array.isArray(sectionOrder) ? sectionOrder : []).find(s => s.key === 'about') || {};
+    const translatedAboutDefault = getTranslatedSectionName('about', aboutEntry.default_name);
+    const aboutCurrentName = aboutEntry.name || translatedAboutDefault;
+    const aboutIsCustom = aboutCurrentName && aboutCurrentName !== translatedAboutDefault;
     return `
+        <div class="form-group">
+            <label class="form-label">${t('form.section_heading')}</label>
+            <input type="text" class="form-input" id="f-about-heading" value="${escapeHtml(aboutIsCustom ? aboutCurrentName : '')}" placeholder="${escapeHtml(translatedAboutDefault)}">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="f-about-heading-apply-language" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="form-hint" style="margin:0">${t('settings.sections.apply_to_language')}</span>
+            </div>
+            <div class="form-hint">${t('settings.sections.rename_placeholder')}</div>
+        </div>
         <div class="form-group">
             <label class="form-label">${t('form.profile_picture')}</label>
             <div class="profile-upload-container">
@@ -1713,6 +1737,39 @@ async function saveItem() {
                 // After the picture save, mirror the current picture filename across all datasets.
                 const current = await api('/api/profile');
                 await api('/api/profile-pictures/apply-global', { method: 'POST', body: { picture_filename: current.picture_filename || null } });
+            }
+            // Persist the About section heading rename if the user changed it.
+            // Empty input is a reset (clears both per-dataset and, when the toggle
+            // is on, the per-language override). We only fire the request when the
+            // resulting value is actually different from the current effective
+            // name to avoid toast spam on no-op saves.
+            if (activeDatasetId) {
+                const headingInput = document.getElementById('f-about-heading');
+                const headingToggle = document.getElementById('f-about-heading-apply-language');
+                if (headingInput) {
+                    const aboutEntry = (Array.isArray(sectionOrder) ? sectionOrder : []).find(s => s.key === 'about') || {};
+                    const translatedDefault = getTranslatedSectionName('about', aboutEntry.default_name);
+                    const currentEffective = aboutEntry.name || translatedDefault;
+                    const newName = headingInput.value.trim();
+                    const resolvedNew = newName === '' ? translatedDefault : newName;
+                    if (resolvedNew !== currentEffective) {
+                        try {
+                            await api('/api/sections/rename', {
+                                method: 'POST',
+                                body: {
+                                    section_key: 'about',
+                                    new_name: newName,
+                                    dataset_id: activeDatasetId,
+                                    apply_to_language: headingToggle ? !!headingToggle.checked : true
+                                }
+                            });
+                            sectionOrder = await loadSectionOrder();
+                            applySectionTitles(sectionOrder);
+                        } catch (err) {
+                            toast(t('toast.section_rename_failed'), 'error');
+                        }
+                    }
+                }
             }
             await loadProfile(true);
             break;
@@ -2848,9 +2905,6 @@ function renderSettingsSections() {
                 <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Show/Hide on Site">
                     ${visibilityIcon(section.visible)}
                 </button>
-                <button class="settings-section-btn" onclick="openSectionRenameModal('${section.key}')" title="${escapeHtml(t('settings.sections.rename'))}">
-                    <span class="material-symbols-outlined" style="font-size:14px">edit</span>
-                </button>
                 <button class="settings-section-btn ${section.print_visible !== false ? 'active' : ''} ${!section.visible ? 'disabled' : ''}" onclick="toggleSettingsSectionPrintVisibility('${section.key}')" title="Show/Hide in Print" ${!section.visible ? 'disabled' : ''}>
                     ${printerIcon(section.print_visible !== false)}
                 </button>
@@ -2967,7 +3021,17 @@ function openSectionRenameModal(key) {
         toast(t('toast.section_rename_needs_dataset') || t('toast.section_rename_failed'), 'error');
         return;
     }
-    const section = settingsSectionOrder.find(s => s.key === key);
+    // Prefer the live section list (populated on page load) so the inline
+    // pencil icons on each section header work without the Settings modal
+    // being open; fall back to the Settings list when that's the entry point.
+    const sources = [sectionOrder, settingsSectionOrder];
+    let section = null;
+    for (const src of sources) {
+        if (Array.isArray(src)) {
+            section = src.find(s => s.key === key);
+            if (section) break;
+        }
+    }
     if (!section) return;
     currentRenameSectionKey = key;
     const input = document.getElementById('section-rename-input');
@@ -3010,10 +3074,14 @@ async function saveSectionRename() {
         });
         toast(newName === '' ? t('toast.section_rename_reset') : t('toast.section_rename_saved'));
         closeSectionRenameModal();
-        settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
-        renderSettingsSections();
         sectionOrder = await loadSectionOrder();
-        await renderSectionsInOrder();
+        applySectionTitles(sectionOrder);
+        // Only refresh the Settings panel if it's currently mounted — the
+        // rename can now also be triggered from the inline section header.
+        if (document.getElementById('settingsModalOverlay')?.classList.contains('active')) {
+            settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
+            renderSettingsSections();
+        }
     } catch (err) {
         toast(t('toast.section_rename_failed'), 'error');
     }
@@ -4419,10 +4487,12 @@ async function saveCustomSectionRename() {
         });
         toast(t('toast.section_updated'));
         closeCustomSectionRenameModal();
-        settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
-        renderSettingsSections();
         sectionOrder = await loadSectionOrder();
-        await renderSectionsInOrder();
+        applySectionTitles(sectionOrder);
+        if (document.getElementById('settingsModalOverlay')?.classList.contains('active')) {
+            settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
+            renderSettingsSections();
+        }
     } catch (err) {
         toast(t('toast.section_save_failed'), 'error');
     }

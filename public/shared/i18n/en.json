@@ -81,6 +81,7 @@
     "modal.edit_project": "Edit Project",
     "modal.add_project": "Add Project",
 
+    "form.section_heading": "Section heading",
     "form.profile_picture": "Profile Picture",
     "form.show_profile_picture": "Show Profile Picture",
     "form.choose_image": "Choose Image",
@@ -180,7 +181,7 @@
     "settings.tab.advanced": "Advanced",
     "settings.version.update_available": "Update available: v{{version}}",
 
-    "settings.sections.info": "Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Use the pencil icon to rename a section for this dataset — or for every dataset in the same language.",
+    "settings.sections.info": "Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. To rename a section, use the pencil icon on the section's header on the main page — renames are scoped to this dataset by default.",
     "settings.sections.click_to_edit": "Click to edit section headline",
     "settings.sections.reset_default": "Reset to default",
     "settings.sections.rename": "Rename section",
