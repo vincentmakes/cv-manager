@@ -2260,7 +2260,7 @@
 }
 
 /* Phone portrait: compact Active dataset banner + CV Manager modal */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     /* ─── Active dataset banner ─── */
     .active-dataset-banner-content { flex-wrap: wrap; row-gap: 4px; }
     /* Explicit ordering so rows stack predictably regardless of DOM order. */
