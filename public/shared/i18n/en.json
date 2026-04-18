@@ -11,7 +11,6 @@
     "toolbar.print": "Print / PDF",
     "toolbar.menu": "Menu",
     "toolbar.change_theme": "Change Theme Color",
-
     "theme.title": "Theme Color",
     "theme.brightness": "Brightness",
     "theme.reset": "Reset",
@@ -24,7 +23,6 @@
     "theme.cyan": "Cyan",
     "theme.indigo": "Indigo",
     "theme.pink": "Pink",
-
     "banner.update": "Update available: v{{latest}} (you're on v{{current}})",
     "banner.whats_new": "What's new",
     "banner.dismiss": "Dismiss",
@@ -35,7 +33,6 @@
     "banner.saved": "✓ Saved",
     "banner.save_failed": "Save failed",
     "badge.open_to_work": "Open to Work",
-
     "section.about": "Professional Summary",
     "section.timeline": "Career Timeline",
     "section.experience": "Work Experience",
@@ -43,7 +40,6 @@
     "section.education": "Education",
     "section.skills": "Skills & Expertise",
     "section.projects": "Featured Projects",
-
     "action.edit_profile": "Edit Profile",
     "action.edit_about": "Edit About",
     "action.toggle_visibility": "Toggle Visibility",
@@ -56,7 +52,6 @@
     "action.move_up": "Move Up",
     "action.move_down": "Move Down",
     "action.reorder_sections": "Reorder sections",
-
     "btn.save": "Save",
     "btn.cancel": "Cancel",
     "btn.delete": "Delete",
@@ -66,9 +61,7 @@
     "btn.ok": "OK",
     "btn.add_item": "Add Item",
     "btn.delete_section": "Delete Section",
-
     "reorder.hint": "Drag sections to reorder. Click OK to save.",
-
     "modal.edit": "Edit",
     "modal.edit_experience": "Edit Experience",
     "modal.add_experience": "Add Experience",
@@ -80,7 +73,6 @@
     "modal.add_skill": "Add Skill Category",
     "modal.edit_project": "Edit Project",
     "modal.add_project": "Add Project",
-
     "form.section_heading": "Section heading",
     "form.profile_picture": "Profile Picture",
     "form.show_profile_picture": "Show Profile Picture",
@@ -143,7 +135,6 @@
     "form.project_title": "Project Title",
     "form.technologies": "Technologies (comma separated)",
     "form.link_optional": "Link (optional)",
-
     "icon.code": "Code / Programming",
     "icon.server": "Server / Infrastructure",
     "icon.database": "Database / Data",
@@ -174,21 +165,14 @@
     "icon.eco": "Sustainability",
     "icon.finance": "Finance",
     "icon.default": "Default",
-
     "settings.title": "Settings",
-    "settings.tab.sections": "Sections & Headlines",
     "settings.tab.print": "Print & Export",
     "settings.tab.advanced": "Advanced",
     "settings.version.update_available": "Update available: v{{version}}",
-
-    "settings.sections.info": "Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. To rename a section, use the pencil icon on the section's header on the main page — renames are scoped to this dataset by default.",
-    "settings.sections.click_to_edit": "Click to edit section headline",
-    "settings.sections.reset_default": "Reset to default",
     "settings.sections.rename": "Rename section",
     "settings.sections.rename_modal_title": "Rename section",
     "settings.sections.apply_to_language": "Apply to all datasets in this language",
     "settings.sections.rename_placeholder": "Leave empty to reset to default",
-
     "settings.print.public_button": "Public Print Button",
     "settings.print.public_button_desc": "Show print button on public site",
     "settings.print.page_numbers": "Page Numbers",
@@ -210,7 +194,6 @@
     "settings.print.static_site_btn": "Download ZIP",
     "settings.print.static_site_generating": "Generating...",
     "settings.print.static_site_docs_link": "Learn how to deploy your static site →",
-
     "settings.advanced.info": "Advanced settings for formatting, SEO, analytics and custom integrations.",
     "settings.advanced.date_format": "Date Format",
     "settings.advanced.date_format_desc": "Choose how dates are displayed on your CV",
@@ -240,9 +223,7 @@
     "settings.advanced.tracking_code": "Tracking Code",
     "settings.advanced.tracking_code_desc": "Paste your analytics tracking code here (Google Analytics, Matomo, etc.). This code will be injected into the public CV pages.",
     "settings.advanced.tracking_code_hint": "Code is inserted before the closing </head> tag. Changes are saved when you click \"Save Changes\".",
-
     "settings.language.info": "Choose the display language for the CV Manager interface. This does not affect the content of your CV.",
-
     "datasets.title": "Saved Datasets",
     "datasets.cv_manager_title": "CV Manager",
     "datasets.default_hint_short": "Public",
@@ -290,13 +271,10 @@
     "datasets.add_language_title": "Add a new language variant",
     "datasets.version_badge_tooltip": "Version {{version}}",
     "datasets.switch_variants": "Other variants of this CV:",
-
     "lang_switcher.label": "Language",
     "lang_switcher.switch_to": "Switch to {{lang}}",
-
     "toast.language_variant_created": "Language variant created",
     "confirm.switch_language": "Switch to {{lang}}? Current changes will be auto-saved.",
-
     "custom_section.edit_title": "Edit Custom Section",
     "custom_section.add_title": "Add Custom Section",
     "custom_section.rename_title": "Rename Section",
@@ -309,7 +287,6 @@
     "custom_section.grid_columns": "Grid Columns",
     "custom_section.show_on_timeline": "Show items on Career Timeline",
     "custom_section.show_on_timeline_hint": "Items will appear alongside standard experiences on the timeline",
-
     "custom_item.edit_title": "Edit Item",
     "custom_item.add_title": "Add Item",
     "custom_item.platform": "Platform",
@@ -342,7 +319,6 @@
     "custom_item.caption_placeholder": "e.g., Photo description",
     "custom_item.add_picture": "Add Picture",
     "custom_item.add_item": "Add Item",
-
     "toast.saved": "Saved successfully",
     "toast.deleted": "Deleted",
     "toast.visibility_updated": "Visibility updated",
@@ -410,7 +386,6 @@
     "toast.item_delete_failed": "Failed to delete item",
     "toast.failed_save": "Failed to save",
     "toast.credential_url_invalid": "Credential URL must start with http:// or https://",
-
     "confirm.delete_item": "Are you sure you want to delete this item?",
     "confirm.delete_dataset": "Delete dataset \"{{name}}\"? This cannot be undone.",
     "confirm.delete_section": "Delete this custom section and all its items? This cannot be undone.",
@@ -418,11 +393,9 @@
     "confirm.delete_logo": "Delete this unused logo? This cannot be undone.",
     "confirm.delete_picture": "Delete this unused picture? This cannot be undone.",
     "confirm.overwrite_dataset": "Overwrite \"{{name}}\"? The existing CV will be replaced with the current data.",
-
     "duration.years": "{{count}} yr",
     "duration.months": "{{count}} mos",
     "duration.years_months": "{{years}} yrs {{months}} mos",
-
     "month.short.jan": "Jan",
     "month.short.feb": "Feb",
     "month.short.mar": "Mar",
@@ -447,9 +420,7 @@
     "month.long.october": "October",
     "month.long.november": "November",
     "month.long.december": "December",
-
     "toolbar.ats_export": "ATS Document",
-
     "ats.title": "ATS-Friendly Document",
     "ats.scale": "Scale",
     "ats.paper_size": "Paper Size",
@@ -462,7 +433,6 @@
     "ats.pdf_title_suffix": "Resume",
     "ats.pdf_subject": "Resume / CV",
     "ats.name_fallback": "Name",
-
     "present": "Present",
     "loading": "Loading...",
     "items": "items",

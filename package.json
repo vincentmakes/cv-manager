@@ -1,6 +1,6 @@
 {
   "name": "cv-manager",
-  "version": "1.36.0",
+  "version": "1.37.0",
   "description": "Professional CV Management System",
   "main": "src/server.js",
   "scripts": {

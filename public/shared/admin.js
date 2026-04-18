@@ -2729,13 +2729,7 @@ async function moveExperience(id, direction) {
 // Settings Modal - Section Reordering
 // ===========================
 
-let settingsSectionOrder = [];
-let draggedItem = null;
-
 async function openSettingsModal() {
-    const qs = activeDatasetId ? `?dataset_id=${activeDatasetId}` : '';
-    settingsSectionOrder = await api('/api/sections/order' + qs);
-    renderSettingsSections();
     await loadPublicSettings();
     populateVersionDisplay();
     document.getElementById('settingsModalOverlay').classList.add('active');
@@ -2882,135 +2876,6 @@ function closeSettingsModal() {
     document.getElementById('settingsModalOverlay').classList.remove('active');
 }
 
-function renderSettingsSections() {
-    const container = document.getElementById('settingsSectionsList');
-
-    container.innerHTML = settingsSectionOrder.map((section, index) => {
-        const translatedDefault = getTranslatedSectionName(section.key, section.default_name);
-        const displayName = section.name || translatedDefault;
-        return `
-        <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
-            <div class="settings-section-drag">
-                <span class="material-symbols-outlined" style="font-size:16px">drag_handle</span>
-            </div>
-            <div class="settings-section-name-wrap">
-                <input type="text" class="settings-section-name-input"
-                    value="${escapeHtml(displayName)}"
-                    data-key="${section.key}"
-                    data-default="${escapeHtml(translatedDefault)}"
-                    readonly
-                />
-            </div>
-            <div class="settings-section-actions">
-                <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Show/Hide on Site">
-                    ${visibilityIcon(section.visible)}
-                </button>
-                <button class="settings-section-btn ${section.print_visible !== false ? 'active' : ''} ${!section.visible ? 'disabled' : ''}" onclick="toggleSettingsSectionPrintVisibility('${section.key}')" title="Show/Hide in Print" ${!section.visible ? 'disabled' : ''}>
-                    ${printerIcon(section.print_visible !== false)}
-                </button>
-                <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', -1)" title="Move Up" ${index === 0 ? 'disabled' : ''}>
-                    <span class="material-symbols-outlined" style="font-size:14px">expand_less</span>
-                </button>
-                <button class="settings-section-btn" onclick="moveSettingsSection('${section.key}', 1)" title="Move Down" ${index === settingsSectionOrder.length - 1 ? 'disabled' : ''}>
-                    <span class="material-symbols-outlined" style="font-size:14px">expand_more</span>
-                </button>
-            </div>
-        </div>
-    `}).join('');
-
-    // Add drag-and-drop event listeners
-    const items = container.querySelectorAll('.settings-section-item');
-    items.forEach(item => {
-        item.addEventListener('dragstart', handleDragStart);
-        item.addEventListener('dragend', handleDragEnd);
-        item.addEventListener('dragover', handleDragOver);
-        item.addEventListener('drop', handleDrop);
-        item.addEventListener('dragenter', handleDragEnter);
-        item.addEventListener('dragleave', handleDragLeave);
-    });
-}
-
-function handleDragStart(e) {
-    draggedItem = this;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', this.dataset.key);
-}
-
-function handleDragEnd(e) {
-    this.classList.remove('dragging');
-    document.querySelectorAll('.settings-section-item').forEach(item => {
-        item.classList.remove('drag-over');
-    });
-    draggedItem = null;
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-}
-
-function handleDragEnter(e) {
-    e.preventDefault();
-    if (this !== draggedItem) {
-        this.classList.add('drag-over');
-    }
-}
-
-function handleDragLeave(e) {
-    this.classList.remove('drag-over');
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    this.classList.remove('drag-over');
-    
-    if (draggedItem && this !== draggedItem) {
-        const fromKey = draggedItem.dataset.key;
-        const toKey = this.dataset.key;
-        
-        const fromIndex = settingsSectionOrder.findIndex(s => s.key === fromKey);
-        const toIndex = settingsSectionOrder.findIndex(s => s.key === toKey);
-        
-        if (fromIndex !== -1 && toIndex !== -1) {
-            const [moved] = settingsSectionOrder.splice(fromIndex, 1);
-            settingsSectionOrder.splice(toIndex, 0, moved);
-            renderSettingsSections();
-        }
-    }
-}
-
-function toggleSettingsSectionVisibility(key) {
-    const section = settingsSectionOrder.find(s => s.key === key);
-    if (section) {
-        section.visible = !section.visible;
-        // If hiding section, also hide from print
-        if (!section.visible) {
-            section.print_visible = false;
-        }
-        renderSettingsSections();
-    }
-}
-
-function toggleSettingsSectionPrintVisibility(key) {
-    const section = settingsSectionOrder.find(s => s.key === key);
-    if (section && section.visible) {
-        section.print_visible = section.print_visible === false ? true : false;
-        renderSettingsSections();
-    }
-}
-
-function moveSettingsSection(key, direction) {
-    const index = settingsSectionOrder.findIndex(s => s.key === key);
-    const newIndex = index + direction;
-    
-    if (newIndex >= 0 && newIndex < settingsSectionOrder.length) {
-        const [moved] = settingsSectionOrder.splice(index, 1);
-        settingsSectionOrder.splice(newIndex, 0, moved);
-        renderSettingsSections();
-    }
-}
-
 // Rename flow: per-dataset by default, optionally propagated to every dataset
 // sharing the active dataset's language. Siblings (same language_group, other
 // language) are never touched — scope is strictly per-language.
@@ -3021,17 +2886,7 @@ function openSectionRenameModal(key) {
         toast(t('toast.section_rename_needs_dataset') || t('toast.section_rename_failed'), 'error');
         return;
     }
-    // Prefer the live section list (populated on page load) so the inline
-    // pencil icons on each section header work without the Settings modal
-    // being open; fall back to the Settings list when that's the entry point.
-    const sources = [sectionOrder, settingsSectionOrder];
-    let section = null;
-    for (const src of sources) {
-        if (Array.isArray(src)) {
-            section = src.find(s => s.key === key);
-            if (section) break;
-        }
-    }
+    const section = (Array.isArray(sectionOrder) ? sectionOrder : []).find(s => s.key === key);
     if (!section) return;
     currentRenameSectionKey = key;
     const input = document.getElementById('section-rename-input');
@@ -3076,29 +2931,14 @@ async function saveSectionRename() {
         closeSectionRenameModal();
         sectionOrder = await loadSectionOrder();
         applySectionTitles(sectionOrder);
-        // Only refresh the Settings panel if it's currently mounted — the
-        // rename can now also be triggered from the inline section header.
-        if (document.getElementById('settingsModalOverlay')?.classList.contains('active')) {
-            settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
-            renderSettingsSections();
-        }
     } catch (err) {
         toast(t('toast.section_rename_failed'), 'error');
     }
 }
 
-async function saveSettingsSectionOrder() {
-    const sections = settingsSectionOrder.map((s, index) => ({
-        key: s.key,
-        visible: s.visible,
-        print_visible: s.print_visible !== false,
-        sort_order: index
-    }));
-    
+async function saveSettings() {
     try {
-        await api('/api/sections/order', { method: 'PUT', body: { sections } });
-        
-        // Also save tracking code
+        // Save tracking code
         const trackingCode = document.getElementById('settingTrackingCode').value;
         await api('/api/settings/trackingCode', { method: 'PUT', body: { value: trackingCode } });
         
@@ -4109,7 +3949,6 @@ function switchSettingsTab(tabName) {
     document.querySelectorAll('.settings-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
     });
-    document.getElementById('settingsTabSections').classList.toggle('active', tabName === 'sections');
     document.getElementById('settingsTabPublic').classList.toggle('active', tabName === 'public');
     document.getElementById('settingsTabAdvanced').classList.toggle('active', tabName === 'advanced');
 }
@@ -4377,8 +4216,6 @@ async function saveCustomSection() {
 
         closeCustomSectionModal();
         // Refresh section order since custom sections affect it
-        settingsSectionOrder = await api('/api/sections/order' + (activeDatasetId ? `?dataset_id=${activeDatasetId}` : ''));
-        renderSettingsSections();
         // Refresh main page sections
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
@@ -4426,8 +4263,6 @@ async function deleteCustomSectionById(id, opts = {}) {
     try {
         await api(`/api/custom-sections/${id}`, { method: 'DELETE' });
         toast(t('toast.section_deleted'));
-        settingsSectionOrder = await api('/api/sections/order' + (activeDatasetId ? `?dataset_id=${activeDatasetId}` : ''));
-        renderSettingsSections();
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
         await renderSectionsInOrder();
@@ -4497,10 +4332,6 @@ async function saveCustomSectionRename() {
         closeCustomSectionRenameModal();
         sectionOrder = await loadSectionOrder();
         applySectionTitles(sectionOrder);
-        if (document.getElementById('settingsModalOverlay')?.classList.contains('active')) {
-            settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
-            renderSettingsSections();
-        }
     } catch (err) {
         toast(t('toast.section_save_failed'), 'error');
     }
@@ -5423,7 +5254,6 @@ async function confirmReorder() {
         await api('/api/sections/order', { method: 'PUT', body: { sections } });
         // Update globals so subsequent renders see the new order
         sectionOrder = newOrder.map(s => ({ ...s }));
-        settingsSectionOrder = newOrder.map(s => ({ ...s }));
         reorderSectionElements();
         // Persist into the active dataset snapshot; otherwise a page reload
         // restores the dataset's saved order and the change appears lost.

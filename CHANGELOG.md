@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.37.0] - 2026-04-18
+
+### Removed
+- The Settings → **Sections & Headlines** tab is gone. Every feature it hosted — reorder, visibility, print-visibility, rename — now lives on the section header of the active dataset (reorder handle, eye icon, printer icon, pencil icon). The Settings modal now opens directly on **Print & Export**. Orphan i18n keys (`settings.tab.sections`, `settings.sections.info`, `settings.sections.click_to_edit`, `settings.sections.reset_default`) and the CSS for the removed list are removed too. User documentation in all 8 locales is rewritten to reflect the inline workflow.
+
 ## [1.36.0] - 2026-04-18
 
 ### Added
