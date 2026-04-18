@@ -2310,48 +2310,30 @@
         display: none;
     }
 
-    /* Row: wrap so secondary metadata flows onto a second line. */
+    /* Row: keep only essentials. radio · lang · version · name · LOAD · ⋮.
+       Everything else (URL, date, MAKE PUBLIC shortcut, EDITING / DEFAULT
+       pills) is either redundant (the radio & row background already convey
+       default / active state) or available from the ⋮ menu (Copy URL,
+       Preview, etc.), so hide it on phone to keep the row on one line. */
     .cvm-row {
-        flex-wrap: wrap;
         column-gap: 6px;
-        row-gap: 4px;
         padding: 8px 8px;
     }
-    /* Row 1: radio · lang · version · name · LOAD · more */
-    .cvm-row .cvm-radio { order: 1; }
-    .cvm-row .dataset-lang-badge { order: 2; }
-    .cvm-row .dataset-version-badge { order: 3; }
-    .cvm-row .cvm-name { order: 4; flex: 1 1 auto; min-width: 0; }
-    .cvm-row > .btn-primary { order: 5; }
-    .cvm-row .cvm-more-btn { order: 6; opacity: 1; }
-    /* Forced flex break so the remaining items wrap to row 2. */
-    .cvm-row::after {
-        content: '';
-        flex: 0 0 100%;
-        order: 7;
-        height: 0;
-    }
-    /* Row 2: badges · url · date */
+    .cvm-row .cvm-name { flex: 1 1 auto; min-width: 0; }
+    .cvm-row .cvm-more-btn { opacity: 1; }
     .cvm-row .dataset-active-badge,
     .cvm-row .dataset-default-badge,
     .cvm-row .dataset-make-public-btn,
     .cvm-row .cvm-url,
     .cvm-row .cvm-date {
-        order: 8;
+        display: none;
     }
-    .cvm-row .cvm-url {
-        max-width: 55vw;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+
+    /* "Existing CVs" heading is redundant with the "CV Manager" modal title. */
+    .cvm-list-title { display: none; }
 
     /* Save-as section: name input takes a full row; lang + submit share the next. */
     .cvm-save-field { flex: 1 1 100%; min-width: 0; }
-}
-
-@media (max-width: 420px) {
-    /* Drop the date on very narrow screens to protect the URL + LOAD. */
-    .cvm-row .cvm-date { display: none; }
 }
 
 /* Version Display (Settings Footer) */
