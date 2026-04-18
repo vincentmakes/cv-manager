@@ -695,13 +695,49 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label" data-i18n="custom_section.section_name">Section Name</label>
-                    <input type="text" class="form-input" id="cs-rename-input">
+                    <input type="text" class="form-input" id="cs-rename-input" data-i18n-placeholder="settings.sections.rename_placeholder">
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="cs-rename-apply-language" checked>
+                        <span data-i18n="settings.sections.apply_to_language">Apply to all datasets in this language</span>
+                    </label>
                 </div>
             </div>
             <div class="modal-footer">
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeCustomSectionRenameModal()" data-i18n="btn.cancel">Cancel</button>
                     <button class="btn btn-primary" onclick="saveCustomSectionRename()" data-i18n="btn.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Rename Modal (built-in sections — opens from Settings > Sections) -->
+    <div class="modal-overlay" id="sectionRenameModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="settings.sections.rename_modal_title">Rename Section</h3>
+                <button class="modal-close" onclick="closeSectionRenameModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="custom_section.section_name">Section Name</label>
+                    <input type="text" class="form-input" id="section-rename-input" data-i18n-placeholder="settings.sections.rename_placeholder">
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="section-rename-apply-language" checked>
+                        <span data-i18n="settings.sections.apply_to_language">Apply to all datasets in this language</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeSectionRenameModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSectionRename()" data-i18n="btn.save">Save</button>
                 </div>
             </div>
         </div>

@@ -2676,7 +2676,8 @@ let settingsSectionOrder = [];
 let draggedItem = null;
 
 async function openSettingsModal() {
-    settingsSectionOrder = await api('/api/sections/order');
+    const qs = activeDatasetId ? `?dataset_id=${activeDatasetId}` : '';
+    settingsSectionOrder = await api('/api/sections/order' + qs);
     renderSettingsSections();
     await loadPublicSettings();
     populateVersionDisplay();
@@ -2828,9 +2829,8 @@ function renderSettingsSections() {
     const container = document.getElementById('settingsSectionsList');
 
     container.innerHTML = settingsSectionOrder.map((section, index) => {
-        const isCustomName = section.name !== section.default_name;
         const translatedDefault = getTranslatedSectionName(section.key, section.default_name);
-        const displayName = isCustomName ? section.name : translatedDefault;
+        const displayName = section.name || translatedDefault;
         return `
         <div class="settings-section-item" draggable="true" data-key="${section.key}" data-index="${index}">
             <div class="settings-section-drag">
@@ -2841,16 +2841,15 @@ function renderSettingsSections() {
                     value="${escapeHtml(displayName)}"
                     data-key="${section.key}"
                     data-default="${escapeHtml(translatedDefault)}"
-                    onchange="updateSettingsSectionName('${section.key}', this.value)"
-                    title="${t('settings.sections.click_to_edit')}"
+                    readonly
                 />
-                ${isCustomName ? `<button class="settings-section-reset-btn" onclick="resetSettingsSectionName('${section.key}')" title="${t('settings.sections.reset_default')}: ${escapeHtml(translatedDefault)}">
-                    <span class="material-symbols-outlined" style="font-size:12px">sync</span>
-                </button>` : ''}
             </div>
             <div class="settings-section-actions">
                 <button class="settings-section-btn ${section.visible ? 'active' : ''}" onclick="toggleSettingsSectionVisibility('${section.key}')" title="Show/Hide on Site">
                     ${visibilityIcon(section.visible)}
+                </button>
+                <button class="settings-section-btn" onclick="openSectionRenameModal('${section.key}')" title="${escapeHtml(t('settings.sections.rename'))}">
+                    <span class="material-symbols-outlined" style="font-size:14px">edit</span>
                 </button>
                 <button class="settings-section-btn ${section.print_visible !== false ? 'active' : ''} ${!section.visible ? 'disabled' : ''}" onclick="toggleSettingsSectionPrintVisibility('${section.key}')" title="Show/Hide in Print" ${!section.visible ? 'disabled' : ''}>
                     ${printerIcon(section.print_visible !== false)}
@@ -2958,30 +2957,65 @@ function moveSettingsSection(key, direction) {
     }
 }
 
-function updateSettingsSectionName(key, newName) {
-    const section = settingsSectionOrder.find(s => s.key === key);
-    if (section) {
-        const trimmed = newName.trim();
-        const translatedDefault = getTranslatedSectionName(key, section.default_name);
-        const wasCustom = section.name !== section.default_name;
-        // Treat empty, English default, or translated default as "reset to default"
-        if (!trimmed || trimmed === section.default_name || trimmed === translatedDefault) {
-            section.name = section.default_name;
-        } else {
-            section.name = trimmed;
-        }
-        const isCustom = section.name !== section.default_name;
-        if (wasCustom !== isCustom) {
-            renderSettingsSections();
-        }
+// Rename flow: per-dataset by default, optionally propagated to every dataset
+// sharing the active dataset's language. Siblings (same language_group, other
+// language) are never touched — scope is strictly per-language.
+let currentRenameSectionKey = null;
+
+function openSectionRenameModal(key) {
+    if (!activeDatasetId) {
+        toast(t('toast.section_rename_needs_dataset') || t('toast.section_rename_failed'), 'error');
+        return;
     }
+    const section = settingsSectionOrder.find(s => s.key === key);
+    if (!section) return;
+    currentRenameSectionKey = key;
+    const input = document.getElementById('section-rename-input');
+    const toggle = document.getElementById('section-rename-apply-language');
+    if (input) {
+        const translatedDefault = getTranslatedSectionName(key, section.default_name);
+        input.value = (section.name && section.name !== translatedDefault) ? section.name : '';
+        input.placeholder = translatedDefault;
+    }
+    if (toggle) toggle.checked = true;
+    document.getElementById('sectionRenameModalOverlay').classList.add('active');
+    setTimeout(() => input?.focus(), 0);
 }
 
-function resetSettingsSectionName(key) {
-    const section = settingsSectionOrder.find(s => s.key === key);
-    if (section) {
-        section.name = section.default_name;
+function closeSectionRenameModal() {
+    document.getElementById('sectionRenameModalOverlay').classList.remove('active');
+    currentRenameSectionKey = null;
+}
+
+async function saveSectionRename() {
+    const key = currentRenameSectionKey;
+    if (!key) return closeSectionRenameModal();
+    if (!activeDatasetId) {
+        toast(t('toast.section_rename_failed'), 'error');
+        return;
+    }
+    const input = document.getElementById('section-rename-input');
+    const toggle = document.getElementById('section-rename-apply-language');
+    const newName = input ? input.value.trim() : '';
+    const applyToLanguage = toggle ? !!toggle.checked : true;
+    try {
+        await api('/api/sections/rename', {
+            method: 'POST',
+            body: {
+                section_key: key,
+                new_name: newName,
+                dataset_id: activeDatasetId,
+                apply_to_language: applyToLanguage
+            }
+        });
+        toast(newName === '' ? t('toast.section_rename_reset') : t('toast.section_rename_saved'));
+        closeSectionRenameModal();
+        settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
         renderSettingsSections();
+        sectionOrder = await loadSectionOrder();
+        await renderSectionsInOrder();
+    } catch (err) {
+        toast(t('toast.section_rename_failed'), 'error');
     }
 }
 
@@ -2990,8 +3024,7 @@ async function saveSettingsSectionOrder() {
         key: s.key,
         visible: s.visible,
         print_visible: s.print_visible !== false,
-        sort_order: index,
-        display_name: (s.name && s.name !== s.default_name) ? s.name : null
+        sort_order: index
     }));
     
     try {
@@ -4276,7 +4309,7 @@ async function saveCustomSection() {
 
         closeCustomSectionModal();
         // Refresh section order since custom sections affect it
-        settingsSectionOrder = await api('/api/sections/order');
+        settingsSectionOrder = await api('/api/sections/order' + (activeDatasetId ? `?dataset_id=${activeDatasetId}` : ''));
         renderSettingsSections();
         // Refresh main page sections
         sectionOrder = await loadSectionOrder();
@@ -4325,7 +4358,7 @@ async function deleteCustomSectionById(id, opts = {}) {
     try {
         await api(`/api/custom-sections/${id}`, { method: 'DELETE' });
         toast(t('toast.section_deleted'));
-        settingsSectionOrder = await api('/api/sections/order');
+        settingsSectionOrder = await api('/api/sections/order' + (activeDatasetId ? `?dataset_id=${activeDatasetId}` : ''));
         renderSettingsSections();
         sectionOrder = await loadSectionOrder();
         sectionVisibility = await loadSectionsAdmin();
@@ -4337,12 +4370,16 @@ async function deleteCustomSectionById(id, opts = {}) {
 }
 
 // Open a lightweight modal to rename a custom section (title only — layout is fixed once created).
+// Rename is scoped per-dataset by default and, when the toggle is on, propagated to every dataset
+// sharing the active dataset's language — matching the built-in section rename flow.
 function openCustomSectionRenameModal(id) {
     const section = customSections.find(s => s.id === id);
     if (!section) return;
     currentCustomSection.id = id;
     const input = document.getElementById('cs-rename-input');
+    const toggle = document.getElementById('cs-rename-apply-language');
     if (input) input.value = section.name || '';
+    if (toggle) toggle.checked = true;
     document.getElementById('customSectionRenameModalOverlay').classList.add('active');
     // Focus the input so the user can start typing immediately.
     setTimeout(() => input?.focus(), 0);
@@ -4356,21 +4393,36 @@ function closeCustomSectionRenameModal() {
 async function saveCustomSectionRename() {
     const id = currentCustomSection.id;
     if (!id) return;
+    const section = customSections.find(s => s.id === id);
+    if (!section) return;
     const input = document.getElementById('cs-rename-input');
+    const toggle = document.getElementById('cs-rename-apply-language');
     const name = (input?.value || '').trim();
     if (!name) {
         toast(t('toast.enter_section_name'), 'error');
         return;
     }
+    if (!activeDatasetId) {
+        toast(t('toast.section_rename_failed'), 'error');
+        return;
+    }
+    const applyToLanguage = toggle ? !!toggle.checked : true;
     try {
-        await api(`/api/custom-sections/${id}`, { method: 'PUT', body: { name } });
+        await api('/api/sections/rename', {
+            method: 'POST',
+            body: {
+                section_key: section.section_key,
+                new_name: name,
+                dataset_id: activeDatasetId,
+                apply_to_language: applyToLanguage
+            }
+        });
         toast(t('toast.section_updated'));
         closeCustomSectionRenameModal();
-        settingsSectionOrder = await api('/api/sections/order');
+        settingsSectionOrder = await api(`/api/sections/order?dataset_id=${activeDatasetId}`);
         renderSettingsSections();
         sectionOrder = await loadSectionOrder();
         await renderSectionsInOrder();
-        autoSaveActiveDataset();
     } catch (err) {
         toast(t('toast.section_save_failed'), 'error');
     }
