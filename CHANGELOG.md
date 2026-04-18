@@ -4,6 +4,20 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.37.0] - 2026-04-18
+
+### Removed
+- The Settings → **Sections & Headlines** tab is gone. Every feature it hosted — reorder, visibility, print-visibility, rename — now lives on the section header of the active dataset (reorder handle, eye icon, printer icon, pencil icon). The Settings modal now opens directly on **Print & Export**. Orphan i18n keys (`settings.tab.sections`, `settings.sections.info`, `settings.sections.click_to_edit`, `settings.sections.reset_default`) and the CSS for the removed list are removed too. User documentation in all 8 locales is rewritten to reflect the inline workflow.
+
+## [1.36.0] - 2026-04-18
+
+### Added
+- Granular section renames, triggered from the section itself rather than from Settings. Every built-in section header (timeline, experience, certifications, education, skills, projects) and every custom section header gains a rename pencil icon next to its visibility toggle. The "Professional Summary" section, which already hosts an Edit icon, instead picks up the rename flow as a new "Section heading" field inside the profile modal. Each rename modal includes an "Apply to all datasets in this language" toggle, on by default. Language-wide renames are stored in a new `section_title_overrides` table keyed by `(section_key, language)`; siblings with a different language in the same language group are never affected.
+
+### Changed
+- Resolution order for section titles is now **per-dataset override → per-language override → i18n `section.<key>` → built-in default**. `GET /api/sections/order` accepts `?dataset_id=` and/or `?language=` and returns the already-resolved `name`, so the client no longer duplicates the precedence logic.
+- Settings → Sections no longer renames; the name input is read-only and points users to the per-section pencil icon on the main page. Existing global `section_visibility.display_name` values are migrated once into the new per-language table for every language present in `saved_datasets`. The ATS PDF export and server-side title rendering now use the same resolution helper.
+
 ## [1.35.0] - 2026-04-18
 
 ### Added

@@ -1317,6 +1317,178 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Section title overrides', () => {
+        // Each test creates its own datasets so they don't leak state.
+        async function createDataset(name, language, language_group) {
+            const body = { name, language };
+            if (language_group) body.language_group = language_group;
+            const res = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+            });
+            assert.strictEqual(res.status, 200, `create ${name}/${language}`);
+            return res.json();
+        }
+        async function del(id) {
+            await fetch(`${BASE_URL}/api/datasets/${id}`, { method: 'DELETE' });
+        }
+
+        it('apply_to_language=true writes the name to every same-language dataset and overwrites existing overrides', async () => {
+            const a = await createDataset('Override Base A', 'en');
+            const b = await createDataset('Override Base B', 'en');
+            const sibling = await createDataset('Override Base Sibling FR', 'fr', a.language_group);
+
+            // Pre-seed B with a different per-dataset override so we can verify it gets overwritten.
+            const pre = await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'experience', new_name: 'B Pre-Rename', dataset_id: b.id, apply_to_language: false })
+            });
+            assert.strictEqual(pre.status, 200);
+
+            // Language-wide rename on A — should overwrite B's prior per-dataset override.
+            const res = await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'experience', new_name: 'Career Highlights', dataset_id: a.id, apply_to_language: true })
+            });
+            assert.strictEqual(res.status, 200);
+            const body = await res.json();
+            assert.strictEqual(body.success, true);
+            assert.strictEqual(body.applied_to_language, true);
+
+            const aOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${a.id}`)).json();
+            const bOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${b.id}`)).json();
+            const sOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${sibling.id}`)).json();
+            const pick = arr => arr.find(s => s.key === 'experience');
+            assert.strictEqual(pick(aOrder).name, 'Career Highlights');
+            assert.strictEqual(pick(bOrder).name, 'Career Highlights', 'same-language sibling overwritten');
+            assert.notStrictEqual(pick(sOrder).name, 'Career Highlights', 'other-language sibling must NOT be touched');
+
+            await del(a.id); await del(b.id); await del(sibling.id);
+        });
+
+        it('apply_to_language=false touches only the active dataset', async () => {
+            const a = await createDataset('Local Rename A', 'en');
+            const b = await createDataset('Local Rename B', 'en');
+
+            const res = await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'skills', new_name: 'My Skills', dataset_id: a.id, apply_to_language: false })
+            });
+            assert.strictEqual(res.status, 200);
+
+            const aOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${a.id}`)).json();
+            const bOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${b.id}`)).json();
+            const pick = arr => arr.find(s => s.key === 'skills');
+            assert.strictEqual(pick(aOrder).name, 'My Skills');
+            assert.notStrictEqual(pick(bOrder).name, 'My Skills', 'per-dataset-only rename must not leak to other datasets');
+
+            await del(a.id); await del(b.id);
+        });
+
+        it('resets the title when new_name is empty (language and dataset cleared)', async () => {
+            const a = await createDataset('Reset Test A', 'en');
+            // Set a language-wide override first
+            await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'education', new_name: 'Studies', dataset_id: a.id, apply_to_language: true })
+            });
+            let aOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${a.id}`)).json();
+            assert.strictEqual(aOrder.find(s => s.key === 'education').name, 'Studies');
+
+            // Reset via empty string
+            const res = await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'education', new_name: '', dataset_id: a.id, apply_to_language: true })
+            });
+            assert.strictEqual(res.status, 200);
+            const body = await res.json();
+            assert.strictEqual(body.reset, true);
+
+            aOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${a.id}`)).json();
+            const entry = aOrder.find(s => s.key === 'education');
+            assert.notStrictEqual(entry.name, 'Studies', 'title should no longer equal the removed override');
+
+            await del(a.id);
+        });
+
+        it('custom section rename with apply_to_language=true propagates to same-language siblings only', async () => {
+            // Create a custom section
+            const createRes = await fetch(`${BASE_URL}/api/custom-sections`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Original Name', layout_type: 'grid-3', icon: 'layers' })
+            });
+            assert.strictEqual(createRes.status, 200);
+            const cs = await createRes.json();
+
+            const a = await createDataset('Custom Rename A', 'en');
+            const b = await createDataset('Custom Rename B', 'en');
+            const sibling = await createDataset('Custom Rename Sibling FR', 'fr', a.language_group);
+
+            const res = await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: cs.section_key, new_name: 'Renamed Custom', dataset_id: a.id, apply_to_language: true })
+            });
+            assert.strictEqual(res.status, 200);
+
+            const aOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${a.id}`)).json();
+            const bOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${b.id}`)).json();
+            const sOrder = await (await fetch(`${BASE_URL}/api/sections/order?dataset_id=${sibling.id}`)).json();
+            const pick = arr => arr.find(s => s.key === cs.section_key);
+            assert.strictEqual(pick(aOrder).name, 'Renamed Custom');
+            assert.strictEqual(pick(bOrder).name, 'Renamed Custom');
+            assert.notStrictEqual(pick(sOrder).name, 'Renamed Custom', 'fr sibling must keep its own title');
+
+            // Cleanup. The custom section delete cascades the override row away;
+            // we rely on the server's DELETE FROM section_title_overrides in DELETE /api/custom-sections.
+            await fetch(`${BASE_URL}/api/custom-sections/${cs.id}`, { method: 'DELETE' });
+            await del(a.id); await del(b.id); await del(sibling.id);
+        });
+
+        it('rename endpoint rejects requests without dataset_id', async () => {
+            const res = await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'experience', new_name: 'X', apply_to_language: false })
+            });
+            assert.strictEqual(res.status, 400);
+        });
+
+        it('public dataset endpoint returns the per-dataset rename in sectionOrder.name', async () => {
+            const a = await createDataset('Public Rename A', 'en');
+            // Make it fetchable on the public server
+            await fetch(`${BASE_URL}/api/datasets/${a.id}/public`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_public: true })
+            });
+            await fetch(`${BASE_URL}/api/sections/rename`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section_key: 'experience', new_name: 'Public Experience', dataset_id: a.id, apply_to_language: false })
+            });
+            const publicRes = await fetch(`${PUBLIC_URL}/api/datasets/id/${a.id}`);
+            assert.strictEqual(publicRes.status, 200);
+            const publicData = await publicRes.json();
+            const entry = publicData.sectionOrder.find(s => s.key === 'experience');
+            assert.strictEqual(entry.name, 'Public Experience', 'public side must see the rename');
+            assert.strictEqual(entry.display_name, 'Public Experience');
+            await del(a.id);
+        });
+
+        it('public dataset endpoint re-resolves section titles in the dataset language', async () => {
+            // Fresh en+fr sibling pair; fr sibling must return French section titles
+            // even if section_visibility.display_name (frozen legacy column) is null.
+            const en = await createDataset('Lang Resolve EN', 'en');
+            const fr = await createDataset('Lang Resolve FR', 'fr', en.language_group);
+            await fetch(`${BASE_URL}/api/datasets/${fr.id}/public`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_public: true })
+            });
+            const publicRes = await fetch(`${PUBLIC_URL}/api/datasets/id/${fr.id}`);
+            const publicData = await publicRes.json();
+            const expEntry = publicData.sectionOrder.find(s => s.key === 'experience');
+            // The French translation of `section.experience` in fr.json is
+            // "Expérience professionnelle". Assert it's not the English default.
+            assert.notStrictEqual(expEntry.name, 'Work Experience', 'FR sibling should not carry English title');
+            assert.match(expEntry.name, /Expérience/, 'FR sibling should show French title');
+            await del(en.id); await del(fr.id);
+        });
+    });
+
     describe('Public API (port)', () => {
         it('GET /api/profile returns 200', async () => {
             const res = await fetch(`${PUBLIC_URL}/api/profile`);

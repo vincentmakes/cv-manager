@@ -291,7 +291,9 @@ function getTranslatedSectionName(key, fallback) {
     return translated !== i18nKey ? translated : (fallback || key);
 }
 
-// Apply custom section titles from section order data to the DOM
+// Apply section titles from section order data to the DOM. The server now
+// returns `name` already resolved through the per-dataset → per-language →
+// i18n → default precedence chain, so the client simply writes it.
 function applySectionTitles(sectionOrderData) {
     if (!sectionOrderData || !sectionOrderData.length) return;
     sectionOrderData.forEach(section => {
@@ -299,9 +301,7 @@ function applySectionTitles(sectionOrderData) {
         if (el) {
             const titleEl = el.querySelector('.section-title');
             if (titleEl) {
-                // Use custom name if user set one, otherwise use translated default
-                const isCustom = section.name && section.name !== section.default_name;
-                titleEl.textContent = isCustom ? section.name : getTranslatedSectionName(section.key, section.name);
+                titleEl.textContent = section.name || getTranslatedSectionName(section.key, section.default_name);
             }
         }
     });

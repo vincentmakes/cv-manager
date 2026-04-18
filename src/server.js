@@ -315,12 +315,39 @@ function serveDatasetPage(req, res, lang) {
 }
 
 // Serve dataset data as JSON for public slug API
+// Re-resolve sectionOrder[].name on a parsed dataset blob using the dataset's
+// own language. The `.name` field inside saved_datasets.data is a snapshot
+// taken at save time, so it can fall out of sync when (a) the admin adds a
+// per-language override after the dataset was saved, (b) the i18n translation
+// for that section changes, or (c) the visitor switches languages. Calling
+// this on read means the public and admin sides always see the effective
+// title without having to re-save every dataset.
+function refreshDatasetSectionNames(data, language) {
+    if (!data || typeof data !== 'object') return data;
+    if (!Array.isArray(data.sectionOrder)) return data;
+    const customNameMap = {};
+    if (Array.isArray(data.customSections)) {
+        data.customSections.forEach(cs => { if (cs && cs.section_key) customNameMap[cs.section_key] = cs.name; });
+    }
+    data.sectionOrder = data.sectionOrder.map(entry => {
+        if (!entry || !entry.key) return entry;
+        const resolved = resolveSectionTitle(entry.key, {
+            datasetOverride: entry.display_name,
+            language,
+            locale: language,
+            customNameFallback: customNameMap[entry.key]
+        });
+        return { ...entry, name: resolved };
+    });
+    return data;
+}
+
 function serveDatasetData(req, res) {
     try {
         const lang = req.params.lang || req.query.lang;
         const dataset = resolveDatasetBySlug(req.params.slug, lang, true);
         if (!dataset) return res.status(404).json({ error: 'Not found' });
-        const data = JSON.parse(dataset.data);
+        const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
         const siblings = getDatasetSiblings(dataset);
         res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
     } catch (err) {
@@ -343,7 +370,7 @@ function serveDatasetDataById(req, res) {
             }
         }
         if (!dataset) return res.status(404).json({ error: 'Not found' });
-        const data = JSON.parse(dataset.data);
+        const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
         const siblings = getDatasetSiblings(dataset);
         res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
     } catch (err) {
@@ -534,6 +561,50 @@ if (!PUBLIC_ONLY) {
             db.exec('ALTER TABLE section_visibility ADD COLUMN display_name TEXT');
         }
     } catch (err) { console.log('Migration check (display_name):', err.message); }
+
+    // Step 2e2: Create section_title_overrides table (per-language rename storage)
+    // and migrate any existing global section_visibility.display_name values into
+    // it, seeding one row per section, per language actually present in saved_datasets.
+    try {
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS section_title_overrides (
+                section_key TEXT NOT NULL,
+                language TEXT NOT NULL,
+                display_name TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (section_key, language)
+            );
+            CREATE INDEX IF NOT EXISTS idx_section_title_overrides_lang
+                ON section_title_overrides(language);
+        `);
+
+        const migratedFlag = db.prepare("SELECT value FROM settings WHERE key = ?").get('section_titles_migrated_v1');
+        if (!migratedFlag) {
+            const languages = new Set(
+                db.prepare('SELECT DISTINCT language FROM saved_datasets WHERE language IS NOT NULL').all().map(r => r.language).filter(Boolean)
+            );
+            if (languages.size === 0) {
+                const langSetting = db.prepare("SELECT value FROM settings WHERE key = ?").get('language');
+                languages.add((langSetting && langSetting.value) || 'en');
+            }
+
+            const renamed = db.prepare("SELECT section_name, display_name FROM section_visibility WHERE display_name IS NOT NULL AND display_name != ''").all();
+            const insert = db.prepare('INSERT OR IGNORE INTO section_title_overrides (section_key, language, display_name) VALUES (?, ?, ?)');
+            const seed = db.transaction(() => {
+                for (const row of renamed) {
+                    for (const lang of languages) {
+                        insert.run(row.section_name, lang, row.display_name);
+                    }
+                }
+            });
+            seed();
+
+            db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('section_titles_migrated_v1', '1');
+            if (renamed.length > 0) {
+                console.log(`Migrated ${renamed.length} section rename(s) into section_title_overrides for ${languages.size} language(s)`);
+            }
+        }
+    } catch (err) { console.log('Migration check (section_title_overrides):', err.message); }
 
     // Step 2f: Migration - add profile_picture_enabled column to profile if missing
     try {
@@ -1051,7 +1122,61 @@ function propagateProfilePictureToSiblings(filename, datasetId) {
 }
 
 // Gather current CV data from live DB into a JSON-serializable snapshot
-function gatherCvData() {
+// Look up a per-language section title override. Returns null when none exists.
+function getLanguageSectionOverride(sectionKey, language) {
+    if (!language) return null;
+    try {
+        const row = db.prepare('SELECT display_name FROM section_title_overrides WHERE section_key = ? AND language = ?').get(sectionKey, language);
+        return row && row.display_name ? row.display_name : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+// Resolve the effective display title for a section. Precedence:
+//   1. per-dataset override passed in via `datasetOverride`
+//   2. per-language override in section_title_overrides
+//   3. translated `section.<key>` for the resolved locale
+//   4. built-in English default (SECTION_DISPLAY_NAMES) or custom_sections.name fallback
+//   5. the raw section key
+function resolveSectionTitle(sectionKey, { datasetOverride, language, locale, customNameFallback } = {}) {
+    if (datasetOverride && String(datasetOverride).trim() !== '') return datasetOverride;
+    const langOverride = getLanguageSectionOverride(sectionKey, language);
+    if (langOverride) return langOverride;
+    const loc = resolveLocale(locale || language);
+    const translationKey = 'section.' + sectionKey;
+    const translated = serverT(translationKey, loc);
+    if (translated && translated !== translationKey) return translated;
+    if (SECTION_DISPLAY_NAMES[sectionKey]) return SECTION_DISPLAY_NAMES[sectionKey];
+    if (customNameFallback) return customNameFallback;
+    return sectionKey;
+}
+
+// Mutate a parsed dataset JSON blob in-place so the given section's per-dataset
+// display_name matches the requested value (null clears). Also keeps the `name`
+// field in sync so consumers that read `section.name` without re-resolving still
+// see the update immediately. Used by the rename endpoint.
+function applyDatasetSectionOverride(data, sectionKey, displayName) {
+    if (!data || typeof data !== 'object') return;
+    const order = Array.isArray(data.sectionOrder) ? data.sectionOrder : [];
+    let entry = order.find(s => s && s.key === sectionKey);
+    if (!entry) {
+        entry = { key: sectionKey, sort_order: 0, visible: true };
+        order.push(entry);
+        data.sectionOrder = order;
+    }
+    entry.display_name = displayName;
+    if (displayName) entry.name = displayName;
+
+    // Mirror the override onto customSections[].display_name for parity with the
+    // structural propagation that already lives in propagateStructure.
+    if (Array.isArray(data.customSections)) {
+        const cs = data.customSections.find(c => c && c.section_key === sectionKey);
+        if (cs) cs.display_name = displayName;
+    }
+}
+
+function gatherCvData(options = {}) {
     const profile = db.prepare('SELECT * FROM profile WHERE id = 1').get();
     const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all();
     const certifications = db.prepare('SELECT * FROM certifications ORDER BY sort_order ASC, issue_date DESC').all();
@@ -1066,10 +1191,18 @@ function gatherCvData() {
     } catch (err) { /* custom_sections table may not exist yet */ }
     const sectionVisibility = {};
     const sectionOrderData = [];
+    const language = options.language || null;
+    const locale = options.locale || language || null;
     sections.forEach(s => {
         sectionVisibility[s.section_name] = !!s.visible;
         const defaultName = SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
-        sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null, name: s.display_name || defaultName, default_name: defaultName });
+        const resolved = resolveSectionTitle(s.section_name, {
+            datasetOverride: s.display_name,
+            language,
+            locale,
+            customNameFallback: customNameMap[s.section_name]
+        });
+        sectionOrderData.push({ key: s.section_name, sort_order: s.sort_order || 0, visible: !!s.visible, display_name: s.display_name || null, name: resolved, default_name: defaultName });
     });
     // Custom sections with items
     let customSections = [];
@@ -1416,6 +1549,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename, open_to_work FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => {
+        const requestedLang = req.query.language || null;
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
         const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
         const customNameMap = {};
@@ -1423,7 +1557,6 @@ if (PUBLIC_ONLY) {
         const sectionKeys = new Set(sections.map(s => s.section_name));
         customSections.forEach(cs => {
             if (!sectionKeys.has(cs.section_key)) {
-                db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, ?, ?)').run(cs.section_key, cs.visible ? 1 : 0, cs.sort_order || 0);
                 sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
             }
         });
@@ -1431,7 +1564,12 @@ if (PUBLIC_ONLY) {
         const defaultName = (s) => SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
         res.json(sections.map(s => ({
             key: s.section_name,
-            name: s.display_name || defaultName(s),
+            name: resolveSectionTitle(s.section_name, {
+                datasetOverride: null,
+                language: requestedLang,
+                locale: requestedLang,
+                customNameFallback: customNameMap[s.section_name]
+            }),
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,
@@ -1864,6 +2002,24 @@ if (PUBLIC_ONLY) {
 
     app.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     app.get('/api/sections/order', (req, res) => {
+        const requestedLang = req.query.language || null;
+        const datasetId = req.query.dataset_id ? parseInt(req.query.dataset_id, 10) : null;
+        let datasetLanguage = requestedLang;
+        let datasetSectionOverrides = {};
+        if (datasetId) {
+            try {
+                const ds = db.prepare('SELECT language, data FROM saved_datasets WHERE id = ?').get(datasetId);
+                if (ds) {
+                    if (!datasetLanguage) datasetLanguage = ds.language;
+                    try {
+                        const parsed = JSON.parse(ds.data);
+                        (parsed.sectionOrder || []).forEach(s => {
+                            if (s && s.key && s.display_name) datasetSectionOverrides[s.key] = s.display_name;
+                        });
+                    } catch (e) { /* ignore malformed dataset blob */ }
+                }
+            } catch (e) { /* dataset lookup failed */ }
+        }
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
         const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
         const customNameMap = {};
@@ -1878,17 +2034,87 @@ if (PUBLIC_ONLY) {
         });
         sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         const defaultName = (s) => SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
-        res.json(sections.map(s => ({
-            key: s.section_name,
-            name: s.display_name || defaultName(s),
-            default_name: defaultName(s),
-            visible: !!s.visible,
-            print_visible: s.print_visible !== 0,
-            sort_order: s.sort_order || 0,
-            is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
-        })));
+        res.json(sections.map(s => {
+            const datasetOverride = datasetSectionOverrides[s.section_name] || null;
+            const languageOverride = getLanguageSectionOverride(s.section_name, datasetLanguage);
+            const resolved = resolveSectionTitle(s.section_name, {
+                datasetOverride,
+                language: datasetLanguage,
+                locale: datasetLanguage,
+                customNameFallback: customNameMap[s.section_name]
+            });
+            return {
+                key: s.section_name,
+                name: resolved,
+                default_name: defaultName(s),
+                dataset_display_name: datasetOverride,
+                language_display_name: languageOverride,
+                visible: !!s.visible,
+                print_visible: s.print_visible !== 0,
+                sort_order: s.sort_order || 0,
+                is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
+            };
+        }));
     });
-    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { const displayName = section.display_name || null; db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible != false ? 1 : 0, section.sort_order, displayName, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible != false ? 1 : 0, section.sort_order, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+
+    // Rename a section title for the active dataset, optionally propagating to
+    // every other dataset sharing the same language. Siblings in the same
+    // language_group but different language are never touched.
+    app.post('/api/sections/rename', (req, res) => {
+        const { section_key, new_name, dataset_id, apply_to_language } = req.body || {};
+        if (!section_key || typeof section_key !== 'string') {
+            return res.status(400).json({ error: 'section_key is required' });
+        }
+        if (dataset_id === undefined || dataset_id === null) {
+            return res.status(400).json({ error: 'dataset_id is required' });
+        }
+        const dataset = db.prepare('SELECT id, language, data FROM saved_datasets WHERE id = ?').get(dataset_id);
+        if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+
+        const trimmed = typeof new_name === 'string' ? new_name.trim() : '';
+        const isReset = trimmed === '';
+        const scopeLanguage = dataset.language;
+
+        const run = db.transaction(() => {
+            // 1. Update the language-wide override row (toggle ON) or leave it alone (toggle OFF).
+            if (apply_to_language) {
+                if (isReset) {
+                    db.prepare('DELETE FROM section_title_overrides WHERE section_key = ? AND language = ?').run(section_key, scopeLanguage);
+                } else {
+                    db.prepare(`INSERT INTO section_title_overrides (section_key, language, display_name, updated_at)
+                                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                                ON CONFLICT(section_key, language) DO UPDATE SET display_name = excluded.display_name, updated_at = CURRENT_TIMESTAMP`)
+                        .run(section_key, scopeLanguage, trimmed);
+                }
+            }
+
+            // 2. Update the target dataset's per-dataset override.
+            const targetData = JSON.parse(dataset.data);
+            applyDatasetSectionOverride(targetData, section_key, isReset ? null : trimmed);
+            db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(targetData), dataset.id);
+
+            // 3. If applying to the whole language, overwrite every other same-language dataset's
+            //    per-dataset override so the language-wide value wins (per the "overwrite them all" rule).
+            if (apply_to_language) {
+                const others = db.prepare('SELECT id, data FROM saved_datasets WHERE language = ? AND id != ?').all(scopeLanguage, dataset.id);
+                for (const other of others) {
+                    try {
+                        const parsed = JSON.parse(other.data);
+                        applyDatasetSectionOverride(parsed, section_key, isReset ? null : trimmed);
+                        db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(parsed), other.id);
+                    } catch (e) { /* skip datasets with malformed JSON */ }
+                }
+            }
+        });
+
+        try {
+            run();
+            res.json({ success: true, reset: isReset, applied_to_language: !!apply_to_language });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
     app.put('/api/sections/:name', (req, res) => { const sectionName = req.params.name; const visible = req.body.visible ? 1 : 0; db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName); if (sectionName.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName); } res.json({ success: true }); });
     app.put('/api/sections/:name/print', (req, res) => { const sectionName = req.params.name; const printVisible = req.body.print_visible ? 1 : 0; const result = db.prepare('UPDATE section_visibility SET print_visible = ? WHERE section_name = ?').run(printVisible, sectionName); if (result.changes === 0) return res.status(404).json({ error: 'Section not found' }); res.json({ success: true }); });
 
@@ -2400,7 +2626,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? AND language = ?').get(req.params.slug, req.params.lang);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = dataset.language_group
                 ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
                 : [{ id: dataset.id, language: dataset.language || 'en' }];
@@ -2422,7 +2648,7 @@ if (PUBLIC_ONLY) {
                 dataset = db.prepare('SELECT * FROM saved_datasets WHERE slug = ? ORDER BY CASE WHEN language = \'en\' THEN 0 ELSE 1 END, language ASC LIMIT 1').get(req.params.slug);
             }
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = dataset.language_group
                 ? db.prepare('SELECT id, language FROM saved_datasets WHERE language_group = ? ORDER BY language ASC').all(dataset.language_group)
                 : [{ id: dataset.id, language: dataset.language || 'en' }];
@@ -2442,7 +2668,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = resolveDatasetBySlug(req.params.slug, req.params.lang, false);
             if (!dataset) return res.status(404).json({ error: 'Not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = getDatasetSiblings(dataset);
             res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) { res.status(500).json({ error: err.message }); }
@@ -2451,7 +2677,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = resolveDatasetBySlug(req.params.slug, null, false);
             if (!dataset) return res.status(404).json({ error: 'Not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = getDatasetSiblings(dataset);
             res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) { res.status(500).json({ error: err.message }); }
@@ -2460,7 +2686,7 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!dataset) return res.status(404).json({ error: 'Not found' });
-            const data = JSON.parse(dataset.data);
+            const data = refreshDatasetSectionNames(JSON.parse(dataset.data), dataset.language);
             const siblings = getDatasetSiblings(dataset);
             res.json({ name: dataset.name, slug: dataset.slug, language: dataset.language, language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, siblings, ...data });
         } catch (err) { res.status(500).json({ error: err.message }); }
@@ -2541,6 +2767,7 @@ if (PUBLIC_ONLY) {
         const section = db.prepare('SELECT section_key FROM custom_sections WHERE id = ?').get(req.params.id);
         if (section) {
             db.prepare('DELETE FROM section_visibility WHERE section_name = ?').run(section.section_key);
+            db.prepare('DELETE FROM section_title_overrides WHERE section_key = ?').run(section.section_key);
         }
         // Clean up picture files for all items in this section
         const items = db.prepare('SELECT image FROM custom_section_items WHERE section_id = ? AND image IS NOT NULL').all(req.params.id);
@@ -2668,15 +2895,18 @@ if (PUBLIC_ONLY) {
 
             function getSectionName(key) {
                 const orderEntry = sectionOrder.find(s => s.key === key);
-                if (!forceEnglishHeaders && orderEntry && orderEntry.display_name) return orderEntry.display_name;
-                const translationKey = 'section.' + key;
-                const translated = tHeader(translationKey);
-                if (translated !== translationKey) return translated;
-                if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
-                if (orderEntry && orderEntry.name) return orderEntry.name;
                 const cs = (cvData.customSections || []).find(s => s.section_key === key);
-                if (cs && cs.name) return cs.name;
-                return key;
+                if (forceEnglishHeaders) {
+                    if (SECTION_DISPLAY_NAMES[key]) return SECTION_DISPLAY_NAMES[key];
+                    if (cs && cs.name) return cs.name;
+                    return key;
+                }
+                return resolveSectionTitle(key, {
+                    datasetOverride: orderEntry ? orderEntry.display_name : null,
+                    language: locale,
+                    locale,
+                    customNameFallback: cs ? cs.name : null
+                });
             }
 
             const sz = (base) => Math.round(base * s * 10) / 10;
@@ -3211,6 +3441,7 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/profile', (req, res) => { res.json(db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename, open_to_work FROM profile WHERE id = 1').get() || {}); });
     publicApp.get('/api/sections', (req, res) => { const sections = db.prepare('SELECT * FROM section_visibility').all(); const result = {}; sections.forEach(s => { result[s.section_name] = !!s.visible; }); res.json(result); });
     publicApp.get('/api/sections/order', (req, res) => {
+        const requestedLang = req.query.language || null;
         const sections = db.prepare('SELECT * FROM section_visibility ORDER BY sort_order ASC').all();
         const customSections = db.prepare('SELECT * FROM custom_sections ORDER BY sort_order ASC').all();
         const customNameMap = {};
@@ -3218,7 +3449,6 @@ if (PUBLIC_ONLY) {
         const sectionKeys = new Set(sections.map(s => s.section_name));
         customSections.forEach(cs => {
             if (!sectionKeys.has(cs.section_key)) {
-                db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, ?, ?)').run(cs.section_key, cs.visible ? 1 : 0, cs.sort_order || 0);
                 sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
             }
         });
@@ -3226,7 +3456,12 @@ if (PUBLIC_ONLY) {
         const defaultName = (s) => SECTION_DISPLAY_NAMES[s.section_name] || customNameMap[s.section_name] || s.section_name;
         res.json(sections.map(s => ({
             key: s.section_name,
-            name: s.display_name || defaultName(s),
+            name: resolveSectionTitle(s.section_name, {
+                datasetOverride: null,
+                language: requestedLang,
+                locale: requestedLang,
+                customNameFallback: customNameMap[s.section_name]
+            }),
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,

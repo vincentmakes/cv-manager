@@ -199,6 +199,9 @@
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.timeline">Career Timeline</h2>
                 <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openSectionRenameModal('timeline')" data-i18n-title="settings.sections.rename" title="Rename section">
+                        <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('timeline')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-timeline">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -221,6 +224,9 @@
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.experience">Work Experience</h2>
                 <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openSectionRenameModal('experience')" data-i18n-title="settings.sections.rename" title="Rename section">
+                        <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('experience')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-experience">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -244,6 +250,9 @@
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.certifications">Certifications</h2>
                 <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openSectionRenameModal('certifications')" data-i18n-title="settings.sections.rename" title="Rename section">
+                        <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('certifications')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-certifications">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -267,6 +276,9 @@
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.education">Education</h2>
                 <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openSectionRenameModal('education')" data-i18n-title="settings.sections.rename" title="Rename section">
+                        <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('education')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-education">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -290,6 +302,9 @@
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.skills">Skills & Expertise</h2>
                 <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openSectionRenameModal('skills')" data-i18n-title="settings.sections.rename" title="Rename section">
+                        <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('skills')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-skills">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -313,6 +328,9 @@
             <div class="section-header">
                 <h2 class="section-title" data-i18n="section.projects">Featured Projects</h2>
                 <div class="section-actions no-print">
+                    <button class="icon-btn" onclick="openSectionRenameModal('projects')" data-i18n-title="settings.sections.rename" title="Rename section">
+                        <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('projects')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-projects">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -408,21 +426,12 @@
             </div>
             <div class="modal-body">
                 <div class="settings-tabs">
-                    <button class="settings-tab active" onclick="switchSettingsTab('sections')" data-tab="sections" data-i18n="settings.tab.sections">Sections & Headlines</button>
-                    <button class="settings-tab" onclick="switchSettingsTab('public')" data-tab="public" data-i18n="settings.tab.print">Print & Export</button>
+                    <button class="settings-tab active" onclick="switchSettingsTab('public')" data-tab="public" data-i18n="settings.tab.print">Print & Export</button>
                     <button class="settings-tab" onclick="switchSettingsTab('advanced')" data-tab="advanced" data-i18n="settings.tab.advanced">Advanced</button>
                 </div>
 
-                <!-- Sections & Headlines Tab -->
-                <div class="settings-tab-content active" id="settingsTabSections">
-                    <div class="settings-info" data-i18n="settings.sections.info">
-                        Drag sections to reorder them, or use the arrow buttons. Toggle visibility with the eye icon. Click section names to edit headlines.
-                    </div>
-                    <div id="settingsSectionsList"></div>
-                </div>
-
                 <!-- Print & Export Tab -->
-                <div class="settings-tab-content" id="settingsTabPublic">
+                <div class="settings-tab-content active" id="settingsTabPublic">
                     <!-- Print Button Setting -->
                     <div class="settings-option">
                         <div class="settings-option-info">
@@ -655,7 +664,7 @@
                 <div class="modal-footer-left"><span id="settingsVersionInfo" class="settings-version"></span></div>
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeSettingsModal()" data-i18n="btn.cancel">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveSettingsSectionOrder()" data-i18n="btn.save_changes">Save Changes</button>
+                    <button class="btn btn-primary" onclick="saveSettings()" data-i18n="btn.save_changes">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -697,11 +706,48 @@
                     <label class="form-label" data-i18n="custom_section.section_name">Section Name</label>
                     <input type="text" class="form-input" id="cs-rename-input">
                 </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="cs-rename-apply-language" checked>
+                        <span data-i18n="settings.sections.apply_to_language">Apply to all datasets in this language</span>
+                    </label>
+                </div>
             </div>
             <div class="modal-footer">
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeCustomSectionRenameModal()" data-i18n="btn.cancel">Cancel</button>
                     <button class="btn btn-primary" onclick="saveCustomSectionRename()" data-i18n="btn.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Rename Modal (built-in sections — opens from Settings > Sections) -->
+    <div class="modal-overlay" id="sectionRenameModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="settings.sections.rename_modal_title">Rename Section</h3>
+                <button class="modal-close" onclick="closeSectionRenameModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="custom_section.section_name">Section Name</label>
+                    <input type="text" class="form-input" id="section-rename-input" data-i18n-placeholder="settings.sections.rename_placeholder">
+                    <div class="form-hint" data-i18n="settings.sections.rename_placeholder">Leave empty to reset to default</div>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="section-rename-apply-language" checked>
+                        <span data-i18n="settings.sections.apply_to_language">Apply to all datasets in this language</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeSectionRenameModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSectionRename()" data-i18n="btn.save">Save</button>
                 </div>
             </div>
         </div>
