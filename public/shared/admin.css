@@ -724,6 +724,9 @@
     color: var(--gray-700);
 }
 .active-dataset-banner-content svg, .active-dataset-banner-content .material-symbols-outlined { flex-shrink: 0; color: var(--primary); }
+/* On desktop the meta wrapper is transparent to flex layout so badges keep their
+   inline position next to the dataset name. Mobile overrides below stack it. */
+.active-dataset-meta { display: contents; }
 .active-dataset-label { color: var(--gray-500); font-weight: 400; }
 .active-dataset-name { font-weight: 600; color: var(--primary-dark); }
 .active-dataset-public-badge {
@@ -2256,6 +2259,101 @@
     .icon-picker-grid { grid-template-columns: repeat(5, 40px); }
 }
 
+/* Phone portrait: compact Active dataset banner + CV Manager modal */
+@media (max-width: 640px) {
+    /* ─── Active dataset banner ─── */
+    .active-dataset-banner-content { flex-wrap: wrap; row-gap: 4px; }
+    /* Explicit ordering so rows stack predictably regardless of DOM order. */
+    .active-dataset-banner-content > .material-symbols-outlined,
+    #activeDatasetName { order: 1; }
+    /* Name stays on row 1 next to the edit icon; meta wraps below it. */
+    .active-dataset-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 6px;
+        flex-basis: 100%;
+        order: 2;
+    }
+    /* Variants group drops to its own row, aligned left (no auto-margin). */
+    .active-dataset-variants-group {
+        margin-left: 0;
+        flex-basis: 100%;
+        order: 3;
+        gap: 6px;
+    }
+    .active-dataset-actions { order: 4; }
+    /* The "Switch other variants of this CV:" label is noise on narrow screens. */
+    #activeDatasetVariantsLabel { display: none !important; }
+    /* Icon-only add-language button: hide the text span, keep the + icon + title. */
+    #datasetAddLangBtn > span:not(.material-symbols-outlined) { display: none; }
+    #datasetAddLangBtn {
+        padding: 5px 7px;
+        gap: 0;
+    }
+
+    /* ─── CV Manager modal ─── */
+    /* Group header: name + count on row 1, actions on row 2 (icon-only). */
+    .cvm-group-header {
+        flex-wrap: wrap;
+        gap: 6px 8px;
+        padding: 8px 10px;
+    }
+    .cvm-group-name { flex: 1 1 auto; order: 1; }
+    .cvm-group-count { order: 2; }
+    .cvm-group-header .cvm-action-btn {
+        order: 3;
+        padding: 4px 8px;
+    }
+    /* Collapse "+ New version" and "Add language" button labels to icons only. */
+    .cvm-group-header .cvm-action-btn > span:not(.material-symbols-outlined) {
+        display: none;
+    }
+
+    /* Row: wrap so secondary metadata flows onto a second line. */
+    .cvm-row {
+        flex-wrap: wrap;
+        column-gap: 6px;
+        row-gap: 4px;
+        padding: 8px 8px;
+    }
+    /* Row 1: radio · lang · version · name · LOAD · more */
+    .cvm-row .cvm-radio { order: 1; }
+    .cvm-row .dataset-lang-badge { order: 2; }
+    .cvm-row .dataset-version-badge { order: 3; }
+    .cvm-row .cvm-name { order: 4; flex: 1 1 auto; min-width: 0; }
+    .cvm-row > .btn-primary { order: 5; }
+    .cvm-row .cvm-more-btn { order: 6; opacity: 1; }
+    /* Forced flex break so the remaining items wrap to row 2. */
+    .cvm-row::after {
+        content: '';
+        flex: 0 0 100%;
+        order: 7;
+        height: 0;
+    }
+    /* Row 2: badges · url · date */
+    .cvm-row .dataset-active-badge,
+    .cvm-row .dataset-default-badge,
+    .cvm-row .dataset-make-public-btn,
+    .cvm-row .cvm-url,
+    .cvm-row .cvm-date {
+        order: 8;
+    }
+    .cvm-row .cvm-url {
+        max-width: 55vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Save-as section: name input takes a full row; lang + submit share the next. */
+    .cvm-save-field { flex: 1 1 100%; min-width: 0; }
+}
+
+@media (max-width: 420px) {
+    /* Drop the date on very narrow screens to protect the URL + LOAD. */
+    .cvm-row .cvm-date { display: none; }
+}
+
 /* Version Display (Settings Footer) */
 .settings-version { font-size: 12px; color: var(--gray-400); align-self: center; }
 .settings-version a { color: var(--primary); text-decoration: none; }
@@ -2872,7 +2970,6 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
 .reorder-pill.dragging {
     cursor: grabbing;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.15);
-    transform: scale(1.04);
     animation: none;
     transition: none;
     background: var(--white);
@@ -2903,6 +3000,7 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
 }
 
 .reorder-placeholder {
+    box-sizing: border-box;
     border: 2px dashed rgba(255, 255, 255, 0.45);
     border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.08);

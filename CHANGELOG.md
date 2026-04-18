@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.34.1] - 2026-04-18
+
+### Fixed
+- Section reorder overlay: the dashed placeholder now matches the height of the floating pill instead of reading shorter than it. The pill no longer scales up while dragged, so the slot it leaves behind and the slot it returns to line up.
+- CV Manager modal on phones: the dataset name, LOAD button, radio (set-default) and ⋮ menu are guaranteed to fit on the first row at iPhone widths. Secondary metadata (EDITING / MAKE PUBLIC / URL / last-modified date) wraps onto a second row; the date is hidden below 420 px. The `+ New version` and `Add language` buttons in each group header collapse to icon-only on mobile.
+- Active dataset banner in portrait: the dataset name now sits on its own row, with version / language / public-status badges stacked underneath it and the language-variants row below that. The `+ Add language` button collapses to an icon and the "Switch other variants of this CV:" label is dropped on narrow screens.
+
 ## [1.34.0] - 2026-04-17
 
 ### Added
