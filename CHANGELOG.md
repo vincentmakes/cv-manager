@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.39.1] - 2026-04-19
+
+### Changed
+- Theme picker bullet selection is now a compact 6-column icon grid instead of a vertical list with sample text — all 24 bullet choices are visible at a glance and take less vertical space in the theme dropdown. Hovering a cell shows the style name as a tooltip. The unused `theme.bullet_sample` i18n key has been removed.
+
 ## [1.39.0] - 2026-04-19
 
 ### Added

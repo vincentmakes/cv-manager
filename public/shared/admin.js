@@ -4123,11 +4123,9 @@ function renderBulletPicker() {
     const list = document.getElementById('themeBulletList');
     const trigger = document.getElementById('themeBulletTrigger');
     if (!list || !trigger) return;
-    const sample = (typeof t === 'function' ? t('theme.bullet_sample') : 'Sample item');
     list.innerHTML = BULLET_STYLES.map(s => `
-        <button type="button" class="theme-bullet-option" data-style="${s.id}">
+        <button type="button" class="theme-bullet-option" data-style="${s.id}" title="${s.id}">
             ${bulletPreviewHtml(s)}
-            <span class="bullet-sample">${sample}</span>
         </button>
     `).join('');
     if (!trigger.dataset.wired) {
