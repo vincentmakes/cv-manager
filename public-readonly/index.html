@@ -866,28 +866,51 @@
             applySectionTitles(sectionOrder);
         }
         
-        async function loadThemeColorPublic(allSettings) {
-            try {
-                const value = (allSettings && allSettings.themeColor !== undefined) ? allSettings.themeColor : (await api('/api/settings/themeColor')).value;
-                if (value) {
-                    applyColorToCSSPublic(value);
-                }
-            } catch (err) {
-                // Ignore errors, use default theme
-            }
+        const loadedFontSetPublic = new Set(['Inter']);
+        function ensureFontLoadedPublic(family) {
+            if (!family || loadedFontSetPublic.has(family)) return;
+            const slug = family.replace(/ /g, '+');
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=' + slug + ':wght@300;400;500;600;700&display=swap';
+            document.head.appendChild(link);
+            loadedFontSetPublic.add(family);
         }
-        
-        function applyColorToCSSPublic(hex) {
+
+        async function loadThemeColorPublic(allSettings) {
+            // Server-side injection wins (no flicker). Fallback to settings API.
+            if (window.DATASET_THEME && typeof window.DATASET_THEME === 'object') {
+                applyThemePublic(window.DATASET_THEME);
+                return;
+            }
+            try {
+                const primary = (allSettings && allSettings.themeColor !== undefined) ? allSettings.themeColor : (await api('/api/settings/themeColor')).value;
+                const fontFamily = (allSettings && allSettings.themeFontFamily !== undefined) ? allSettings.themeFontFamily : (await api('/api/settings/themeFontFamily')).value;
+                const gradientEnd = (allSettings && allSettings.themeGradientEnd !== undefined) ? allSettings.themeGradientEnd : (await api('/api/settings/themeGradientEnd')).value;
+                applyThemePublic({ primary: primary || '#0066ff', gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter' });
+            } catch (err) { /* Ignore — defaults stand */ }
+        }
+
+        function applyThemePublic(theme) {
+            applyColorToCSSPublic(theme.primary || '#0066ff', theme.gradientEnd || null, theme.fontFamily || 'Inter');
+        }
+
+        function applyColorToCSSPublic(hex, gradientEnd, fontFamily) {
             const root = document.documentElement;
             const hsl = hexToHSLPublic(hex);
-            
+
             root.style.setProperty('--primary', hex);
             root.style.setProperty('--primary-dark', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
             root.style.setProperty('--primary-light', hslToHexPublic(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
-            root.style.setProperty('--accent', hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l));
+            const accent = hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l);
+            root.style.setProperty('--accent', accent);
             root.style.setProperty('--dark', hslToHexPublic(hsl.h, hsl.s, 15));
             root.style.setProperty('--light', hslToHexPublic(hsl.h, 30, 90));
             root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
+            root.style.setProperty('--gradient-end', gradientEnd || accent);
+            const family = fontFamily || 'Inter';
+            if (family !== 'Inter') ensureFontLoadedPublic(family);
+            root.style.setProperty('--font-family', "'" + family + "', var(--font-family-default)");
         }
         
         function hexToHSLPublic(hex) {

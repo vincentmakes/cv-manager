@@ -50,7 +50,65 @@
                         <div class="color-preset" style="background: #0891b2" data-color="#0891b2" data-i18n-title="theme.cyan" title="Cyan"></div>
                         <div class="color-preset" style="background: #4f46e5" data-color="#4f46e5" data-i18n-title="theme.indigo" title="Indigo"></div>
                         <div class="color-preset" style="background: #be185d" data-color="#be185d" data-i18n-title="theme.pink" title="Pink"></div>
+                        <div class="color-preset" style="background: #111827" data-color="#111827" data-i18n-title="theme.slate" title="Slate"></div>
+                        <div class="color-preset" style="background: #6b7280" data-color="#6b7280" data-i18n-title="theme.gray" title="Gray"></div>
+                        <div class="color-preset" style="background: #d97706" data-color="#d97706" data-i18n-title="theme.amber" title="Amber"></div>
+                        <div class="color-preset" style="background: #65a30d" data-color="#65a30d" data-i18n-title="theme.lime" title="Lime"></div>
+                        <div class="color-preset" style="background: #16a34a" data-color="#16a34a" data-i18n-title="theme.green" title="Green"></div>
+                        <div class="color-preset" style="background: #0d9488" data-color="#0d9488" data-i18n-title="theme.teal" title="Teal"></div>
+                        <div class="color-preset" style="background: #8b5cf6" data-color="#8b5cf6" data-i18n-title="theme.violet" title="Violet"></div>
+                        <div class="color-preset" style="background: #f43f5e" data-color="#f43f5e" data-i18n-title="theme.rose" title="Rose"></div>
                     </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-label" data-i18n="theme.font">Font</label>
+                        <div class="theme-font-picker">
+                            <button type="button" class="theme-font-trigger" id="themeFontTrigger">
+                                <span id="themeFontLabel">Inter</span>
+                                <span class="material-symbols-outlined">expand_more</span>
+                            </button>
+                            <div class="theme-font-list" id="themeFontList"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-row">
+                            <input type="checkbox" id="themeUseGradient">
+                            <span data-i18n="theme.use_custom_gradient">Use custom gradient end color</span>
+                        </label>
+                        <div class="theme-gradient-picker" id="gradientPickerWrapper" style="display:none;">
+                            <div class="color-wheel-container">
+                                <canvas id="gradientWheel" width="180" height="180"></canvas>
+                                <div class="color-wheel-cursor" id="gradientWheelCursor"></div>
+                            </div>
+                            <div class="color-brightness">
+                                <label data-i18n="theme.brightness">Brightness</label>
+                                <input type="range" id="gradientBrightness" min="30" max="70" value="35">
+                            </div>
+                            <div class="color-preview-row">
+                                <div class="color-preview" id="gradientPreview"></div>
+                                <input type="text" class="color-hex-input" id="gradientHexInput" value="#003c99" maxlength="7">
+                            </div>
+                            <div class="color-presets">
+                                <div class="gradient-preset color-preset" style="background: #003c99" data-color="#003c99"></div>
+                                <div class="gradient-preset color-preset" style="background: #0e2954" data-color="#0e2954"></div>
+                                <div class="gradient-preset color-preset" style="background: #014737" data-color="#014737"></div>
+                                <div class="gradient-preset color-preset" style="background: #4a044e" data-color="#4a044e"></div>
+                                <div class="gradient-preset color-preset" style="background: #7c2d12" data-color="#7c2d12"></div>
+                                <div class="gradient-preset color-preset" style="background: #831843" data-color="#831843"></div>
+                                <div class="gradient-preset color-preset" style="background: #1f2937" data-color="#1f2937"></div>
+                                <div class="gradient-preset color-preset" style="background: #312e81" data-color="#312e81"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-row">
+                            <input type="checkbox" id="themeApplyToAll" checked>
+                            <span data-i18n="theme.apply_to_all">Apply to all saved datasets</span>
+                        </label>
+                    </div>
+
                     <div class="color-picker-actions">
                         <button class="btn btn-ghost btn-sm" onclick="resetThemeColor()" data-i18n="theme.reset">Reset</button>
                         <button class="btn btn-primary btn-sm" onclick="applyThemeColor()" data-i18n="theme.apply">Apply</button>

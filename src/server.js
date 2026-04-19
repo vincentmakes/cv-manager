@@ -236,7 +236,8 @@ function servePublicIndex(req, res) {
 
             // Inject default dataset ID and language info (no DATASET_PREVIEW = no preview banner)
             const siblings = getDatasetSiblings(defaultDataset);
-            const datasetScript = `<script>window.DATASET_ID = ${defaultDataset.id}; window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_IS_DEFAULT = true;${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
+            const datasetTheme = data.theme || gatherTheme();
+            const datasetScript = `<script>window.DATASET_ID = ${defaultDataset.id}; window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_IS_DEFAULT = true; window.DATASET_THEME = ${JSON.stringify(datasetTheme)};${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
 
             return res.type('html').send(html);
@@ -266,6 +267,11 @@ function servePublicIndex(req, res) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
 
+        // Inject theme so the public page can apply font/gradient before paint
+        const fallbackTheme = gatherTheme();
+        const themeScript = `<script>window.DATASET_THEME = ${JSON.stringify(fallbackTheme)};</script>`;
+        html = html.replace('</head>', `${themeScript}</head>`);
+
         res.type('html').send(html);
     } catch (err) { res.sendFile(path.join(__dirname, '../public-readonly/index.html')); }
 }
@@ -292,7 +298,8 @@ function serveDatasetPage(req, res, lang) {
 
         // Inject dataset context with language info and exact ID
         const siblings = getDatasetSiblings(dataset);
-        const datasetScript = `<script>window.DATASET_ID = ${dataset.id}; window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}";${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
+        const datasetTheme = data.theme || gatherTheme();
+        const datasetScript = `<script>window.DATASET_ID = ${dataset.id}; window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_THEME = ${JSON.stringify(datasetTheme)};${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
 
         // Apply noindex if slugsIndex setting is not enabled
@@ -1229,7 +1236,20 @@ function gatherCvData(options = {}) {
         projects: projects.map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [], visible: !!p.visible })),
         sectionVisibility,
         sectionOrder: sectionOrderData,
-        customSections
+        customSections,
+        theme: gatherTheme()
+    };
+}
+
+// Read the three theme settings into a normalized object. Used by gatherCvData
+// (so every dataset snapshot embeds its own theme) and by SSR HTML injection
+// when no default dataset exists.
+function gatherTheme() {
+    const get = (key) => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || null;
+    return {
+        primary: get('themeColor') || '#0066ff',
+        gradientEnd: get('themeGradientEnd') || null,
+        fontFamily: get('themeFontFamily') || 'Inter'
     };
 }
 
@@ -1993,6 +2013,52 @@ if (PUBLIC_ONLY) {
     app.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     app.put('/api/settings/:key', (req, res) => { db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(req.params.key, req.body.value); res.json({ success: true }); });
 
+    // Composite theme endpoints. The legacy /api/settings/themeColor still works
+    // for backward compatibility, but the picker now uses these to write the
+    // three theme fields together and (optionally) propagate to all datasets.
+    app.get('/api/theme', (req, res) => {
+        try { res.json(gatherTheme()); } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+    app.put('/api/theme', (req, res) => {
+        const { primary, gradientEnd, fontFamily, applyToAll, currentDatasetId } = req.body || {};
+        if (!primary || !/^#[0-9a-fA-F]{6}$/.test(primary)) return res.status(400).json({ error: 'Invalid primary color' });
+        if (gradientEnd !== null && gradientEnd !== undefined && !/^#[0-9a-fA-F]{6}$/.test(gradientEnd)) return res.status(400).json({ error: 'Invalid gradient end color' });
+        const font = typeof fontFamily === 'string' && fontFamily.trim() ? fontFamily.trim() : 'Inter';
+        const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+        try {
+            const writeAll = db.transaction(() => {
+                upsert.run('themeColor', primary);
+                upsert.run('themeFontFamily', font);
+                if (gradientEnd) upsert.run('themeGradientEnd', gradientEnd);
+                else db.prepare('DELETE FROM settings WHERE key = ?').run('themeGradientEnd');
+                upsert.run('applyThemeToAllDatasets', applyToAll ? 'true' : 'false');
+                const themeBlob = { primary, gradientEnd: gradientEnd || null, fontFamily: font };
+                if (applyToAll) {
+                    const rows = db.prepare('SELECT id, data FROM saved_datasets').all();
+                    const update = db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+                    rows.forEach(row => {
+                        try {
+                            const parsed = JSON.parse(row.data);
+                            parsed.theme = themeBlob;
+                            update.run(JSON.stringify(parsed), row.id);
+                        } catch (e) { /* skip malformed */ }
+                    });
+                } else if (currentDatasetId) {
+                    const row = db.prepare('SELECT data FROM saved_datasets WHERE id = ?').get(currentDatasetId);
+                    if (row) {
+                        try {
+                            const parsed = JSON.parse(row.data);
+                            parsed.theme = themeBlob;
+                            db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(parsed), currentDatasetId);
+                        } catch (e) { /* skip malformed */ }
+                    }
+                }
+            });
+            writeAll();
+            res.json({ success: true, theme: gatherTheme() });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
     // Version check endpoint (admin only)
     app.get('/api/version', async (req, res) => {
         const cache = await checkLatestVersion();
@@ -2555,7 +2621,7 @@ if (PUBLIC_ONLY) {
             res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public });
         } catch (err) { res.status(500).json({ error: err.message }); }
     });
-    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, profile_picture_enabled = ?, picture_filename = ?, picture_propagate = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages, p.profile_picture_enabled == null ? 1 : (p.profile_picture_enabled ? 1 : 0), p.picture_filename || null, p.picture_propagate == null ? 1 : (p.picture_propagate ? 1 : 0)); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.theme && typeof data.theme === 'object') { const t = data.theme; const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'); if (t.primary && /^#[0-9a-fA-F]{6}$/.test(t.primary)) upsert.run('themeColor', t.primary); if (t.fontFamily) upsert.run('themeFontFamily', t.fontFamily); if (t.gradientEnd && /^#[0-9a-fA-F]{6}$/.test(t.gradientEnd)) upsert.run('themeGradientEnd', t.gradientEnd); else db.prepare('DELETE FROM settings WHERE key = ?').run('themeGradientEnd'); } if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, profile_picture_enabled = ?, picture_filename = ?, picture_propagate = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages, p.profile_picture_enabled == null ? 1 : (p.profile_picture_enabled ? 1 : 0), p.picture_filename || null, p.picture_propagate == null ? 1 : (p.picture_propagate ? 1 : 0)); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public, theme: data.theme || null }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {
         try {
             const ds = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
