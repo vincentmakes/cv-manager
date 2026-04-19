@@ -296,7 +296,9 @@ body {
 .section-title {
     font-size: 20px;
     font-weight: 700;
-    color: var(--primary);
+    /* Fallback to --primary so themes that don't set a custom heading color
+       keep the pre-1.40 behavior where section titles match the accent. */
+    color: var(--section-title-color, var(--primary));
 }
 
 /* About */

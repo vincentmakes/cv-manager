@@ -1618,6 +1618,68 @@ describe('Backend API', () => {
             assert.strictEqual(theme.bulletStyle, 'triangle');
         });
 
+        it('PUT /api/theme rejects invalid sectionTitleColor', async () => {
+            const r = await fetch(`${BASE_URL}/api/theme`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ primary: '#0066ff', sectionTitleColor: 'not-a-color' })
+            });
+            assert.strictEqual(r.status, 400);
+        });
+
+        it('PUT /api/theme persists sectionTitleColor into settings and every dataset when applyToAll=true', async () => {
+            const a = await createDs('Section Title Bulk A');
+            const b = await createDs('Section Title Bulk B');
+            const result = await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#0066ff', sectionTitleColor: '#001a4d', applyToAll: true
+            });
+            assert.strictEqual(result.success, true);
+            const settingsTheme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(settingsTheme.sectionTitleColor, '#001a4d');
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
+            assert.strictEqual(aData.theme.sectionTitleColor, '#001a4d');
+            assert.strictEqual(bData.theme.sectionTitleColor, '#001a4d');
+            await delDs(a.id); await delDs(b.id);
+        });
+
+        it('PUT /api/theme with applyToAll=false only updates currentDatasetId sectionTitleColor', async () => {
+            const a = await createDs('Section Title Solo A');
+            const b = await createDs('Section Title Solo B');
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionTitleColor: '#111827', applyToAll: true });
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionTitleColor: '#000000', applyToAll: false, currentDatasetId: a.id });
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
+            assert.strictEqual(aData.theme.sectionTitleColor, '#000000', 'A picks up the new sectionTitleColor');
+            assert.strictEqual(bData.theme.sectionTitleColor, '#111827', 'B retains the prior bulk-applied sectionTitleColor');
+            await delDs(a.id); await delDs(b.id);
+        });
+
+        it('PUT /api/theme with applyToAll=false propagates sectionTitleColor to language siblings', async () => {
+            const en = await createDs('Section Title Sibling Group');
+            const frRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Section Title Sibling Group', language: 'fr', language_group: en.language_group })
+            });
+            const fr = await frRes.json();
+            await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#0066ff', sectionTitleColor: '#1e3a8a', applyToAll: false, currentDatasetId: en.id
+            });
+            const enData = await getJson(`${BASE_URL}/api/datasets/id/${en.id}`);
+            const frData = await getJson(`${BASE_URL}/api/datasets/id/${fr.id}`);
+            assert.strictEqual(enData.theme.sectionTitleColor, '#1e3a8a');
+            assert.strictEqual(frData.theme.sectionTitleColor, '#1e3a8a', 'sibling FR variant inherits sectionTitleColor');
+            await delDs(en.id); await delDs(fr.id);
+        });
+
+        it('PUT /api/theme clears sectionTitleColor when set to null', async () => {
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionTitleColor: '#000000', applyToAll: false });
+            let theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.sectionTitleColor, '#000000');
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionTitleColor: null, applyToAll: false });
+            theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.sectionTitleColor, null);
+        });
+
         it('Dataset load with embedded theme writes theme into settings', async () => {
             // Create a dataset, manually set its data.theme, then load it
             await putJson(`${BASE_URL}/api/theme`, { primary: '#aaaaaa', fontFamily: 'Inter', applyToAll: false });

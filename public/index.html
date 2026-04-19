@@ -129,6 +129,28 @@
 
                     <div class="theme-section">
                         <label class="theme-section-row">
+                            <input type="checkbox" id="themeUseSectionTitleColor">
+                            <span data-i18n="theme.use_section_title_color">Custom section title color</span>
+                        </label>
+                        <div class="theme-section-title-picker" id="sectionTitleColorWrapper" style="display:none;">
+                            <div class="color-wheel-container">
+                                <canvas id="sectionTitleWheel" width="180" height="180"></canvas>
+                                <div class="color-wheel-cursor" id="sectionTitleWheelCursor"></div>
+                            </div>
+                            <div class="color-brightness">
+                                <label data-i18n="theme.brightness">Brightness</label>
+                                <input type="range" id="sectionTitleBrightness" min="5" max="70" value="20">
+                            </div>
+                            <div class="color-preview-row">
+                                <div class="color-preview" id="sectionTitlePreview"></div>
+                                <input type="text" class="color-hex-input" id="sectionTitleHexInput" value="#000000" maxlength="7">
+                            </div>
+                            <div class="color-presets" id="sectionTitlePresets"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-row">
                             <input type="checkbox" id="themeApplyToAll" checked>
                             <span data-i18n="theme.apply_to_all">Apply to all saved datasets</span>
                         </label>

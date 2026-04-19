@@ -892,7 +892,11 @@
                 try {
                     bulletStyle = (allSettings && allSettings.themeBulletStyle !== undefined) ? allSettings.themeBulletStyle : (await api('/api/settings/themeBulletStyle')).value;
                 } catch (e) { /* optional */ }
-                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle' });
+                let sectionTitleColor = null;
+                try {
+                    sectionTitleColor = (allSettings && allSettings.themeSectionTitleColor !== undefined) ? allSettings.themeSectionTitleColor : (await api('/api/settings/themeSectionTitleColor')).value;
+                } catch (e) { /* optional */ }
+                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle', sectionTitleColor: sectionTitleColor || null });
             } catch (err) { /* Ignore — defaults stand */ }
         }
 
@@ -907,6 +911,12 @@
                 const bullet = theme.bulletStyle || 'triangle';
                 document.body.dataset.bulletStyle = bullet;
                 document.body.dataset.bulletKind = BULLET_GLYPH_IDS.has(bullet) ? 'glyph' : 'icon';
+            }
+            const root = document.documentElement;
+            if (theme.sectionTitleColor && /^#[0-9a-fA-F]{6}$/.test(theme.sectionTitleColor)) {
+                root.style.setProperty('--section-title-color', theme.sectionTitleColor);
+            } else {
+                root.style.removeProperty('--section-title-color');
             }
         }
 

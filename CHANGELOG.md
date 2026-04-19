@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.40.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a **Custom section title color** option. A toggle reveals a dedicated color wheel with a brightness slider, hex input, and 12 preset swatches chosen to read well as heading text (black, charcoal, slate, gray, navy, dark blue, midnight, dark green, dark red, dark purple, brown, steel). When off, section titles continue to track the primary color as before — the new `--section-title-color` CSS variable falls back to `var(--primary)` so existing themes are visually unchanged. The chosen color applies to every built-in section heading (About, Experience, Certifications, Education, Skills, Projects, Timeline) and every custom section heading on both the admin preview and the public read-only CV page. The color is stored alongside the other theme fields in the per-dataset `data.theme` blob and follows the same propagation rule as the rest of the theme: `applyToAll: true` writes it into every saved dataset; `applyToAll: false` writes it into the current dataset and its language siblings only.
+
 ## [1.39.0] - 2026-04-19
 
 ### Added
