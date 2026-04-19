@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "Dunkelviolett",
     "theme.title_color.brown": "Braun",
     "theme.title_color.steel": "Stahl",
+    "theme.use_section_radius": "Eigener Eckenradius für Abschnitte",
+    "theme.section_radius": "Eckenradius",
     "banner.update": "Update verfügbar: v{{latest}} (Sie verwenden v{{current}})",
     "banner.whats_new": "Was ist neu",
     "banner.dismiss": "Ausblenden",

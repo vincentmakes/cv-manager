@@ -51,6 +51,8 @@
     "theme.title_color.dark_purple": "Dark Purple",
     "theme.title_color.brown": "Brown",
     "theme.title_color.steel": "Steel",
+    "theme.use_section_radius": "Custom section corner radius",
+    "theme.section_radius": "Corner radius",
     "banner.update": "Update available: v{{latest}} (you're on v{{current}})",
     "banner.whats_new": "What's new",
     "banner.dismiss": "Dismiss",

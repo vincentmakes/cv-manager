@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.41.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a **Custom section corner radius** option. A toggle reveals a slider (0–32px, integer steps, default 16px) that controls the border-radius of every section box — both built-in (About, Experience, Certifications, Education, Skills, Projects, Timeline) and custom — via the new `--section-radius` CSS variable. When the toggle is off, sections fall back to the pre-1.41 `--radius-lg` value and are visually unchanged. The chosen radius is stored alongside the other theme fields in the per-dataset `data.theme` blob, follows the same `PUT /api/theme` propagation rules (applyToAll, language siblings) and is restored on dataset load. Print styles also honor the custom radius so the printed PDF matches the on-screen look.
+
 ## [1.40.0] - 2026-04-19
 
 ### Added

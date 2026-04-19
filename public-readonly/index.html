@@ -896,7 +896,13 @@
                 try {
                     sectionTitleColor = (allSettings && allSettings.themeSectionTitleColor !== undefined) ? allSettings.themeSectionTitleColor : (await api('/api/settings/themeSectionTitleColor')).value;
                 } catch (e) { /* optional */ }
-                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle', sectionTitleColor: sectionTitleColor || null });
+                let sectionRadius = null;
+                try {
+                    const raw = (allSettings && allSettings.themeSectionRadius !== undefined) ? allSettings.themeSectionRadius : (await api('/api/settings/themeSectionRadius')).value;
+                    const n = raw == null ? null : parseInt(raw, 10);
+                    if (Number.isInteger(n) && n >= 0 && n <= 32) sectionRadius = n;
+                } catch (e) { /* optional */ }
+                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle', sectionTitleColor: sectionTitleColor || null, sectionRadius });
             } catch (err) { /* Ignore — defaults stand */ }
         }
 
@@ -917,6 +923,11 @@
                 root.style.setProperty('--section-title-color', theme.sectionTitleColor);
             } else {
                 root.style.removeProperty('--section-title-color');
+            }
+            if (Number.isInteger(theme.sectionRadius) && theme.sectionRadius >= 0 && theme.sectionRadius <= 32) {
+                root.style.setProperty('--section-radius', theme.sectionRadius + 'px');
+            } else {
+                root.style.removeProperty('--section-radius');
             }
         }
 

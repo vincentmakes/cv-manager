@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "Donkerpaars",
     "theme.title_color.brown": "Bruin",
     "theme.title_color.steel": "Staal",
+    "theme.use_section_radius": "Aangepaste hoekafronding voor secties",
+    "theme.section_radius": "Hoekafronding",
     "banner.update": "Update beschikbaar: v{{latest}} (je gebruikt v{{current}})",
     "banner.whats_new": "Wat is nieuw",
     "banner.dismiss": "Sluiten",

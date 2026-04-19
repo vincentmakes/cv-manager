@@ -151,6 +151,22 @@
 
                     <div class="theme-section">
                         <label class="theme-section-row">
+                            <input type="checkbox" id="themeUseSectionRadius">
+                            <span data-i18n="theme.use_section_radius">Custom section corner radius</span>
+                        </label>
+                        <div class="theme-section-radius-picker" id="sectionRadiusWrapper" style="display:none;">
+                            <div class="color-brightness">
+                                <label>
+                                    <span data-i18n="theme.section_radius">Corner radius</span>
+                                    <span class="theme-section-radius-value" id="themeSectionRadiusValue">16px</span>
+                                </label>
+                                <input type="range" id="themeSectionRadiusSlider" min="0" max="32" step="1" value="16">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-row">
                             <input type="checkbox" id="themeApplyToAll" checked>
                             <span data-i18n="theme.apply_to_all">Apply to all saved datasets</span>
                         </label>

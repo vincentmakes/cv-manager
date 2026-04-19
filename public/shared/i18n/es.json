@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "Púrpura oscuro",
     "theme.title_color.brown": "Marrón",
     "theme.title_color.steel": "Acero",
+    "theme.use_section_radius": "Radio de esquina personalizado para secciones",
+    "theme.section_radius": "Radio de esquina",
     "banner.update": "Actualización disponible: v{{latest}} (estás en v{{current}})",
     "banner.whats_new": "Novedades",
     "banner.dismiss": "Descartar",

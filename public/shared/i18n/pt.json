@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "Roxo escuro",
     "theme.title_color.brown": "Castanho",
     "theme.title_color.steel": "Aço",
+    "theme.use_section_radius": "Raio dos cantos personalizado para secções",
+    "theme.section_radius": "Raio dos cantos",
     "banner.update": "Atualização disponível: v{{latest}} (está na v{{current}})",
     "banner.whats_new": "Novidades",
     "banner.dismiss": "Dispensar",

@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "Viola scuro",
     "theme.title_color.brown": "Marrone",
     "theme.title_color.steel": "Acciaio",
+    "theme.use_section_radius": "Raggio degli angoli personalizzato per le sezioni",
+    "theme.section_radius": "Raggio degli angoli",
     "banner.update": "Aggiornamento disponibile: v{{latest}} (versione attuale v{{current}})",
     "banner.whats_new": "Novità",
     "banner.dismiss": "Ignora",

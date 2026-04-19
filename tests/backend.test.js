@@ -1680,6 +1680,70 @@ describe('Backend API', () => {
             assert.strictEqual(theme.sectionTitleColor, null);
         });
 
+        it('PUT /api/theme rejects invalid sectionRadius (out of range, non-integer, non-numeric)', async () => {
+            for (const bad of [-1, 33, 1000, 3.5, 'foo']) {
+                const r = await fetch(`${BASE_URL}/api/theme`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ primary: '#0066ff', sectionRadius: bad })
+                });
+                assert.strictEqual(r.status, 400, `expected 400 for sectionRadius=${bad}`);
+            }
+        });
+
+        it('PUT /api/theme persists sectionRadius into settings and every dataset when applyToAll=true', async () => {
+            const a = await createDs('Section Radius Bulk A');
+            const b = await createDs('Section Radius Bulk B');
+            const result = await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#0066ff', sectionRadius: 4, applyToAll: true
+            });
+            assert.strictEqual(result.success, true);
+            const settingsTheme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(settingsTheme.sectionRadius, 4);
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
+            assert.strictEqual(aData.theme.sectionRadius, 4);
+            assert.strictEqual(bData.theme.sectionRadius, 4);
+            await delDs(a.id); await delDs(b.id);
+        });
+
+        it('PUT /api/theme with applyToAll=false only updates currentDatasetId sectionRadius', async () => {
+            const a = await createDs('Section Radius Solo A');
+            const b = await createDs('Section Radius Solo B');
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionRadius: 20, applyToAll: true });
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionRadius: 0, applyToAll: false, currentDatasetId: a.id });
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
+            assert.strictEqual(aData.theme.sectionRadius, 0, 'A picks up the new sectionRadius');
+            assert.strictEqual(bData.theme.sectionRadius, 20, 'B retains the prior bulk-applied sectionRadius');
+            await delDs(a.id); await delDs(b.id);
+        });
+
+        it('PUT /api/theme with applyToAll=false propagates sectionRadius to language siblings', async () => {
+            const en = await createDs('Section Radius Sibling Group');
+            const frRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Section Radius Sibling Group', language: 'fr', language_group: en.language_group })
+            });
+            const fr = await frRes.json();
+            await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#0066ff', sectionRadius: 24, applyToAll: false, currentDatasetId: en.id
+            });
+            const enData = await getJson(`${BASE_URL}/api/datasets/id/${en.id}`);
+            const frData = await getJson(`${BASE_URL}/api/datasets/id/${fr.id}`);
+            assert.strictEqual(enData.theme.sectionRadius, 24);
+            assert.strictEqual(frData.theme.sectionRadius, 24, 'sibling FR variant inherits sectionRadius');
+            await delDs(en.id); await delDs(fr.id);
+        });
+
+        it('PUT /api/theme clears sectionRadius when set to null', async () => {
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionRadius: 12, applyToAll: false });
+            let theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.sectionRadius, 12);
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', sectionRadius: null, applyToAll: false });
+            theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.sectionRadius, null);
+        });
+
         it('Dataset load with embedded theme writes theme into settings', async () => {
             // Create a dataset, manually set its data.theme, then load it
             await putJson(`${BASE_URL}/api/theme`, { primary: '#aaaaaa', fontFamily: 'Inter', applyToAll: false });

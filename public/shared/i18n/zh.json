@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "深紫",
     "theme.title_color.brown": "棕色",
     "theme.title_color.steel": "钢灰",
+    "theme.use_section_radius": "自定义章节圆角",
+    "theme.section_radius": "圆角大小",
     "banner.update": "有新版本可用：v{{latest}}（当前版本 v{{current}}）",
     "banner.whats_new": "更新内容",
     "banner.dismiss": "忽略",

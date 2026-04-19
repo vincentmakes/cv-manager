@@ -50,6 +50,8 @@
     "theme.title_color.dark_purple": "Violet foncé",
     "theme.title_color.brown": "Marron",
     "theme.title_color.steel": "Acier",
+    "theme.use_section_radius": "Rayon d'angle personnalisé pour les sections",
+    "theme.section_radius": "Rayon d'angle",
     "banner.update": "Mise à jour disponible : v{{latest}} (vous utilisez la v{{current}})",
     "banner.whats_new": "Nouveautés",
     "banner.dismiss": "Fermer",

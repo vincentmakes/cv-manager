@@ -3694,7 +3694,14 @@ const FONT_OPTIONS = [
     { family: 'JetBrains Mono', label: 'JetBrains Mono' }
 ];
 
-const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter', bulletStyle: 'triangle', sectionTitleColor: null };
+const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter', bulletStyle: 'triangle', sectionTitleColor: null, sectionRadius: null };
+
+// Slider bounds for the section corner-radius picker (pixels). 0 = sharp
+// corners; 32 = very rounded. Default rests at 16px — matches the pre-1.41
+// `--radius-lg` value so unchanged themes look identical.
+const SECTION_RADIUS_MIN = 0;
+const SECTION_RADIUS_MAX = 32;
+const SECTION_RADIUS_DEFAULT = 16;
 
 // Preset swatches for the "Section titles" color picker. These colors are
 // chosen to read well as heading text: neutrals (black, charcoal, slate, gray),
@@ -3870,6 +3877,34 @@ function initColorPicker() {
                 themeState.sectionTitleColor = null;
                 if (wrapper) wrapper.style.display = 'none';
             }
+            applyThemeToCSS(themeState);
+        });
+    }
+
+    const useSectionRadiusToggle = document.getElementById('themeUseSectionRadius');
+    const sectionRadiusSlider = document.getElementById('themeSectionRadiusSlider');
+    const sectionRadiusLabel = document.getElementById('themeSectionRadiusValue');
+    if (useSectionRadiusToggle) {
+        useSectionRadiusToggle.addEventListener('change', () => {
+            const wrapper = document.getElementById('sectionRadiusWrapper');
+            if (useSectionRadiusToggle.checked) {
+                if (themeState.sectionRadius == null) themeState.sectionRadius = SECTION_RADIUS_DEFAULT;
+                if (sectionRadiusSlider) sectionRadiusSlider.value = themeState.sectionRadius;
+                if (sectionRadiusLabel) sectionRadiusLabel.textContent = `${themeState.sectionRadius}px`;
+                if (wrapper) wrapper.style.display = 'block';
+            } else {
+                themeState.sectionRadius = null;
+                if (wrapper) wrapper.style.display = 'none';
+            }
+            applyThemeToCSS(themeState);
+        });
+    }
+    if (sectionRadiusSlider) {
+        sectionRadiusSlider.addEventListener('input', () => {
+            const v = parseInt(sectionRadiusSlider.value, 10);
+            if (Number.isNaN(v)) return;
+            themeState.sectionRadius = v;
+            if (sectionRadiusLabel) sectionRadiusLabel.textContent = `${v}px`;
             applyThemeToCSS(themeState);
         });
     }
@@ -4268,6 +4303,7 @@ async function loadTheme() {
             themeState.fontFamily = theme.fontFamily || THEME_DEFAULTS.fontFamily;
             themeState.bulletStyle = theme.bulletStyle || THEME_DEFAULTS.bulletStyle;
             themeState.sectionTitleColor = theme.sectionTitleColor || null;
+            themeState.sectionRadius = (typeof theme.sectionRadius === 'number' && Number.isFinite(theme.sectionRadius)) ? theme.sectionRadius : null;
         }
         try {
             const allSetting = await api('/api/settings/applyThemeToAllDatasets');
@@ -4316,6 +4352,18 @@ async function loadTheme() {
         updateColorPickerUI('sectionTitle', themeState.sectionTitleColor);
     }
 
+    const hasCustomSectionRadius = themeState.sectionRadius != null;
+    const useSectionRadiusToggle = document.getElementById('themeUseSectionRadius');
+    const radiusWrapper = document.getElementById('sectionRadiusWrapper');
+    const radiusSlider = document.getElementById('themeSectionRadiusSlider');
+    const radiusLabel = document.getElementById('themeSectionRadiusValue');
+    if (useSectionRadiusToggle) useSectionRadiusToggle.checked = hasCustomSectionRadius;
+    if (radiusWrapper) radiusWrapper.style.display = hasCustomSectionRadius ? 'block' : 'none';
+    if (hasCustomSectionRadius) {
+        if (radiusSlider) radiusSlider.value = themeState.sectionRadius;
+        if (radiusLabel) radiusLabel.textContent = `${themeState.sectionRadius}px`;
+    }
+
     const applyAllToggle = document.getElementById('themeApplyToAll');
     if (applyAllToggle) applyAllToggle.checked = applyToAllDatasets;
 
@@ -4362,6 +4410,7 @@ async function applyThemeColor() {
             fontFamily: themeState.fontFamily,
             bulletStyle: themeState.bulletStyle,
             sectionTitleColor: themeState.sectionTitleColor,
+            sectionRadius: themeState.sectionRadius,
             applyToAll: applyToAllDatasets,
             currentDatasetId: (typeof activeDatasetId !== 'undefined') ? activeDatasetId : null
         }});
@@ -4385,6 +4434,7 @@ async function resetThemeColor() {
             fontFamily: 'Inter',
             bulletStyle: 'triangle',
             sectionTitleColor: null,
+            sectionRadius: null,
             applyToAll: applyToAllDatasets,
             currentDatasetId: (typeof activeDatasetId !== 'undefined') ? activeDatasetId : null
         }});
@@ -4403,6 +4453,10 @@ async function resetThemeColor() {
     if (useSectionTitleToggle) useSectionTitleToggle.checked = false;
     const stWrapper = document.getElementById('sectionTitleColorWrapper');
     if (stWrapper) stWrapper.style.display = 'none';
+    const useSectionRadiusToggle = document.getElementById('themeUseSectionRadius');
+    if (useSectionRadiusToggle) useSectionRadiusToggle.checked = false;
+    const radiusWrapper = document.getElementById('sectionRadiusWrapper');
+    if (radiusWrapper) radiusWrapper.style.display = 'none';
     updateFontTrigger('Inter');
     updateBulletTrigger('triangle');
     document.getElementById('colorPickerDropdown').classList.remove('active');
@@ -4462,6 +4516,17 @@ function applyThemeToCSS(theme) {
         root.style.setProperty('--section-title-color', titleColor);
     } else {
         root.style.removeProperty('--section-title-color');
+    }
+
+    // Section box corner radius. When set, overrides the default --radius-lg
+    // via the `--section-radius` CSS variable; otherwise the fallback in
+    // styles.css (`var(--section-radius, var(--radius-lg))`) kicks in.
+    const radius = theme && theme.sectionRadius;
+    if (typeof radius === 'number' && Number.isFinite(radius)) {
+        const clamped = Math.max(0, Math.min(64, Math.round(radius)));
+        root.style.setProperty('--section-radius', `${clamped}px`);
+    } else {
+        root.style.removeProperty('--section-radius');
     }
 }
 
