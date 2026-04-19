@@ -926,8 +926,12 @@
             }
             if (Number.isInteger(theme.sectionRadius) && theme.sectionRadius >= 0 && theme.sectionRadius <= 32) {
                 root.style.setProperty('--section-radius', theme.sectionRadius + 'px');
+                // Header scales 1.5× — matches the baseline 24:16 ratio so the
+                // top card stays visually consistent with the section boxes.
+                root.style.setProperty('--header-radius', Math.round(theme.sectionRadius * 1.5) + 'px');
             } else {
                 root.style.removeProperty('--section-radius');
+                root.style.removeProperty('--header-radius');
             }
         }
 
@@ -938,8 +942,7 @@
             root.style.setProperty('--primary', hex);
             root.style.setProperty('--primary-dark', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
             root.style.setProperty('--primary-light', hslToHexPublic(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
-            const accent = hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l);
-            root.style.setProperty('--accent', accent);
+            const autoAccent = hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l);
             root.style.setProperty('--dark', hslToHexPublic(hsl.h, hsl.s, 15));
             root.style.setProperty('--light', hslToHexPublic(hsl.h, 30, 90));
             root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
@@ -949,7 +952,7 @@
             // so the whole theme feels consistent.
             const hasCustomGradient = !!(gradientStart || gradientEnd);
             const gs = gradientStart || hex;
-            const ge = gradientEnd || accent;
+            const ge = gradientEnd || autoAccent;
             root.style.setProperty('--gradient-start', gs);
             root.style.setProperty('--gradient-end', ge);
             if (hasCustomGradient) {
@@ -959,6 +962,11 @@
                 root.style.setProperty('--header-gradient-start', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
                 root.style.setProperty('--header-gradient-end', hslToHexPublic(hsl.h, hsl.s, 15));
             }
+            // Preserve "accent == gradient-end" invariant: when a custom
+            // gradient is set, accent tracks the user's chosen end color so
+            // elements that echo the gradient end (item-card highlight,
+            // print timeline branch strokes) stay in sync with the theme.
+            root.style.setProperty('--accent', hasCustomGradient ? ge : autoAccent);
             const family = fontFamily || 'Inter';
             if (family !== 'Inter') ensureFontLoadedPublic(family);
             root.style.setProperty('--font-family', "'" + family + "', var(--font-family-default)");

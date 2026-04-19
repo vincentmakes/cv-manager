@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.41.1] - 2026-04-19
+
+### Changed
+- The top CV header's corner radius now scales in proportion to the "Custom section corner radius" slider (1.5× the section value — matches the baseline 24px header : 16px section ratio). Picking 0px yields fully square corners on both sections and header; picking 32px yields heavily rounded corners throughout. When the toggle is off, the header keeps its pre-1.41 `--radius-xl` look via the `--header-radius` CSS fallback. The scaling applies on the admin preview, the public read-only page, and printed PDFs.
+
+### Fixed
+- When a custom gradient is configured in the theme picker, the `--accent` CSS variable now follows the chosen gradient end color instead of staying derived from the primary color. This preserves the default-theme invariant "accent == gradient-end" so elements that visually echo the gradient end (the item-card highlight-pulse border, print-mode timeline branch strokes) stay visually coherent with the rest of the theme. When no custom gradient is set, accent continues to auto-derive from primary as before.
+
 ## [1.41.0] - 2026-04-19
 
 ### Added

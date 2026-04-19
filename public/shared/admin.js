@@ -4471,7 +4471,6 @@ function applyThemeToCSS(theme) {
     root.style.setProperty('--primary', hex);
     root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
     root.style.setProperty('--primary-light', hslToHex(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
-    root.style.setProperty('--accent', hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l));
     root.style.setProperty('--dark', hslToHex(hsl.h, hsl.s, 15));
     root.style.setProperty('--light', hslToHex(hsl.h, 30, 90));
     root.style.setProperty('--very-light', hslToHex(hsl.h, 20, 97));
@@ -4492,6 +4491,18 @@ function applyThemeToCSS(theme) {
     } else {
         root.style.setProperty('--header-gradient-start', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
         root.style.setProperty('--header-gradient-end',   hslToHex(hsl.h, hsl.s, 15));
+    }
+
+    // --accent preserves the default-theme invariant "accent == gradient-end".
+    // In the default (auto-derived) gradient, gradient-end is primary +15° hue,
+    // so accent stays primary-derived. When a custom gradient is set, accent
+    // tracks the user's chosen end color so elements that visually "echo" the
+    // gradient end (item-card highlight, print timeline branch strokes) stay in
+    // sync with the rest of the theme.
+    if (hasCustomGradient) {
+        root.style.setProperty('--accent', gradientEnd);
+    } else {
+        root.style.setProperty('--accent', hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l));
     }
 
     const family = (theme && theme.fontFamily) || 'Inter';
@@ -4521,12 +4532,17 @@ function applyThemeToCSS(theme) {
     // Section box corner radius. When set, overrides the default --radius-lg
     // via the `--section-radius` CSS variable; otherwise the fallback in
     // styles.css (`var(--section-radius, var(--radius-lg))`) kicks in.
+    // The header corner radius scales in proportion (1.5× — matches the
+    // baseline 24px header : 16px section ratio) via `--header-radius`, so
+    // the top card and section boxes stay visually consistent.
     const radius = theme && theme.sectionRadius;
     if (typeof radius === 'number' && Number.isFinite(radius)) {
         const clamped = Math.max(0, Math.min(64, Math.round(radius)));
         root.style.setProperty('--section-radius', `${clamped}px`);
+        root.style.setProperty('--header-radius', `${Math.round(clamped * 1.5)}px`);
     } else {
         root.style.removeProperty('--section-radius');
+        root.style.removeProperty('--header-radius');
     }
 }
 
