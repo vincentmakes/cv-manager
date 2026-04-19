@@ -1555,7 +1555,25 @@
 .theme-font-option.active { background: var(--light); color: var(--primary); }
 
 .theme-gradient-picker { margin-top: 10px; padding: 10px; background: var(--gray-50); border-radius: var(--radius-sm); }
-.theme-gradient-picker .color-presets { grid-template-columns: repeat(8, 1fr); }
+
+/* Gradient pair presets — each swatch shows the actual gradient, click sets
+   both start and end on the theme at once. */
+.gradient-pair-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 4px;
+}
+.gradient-pair-preset {
+    width: 100%;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+}
+.gradient-pair-preset:hover { transform: scale(1.08); border-color: var(--gray-300); }
+.gradient-pair-preset.active { border-color: var(--gray-700); }
 
 .gradient-endpoint-tabs {
     display: flex;

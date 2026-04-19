@@ -3707,10 +3707,10 @@ let wheelDragState = { primary: false, gradient: false };
 let wheelCtx = { primary: null, gradient: null };
 const loadedFontSet = new Set(['Inter']);
 
-// Preset grids are scoped by container ID so the selector for target=primary
-// doesn't accidentally match .color-preset elements that live inside the
-// gradient sub-picker (the root cause of the "end point not impacted" bug).
-const PRESET_CONTAINER = { primary: 'primaryPresets', gradient: 'gradientPresets' };
+// Preset grid is scoped by container ID so the selector for target=primary
+// doesn't match .color-preset elements elsewhere. The gradient sub-picker
+// uses a different preset style (pair swatches) handled separately.
+const PRESET_CONTAINER = { primary: 'primaryPresets' };
 
 // Backward-compat alias kept because other parts of admin.js may still read currentColor
 let currentColor = themeState.primary;
@@ -3747,7 +3747,7 @@ function initColorPicker() {
         drawColorWheel('gradient');
         setupWheelEvents('gradient');
         setupHexInput('gradient');
-        setupPresets('gradient');
+        setupGradientPairPresets();
         setupBrightness('gradient');
     }
 
@@ -3948,6 +3948,42 @@ function updateGradientSwatches() {
     const endSwatch = document.getElementById('gradientEndSwatch');
     if (startSwatch) startSwatch.style.backgroundColor = startColor;
     if (endSwatch) endSwatch.style.backgroundColor = endColor;
+    refreshGradientPairActiveState();
+}
+
+// Curated gradient pair presets set BOTH endpoints on click so the user gets
+// a coherent start/end combination (darker variant or complementary hue)
+// rather than picking a flat single color per endpoint.
+function setupGradientPairPresets() {
+    const container = document.getElementById('gradientPairPresets');
+    if (!container) return;
+    container.querySelectorAll('.gradient-pair-preset').forEach(preset => {
+        preset.addEventListener('click', () => {
+            const start = preset.dataset.start;
+            const end = preset.dataset.end;
+            if (!start || !end) return;
+            themeState.gradientStart = start;
+            themeState.gradientEnd = end;
+            // Sync the wheel to whichever endpoint is currently active so the
+            // user can keep tuning from the preset they just picked.
+            const activeColor = activeGradientEndpoint === 'start' ? start : end;
+            pickerHSL.gradient = hexToHSL(activeColor);
+            const slider = document.getElementById('gradientBrightness');
+            if (slider) slider.value = pickerHSL.gradient.l;
+            drawColorWheel('gradient');
+            updateColorPickerUI('gradient', activeColor);
+            applyThemeToCSS(themeState);
+        });
+    });
+}
+
+function refreshGradientPairActiveState() {
+    const start = (themeState.gradientStart || '').toLowerCase();
+    const end = (themeState.gradientEnd || '').toLowerCase();
+    document.querySelectorAll('.gradient-pair-preset').forEach(preset => {
+        const match = preset.dataset.start.toLowerCase() === start && preset.dataset.end.toLowerCase() === end;
+        preset.classList.toggle('active', match);
+    });
 }
 
 function positionCursorFromHex(target, hex) {
