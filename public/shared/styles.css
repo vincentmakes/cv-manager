@@ -1092,11 +1092,11 @@ body {
 
 /* Unicode-glyph styles */
 body[data-bullet-style="bullet"] .item-highlights li::before,
-body[data-bullet-style="bullet"] .custom-bullet-list li::before { content: '●'; }
+body[data-bullet-style="bullet"] .custom-bullet-list li::before { content: '●'; font-size: 9px; top: 2px; }
 body[data-bullet-style="hollow_circle"] .item-highlights li::before,
-body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content: '○'; }
+body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content: '○'; font-size: 10px; top: 1px; }
 body[data-bullet-style="square"] .item-highlights li::before,
-body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; }
+body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; font-size: 9px; top: 2px; }
 body[data-bullet-style="small_square"] .item-highlights li::before,
 body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; }
 body[data-bullet-style="diamond"] .item-highlights li::before,
