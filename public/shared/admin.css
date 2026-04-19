@@ -1433,12 +1433,20 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     padding: 16px;
-    width: 240px;
+    width: 320px;
+    max-width: calc(100vw - 24px);
     max-height: calc(100vh - 80px);
     overflow-y: auto;
+    overscroll-behavior: contain;
     z-index: 1001;
     display: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
 }
+.color-picker-dropdown::-webkit-scrollbar { width: 8px; }
+.color-picker-dropdown::-webkit-scrollbar-track { background: transparent; }
+.color-picker-dropdown::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+.color-picker-dropdown::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
 
 .color-picker-dropdown.active { display: block; }
 .color-picker-header { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; }
@@ -1505,7 +1513,20 @@
 
 .color-preset:hover { transform: scale(1.15); border-color: var(--gray-300); }
 .color-preset.active { border-color: var(--gray-700); }
-.color-picker-actions { display: flex; justify-content: space-between; gap: 8px; }
+.color-picker-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    position: sticky;
+    bottom: -16px;
+    margin: 12px -16px -16px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-top: 1px solid var(--gray-100);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    z-index: 2;
+}
+.color-picker-actions .btn { flex: 1; }
 
 /* Theme picker — font, gradient, apply-to-all sub-sections */
 .theme-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
@@ -1541,6 +1562,7 @@
     box-shadow: var(--shadow-md);
     max-height: 220px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     z-index: 5;
     display: none;
 }
@@ -1601,8 +1623,9 @@
     padding: 6px;
     grid-template-columns: repeat(6, 1fr);
     gap: 4px;
-    max-height: 240px;
+    max-height: 300px;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 .theme-bullet-list.active { display: grid; }
 .theme-bullet-option {
