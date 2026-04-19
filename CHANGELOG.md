@@ -4,23 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.41.2] - 2026-04-19
-
-### Fixed
-- When a custom gradient is configured, the `--primary-dark` CSS variable now follows the chosen gradient start color too — extending the 1.41.1 fix that already rebound `--accent` to the gradient end. `--primary-dark` drives the color of every item title in the CV (Experience job titles, Certification names, custom-section item titles and bullet titles); previously these stayed primary-derived even when the user picked a custom gradient, leaving body text visually disconnected from the chosen palette. The two invariants now both hold: in the default theme `--primary-dark` matches the auto `--header-gradient-start` and `--accent` matches the auto `--gradient-end`; in a custom gradient theme `--primary-dark` = `gradientStart` and `--accent` = `gradientEnd`. Toggling the custom gradient off restores the auto-derived values.
-
-## [1.41.1] - 2026-04-19
-
-### Changed
-- The top CV header's corner radius now scales in proportion to the "Custom section corner radius" slider (1.5× the section value — matches the baseline 24px header : 16px section ratio). Picking 0px yields fully square corners on both sections and header; picking 32px yields heavily rounded corners throughout. When the toggle is off, the header keeps its pre-1.41 `--radius-xl` look via the `--header-radius` CSS fallback. The scaling applies on the admin preview, the public read-only page, and printed PDFs.
-
-### Fixed
-- When a custom gradient is configured in the theme picker, the `--accent` CSS variable now follows the chosen gradient end color instead of staying derived from the primary color. This preserves the default-theme invariant "accent == gradient-end" so elements that visually echo the gradient end (the item-card highlight-pulse border, print-mode timeline branch strokes) stay visually coherent with the rest of the theme. When no custom gradient is set, accent continues to auto-derive from primary as before.
-
 ## [1.41.0] - 2026-04-19
 
 ### Added
 - Theme picker now exposes a **Custom section corner radius** option. A toggle reveals a slider (0–32px, integer steps, default 16px) that controls the border-radius of every section box — both built-in (About, Experience, Certifications, Education, Skills, Projects, Timeline) and custom — via the new `--section-radius` CSS variable. When the toggle is off, sections fall back to the pre-1.41 `--radius-lg` value and are visually unchanged. The chosen radius is stored alongside the other theme fields in the per-dataset `data.theme` blob, follows the same `PUT /api/theme` propagation rules (applyToAll, language siblings) and is restored on dataset load. Print styles also honor the custom radius so the printed PDF matches the on-screen look.
+- The top CV header's corner radius scales in proportion to the section radius slider (1.5× the section value — matches the baseline 24px header : 16px section ratio) via a new `--header-radius` CSS variable. Picking 0px yields fully square corners on both sections and header; picking 32px yields heavily rounded corners throughout. When the toggle is off, the header keeps its pre-1.41 `--radius-xl` look via the CSS fallback. The scaling applies on the admin preview, the public read-only page, and printed PDFs.
+
+### Fixed
+- When a custom gradient is configured in the theme picker, the `--primary-dark` and `--accent` CSS variables now follow the user's chosen gradient endpoints instead of staying derived from the primary color. `--primary-dark` (which drives every item title in the CV — Experience job titles, Certification names, custom-section item titles and bullet titles) follows `gradientStart`; `--accent` (timeline branch strokes, item-card highlight pulse) follows `gradientEnd`. This preserves the default-theme invariants "primary-dark == header-gradient-start" and "accent == gradient-end" so the CV's body text and accent strokes stay visually coherent with the chosen palette. When no custom gradient is set, both variables continue to auto-derive from primary as before.
 
 ## [1.40.0] - 2026-04-19
 
