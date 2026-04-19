@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.39.2] - 2026-04-19
+
+### Added
+- 33 additional Material Symbols bullet styles in the theme picker covering tools (build, handyman, engineering, construction), arrows (arrow_forward, arrow_right_alt, double_arrow, chevron_right, north_east), globes (public, language, travel_explore), stars (kid_star, grade), charts (analytics, leaderboard), emotion (favorite, thumb_up), education (school, menu_book), work (business_center), thought (psychology), markers (flag, bookmark, key), creativity (palette), social (hub, groups, handshake), verification (fact_check), terminal, local_fire_department, and edit_note. The picker now offers 57 choices total.
+
+### Changed
+- Refactored bullet style CSS to use a single `data-bullet-kind="icon"` attribute for the Material Symbols font override instead of enumerating every icon ID, so new icons can be added with a single `content:` rule each.
+
 ## [1.39.1] - 2026-04-19
 
 ### Changed

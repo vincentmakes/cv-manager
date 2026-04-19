@@ -896,9 +896,18 @@
             } catch (err) { /* Ignore — defaults stand */ }
         }
 
+        // Keep in sync with the glyph IDs in BULLET_STYLES (admin.js). Any
+        // other ID is treated as a Material Symbols icon, which the CSS
+        // rules for `data-bullet-kind="icon"` then style appropriately.
+        const BULLET_GLYPH_IDS = new Set(['triangle','bullet','hollow_circle','square','small_square','diamond','arrow','dash']);
+
         function applyThemePublic(theme) {
             applyColorToCSSPublic(theme.primary || '#0066ff', theme.gradientStart || null, theme.gradientEnd || null, theme.fontFamily || 'Inter');
-            if (document.body) document.body.dataset.bulletStyle = theme.bulletStyle || 'triangle';
+            if (document.body) {
+                const bullet = theme.bulletStyle || 'triangle';
+                document.body.dataset.bulletStyle = bullet;
+                document.body.dataset.bulletKind = BULLET_GLYPH_IDS.has(bullet) ? 'glyph' : 'icon';
+            }
         }
 
         function applyColorToCSSPublic(hex, gradientStart, gradientEnd, fontFamily) {

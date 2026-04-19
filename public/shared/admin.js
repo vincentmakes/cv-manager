@@ -3713,17 +3713,50 @@ const BULLET_STYLES = [
     { id: 'done_all', icon: 'done_all' },
     { id: 'task_alt', icon: 'task_alt' },
     { id: 'star', icon: 'star' },
+    { id: 'kid_star', icon: 'kid_star' },
+    { id: 'grade', icon: 'grade' },
     { id: 'auto_awesome', icon: 'auto_awesome' },
     { id: 'bolt', icon: 'bolt' },
     { id: 'trending_up', icon: 'trending_up' },
     { id: 'insights', icon: 'insights' },
+    { id: 'analytics', icon: 'analytics' },
+    { id: 'leaderboard', icon: 'leaderboard' },
     { id: 'rocket_launch', icon: 'rocket_launch' },
     { id: 'verified', icon: 'verified' },
     { id: 'workspace_premium', icon: 'workspace_premium' },
     { id: 'emoji_events', icon: 'emoji_events' },
     { id: 'military_tech', icon: 'military_tech' },
     { id: 'lightbulb', icon: 'lightbulb' },
-    { id: 'code', icon: 'code' }
+    { id: 'code', icon: 'code' },
+    { id: 'terminal', icon: 'terminal' },
+    { id: 'build', icon: 'build' },
+    { id: 'handyman', icon: 'handyman' },
+    { id: 'engineering', icon: 'engineering' },
+    { id: 'construction', icon: 'construction' },
+    { id: 'arrow_forward', icon: 'arrow_forward' },
+    { id: 'arrow_right_alt', icon: 'arrow_right_alt' },
+    { id: 'double_arrow', icon: 'double_arrow' },
+    { id: 'chevron_right', icon: 'chevron_right' },
+    { id: 'north_east', icon: 'north_east' },
+    { id: 'public', icon: 'public' },
+    { id: 'language', icon: 'language' },
+    { id: 'travel_explore', icon: 'travel_explore' },
+    { id: 'favorite', icon: 'favorite' },
+    { id: 'thumb_up', icon: 'thumb_up' },
+    { id: 'school', icon: 'school' },
+    { id: 'menu_book', icon: 'menu_book' },
+    { id: 'business_center', icon: 'business_center' },
+    { id: 'psychology', icon: 'psychology' },
+    { id: 'flag', icon: 'flag' },
+    { id: 'bookmark', icon: 'bookmark' },
+    { id: 'key', icon: 'key' },
+    { id: 'palette', icon: 'palette' },
+    { id: 'hub', icon: 'hub' },
+    { id: 'groups', icon: 'groups' },
+    { id: 'handshake', icon: 'handshake' },
+    { id: 'fact_check', icon: 'fact_check' },
+    { id: 'local_fire_department', icon: 'local_fire_department' },
+    { id: 'edit_note', icon: 'edit_note' }
 ];
 
 let themeState = { ...THEME_DEFAULTS };
@@ -4315,9 +4348,15 @@ function applyThemeToCSS(theme) {
     root.style.setProperty('--font-family', `'${family}', var(--font-family-default)`);
 
     // Bullet style is applied via a data-attribute on <body>; per-style CSS
-    // selectors in styles.css override the default '▹' content.
+    // selectors in styles.css override the default '▹' content. A secondary
+    // `data-bullet-kind` attribute (icon|glyph) lets one CSS rule set the
+    // Material Symbols font for every icon style without enumerating each.
     const bullet = (theme && theme.bulletStyle) || 'triangle';
-    if (document.body) document.body.dataset.bulletStyle = bullet;
+    if (document.body) {
+        document.body.dataset.bulletStyle = bullet;
+        const style = BULLET_STYLES.find(s => s.id === bullet);
+        document.body.dataset.bulletKind = (style && style.icon) ? 'icon' : 'glyph';
+    }
 }
 
 // Backward-compat alias for any caller that still hands us a single hex

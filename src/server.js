@@ -1248,9 +1248,14 @@ function gatherCvData(options = {}) {
 // this whitelist — the PUT /api/theme handler rejects unknown style IDs.
 const ALLOWED_BULLET_STYLES = new Set([
     'triangle','bullet','hollow_circle','square','small_square','diamond','arrow','dash',
-    'check','check_circle','done_all','task_alt','star','auto_awesome','bolt','trending_up',
-    'insights','rocket_launch','verified','workspace_premium','emoji_events','military_tech',
-    'lightbulb','code'
+    'check','check_circle','done_all','task_alt','star','kid_star','grade','auto_awesome',
+    'bolt','trending_up','insights','analytics','leaderboard','rocket_launch','verified',
+    'workspace_premium','emoji_events','military_tech','lightbulb','code','terminal',
+    'build','handyman','engineering','construction','arrow_forward','arrow_right_alt',
+    'double_arrow','chevron_right','north_east','public','language','travel_explore',
+    'favorite','thumb_up','school','menu_book','business_center','psychology','flag',
+    'bookmark','key','palette','hub','groups','handshake','fact_check',
+    'local_fire_department','edit_note'
 ]);
 
 function gatherTheme() {
