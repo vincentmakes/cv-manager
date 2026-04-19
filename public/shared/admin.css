@@ -1433,12 +1433,20 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     padding: 16px;
-    width: 240px;
+    width: 320px;
+    max-width: calc(100vw - 24px);
     max-height: calc(100vh - 80px);
     overflow-y: auto;
+    overscroll-behavior: contain;
     z-index: 1001;
     display: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
 }
+.color-picker-dropdown::-webkit-scrollbar { width: 8px; }
+.color-picker-dropdown::-webkit-scrollbar-track { background: transparent; }
+.color-picker-dropdown::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+.color-picker-dropdown::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
 
 .color-picker-dropdown.active { display: block; }
 .color-picker-header { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; }
@@ -1505,7 +1513,20 @@
 
 .color-preset:hover { transform: scale(1.15); border-color: var(--gray-300); }
 .color-preset.active { border-color: var(--gray-700); }
-.color-picker-actions { display: flex; justify-content: space-between; gap: 8px; }
+.color-picker-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    position: sticky;
+    bottom: -16px;
+    margin: 12px -16px -16px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-top: 1px solid var(--gray-100);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    z-index: 2;
+}
+.color-picker-actions .btn { flex: 1; }
 
 /* Theme picker — font, gradient, apply-to-all sub-sections */
 .theme-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
@@ -1541,6 +1562,7 @@
     box-shadow: var(--shadow-md);
     max-height: 220px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     z-index: 5;
     display: none;
 }
@@ -1553,6 +1575,90 @@
 }
 .theme-font-option:hover { background: var(--gray-50); }
 .theme-font-option.active { background: var(--light); color: var(--primary); }
+
+/* Bullet style picker — matches font picker layout, but each option
+   shows the bullet glyph/icon next to a sample sentence. */
+.theme-bullet-picker { position: relative; }
+.theme-bullet-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--gray-700);
+    text-align: left;
+}
+.theme-bullet-trigger:hover { border-color: var(--gray-500); }
+.theme-bullet-trigger .material-symbols-outlined { font-size: 18px; }
+.theme-bullet-trigger .bullet-preview {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+    min-width: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.theme-bullet-trigger .bullet-preview.material-symbols-outlined {
+    font-size: 18px;
+    font-weight: 400;
+}
+.theme-bullet-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 5;
+    display: none;
+    padding: 6px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.theme-bullet-list.active { display: grid; }
+.theme-bullet-option {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--gray-900);
+}
+.theme-bullet-option:hover { background: var(--gray-50); border-color: var(--gray-300); }
+.theme-bullet-option.active {
+    background: var(--light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+.theme-bullet-option .bullet-preview {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.theme-bullet-option .bullet-preview.material-symbols-outlined {
+    font-size: 18px;
+    font-weight: 400;
+}
 
 .theme-gradient-picker { margin-top: 10px; padding: 10px; background: var(--gray-50); border-radius: var(--radius-sm); }
 
@@ -2192,8 +2298,10 @@
         position: fixed;
         left: 12px;
         right: 12px;
-        top: auto;
+        top: 60px;
+        bottom: 12px;
         width: auto;
+        max-height: none;
     }
     .toolbar-actions .language-picker-wrapper { width: 100%; }
     .toolbar-actions .language-picker-wrapper > .btn { width: 100%; justify-content: flex-start; }

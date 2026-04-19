@@ -1084,6 +1084,138 @@ body {
     margin-bottom: 0;
 }
 
+/* Theme bullet styles — driven by the `data-bullet-style` attribute set on
+   <body> by the theme picker. Default (triangle) matches the baseline
+   content: '▹' declared above. Each rule below overrides both bullet
+   locations (experience highlights + custom bullet-list sections) so a
+   single setting applies consistently across the CV. */
+
+/* Unicode-glyph styles */
+body[data-bullet-style="bullet"] .item-highlights li::before,
+body[data-bullet-style="bullet"] .custom-bullet-list li::before { content: '●'; font-size: 9px; top: 2px; }
+body[data-bullet-style="hollow_circle"] .item-highlights li::before,
+body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content: '○'; font-size: 10px; top: 1px; }
+body[data-bullet-style="square"] .item-highlights li::before,
+body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; font-size: 9px; top: 2px; }
+body[data-bullet-style="small_square"] .item-highlights li::before,
+body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; }
+body[data-bullet-style="diamond"] .item-highlights li::before,
+body[data-bullet-style="diamond"] .custom-bullet-list li::before { content: '◆'; }
+body[data-bullet-style="arrow"] .item-highlights li::before,
+body[data-bullet-style="arrow"] .custom-bullet-list li::before { content: '▸'; }
+body[data-bullet-style="dash"] .item-highlights li::before,
+body[data-bullet-style="dash"] .custom-bullet-list li::before { content: '—'; font-weight: normal; }
+
+/* Material Symbols icon styles — one shared rule targets every icon bullet
+   via `data-bullet-kind="icon"`, which admin.js / public-readonly set based
+   on the chosen style. Individual `content:` rules below select the glyph
+   by `data-bullet-style`. */
+body[data-bullet-kind="icon"] .item-highlights li::before,
+body[data-bullet-kind="icon"] .custom-bullet-list li::before {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.2;
+}
+body[data-bullet-style="check"] .item-highlights li::before,
+body[data-bullet-style="check"] .custom-bullet-list li::before { content: 'check'; }
+body[data-bullet-style="check_circle"] .item-highlights li::before,
+body[data-bullet-style="check_circle"] .custom-bullet-list li::before { content: 'check_circle'; }
+body[data-bullet-style="done_all"] .item-highlights li::before,
+body[data-bullet-style="done_all"] .custom-bullet-list li::before { content: 'done_all'; }
+body[data-bullet-style="task_alt"] .item-highlights li::before,
+body[data-bullet-style="task_alt"] .custom-bullet-list li::before { content: 'task_alt'; }
+body[data-bullet-style="star"] .item-highlights li::before,
+body[data-bullet-style="star"] .custom-bullet-list li::before { content: 'star'; }
+body[data-bullet-style="auto_awesome"] .item-highlights li::before,
+body[data-bullet-style="auto_awesome"] .custom-bullet-list li::before { content: 'auto_awesome'; }
+body[data-bullet-style="bolt"] .item-highlights li::before,
+body[data-bullet-style="bolt"] .custom-bullet-list li::before { content: 'bolt'; }
+body[data-bullet-style="trending_up"] .item-highlights li::before,
+body[data-bullet-style="trending_up"] .custom-bullet-list li::before { content: 'trending_up'; }
+body[data-bullet-style="insights"] .item-highlights li::before,
+body[data-bullet-style="insights"] .custom-bullet-list li::before { content: 'insights'; }
+body[data-bullet-style="rocket_launch"] .item-highlights li::before,
+body[data-bullet-style="rocket_launch"] .custom-bullet-list li::before { content: 'rocket_launch'; }
+body[data-bullet-style="verified"] .item-highlights li::before,
+body[data-bullet-style="verified"] .custom-bullet-list li::before { content: 'verified'; }
+body[data-bullet-style="workspace_premium"] .item-highlights li::before,
+body[data-bullet-style="workspace_premium"] .custom-bullet-list li::before { content: 'workspace_premium'; }
+body[data-bullet-style="emoji_events"] .item-highlights li::before,
+body[data-bullet-style="emoji_events"] .custom-bullet-list li::before { content: 'emoji_events'; }
+body[data-bullet-style="military_tech"] .item-highlights li::before,
+body[data-bullet-style="military_tech"] .custom-bullet-list li::before { content: 'military_tech'; }
+body[data-bullet-style="lightbulb"] .item-highlights li::before,
+body[data-bullet-style="lightbulb"] .custom-bullet-list li::before { content: 'lightbulb'; }
+body[data-bullet-style="code"] .item-highlights li::before,
+body[data-bullet-style="code"] .custom-bullet-list li::before { content: 'code'; }
+body[data-bullet-style="terminal"] .item-highlights li::before,
+body[data-bullet-style="terminal"] .custom-bullet-list li::before { content: 'terminal'; }
+body[data-bullet-style="kid_star"] .item-highlights li::before,
+body[data-bullet-style="kid_star"] .custom-bullet-list li::before { content: 'kid_star'; }
+body[data-bullet-style="analytics"] .item-highlights li::before,
+body[data-bullet-style="analytics"] .custom-bullet-list li::before { content: 'analytics'; }
+body[data-bullet-style="leaderboard"] .item-highlights li::before,
+body[data-bullet-style="leaderboard"] .custom-bullet-list li::before { content: 'leaderboard'; }
+body[data-bullet-style="build"] .item-highlights li::before,
+body[data-bullet-style="build"] .custom-bullet-list li::before { content: 'build'; }
+body[data-bullet-style="engineering"] .item-highlights li::before,
+body[data-bullet-style="engineering"] .custom-bullet-list li::before { content: 'engineering'; }
+body[data-bullet-style="construction"] .item-highlights li::before,
+body[data-bullet-style="construction"] .custom-bullet-list li::before { content: 'construction'; }
+body[data-bullet-style="arrow_forward"] .item-highlights li::before,
+body[data-bullet-style="arrow_forward"] .custom-bullet-list li::before { content: 'arrow_forward'; }
+body[data-bullet-style="arrow_right_alt"] .item-highlights li::before,
+body[data-bullet-style="arrow_right_alt"] .custom-bullet-list li::before { content: 'arrow_right_alt'; }
+body[data-bullet-style="double_arrow"] .item-highlights li::before,
+body[data-bullet-style="double_arrow"] .custom-bullet-list li::before { content: 'double_arrow'; }
+body[data-bullet-style="chevron_right"] .item-highlights li::before,
+body[data-bullet-style="chevron_right"] .custom-bullet-list li::before { content: 'chevron_right'; }
+body[data-bullet-style="north_east"] .item-highlights li::before,
+body[data-bullet-style="north_east"] .custom-bullet-list li::before { content: 'north_east'; }
+body[data-bullet-style="public"] .item-highlights li::before,
+body[data-bullet-style="public"] .custom-bullet-list li::before { content: 'public'; }
+body[data-bullet-style="language"] .item-highlights li::before,
+body[data-bullet-style="language"] .custom-bullet-list li::before { content: 'language'; }
+body[data-bullet-style="travel_explore"] .item-highlights li::before,
+body[data-bullet-style="travel_explore"] .custom-bullet-list li::before { content: 'travel_explore'; }
+body[data-bullet-style="favorite"] .item-highlights li::before,
+body[data-bullet-style="favorite"] .custom-bullet-list li::before { content: 'favorite'; }
+body[data-bullet-style="thumb_up"] .item-highlights li::before,
+body[data-bullet-style="thumb_up"] .custom-bullet-list li::before { content: 'thumb_up'; }
+body[data-bullet-style="school"] .item-highlights li::before,
+body[data-bullet-style="school"] .custom-bullet-list li::before { content: 'school'; }
+body[data-bullet-style="menu_book"] .item-highlights li::before,
+body[data-bullet-style="menu_book"] .custom-bullet-list li::before { content: 'menu_book'; }
+body[data-bullet-style="business_center"] .item-highlights li::before,
+body[data-bullet-style="business_center"] .custom-bullet-list li::before { content: 'business_center'; }
+body[data-bullet-style="psychology"] .item-highlights li::before,
+body[data-bullet-style="psychology"] .custom-bullet-list li::before { content: 'psychology'; }
+body[data-bullet-style="flag"] .item-highlights li::before,
+body[data-bullet-style="flag"] .custom-bullet-list li::before { content: 'flag'; }
+body[data-bullet-style="bookmark"] .item-highlights li::before,
+body[data-bullet-style="bookmark"] .custom-bullet-list li::before { content: 'bookmark'; }
+body[data-bullet-style="key"] .item-highlights li::before,
+body[data-bullet-style="key"] .custom-bullet-list li::before { content: 'key'; }
+body[data-bullet-style="palette"] .item-highlights li::before,
+body[data-bullet-style="palette"] .custom-bullet-list li::before { content: 'palette'; }
+body[data-bullet-style="hub"] .item-highlights li::before,
+body[data-bullet-style="hub"] .custom-bullet-list li::before { content: 'hub'; }
+body[data-bullet-style="groups"] .item-highlights li::before,
+body[data-bullet-style="groups"] .custom-bullet-list li::before { content: 'groups'; }
+body[data-bullet-style="handshake"] .item-highlights li::before,
+body[data-bullet-style="handshake"] .custom-bullet-list li::before { content: 'handshake'; }
+body[data-bullet-style="fact_check"] .item-highlights li::before,
+body[data-bullet-style="fact_check"] .custom-bullet-list li::before { content: 'fact_check'; }
+body[data-bullet-style="local_fire_department"] .item-highlights li::before,
+body[data-bullet-style="local_fire_department"] .custom-bullet-list li::before { content: 'local_fire_department'; }
+body[data-bullet-style="edit_note"] .item-highlights li::before,
+body[data-bullet-style="edit_note"] .custom-bullet-list li::before { content: 'edit_note'; }
+
+/* Custom bullet-list has more line-height than item-highlights; nudge the
+   icon down 1px so it aligns with the first text baseline. */
+body[data-bullet-kind="icon"] .custom-bullet-list li::before { top: 1px; }
+
 /* Free Text Layout */
 .custom-free-text-blocks {
     display: flex;

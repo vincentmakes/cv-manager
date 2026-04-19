@@ -259,6 +259,40 @@ Built-in sections: `about`, `timeline`, `experience`, `certifications`, `educati
 
 Visibility and ordering are controlled via the `section_visibility` table and the Settings > Sections panel.
 
+### Theme System
+
+The theme picker in the toolbar is the single entry point for any visual setting that is part of the CV's identity (currently: primary color, gradient start/end, font family, bullet style). Theme state is stored in three places and the pipeline between them enforces a consistent propagation rule — **every theme feature must follow it**.
+
+**Storage:**
+- `settings` table — rows `themeColor`, `themeGradientStart`, `themeGradientEnd`, `themeFontFamily`, `themeBulletStyle`, plus `applyThemeToAllDatasets`. Represents the currently-active theme and powers SSR / new-dataset defaults.
+- `saved_datasets.data.theme` — per-dataset JSON blob: `{ primary, gradientStart, gradientEnd, fontFamily, bulletStyle }`. Loaded when a dataset is opened; copied back to `settings` at load time.
+- Client `themeState` in `public/shared/admin.js` (seeded from `THEME_DEFAULTS` and populated by `loadTheme()`).
+
+**Propagation rule (applies to every theme field):**
+- **"Apply to all saved datasets" checkbox ON** → `PUT /api/theme` writes the new theme blob into every dataset's `data.theme` AND into the `settings` table.
+- **Checkbox OFF** → `PUT /api/theme` writes the new blob into the current dataset's `data.theme` AND into every sibling that shares its `language_group` (so language variants of the same CV stay visually in sync), plus into `settings`. Unrelated datasets are untouched.
+
+This rule is implemented once, centrally, in the `PUT /api/theme` handler in `src/server.js` (around line 2023). Every theme field is threaded through the same `themeBlob` object and written via the shared `writeTheme(id, dataStr)` helper — so as long as a new field goes into that blob, it inherits the propagation rule for free.
+
+**Checklist for adding a new theme feature** (e.g. `letterSpacing`, `cornerRadius`, `headerStyle`):
+1. Add the field + default to `THEME_DEFAULTS` in `public/shared/admin.js`.
+2. Read it in `loadTheme()`, send it in `applyThemeColor()` and `resetThemeColor()` PUT bodies.
+3. Apply it in `applyThemeToCSS(theme)` (client) — set a CSS variable or data-attribute on `:root` / `<body>`.
+4. Thread it through `src/server.js`:
+   - Destructure from `req.body` in `PUT /api/theme` and validate (mirror the existing `bulletStyle` whitelist / hex regex / trim-string patterns depending on type).
+   - Add `upsert.run('themeXxx', value)` in the settings write block.
+   - Include it in the `themeBlob` literal so `writeTheme()` propagates it automatically — **do not write a parallel propagation loop**.
+   - Add it to `gatherTheme()` (used by `GET /api/theme` and SSR).
+   - Copy it back to `settings` in the dataset-load handler (`POST /api/datasets/:id/load`, inside the `if (data.theme && ...)` block).
+5. Mirror the application in `public-readonly/index.html` → `applyThemePublic(theme)` so the public read-only page honors it.
+6. Add regression tests in `tests/backend.test.js` inside `describe('Theme management', ...)`:
+   - Validation rejection for invalid values.
+   - `applyToAll: true` writes the field into every dataset.
+   - `applyToAll: false` + a language-sibling group writes the field into the current dataset and its siblings but leaves unrelated datasets alone.
+7. If the feature is user-visible in the picker UI, add `theme.*` i18n keys to all 8 locale files (`en`, `de`, `fr`, `nl`, `es`, `it`, `pt`, `zh`) — key parity is enforced by `tests/frontend.test.js`.
+
+**Anti-pattern:** adding a new API endpoint just for a theme field (e.g. `PUT /api/theme/letterSpacing`) bypasses the shared propagation logic and will drift out of sync with the checkbox. Always fold new fields into `PUT /api/theme`.
+
 ### Date Formats
 
 Dates are stored as `YYYY-MM` or `YYYY`. Display format is configurable per user: `MMM YYYY`, `MMMM YYYY`, `MM/YYYY`, `YYYY`, `MMM YY`.

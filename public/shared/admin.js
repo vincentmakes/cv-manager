@@ -3694,7 +3694,68 @@ const FONT_OPTIONS = [
     { family: 'JetBrains Mono', label: 'JetBrains Mono' }
 ];
 
-const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter' };
+const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter', bulletStyle: 'triangle' };
+
+// Bullet styles offered by the theme picker. `glyph` renders as a raw character;
+// `icon` renders via the Material Symbols Outlined font ligature. Server-side
+// whitelist in src/server.js (PUT /api/theme) MUST stay in sync with this list.
+const BULLET_STYLES = [
+    { id: 'triangle', glyph: '▹' },
+    { id: 'bullet', glyph: '●' },
+    { id: 'hollow_circle', glyph: '○' },
+    { id: 'square', glyph: '■' },
+    { id: 'small_square', glyph: '▪' },
+    { id: 'diamond', glyph: '◆' },
+    { id: 'arrow', glyph: '▸' },
+    { id: 'dash', glyph: '—' },
+    { id: 'check', icon: 'check' },
+    { id: 'check_circle', icon: 'check_circle' },
+    { id: 'done_all', icon: 'done_all' },
+    { id: 'task_alt', icon: 'task_alt' },
+    { id: 'star', icon: 'star' },
+    { id: 'kid_star', icon: 'kid_star' },
+    { id: 'auto_awesome', icon: 'auto_awesome' },
+    { id: 'bolt', icon: 'bolt' },
+    { id: 'trending_up', icon: 'trending_up' },
+    { id: 'insights', icon: 'insights' },
+    { id: 'analytics', icon: 'analytics' },
+    { id: 'leaderboard', icon: 'leaderboard' },
+    { id: 'rocket_launch', icon: 'rocket_launch' },
+    { id: 'verified', icon: 'verified' },
+    { id: 'workspace_premium', icon: 'workspace_premium' },
+    { id: 'emoji_events', icon: 'emoji_events' },
+    { id: 'military_tech', icon: 'military_tech' },
+    { id: 'lightbulb', icon: 'lightbulb' },
+    { id: 'code', icon: 'code' },
+    { id: 'terminal', icon: 'terminal' },
+    { id: 'build', icon: 'build' },
+    { id: 'engineering', icon: 'engineering' },
+    { id: 'construction', icon: 'construction' },
+    { id: 'arrow_forward', icon: 'arrow_forward' },
+    { id: 'arrow_right_alt', icon: 'arrow_right_alt' },
+    { id: 'double_arrow', icon: 'double_arrow' },
+    { id: 'chevron_right', icon: 'chevron_right' },
+    { id: 'north_east', icon: 'north_east' },
+    { id: 'public', icon: 'public' },
+    { id: 'language', icon: 'language' },
+    { id: 'travel_explore', icon: 'travel_explore' },
+    { id: 'favorite', icon: 'favorite' },
+    { id: 'thumb_up', icon: 'thumb_up' },
+    { id: 'school', icon: 'school' },
+    { id: 'menu_book', icon: 'menu_book' },
+    { id: 'business_center', icon: 'business_center' },
+    { id: 'psychology', icon: 'psychology' },
+    { id: 'flag', icon: 'flag' },
+    { id: 'bookmark', icon: 'bookmark' },
+    { id: 'key', icon: 'key' },
+    { id: 'palette', icon: 'palette' },
+    { id: 'hub', icon: 'hub' },
+    { id: 'groups', icon: 'groups' },
+    { id: 'handshake', icon: 'handshake' },
+    { id: 'fact_check', icon: 'fact_check' },
+    { id: 'local_fire_department', icon: 'local_fire_department' },
+    { id: 'edit_note', icon: 'edit_note' }
+];
 
 let themeState = { ...THEME_DEFAULTS };
 let applyToAllDatasets = true;
@@ -4084,6 +4145,55 @@ function updateFontTrigger(family) {
     });
 }
 
+function bulletPreviewHtml(style) {
+    if (style.icon) return `<span class="bullet-preview material-symbols-outlined">${style.icon}</span>`;
+    return `<span class="bullet-preview">${style.glyph}</span>`;
+}
+
+function renderBulletPicker() {
+    const list = document.getElementById('themeBulletList');
+    const trigger = document.getElementById('themeBulletTrigger');
+    if (!list || !trigger) return;
+    list.innerHTML = BULLET_STYLES.map(s => `
+        <button type="button" class="theme-bullet-option" data-style="${s.id}" title="${s.id}">
+            ${bulletPreviewHtml(s)}
+        </button>
+    `).join('');
+    if (!trigger.dataset.wired) {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            list.classList.toggle('active');
+        });
+        list.addEventListener('click', (e) => {
+            const opt = e.target.closest('.theme-bullet-option');
+            if (!opt) return;
+            const styleId = opt.dataset.style;
+            themeState.bulletStyle = styleId;
+            updateBulletTrigger(styleId);
+            list.classList.remove('active');
+            applyThemeToCSS(themeState);
+        });
+        trigger.dataset.wired = '1';
+    }
+}
+
+function updateBulletTrigger(styleId) {
+    const preview = document.getElementById('themeBulletPreview');
+    const style = BULLET_STYLES.find(s => s.id === styleId) || BULLET_STYLES[0];
+    if (preview) {
+        if (style.icon) {
+            preview.textContent = style.icon;
+            preview.className = 'bullet-preview material-symbols-outlined';
+        } else {
+            preview.textContent = style.glyph;
+            preview.className = 'bullet-preview';
+        }
+    }
+    document.querySelectorAll('.theme-bullet-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.style === styleId);
+    });
+}
+
 async function loadTheme() {
     try {
         const theme = await api('/api/theme');
@@ -4092,6 +4202,7 @@ async function loadTheme() {
             themeState.gradientStart = theme.gradientStart || null;
             themeState.gradientEnd = theme.gradientEnd || null;
             themeState.fontFamily = theme.fontFamily || THEME_DEFAULTS.fontFamily;
+            themeState.bulletStyle = theme.bulletStyle || THEME_DEFAULTS.bulletStyle;
         }
         try {
             const allSetting = await api('/api/settings/applyThemeToAllDatasets');
@@ -4122,6 +4233,9 @@ async function loadTheme() {
 
     updateFontTrigger(themeState.fontFamily);
     if (themeState.fontFamily !== 'Inter') ensureFontLoaded(themeState.fontFamily);
+
+    renderBulletPicker();
+    updateBulletTrigger(themeState.bulletStyle);
 
     const applyAllToggle = document.getElementById('themeApplyToAll');
     if (applyAllToggle) applyAllToggle.checked = applyToAllDatasets;
@@ -4154,6 +4268,7 @@ async function applyThemeColor() {
             gradientStart: themeState.gradientStart,
             gradientEnd: themeState.gradientEnd,
             fontFamily: themeState.fontFamily,
+            bulletStyle: themeState.bulletStyle,
             applyToAll: applyToAllDatasets,
             currentDatasetId: (typeof activeDatasetId !== 'undefined') ? activeDatasetId : null
         }});
@@ -4175,6 +4290,7 @@ async function resetThemeColor() {
             gradientStart: null,
             gradientEnd: null,
             fontFamily: 'Inter',
+            bulletStyle: 'triangle',
             applyToAll: applyToAllDatasets,
             currentDatasetId: (typeof activeDatasetId !== 'undefined') ? activeDatasetId : null
         }});
@@ -4190,6 +4306,7 @@ async function resetThemeColor() {
     const gradWrapper = document.getElementById('gradientPickerWrapper');
     if (gradWrapper) gradWrapper.style.display = 'none';
     updateFontTrigger('Inter');
+    updateBulletTrigger('triangle');
     document.getElementById('colorPickerDropdown').classList.remove('active');
     toast(t('toast.theme_reset'));
 }
@@ -4227,6 +4344,17 @@ function applyThemeToCSS(theme) {
 
     const family = (theme && theme.fontFamily) || 'Inter';
     root.style.setProperty('--font-family', `'${family}', var(--font-family-default)`);
+
+    // Bullet style is applied via a data-attribute on <body>; per-style CSS
+    // selectors in styles.css override the default '▹' content. A secondary
+    // `data-bullet-kind` attribute (icon|glyph) lets one CSS rule set the
+    // Material Symbols font for every icon style without enumerating each.
+    const bullet = (theme && theme.bulletStyle) || 'triangle';
+    if (document.body) {
+        document.body.dataset.bulletStyle = bullet;
+        const style = BULLET_STYLES.find(s => s.id === bullet);
+        document.body.dataset.bulletKind = (style && style.icon) ? 'icon' : 'glyph';
+    }
 }
 
 // Backward-compat alias for any caller that still hands us a single hex

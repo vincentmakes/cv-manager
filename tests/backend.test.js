@@ -1540,14 +1540,16 @@ describe('Backend API', () => {
             const a = await createDs('Theme Solo A');
             const b = await createDs('Theme Solo B');
             // Seed both with one theme via applyToAll
-            await putJson(`${BASE_URL}/api/theme`, { primary: '#00ff00', applyToAll: true });
-            // Now change only `a` with applyToAll=false
-            await putJson(`${BASE_URL}/api/theme`, { primary: '#0000ff', fontFamily: 'Lato', applyToAll: false, currentDatasetId: a.id });
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#00ff00', bulletStyle: 'triangle', applyToAll: true });
+            // Now change only `a` with applyToAll=false (covers bulletStyle too)
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0000ff', fontFamily: 'Lato', bulletStyle: 'star', applyToAll: false, currentDatasetId: a.id });
             const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
             const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
             assert.strictEqual(aData.theme.primary, '#0000ff', 'A picks up the new theme');
             assert.strictEqual(aData.theme.fontFamily, 'Lato');
+            assert.strictEqual(aData.theme.bulletStyle, 'star', 'A picks up the new bulletStyle');
             assert.strictEqual(bData.theme.primary, '#00ff00', 'B (no shared language_group) retains the prior bulk-applied theme');
+            assert.strictEqual(bData.theme.bulletStyle, 'triangle', 'B retains its prior bulletStyle');
             await delDs(a.id); await delDs(b.id);
         });
 
@@ -1559,18 +1561,20 @@ describe('Backend API', () => {
                 body: JSON.stringify({ name: 'Theme Sibling Group', language: 'fr', language_group: en.language_group })
             });
             const fr = await frRes.json();
-            // Apply a per-dataset theme (toggle off) on the English one
+            // Apply a per-dataset theme (toggle off) on the English one — including a bulletStyle
             await putJson(`${BASE_URL}/api/theme`, {
                 primary: '#aabbcc', gradientStart: '#112233', gradientEnd: '#445566',
-                fontFamily: 'Roboto', applyToAll: false, currentDatasetId: en.id
+                fontFamily: 'Roboto', bulletStyle: 'bolt', applyToAll: false, currentDatasetId: en.id
             });
             const enData = await getJson(`${BASE_URL}/api/datasets/id/${en.id}`);
             const frData = await getJson(`${BASE_URL}/api/datasets/id/${fr.id}`);
             assert.strictEqual(enData.theme.primary, '#aabbcc');
+            assert.strictEqual(enData.theme.bulletStyle, 'bolt');
             assert.strictEqual(frData.theme.primary, '#aabbcc', 'sibling FR variant inherits the new theme');
             assert.strictEqual(frData.theme.gradientStart, '#112233');
             assert.strictEqual(frData.theme.gradientEnd, '#445566');
             assert.strictEqual(frData.theme.fontFamily, 'Roboto');
+            assert.strictEqual(frData.theme.bulletStyle, 'bolt', 'sibling FR variant inherits the bulletStyle');
             await delDs(en.id); await delDs(fr.id);
         });
 
@@ -1583,6 +1587,35 @@ describe('Backend API', () => {
             theme = await getJson(`${BASE_URL}/api/theme`);
             assert.strictEqual(theme.gradientStart, null);
             assert.strictEqual(theme.gradientEnd, null);
+        });
+
+        it('PUT /api/theme rejects invalid bulletStyle', async () => {
+            const r = await fetch(`${BASE_URL}/api/theme`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ primary: '#0066ff', bulletStyle: 'not-a-style' })
+            });
+            assert.strictEqual(r.status, 400);
+        });
+
+        it('PUT /api/theme persists bulletStyle into settings and dataset.data.theme', async () => {
+            const a = await createDs('Bullet Style Dataset');
+            const result = await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#0066ff', bulletStyle: 'star', applyToAll: true
+            });
+            assert.strictEqual(result.success, true);
+            const settingsTheme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(settingsTheme.bulletStyle, 'star');
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            assert.strictEqual(aData.theme.bulletStyle, 'star');
+            await delDs(a.id);
+        });
+
+        it('PUT /api/theme defaults bulletStyle to "triangle" when omitted', async () => {
+            // Seed a non-default bullet, then omit the field on a later PUT
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', bulletStyle: 'check', applyToAll: false });
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', applyToAll: false });
+            const theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.bulletStyle, 'triangle');
         });
 
         it('Dataset load with embedded theme writes theme into settings', async () => {

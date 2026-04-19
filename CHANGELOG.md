@@ -4,6 +4,16 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.39.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a **Bullets** option to change the style of list bullets used in experience highlights and custom bullet-list sections. The picker is a compact 6-column icon grid offering 55 choices: 8 Unicode glyphs (triangle default, filled/hollow circle, square, small square, diamond, arrow, dash) and 47 CV-relevant Material Symbols icons including achievement markers (check, check_circle, done_all, task_alt, star, kid_star, verified, workspace_premium, emoji_events, military_tech), impact (bolt, trending_up, insights, analytics, leaderboard, rocket_launch, local_fire_department, auto_awesome), tools (build, engineering, construction, terminal, code), arrows (arrow_forward, arrow_right_alt, double_arrow, chevron_right, north_east), globes (public, language, travel_explore), education (school, menu_book, lightbulb, psychology), work (business_center, edit_note, fact_check), markers (flag, bookmark, key, favorite, thumb_up), creativity (palette), and social (hub, groups, handshake). Hovering a cell shows the style name as a tooltip. Bullet style is stored alongside primary color, gradient, and font in the per-dataset `data.theme` blob, propagates to language siblings via the existing theme pipeline, and applies on both the admin preview and the public read-only CV page. Reset returns to the default triangle.
+
+## [1.38.1] - 2026-04-19
+
+### Fixed
+- Theme picker: the dropdown is now fully scrollable on mobile viewports. Previously the mobile override set `top: auto` on the `position: fixed` dropdown, which left the dropdown anchored to its static position inside the hamburger menu and pushed the Apply/Reset buttons off-screen with no way to scroll to them. The dropdown is now pinned below the mobile toolbar with a bounded height so its entire content (including the Apply button) is always reachable.
+
 ## [1.38.0] - 2026-04-19
 
 ### Added
