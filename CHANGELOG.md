@@ -4,6 +4,19 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.38.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a font selection of seven Google Fonts (Inter, Roboto, Open Sans, Lato, Merriweather, Playfair Display, JetBrains Mono). Each option is rendered in its own face inside the dropdown so the choice can be made by sight. The selected font drives a new `--font-family` CSS variable that the CV content (admin preview and public site) uses; the admin chrome stays in Inter.
+- Theme picker now exposes a "Use custom gradient" toggle. When enabled, a second color wheel with a Start/End tab switcher lets you pick BOTH endpoints of the gradient explicitly — fully decoupled from the primary color. When disabled, the gradient continues to be auto-derived (start = primary, end = +15° hue rotation) so existing behavior is preserved. New `--gradient-start` and `--gradient-end` CSS variables power the profile-image avatar gradient and the timeline track gradient.
+- Per-dataset theme changes also propagate to language siblings (datasets in the same `language_group`), so the visual identity stays consistent across language variants of the same CV regardless of the "Apply to all saved datasets" toggle state.
+- Eight extra preset color swatches in the theme picker (slate, gray, amber, lime, green, teal, violet, rose) bringing the total from 8 to 16, arranged in two rows.
+- Per-dataset theme: each saved dataset now stores its own `{ primary, gradientEnd, fontFamily }` snapshot inside `data.theme`. Loading a dataset applies its theme. A new "Apply to all saved datasets" toggle in the theme picker (on by default) controls whether changing the theme bulk-updates every saved dataset and the global fallback, or only the currently-loaded dataset. New endpoint `PUT /api/theme` performs the atomic write.
+
+### Fixed
+- Theme picker: the cursor dot on the color wheel now sits at the position of the currently-selected color whenever the picker opens. Previously the cursor stayed at its last click position (or at the wheel origin on first open), making the indicator misleading.
+- Theme picker: moving the brightness slider now updates the live preview swatch, the hex input, and the theme being edited — not just the wheel background. The new color is recomputed directly from the stored hue and saturation, avoiding canvas resampling drift, so the brightness slider behaves like a true lightness control.
+
 ## [1.37.1] - 2026-04-18
 
 ### Fixed

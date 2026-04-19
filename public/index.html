@@ -41,7 +41,7 @@
                         <div class="color-preview" id="colorPreview"></div>
                         <input type="text" class="color-hex-input" id="colorHexInput" value="#0066ff" maxlength="7">
                     </div>
-                    <div class="color-presets">
+                    <div class="color-presets" id="primaryPresets">
                         <div class="color-preset" style="background: #0066ff" data-color="#0066ff" data-i18n-title="theme.blue" title="Blue (Default)"></div>
                         <div class="color-preset" style="background: #059669" data-color="#059669" data-i18n-title="theme.emerald" title="Emerald"></div>
                         <div class="color-preset" style="background: #7c3aed" data-color="#7c3aed" data-i18n-title="theme.purple" title="Purple"></div>
@@ -50,7 +50,79 @@
                         <div class="color-preset" style="background: #0891b2" data-color="#0891b2" data-i18n-title="theme.cyan" title="Cyan"></div>
                         <div class="color-preset" style="background: #4f46e5" data-color="#4f46e5" data-i18n-title="theme.indigo" title="Indigo"></div>
                         <div class="color-preset" style="background: #be185d" data-color="#be185d" data-i18n-title="theme.pink" title="Pink"></div>
+                        <div class="color-preset" style="background: #111827" data-color="#111827" data-i18n-title="theme.slate" title="Slate"></div>
+                        <div class="color-preset" style="background: #6b7280" data-color="#6b7280" data-i18n-title="theme.gray" title="Gray"></div>
+                        <div class="color-preset" style="background: #d97706" data-color="#d97706" data-i18n-title="theme.amber" title="Amber"></div>
+                        <div class="color-preset" style="background: #65a30d" data-color="#65a30d" data-i18n-title="theme.lime" title="Lime"></div>
+                        <div class="color-preset" style="background: #16a34a" data-color="#16a34a" data-i18n-title="theme.green" title="Green"></div>
+                        <div class="color-preset" style="background: #0d9488" data-color="#0d9488" data-i18n-title="theme.teal" title="Teal"></div>
+                        <div class="color-preset" style="background: #8b5cf6" data-color="#8b5cf6" data-i18n-title="theme.violet" title="Violet"></div>
+                        <div class="color-preset" style="background: #f43f5e" data-color="#f43f5e" data-i18n-title="theme.rose" title="Rose"></div>
                     </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-label" data-i18n="theme.font">Font</label>
+                        <div class="theme-font-picker">
+                            <button type="button" class="theme-font-trigger" id="themeFontTrigger">
+                                <span id="themeFontLabel">Inter</span>
+                                <span class="material-symbols-outlined">expand_more</span>
+                            </button>
+                            <div class="theme-font-list" id="themeFontList"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-row">
+                            <input type="checkbox" id="themeUseGradient">
+                            <span data-i18n="theme.use_custom_gradient">Use custom gradient end color</span>
+                        </label>
+                        <div class="theme-gradient-picker" id="gradientPickerWrapper" style="display:none;">
+                            <div class="gradient-endpoint-tabs">
+                                <button type="button" class="gradient-endpoint-tab" data-endpoint="start">
+                                    <span class="gradient-endpoint-swatch" id="gradientStartSwatch"></span>
+                                    <span data-i18n="theme.gradient_start">Start</span>
+                                </button>
+                                <button type="button" class="gradient-endpoint-tab active" data-endpoint="end">
+                                    <span class="gradient-endpoint-swatch" id="gradientEndSwatch"></span>
+                                    <span data-i18n="theme.gradient_end">End</span>
+                                </button>
+                            </div>
+                            <div class="color-wheel-container">
+                                <canvas id="gradientWheel" width="180" height="180"></canvas>
+                                <div class="color-wheel-cursor" id="gradientWheelCursor"></div>
+                            </div>
+                            <div class="color-brightness">
+                                <label data-i18n="theme.brightness">Brightness</label>
+                                <input type="range" id="gradientBrightness" min="30" max="70" value="35">
+                            </div>
+                            <div class="color-preview-row">
+                                <div class="color-preview" id="gradientPreview"></div>
+                                <input type="text" class="color-hex-input" id="gradientHexInput" value="#003c99" maxlength="7">
+                            </div>
+                            <div class="gradient-pair-presets" id="gradientPairPresets">
+                                <div class="gradient-pair-preset" data-start="#0066ff" data-end="#001a4d" style="background: linear-gradient(135deg, #0066ff, #001a4d)" title="Ocean Deep"></div>
+                                <div class="gradient-pair-preset" data-start="#1e3a8a" data-end="#0f172a" style="background: linear-gradient(135deg, #1e3a8a, #0f172a)" title="Midnight"></div>
+                                <div class="gradient-pair-preset" data-start="#10b981" data-end="#064e3b" style="background: linear-gradient(135deg, #10b981, #064e3b)" title="Emerald Fade"></div>
+                                <div class="gradient-pair-preset" data-start="#16a34a" data-end="#14532d" style="background: linear-gradient(135deg, #16a34a, #14532d)" title="Forest"></div>
+                                <div class="gradient-pair-preset" data-start="#8b5cf6" data-end="#1e1b4b" style="background: linear-gradient(135deg, #8b5cf6, #1e1b4b)" title="Aurora"></div>
+                                <div class="gradient-pair-preset" data-start="#4f46e5" data-end="#1e1b4b" style="background: linear-gradient(135deg, #4f46e5, #1e1b4b)" title="Royal"></div>
+                                <div class="gradient-pair-preset" data-start="#0891b2" data-end="#1e1b4b" style="background: linear-gradient(135deg, #0891b2, #1e1b4b)" title="Twilight"></div>
+                                <div class="gradient-pair-preset" data-start="#14b8a6" data-end="#134e4a" style="background: linear-gradient(135deg, #14b8a6, #134e4a)" title="Teal"></div>
+                                <div class="gradient-pair-preset" data-start="#f97316" data-end="#be185d" style="background: linear-gradient(135deg, #f97316, #be185d)" title="Sunset"></div>
+                                <div class="gradient-pair-preset" data-start="#f43f5e" data-end="#881337" style="background: linear-gradient(135deg, #f43f5e, #881337)" title="Rose"></div>
+                                <div class="gradient-pair-preset" data-start="#dc2626" data-end="#7f1d1d" style="background: linear-gradient(135deg, #dc2626, #7f1d1d)" title="Crimson"></div>
+                                <div class="gradient-pair-preset" data-start="#475569" data-end="#0f172a" style="background: linear-gradient(135deg, #475569, #0f172a)" title="Graphite"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="theme-section">
+                        <label class="theme-section-row">
+                            <input type="checkbox" id="themeApplyToAll" checked>
+                            <span data-i18n="theme.apply_to_all">Apply to all saved datasets</span>
+                        </label>
+                    </div>
+
                     <div class="color-picker-actions">
                         <button class="btn btn-ghost btn-sm" onclick="resetThemeColor()" data-i18n="theme.reset">Reset</button>
                         <button class="btn btn-primary btn-sm" onclick="applyThemeColor()" data-i18n="theme.apply">Apply</button>

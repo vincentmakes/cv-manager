@@ -1489,6 +1489,125 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Theme management', () => {
+        async function getJson(url) { const r = await fetch(url); return r.json(); }
+        async function putJson(url, body) {
+            const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            return r.json();
+        }
+        async function createDs(name) {
+            const r = await fetch(`${BASE_URL}/api/datasets`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, language: 'en' }) });
+            return r.json();
+        }
+        async function delDs(id) { await fetch(`${BASE_URL}/api/datasets/${id}`, { method: 'DELETE' }); }
+
+        it('GET /api/theme returns defaults when nothing has been set', async () => {
+            // Reset known keys first
+            await fetch(`${BASE_URL}/api/settings/themeColor`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: null }) });
+            const theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(typeof theme, 'object');
+            assert.ok(/^#[0-9a-fA-F]{6}$/.test(theme.primary), 'primary is a hex color');
+            assert.strictEqual(theme.fontFamily, 'Inter');
+        });
+
+        it('PUT /api/theme rejects invalid primary color', async () => {
+            const r = await fetch(`${BASE_URL}/api/theme`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ primary: 'not-a-color' }) });
+            assert.strictEqual(r.status, 400);
+        });
+
+        it('PUT /api/theme with applyToAll=true writes theme into every dataset.data.theme', async () => {
+            const a = await createDs('Theme Bulk A');
+            const b = await createDs('Theme Bulk B');
+            const result = await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#ff0000', gradientEnd: '#440000', fontFamily: 'Roboto', applyToAll: true
+            });
+            assert.strictEqual(result.success, true);
+            // Both datasets should now have the new theme embedded
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
+            assert.strictEqual(aData.theme.primary, '#ff0000');
+            assert.strictEqual(aData.theme.gradientEnd, '#440000');
+            assert.strictEqual(aData.theme.fontFamily, 'Roboto');
+            assert.strictEqual(bData.theme.primary, '#ff0000');
+            assert.strictEqual(bData.theme.fontFamily, 'Roboto');
+            // Settings also reflect the new theme
+            const settingsTheme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(settingsTheme.primary, '#ff0000');
+            await delDs(a.id); await delDs(b.id);
+        });
+
+        it('PUT /api/theme with applyToAll=false only updates currentDatasetId (and its language siblings), not unrelated datasets', async () => {
+            const a = await createDs('Theme Solo A');
+            const b = await createDs('Theme Solo B');
+            // Seed both with one theme via applyToAll
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#00ff00', applyToAll: true });
+            // Now change only `a` with applyToAll=false
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0000ff', fontFamily: 'Lato', applyToAll: false, currentDatasetId: a.id });
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
+            assert.strictEqual(aData.theme.primary, '#0000ff', 'A picks up the new theme');
+            assert.strictEqual(aData.theme.fontFamily, 'Lato');
+            assert.strictEqual(bData.theme.primary, '#00ff00', 'B (no shared language_group) retains the prior bulk-applied theme');
+            await delDs(a.id); await delDs(b.id);
+        });
+
+        it('PUT /api/theme with applyToAll=false also propagates to language siblings', async () => {
+            // Two datasets in the same language_group
+            const en = await createDs('Theme Sibling Group');
+            const frRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Theme Sibling Group', language: 'fr', language_group: en.language_group })
+            });
+            const fr = await frRes.json();
+            // Apply a per-dataset theme (toggle off) on the English one
+            await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#aabbcc', gradientStart: '#112233', gradientEnd: '#445566',
+                fontFamily: 'Roboto', applyToAll: false, currentDatasetId: en.id
+            });
+            const enData = await getJson(`${BASE_URL}/api/datasets/id/${en.id}`);
+            const frData = await getJson(`${BASE_URL}/api/datasets/id/${fr.id}`);
+            assert.strictEqual(enData.theme.primary, '#aabbcc');
+            assert.strictEqual(frData.theme.primary, '#aabbcc', 'sibling FR variant inherits the new theme');
+            assert.strictEqual(frData.theme.gradientStart, '#112233');
+            assert.strictEqual(frData.theme.gradientEnd, '#445566');
+            assert.strictEqual(frData.theme.fontFamily, 'Roboto');
+            await delDs(en.id); await delDs(fr.id);
+        });
+
+        it('PUT /api/theme persists both gradientStart and gradientEnd; clears them when null', async () => {
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#abcdef', gradientStart: '#222222', gradientEnd: '#123456', applyToAll: false });
+            let theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.gradientStart, '#222222');
+            assert.strictEqual(theme.gradientEnd, '#123456');
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#abcdef', gradientStart: null, gradientEnd: null, applyToAll: false });
+            theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.gradientStart, null);
+            assert.strictEqual(theme.gradientEnd, null);
+        });
+
+        it('Dataset load with embedded theme writes theme into settings', async () => {
+            // Create a dataset, manually set its data.theme, then load it
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#aaaaaa', fontFamily: 'Inter', applyToAll: false });
+            const a = await createDs('Theme Load Source');
+            // Bulk-apply a custom theme so the dataset stores it
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#cc00cc', fontFamily: 'Merriweather', applyToAll: true });
+            // Reset settings to a different theme
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#aaaaaa', fontFamily: 'Inter', applyToAll: false });
+            const beforeLoad = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(beforeLoad.primary, '#aaaaaa');
+            // Load the dataset — server should re-write the dataset's theme into settings
+            const loadRes = await fetch(`${BASE_URL}/api/datasets/${a.id}/load`, { method: 'POST' });
+            const loadJson = await loadRes.json();
+            assert.strictEqual(loadJson.success, true);
+            assert.ok(loadJson.theme, 'load response includes theme');
+            assert.strictEqual(loadJson.theme.primary, '#cc00cc');
+            const afterLoad = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(afterLoad.primary, '#cc00cc');
+            assert.strictEqual(afterLoad.fontFamily, 'Merriweather');
+            await delDs(a.id);
+        });
+    });
+
     describe('Public API (port)', () => {
         it('GET /api/profile returns 200', async () => {
             const res = await fetch(`${PUBLIC_URL}/api/profile`);
