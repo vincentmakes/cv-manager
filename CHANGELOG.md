@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.38.1] - 2026-04-19
+
+### Fixed
+- Theme picker: the dropdown is now fully scrollable on mobile viewports. Previously the mobile override set `top: auto` on the `position: fixed` dropdown, which left the dropdown anchored to its static position inside the hamburger menu and pushed the Apply/Reset buttons off-screen with no way to scroll to them. The dropdown is now pinned below the mobile toolbar with a bounded height so its entire content (including the Apply button) is always reachable.
+
 ## [1.38.0] - 2026-04-19
 
 ### Added

@@ -2192,8 +2192,10 @@
         position: fixed;
         left: 12px;
         right: 12px;
-        top: auto;
+        top: 60px;
+        bottom: 12px;
         width: auto;
+        max-height: none;
     }
     .toolbar-actions .language-picker-wrapper { width: 100%; }
     .toolbar-actions .language-picker-wrapper > .btn { width: 100%; justify-content: flex-start; }
