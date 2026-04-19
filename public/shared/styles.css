@@ -63,7 +63,10 @@ body {
 /* Header Section */
 .header {
     background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end));
-    border-radius: var(--radius-xl);
+    /* Scales in proportion to --section-radius (1.5× ratio, matching the
+       baseline 24px : 16px relationship). When no custom radius is set, the
+       fallback keeps the pre-1.41 look. */
+    border-radius: var(--header-radius, var(--radius-xl));
     padding: 28px;
     margin-bottom: 20px;
     box-shadow: var(--shadow-lg);
@@ -187,7 +190,9 @@ body {
 /* Sections */
 .section {
     background: var(--white);
-    border-radius: var(--radius-lg);
+    /* Theme picker can override the corner radius via `--section-radius`;
+       fallback keeps the pre-1.41 look. Applies to built-in and custom sections. */
+    border-radius: var(--section-radius, var(--radius-lg));
     padding: 24px;
     margin-bottom: 16px;
     box-shadow: var(--shadow-md);
@@ -296,7 +301,9 @@ body {
 .section-title {
     font-size: 20px;
     font-weight: 700;
-    color: var(--primary);
+    /* Fallback to --primary so themes that don't set a custom heading color
+       keep the pre-1.40 behavior where section titles match the accent. */
+    color: var(--section-title-color, var(--primary));
 }
 
 /* About */
@@ -1786,11 +1793,14 @@ body.has-preview-banner .container {
     .contact-badge { font-size: 9px; padding: 2px 6px; }
     
     /* Sections - prevent unnecessary page breaks, except for experience which can be long */
-    .section { 
-        box-shadow: none; 
+    .section {
+        box-shadow: none;
         margin-bottom: 10px;
         padding: 14px;
-        border-radius: var(--radius-md);
+        /* Honor the theme's custom radius in print as well so the printed PDF
+           matches the on-screen look; otherwise fall back to the tighter
+           print default. */
+        border-radius: var(--section-radius, var(--radius-md));
         page-break-inside: avoid;
         break-inside: avoid;
     }

@@ -4,6 +4,21 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.41.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a **Custom section corner radius** option. A toggle reveals a slider (0–32px, integer steps, default 16px) that controls the border-radius of every section box — both built-in (About, Experience, Certifications, Education, Skills, Projects, Timeline) and custom — via the new `--section-radius` CSS variable. When the toggle is off, sections fall back to the pre-1.41 `--radius-lg` value and are visually unchanged. The chosen radius is stored alongside the other theme fields in the per-dataset `data.theme` blob, follows the same `PUT /api/theme` propagation rules (applyToAll, language siblings) and is restored on dataset load. Print styles also honor the custom radius so the printed PDF matches the on-screen look.
+- The top CV header's corner radius scales in proportion to the section radius slider (1.5× the section value — matches the baseline 24px header : 16px section ratio) via a new `--header-radius` CSS variable. Picking 0px yields fully square corners on both sections and header; picking 32px yields heavily rounded corners throughout. When the toggle is off, the header keeps its pre-1.41 `--radius-xl` look via the CSS fallback. The scaling applies on the admin preview, the public read-only page, and printed PDFs.
+
+### Fixed
+- When a custom gradient is configured in the theme picker, the `--primary-dark` and `--accent` CSS variables now both follow the user's chosen gradient end color instead of staying derived from the primary. `--primary-dark` drives every item title in the CV (Experience job titles, Certification names, custom-section item titles and bullet titles); `--accent` drives the timeline branch strokes and the item-card highlight pulse. The gradient end is typically the darker of the two endpoints (matching the bundled pair presets), so this keeps body-text titles legible while pulling them inside the chosen palette. When no custom gradient is set, both variables continue to auto-derive from primary as before.
+- The admin top toolbar (and its mobile-menu drawer) now use `--header-gradient-start` / `--header-gradient-end` instead of the literal `--primary-dark` / `--dark` variables. In the default theme these resolve to the same colors so the toolbar looks identical, but when a custom gradient is set the toolbar adopts the user's start → end colors — matching the CV header — instead of mixing a custom start color with the default primary-derived dark end.
+
+## [1.40.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a **Custom section title color** option. A toggle reveals a dedicated color wheel with a brightness slider, hex input, and 12 preset swatches chosen to read well as heading text (black, charcoal, slate, gray, navy, dark blue, midnight, dark green, dark red, dark purple, brown, steel). When off, section titles continue to track the primary color as before — the new `--section-title-color` CSS variable falls back to `var(--primary)` so existing themes are visually unchanged. The chosen color applies to every built-in section heading (About, Experience, Certifications, Education, Skills, Projects, Timeline) and every custom section heading on both the admin preview and the public read-only CV page. The color is stored alongside the other theme fields in the per-dataset `data.theme` blob and follows the same propagation rule as the rest of the theme: `applyToAll: true` writes it into every saved dataset; `applyToAll: false` writes it into the current dataset and its language siblings only.
+
 ## [1.39.0] - 2026-04-19
 
 ### Added

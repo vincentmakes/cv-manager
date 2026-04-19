@@ -3694,7 +3694,42 @@ const FONT_OPTIONS = [
     { family: 'JetBrains Mono', label: 'JetBrains Mono' }
 ];
 
-const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter', bulletStyle: 'triangle' };
+const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter', bulletStyle: 'triangle', sectionTitleColor: null, sectionRadius: null };
+
+// Slider bounds for the section corner-radius picker (pixels). 0 = sharp
+// corners; 32 = very rounded. Default rests at 16px — matches the pre-1.41
+// `--radius-lg` value so unchanged themes look identical.
+const SECTION_RADIUS_MIN = 0;
+const SECTION_RADIUS_MAX = 32;
+const SECTION_RADIUS_DEFAULT = 16;
+
+// Preset swatches for the "Section titles" color picker. These colors are
+// chosen to read well as heading text: neutrals (black, charcoal, slate, gray),
+// deep blues/navies, plus a few darker hues so users can pick a muted heading
+// color when they don't want section titles to match the primary accent.
+const SECTION_TITLE_PRESETS = [
+    { color: '#000000', labelKey: 'theme.title_color.black', fallback: 'Black' },
+    { color: '#111827', labelKey: 'theme.title_color.charcoal', fallback: 'Charcoal' },
+    { color: '#1f2937', labelKey: 'theme.title_color.slate', fallback: 'Slate' },
+    { color: '#374151', labelKey: 'theme.title_color.gray', fallback: 'Gray' },
+    { color: '#001a4d', labelKey: 'theme.title_color.navy', fallback: 'Navy' },
+    { color: '#1e3a8a', labelKey: 'theme.title_color.dark_blue', fallback: 'Dark Blue' },
+    { color: '#0f172a', labelKey: 'theme.title_color.midnight', fallback: 'Midnight' },
+    { color: '#064e3b', labelKey: 'theme.title_color.dark_green', fallback: 'Dark Green' },
+    { color: '#7f1d1d', labelKey: 'theme.title_color.dark_red', fallback: 'Dark Red' },
+    { color: '#581c87', labelKey: 'theme.title_color.dark_purple', fallback: 'Dark Purple' },
+    { color: '#78350f', labelKey: 'theme.title_color.brown', fallback: 'Brown' },
+    { color: '#334155', labelKey: 'theme.title_color.steel', fallback: 'Steel' }
+];
+
+// Lookup table used by the color-wheel machinery so the same setup/draw/pick
+// helpers work for the primary wheel, the gradient wheel, and the section-title
+// wheel. Adding a new wheel elsewhere is a matter of registering its DOM IDs.
+const WHEEL_IDS = {
+    primary: { canvas: 'colorWheel', cursor: 'colorWheelCursor', preview: 'colorPreview', input: 'colorHexInput', brightness: 'colorBrightness' },
+    gradient: { canvas: 'gradientWheel', cursor: 'gradientWheelCursor', preview: 'gradientPreview', input: 'gradientHexInput', brightness: 'gradientBrightness' },
+    sectionTitle: { canvas: 'sectionTitleWheel', cursor: 'sectionTitleWheelCursor', preview: 'sectionTitlePreview', input: 'sectionTitleHexInput', brightness: 'sectionTitleBrightness' }
+};
 
 // Bullet styles offered by the theme picker. `glyph` renders as a raw character;
 // `icon` renders via the Material Symbols Outlined font ligature. Server-side
@@ -3763,15 +3798,15 @@ let applyToAllDatasets = true;
 // currently active ('start' or 'end'). We keep HSL state for each endpoint
 // so switching tabs restores the wheel to the stored color/brightness.
 let activeGradientEndpoint = 'end';
-let pickerHSL = { primary: { h: 214, s: 100, l: 50 }, gradient: { h: 214, s: 100, l: 35 } };
-let wheelDragState = { primary: false, gradient: false };
-let wheelCtx = { primary: null, gradient: null };
+let pickerHSL = { primary: { h: 214, s: 100, l: 50 }, gradient: { h: 214, s: 100, l: 35 }, sectionTitle: { h: 0, s: 0, l: 20 } };
+let wheelDragState = { primary: false, gradient: false, sectionTitle: false };
+let wheelCtx = { primary: null, gradient: null, sectionTitle: null };
 const loadedFontSet = new Set(['Inter']);
 
 // Preset grid is scoped by container ID so the selector for target=primary
 // doesn't match .color-preset elements elsewhere. The gradient sub-picker
 // uses a different preset style (pair swatches) handled separately.
-const PRESET_CONTAINER = { primary: 'primaryPresets' };
+const PRESET_CONTAINER = { primary: 'primaryPresets', sectionTitle: 'sectionTitlePresets' };
 
 // Backward-compat alias kept because other parts of admin.js may still read currentColor
 let currentColor = themeState.primary;
@@ -3810,6 +3845,68 @@ function initColorPicker() {
         setupHexInput('gradient');
         setupGradientPairPresets();
         setupBrightness('gradient');
+    }
+
+    // Section-title sub-picker (built when user enables a custom heading color).
+    const stCanvas = document.getElementById('sectionTitleWheel');
+    if (stCanvas) {
+        wheelCtx.sectionTitle = stCanvas.getContext('2d');
+        drawColorWheel('sectionTitle');
+        setupWheelEvents('sectionTitle');
+        setupHexInput('sectionTitle');
+        setupPresets('sectionTitle');
+        setupBrightness('sectionTitle');
+    }
+
+    const useSectionTitleToggle = document.getElementById('themeUseSectionTitleColor');
+    if (useSectionTitleToggle) {
+        useSectionTitleToggle.addEventListener('change', () => {
+            const wrapper = document.getElementById('sectionTitleColorWrapper');
+            if (useSectionTitleToggle.checked) {
+                // Seed with a sensible default (black) if nothing chosen yet so
+                // the wheel/preview immediately reflect an actual color rather
+                // than flashing an empty swatch.
+                if (!themeState.sectionTitleColor) themeState.sectionTitleColor = '#000000';
+                pickerHSL.sectionTitle = hexToHSL(themeState.sectionTitleColor);
+                const slider = document.getElementById('sectionTitleBrightness');
+                if (slider) slider.value = pickerHSL.sectionTitle.l;
+                if (wrapper) wrapper.style.display = 'block';
+                drawColorWheel('sectionTitle');
+                updateColorPickerUI('sectionTitle', themeState.sectionTitleColor);
+            } else {
+                themeState.sectionTitleColor = null;
+                if (wrapper) wrapper.style.display = 'none';
+            }
+            applyThemeToCSS(themeState);
+        });
+    }
+
+    const useSectionRadiusToggle = document.getElementById('themeUseSectionRadius');
+    const sectionRadiusSlider = document.getElementById('themeSectionRadiusSlider');
+    const sectionRadiusLabel = document.getElementById('themeSectionRadiusValue');
+    if (useSectionRadiusToggle) {
+        useSectionRadiusToggle.addEventListener('change', () => {
+            const wrapper = document.getElementById('sectionRadiusWrapper');
+            if (useSectionRadiusToggle.checked) {
+                if (themeState.sectionRadius == null) themeState.sectionRadius = SECTION_RADIUS_DEFAULT;
+                if (sectionRadiusSlider) sectionRadiusSlider.value = themeState.sectionRadius;
+                if (sectionRadiusLabel) sectionRadiusLabel.textContent = `${themeState.sectionRadius}px`;
+                if (wrapper) wrapper.style.display = 'block';
+            } else {
+                themeState.sectionRadius = null;
+                if (wrapper) wrapper.style.display = 'none';
+            }
+            applyThemeToCSS(themeState);
+        });
+    }
+    if (sectionRadiusSlider) {
+        sectionRadiusSlider.addEventListener('input', () => {
+            const v = parseInt(sectionRadiusSlider.value, 10);
+            if (Number.isNaN(v)) return;
+            themeState.sectionRadius = v;
+            if (sectionRadiusLabel) sectionRadiusLabel.textContent = `${v}px`;
+            applyThemeToCSS(themeState);
+        });
     }
 
     const useGradientToggle = document.getElementById('themeUseGradient');
@@ -3863,8 +3960,9 @@ function initColorPicker() {
 }
 
 function setupWheelEvents(target) {
-    const canvasId = target === 'primary' ? 'colorWheel' : 'gradientWheel';
-    const canvas = document.getElementById(canvasId);
+    const ids = WHEEL_IDS[target];
+    if (!ids) return;
+    const canvas = document.getElementById(ids.canvas);
     if (!canvas) return;
     const start = (e) => { wheelDragState[target] = true; pickColorAt(target, e); };
     const move = (e) => { if (wheelDragState[target]) pickColorAt(target, e); };
@@ -3882,13 +3980,14 @@ function setupWheelEvents(target) {
 // this respects which endpoint tab is currently active.
 function commitTargetColor(target, hex) {
     if (target === 'primary') { themeState.primary = hex; currentColor = hex; return; }
+    if (target === 'sectionTitle') { themeState.sectionTitleColor = hex; return; }
     if (activeGradientEndpoint === 'start') themeState.gradientStart = hex;
     else themeState.gradientEnd = hex;
 }
 
 function setupBrightness(target) {
-    const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
-    const slider = document.getElementById(sliderId);
+    const ids = WHEEL_IDS[target];
+    const slider = ids && document.getElementById(ids.brightness);
     if (!slider) return;
     slider.addEventListener('input', () => {
         const newL = parseInt(slider.value, 10);
@@ -3903,16 +4002,15 @@ function setupBrightness(target) {
 }
 
 function setupHexInput(target) {
-    const id = target === 'primary' ? 'colorHexInput' : 'gradientHexInput';
-    const input = document.getElementById(id);
+    const ids = WHEEL_IDS[target];
+    const input = ids && document.getElementById(ids.input);
     if (!input) return;
     input.addEventListener('change', (e) => {
         const hex = e.target.value;
         if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
         commitTargetColor(target, hex.toLowerCase());
         pickerHSL[target] = hexToHSL(hex);
-        const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
-        const slider = document.getElementById(sliderId);
+        const slider = document.getElementById(ids.brightness);
         if (slider) slider.value = pickerHSL[target].l;
         drawColorWheel(target);
         updateColorPickerUI(target, hex);
@@ -3926,13 +4024,13 @@ function setupPresets(target) {
     // match both selectors).
     const container = document.getElementById(PRESET_CONTAINER[target]);
     if (!container) return;
+    const ids = WHEEL_IDS[target];
     container.querySelectorAll('.color-preset').forEach(preset => {
         preset.addEventListener('click', () => {
             const color = preset.dataset.color;
             commitTargetColor(target, color);
             pickerHSL[target] = hexToHSL(color);
-            const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
-            const slider = document.getElementById(sliderId);
+            const slider = ids && document.getElementById(ids.brightness);
             if (slider) slider.value = pickerHSL[target].l;
             drawColorWheel(target);
             updateColorPickerUI(target, color);
@@ -3942,8 +4040,9 @@ function setupPresets(target) {
 }
 
 function pickColorAt(target, e) {
-    const canvasId = target === 'primary' ? 'colorWheel' : 'gradientWheel';
-    const canvas = document.getElementById(canvasId);
+    const ids = WHEEL_IDS[target];
+    if (!ids) return;
+    const canvas = document.getElementById(ids.canvas);
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX || e.pageX) - rect.left;
     const y = (e.clientY || e.pageY) - rect.top;
@@ -4048,10 +4147,10 @@ function refreshGradientPairActiveState() {
 }
 
 function positionCursorFromHex(target, hex) {
-    const cursorId = target === 'primary' ? 'colorWheelCursor' : 'gradientWheelCursor';
-    const canvasId = target === 'primary' ? 'colorWheel' : 'gradientWheel';
-    const cursor = document.getElementById(cursorId);
-    const canvas = document.getElementById(canvasId);
+    const ids = WHEEL_IDS[target];
+    if (!ids) return;
+    const cursor = document.getElementById(ids.cursor);
+    const canvas = document.getElementById(ids.canvas);
     if (!cursor || !canvas) return;
     const cx = canvas.width / 2, cy = canvas.height / 2;
     const R = Math.min(cx, cy);
@@ -4068,10 +4167,10 @@ function updateColorPickerUI(target, hex) {
         hex = target;
         target = 'primary';
     }
-    const previewId = target === 'primary' ? 'colorPreview' : 'gradientPreview';
-    const inputId = target === 'primary' ? 'colorHexInput' : 'gradientHexInput';
-    const preview = document.getElementById(previewId);
-    const input = document.getElementById(inputId);
+    const ids = WHEEL_IDS[target];
+    if (!ids) return;
+    const preview = document.getElementById(ids.preview);
+    const input = document.getElementById(ids.input);
     if (preview) preview.style.backgroundColor = hex;
     if (input) input.value = hex.toUpperCase();
     const presetContainer = document.getElementById(PRESET_CONTAINER[target]);
@@ -4086,14 +4185,14 @@ function updateColorPickerUI(target, hex) {
 
 function drawColorWheel(target) {
     target = target || 'primary';
-    const canvasId = target === 'primary' ? 'colorWheel' : 'gradientWheel';
-    const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
-    const canvas = document.getElementById(canvasId);
+    const ids = WHEEL_IDS[target];
+    if (!ids) return;
+    const canvas = document.getElementById(ids.canvas);
     const ctx = wheelCtx[target];
     if (!canvas || !ctx) return;
     const cx = canvas.width / 2, cy = canvas.height / 2;
     const radius = Math.min(cx, cy);
-    const brightness = document.getElementById(sliderId)?.value || 50;
+    const brightness = document.getElementById(ids.brightness)?.value || 50;
 
     for (let angle = 0; angle < 360; angle++) {
         const startAngle = (angle - 1) * Math.PI / 180;
@@ -4203,6 +4302,8 @@ async function loadTheme() {
             themeState.gradientEnd = theme.gradientEnd || null;
             themeState.fontFamily = theme.fontFamily || THEME_DEFAULTS.fontFamily;
             themeState.bulletStyle = theme.bulletStyle || THEME_DEFAULTS.bulletStyle;
+            themeState.sectionTitleColor = theme.sectionTitleColor || null;
+            themeState.sectionRadius = (typeof theme.sectionRadius === 'number' && Number.isFinite(theme.sectionRadius)) ? theme.sectionRadius : null;
         }
         try {
             const allSetting = await api('/api/settings/applyThemeToAllDatasets');
@@ -4237,11 +4338,50 @@ async function loadTheme() {
     renderBulletPicker();
     updateBulletTrigger(themeState.bulletStyle);
 
+    renderSectionTitlePresets();
+    const hasCustomSectionTitle = !!themeState.sectionTitleColor;
+    const useSectionTitleToggle = document.getElementById('themeUseSectionTitleColor');
+    const stWrapper = document.getElementById('sectionTitleColorWrapper');
+    if (useSectionTitleToggle) useSectionTitleToggle.checked = hasCustomSectionTitle;
+    if (stWrapper) stWrapper.style.display = hasCustomSectionTitle ? 'block' : 'none';
+    if (hasCustomSectionTitle) {
+        pickerHSL.sectionTitle = hexToHSL(themeState.sectionTitleColor);
+        const slider = document.getElementById('sectionTitleBrightness');
+        if (slider) slider.value = pickerHSL.sectionTitle.l;
+        drawColorWheel('sectionTitle');
+        updateColorPickerUI('sectionTitle', themeState.sectionTitleColor);
+    }
+
+    const hasCustomSectionRadius = themeState.sectionRadius != null;
+    const useSectionRadiusToggle = document.getElementById('themeUseSectionRadius');
+    const radiusWrapper = document.getElementById('sectionRadiusWrapper');
+    const radiusSlider = document.getElementById('themeSectionRadiusSlider');
+    const radiusLabel = document.getElementById('themeSectionRadiusValue');
+    if (useSectionRadiusToggle) useSectionRadiusToggle.checked = hasCustomSectionRadius;
+    if (radiusWrapper) radiusWrapper.style.display = hasCustomSectionRadius ? 'block' : 'none';
+    if (hasCustomSectionRadius) {
+        if (radiusSlider) radiusSlider.value = themeState.sectionRadius;
+        if (radiusLabel) radiusLabel.textContent = `${themeState.sectionRadius}px`;
+    }
+
     const applyAllToggle = document.getElementById('themeApplyToAll');
     if (applyAllToggle) applyAllToggle.checked = applyToAllDatasets;
 
     applyThemeToCSS(themeState);
     updateGradientSwatches();
+}
+
+function renderSectionTitlePresets() {
+    const container = document.getElementById('sectionTitlePresets');
+    if (!container || container.dataset.rendered) return;
+    container.innerHTML = SECTION_TITLE_PRESETS.map(p => `
+        <div class="color-preset" style="background: ${p.color}" data-color="${p.color}" data-i18n-title="${p.labelKey}" title="${p.fallback}"></div>
+    `).join('');
+    container.dataset.rendered = '1';
+    // Re-wire preset clicks now that the DOM exists.
+    setupPresets('sectionTitle');
+    // Re-run i18n on these newly-inserted nodes if I18n is present.
+    if (typeof I18n !== 'undefined' && I18n.refreshUI) I18n.refreshUI();
 }
 
 function toggleColorPicker() {
@@ -4269,6 +4409,8 @@ async function applyThemeColor() {
             gradientEnd: themeState.gradientEnd,
             fontFamily: themeState.fontFamily,
             bulletStyle: themeState.bulletStyle,
+            sectionTitleColor: themeState.sectionTitleColor,
+            sectionRadius: themeState.sectionRadius,
             applyToAll: applyToAllDatasets,
             currentDatasetId: (typeof activeDatasetId !== 'undefined') ? activeDatasetId : null
         }});
@@ -4291,6 +4433,8 @@ async function resetThemeColor() {
             gradientEnd: null,
             fontFamily: 'Inter',
             bulletStyle: 'triangle',
+            sectionTitleColor: null,
+            sectionRadius: null,
             applyToAll: applyToAllDatasets,
             currentDatasetId: (typeof activeDatasetId !== 'undefined') ? activeDatasetId : null
         }});
@@ -4305,6 +4449,14 @@ async function resetThemeColor() {
     if (useGradientToggle) useGradientToggle.checked = false;
     const gradWrapper = document.getElementById('gradientPickerWrapper');
     if (gradWrapper) gradWrapper.style.display = 'none';
+    const useSectionTitleToggle = document.getElementById('themeUseSectionTitleColor');
+    if (useSectionTitleToggle) useSectionTitleToggle.checked = false;
+    const stWrapper = document.getElementById('sectionTitleColorWrapper');
+    if (stWrapper) stWrapper.style.display = 'none';
+    const useSectionRadiusToggle = document.getElementById('themeUseSectionRadius');
+    if (useSectionRadiusToggle) useSectionRadiusToggle.checked = false;
+    const radiusWrapper = document.getElementById('sectionRadiusWrapper');
+    if (radiusWrapper) radiusWrapper.style.display = 'none';
     updateFontTrigger('Inter');
     updateBulletTrigger('triangle');
     document.getElementById('colorPickerDropdown').classList.remove('active');
@@ -4317,9 +4469,7 @@ function applyThemeToCSS(theme) {
     const hsl = hexToHSL(hex);
 
     root.style.setProperty('--primary', hex);
-    root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
     root.style.setProperty('--primary-light', hslToHex(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
-    root.style.setProperty('--accent', hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l));
     root.style.setProperty('--dark', hslToHex(hsl.h, hsl.s, 15));
     root.style.setProperty('--light', hslToHex(hsl.h, 30, 90));
     root.style.setProperty('--very-light', hslToHex(hsl.h, 20, 97));
@@ -4342,6 +4492,22 @@ function applyThemeToCSS(theme) {
         root.style.setProperty('--header-gradient-end',   hslToHex(hsl.h, hsl.s, 15));
     }
 
+    // When a custom gradient is active, both --primary-dark (drives item
+    // titles, cert names, custom-section item titles) and --accent (timeline
+    // branch strokes, item-card highlight pulse) follow the user's chosen
+    // gradient end. The semantic name "primary-dark" stays meaningful — the
+    // gradient end is typically the darker of the two endpoints (see the
+    // built-in pair presets) and reads better as body-text color than the
+    // start would. When no custom gradient is set, both variables continue
+    // to auto-derive from primary so existing themes look unchanged.
+    if (hasCustomGradient) {
+        root.style.setProperty('--primary-dark', gradientEnd);
+        root.style.setProperty('--accent', gradientEnd);
+    } else {
+        root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+        root.style.setProperty('--accent', hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l));
+    }
+
     const family = (theme && theme.fontFamily) || 'Inter';
     root.style.setProperty('--font-family', `'${family}', var(--font-family-default)`);
 
@@ -4354,6 +4520,32 @@ function applyThemeToCSS(theme) {
         document.body.dataset.bulletStyle = bullet;
         const style = BULLET_STYLES.find(s => s.id === bullet);
         document.body.dataset.bulletKind = (style && style.icon) ? 'icon' : 'glyph';
+    }
+
+    // Section titles default to --primary via CSS fallback. When the user
+    // picks a custom color we set --section-title-color; otherwise we remove
+    // the variable so the fallback kicks in and section titles track primary.
+    const titleColor = theme && theme.sectionTitleColor;
+    if (titleColor && /^#[0-9a-fA-F]{6}$/.test(titleColor)) {
+        root.style.setProperty('--section-title-color', titleColor);
+    } else {
+        root.style.removeProperty('--section-title-color');
+    }
+
+    // Section box corner radius. When set, overrides the default --radius-lg
+    // via the `--section-radius` CSS variable; otherwise the fallback in
+    // styles.css (`var(--section-radius, var(--radius-lg))`) kicks in.
+    // The header corner radius scales in proportion (1.5× — matches the
+    // baseline 24px header : 16px section ratio) via `--header-radius`, so
+    // the top card and section boxes stay visually consistent.
+    const radius = theme && theme.sectionRadius;
+    if (typeof radius === 'number' && Number.isFinite(radius)) {
+        const clamped = Math.max(0, Math.min(64, Math.round(radius)));
+        root.style.setProperty('--section-radius', `${clamped}px`);
+        root.style.setProperty('--header-radius', `${Math.round(clamped * 1.5)}px`);
+    } else {
+        root.style.removeProperty('--section-radius');
+        root.style.removeProperty('--header-radius');
     }
 }
 

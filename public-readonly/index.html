@@ -892,7 +892,17 @@
                 try {
                     bulletStyle = (allSettings && allSettings.themeBulletStyle !== undefined) ? allSettings.themeBulletStyle : (await api('/api/settings/themeBulletStyle')).value;
                 } catch (e) { /* optional */ }
-                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle' });
+                let sectionTitleColor = null;
+                try {
+                    sectionTitleColor = (allSettings && allSettings.themeSectionTitleColor !== undefined) ? allSettings.themeSectionTitleColor : (await api('/api/settings/themeSectionTitleColor')).value;
+                } catch (e) { /* optional */ }
+                let sectionRadius = null;
+                try {
+                    const raw = (allSettings && allSettings.themeSectionRadius !== undefined) ? allSettings.themeSectionRadius : (await api('/api/settings/themeSectionRadius')).value;
+                    const n = raw == null ? null : parseInt(raw, 10);
+                    if (Number.isInteger(n) && n >= 0 && n <= 32) sectionRadius = n;
+                } catch (e) { /* optional */ }
+                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle', sectionTitleColor: sectionTitleColor || null, sectionRadius });
             } catch (err) { /* Ignore — defaults stand */ }
         }
 
@@ -908,6 +918,21 @@
                 document.body.dataset.bulletStyle = bullet;
                 document.body.dataset.bulletKind = BULLET_GLYPH_IDS.has(bullet) ? 'glyph' : 'icon';
             }
+            const root = document.documentElement;
+            if (theme.sectionTitleColor && /^#[0-9a-fA-F]{6}$/.test(theme.sectionTitleColor)) {
+                root.style.setProperty('--section-title-color', theme.sectionTitleColor);
+            } else {
+                root.style.removeProperty('--section-title-color');
+            }
+            if (Number.isInteger(theme.sectionRadius) && theme.sectionRadius >= 0 && theme.sectionRadius <= 32) {
+                root.style.setProperty('--section-radius', theme.sectionRadius + 'px');
+                // Header scales 1.5× — matches the baseline 24:16 ratio so the
+                // top card stays visually consistent with the section boxes.
+                root.style.setProperty('--header-radius', Math.round(theme.sectionRadius * 1.5) + 'px');
+            } else {
+                root.style.removeProperty('--section-radius');
+                root.style.removeProperty('--header-radius');
+            }
         }
 
         function applyColorToCSSPublic(hex, gradientStart, gradientEnd, fontFamily) {
@@ -915,10 +940,9 @@
             const hsl = hexToHSLPublic(hex);
 
             root.style.setProperty('--primary', hex);
-            root.style.setProperty('--primary-dark', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
             root.style.setProperty('--primary-light', hslToHexPublic(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
-            const accent = hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l);
-            root.style.setProperty('--accent', accent);
+            const autoAccent = hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l);
+            const autoPrimaryDark = hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10));
             root.style.setProperty('--dark', hslToHexPublic(hsl.h, hsl.s, 15));
             root.style.setProperty('--light', hslToHexPublic(hsl.h, 30, 90));
             root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
@@ -928,16 +952,23 @@
             // so the whole theme feels consistent.
             const hasCustomGradient = !!(gradientStart || gradientEnd);
             const gs = gradientStart || hex;
-            const ge = gradientEnd || accent;
+            const ge = gradientEnd || autoAccent;
             root.style.setProperty('--gradient-start', gs);
             root.style.setProperty('--gradient-end', ge);
             if (hasCustomGradient) {
                 root.style.setProperty('--header-gradient-start', gs);
                 root.style.setProperty('--header-gradient-end', ge);
             } else {
-                root.style.setProperty('--header-gradient-start', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+                root.style.setProperty('--header-gradient-start', autoPrimaryDark);
                 root.style.setProperty('--header-gradient-end', hslToHexPublic(hsl.h, hsl.s, 15));
             }
+            // When a custom gradient is active, both --primary-dark (item
+            // titles, cert names, custom-section titles) and --accent (timeline
+            // branch strokes, item-card highlight pulse) follow the user's
+            // chosen gradient end so the CV's body text and accent strokes
+            // stay inside the chosen palette.
+            root.style.setProperty('--primary-dark', hasCustomGradient ? ge : autoPrimaryDark);
+            root.style.setProperty('--accent', hasCustomGradient ? ge : autoAccent);
             const family = fontFamily || 'Inter';
             if (family !== 'Inter') ensureFontLoadedPublic(family);
             root.style.setProperty('--font-family', "'" + family + "', var(--font-family-default)");
