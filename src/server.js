@@ -1251,7 +1251,7 @@ const ALLOWED_BULLET_STYLES = new Set([
     'check','check_circle','done_all','task_alt','star','kid_star','auto_awesome',
     'bolt','trending_up','insights','analytics','leaderboard','rocket_launch','verified',
     'workspace_premium','emoji_events','military_tech','lightbulb','code','terminal',
-    'handyman','engineering','construction','arrow_forward','arrow_right_alt',
+    'build','engineering','construction','arrow_forward','arrow_right_alt',
     'double_arrow','chevron_right','north_east','public','language','travel_explore',
     'favorite','thumb_up','school','menu_book','business_center','psychology','flag',
     'bookmark','key','palette','hub','groups','handshake','fact_check',

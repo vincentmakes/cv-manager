@@ -3728,7 +3728,7 @@ const BULLET_STYLES = [
     { id: 'lightbulb', icon: 'lightbulb' },
     { id: 'code', icon: 'code' },
     { id: 'terminal', icon: 'terminal' },
-    { id: 'handyman', icon: 'handyman' },
+    { id: 'build', icon: 'build' },
     { id: 'engineering', icon: 'engineering' },
     { id: 'construction', icon: 'construction' },
     { id: 'arrow_forward', icon: 'arrow_forward' },
