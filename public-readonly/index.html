@@ -940,9 +940,9 @@
             const hsl = hexToHSLPublic(hex);
 
             root.style.setProperty('--primary', hex);
-            root.style.setProperty('--primary-dark', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
             root.style.setProperty('--primary-light', hslToHexPublic(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
             const autoAccent = hslToHexPublic((hsl.h + 15) % 360, hsl.s, hsl.l);
+            const autoPrimaryDark = hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10));
             root.style.setProperty('--dark', hslToHexPublic(hsl.h, hsl.s, 15));
             root.style.setProperty('--light', hslToHexPublic(hsl.h, 30, 90));
             root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
@@ -959,13 +959,16 @@
                 root.style.setProperty('--header-gradient-start', gs);
                 root.style.setProperty('--header-gradient-end', ge);
             } else {
-                root.style.setProperty('--header-gradient-start', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+                root.style.setProperty('--header-gradient-start', autoPrimaryDark);
                 root.style.setProperty('--header-gradient-end', hslToHexPublic(hsl.h, hsl.s, 15));
             }
-            // Preserve "accent == gradient-end" invariant: when a custom
-            // gradient is set, accent tracks the user's chosen end color so
-            // elements that echo the gradient end (item-card highlight,
-            // print timeline branch strokes) stay in sync with the theme.
+            // Preserve the default-theme invariants when a custom gradient is
+            // active: --primary-dark mirrors the header-gradient-start (drives
+            // item titles, cert names, custom-section item titles); --accent
+            // mirrors gradient-end (timeline branch strokes, item-card
+            // highlight pulse). Locking them keeps the CV's body text and
+            // accent strokes inside the chosen palette.
+            root.style.setProperty('--primary-dark', hasCustomGradient ? gs : autoPrimaryDark);
             root.style.setProperty('--accent', hasCustomGradient ? ge : autoAccent);
             const family = fontFamily || 'Inter';
             if (family !== 'Inter') ensureFontLoadedPublic(family);

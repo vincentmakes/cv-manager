@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.41.2] - 2026-04-19
+
+### Fixed
+- When a custom gradient is configured, the `--primary-dark` CSS variable now follows the chosen gradient start color too — extending the 1.41.1 fix that already rebound `--accent` to the gradient end. `--primary-dark` drives the color of every item title in the CV (Experience job titles, Certification names, custom-section item titles and bullet titles); previously these stayed primary-derived even when the user picked a custom gradient, leaving body text visually disconnected from the chosen palette. The two invariants now both hold: in the default theme `--primary-dark` matches the auto `--header-gradient-start` and `--accent` matches the auto `--gradient-end`; in a custom gradient theme `--primary-dark` = `gradientStart` and `--accent` = `gradientEnd`. Toggling the custom gradient off restores the auto-derived values.
+
 ## [1.41.1] - 2026-04-19
 
 ### Changed

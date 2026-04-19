@@ -4469,7 +4469,6 @@ function applyThemeToCSS(theme) {
     const hsl = hexToHSL(hex);
 
     root.style.setProperty('--primary', hex);
-    root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
     root.style.setProperty('--primary-light', hslToHex(hsl.h, Math.min(hsl.s + 10, 100), Math.min(hsl.l + 15, 80)));
     root.style.setProperty('--dark', hslToHex(hsl.h, hsl.s, 15));
     root.style.setProperty('--light', hslToHex(hsl.h, 30, 90));
@@ -4493,15 +4492,20 @@ function applyThemeToCSS(theme) {
         root.style.setProperty('--header-gradient-end',   hslToHex(hsl.h, hsl.s, 15));
     }
 
-    // --accent preserves the default-theme invariant "accent == gradient-end".
-    // In the default (auto-derived) gradient, gradient-end is primary +15° hue,
-    // so accent stays primary-derived. When a custom gradient is set, accent
-    // tracks the user's chosen end color so elements that visually "echo" the
-    // gradient end (item-card highlight, print timeline branch strokes) stay in
-    // sync with the rest of the theme.
+    // Preserve the default-theme invariants when a custom gradient is active:
+    //   --primary-dark == --header-gradient-start  (item titles, cert names,
+    //                                               custom-section item titles)
+    //   --accent       == --gradient-end           (timeline branch strokes,
+    //                                               item-card highlight pulse)
+    // Both pairs share an identical auto-derivation formula in the default
+    // theme, so keeping them locked together when the user picks a custom
+    // gradient stops the CV's text and accent strokes from drifting out of
+    // the chosen palette.
     if (hasCustomGradient) {
+        root.style.setProperty('--primary-dark', gradientStart);
         root.style.setProperty('--accent', gradientEnd);
     } else {
+        root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
         root.style.setProperty('--accent', hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l));
     }
 
