@@ -4,23 +4,10 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
-## [1.39.2] - 2026-04-19
-
-### Added
-- 33 additional Material Symbols bullet styles in the theme picker covering tools (build, handyman, engineering, construction), arrows (arrow_forward, arrow_right_alt, double_arrow, chevron_right, north_east), globes (public, language, travel_explore), stars (kid_star, grade), charts (analytics, leaderboard), emotion (favorite, thumb_up), education (school, menu_book), work (business_center), thought (psychology), markers (flag, bookmark, key), creativity (palette), social (hub, groups, handshake), verification (fact_check), terminal, local_fire_department, and edit_note. The picker now offers 57 choices total.
-
-### Changed
-- Refactored bullet style CSS to use a single `data-bullet-kind="icon"` attribute for the Material Symbols font override instead of enumerating every icon ID, so new icons can be added with a single `content:` rule each.
-
-## [1.39.1] - 2026-04-19
-
-### Changed
-- Theme picker bullet selection is now a compact 6-column icon grid instead of a vertical list with sample text — all 24 bullet choices are visible at a glance and take less vertical space in the theme dropdown. Hovering a cell shows the style name as a tooltip. The unused `theme.bullet_sample` i18n key has been removed.
-
 ## [1.39.0] - 2026-04-19
 
 ### Added
-- Theme picker now exposes a **Bullets** option to change the style of list bullets used in experience highlights and custom bullet-list sections. Choose between 8 Unicode glyphs (triangle default, filled/hollow circle, square/small square, diamond, arrow, dash) and 16 CV-relevant Material Symbols icons (check, check_circle, done_all, task_alt, star, auto_awesome, bolt, trending_up, insights, rocket_launch, verified, workspace_premium, emoji_events, military_tech, lightbulb, code). The picker displays each option with a live preview of the bullet next to a sample line. Bullet style is stored alongside primary color, gradient, and font in the per-dataset `data.theme` blob, propagates to language siblings via the existing theme pipeline, and applies on both the admin preview and the public read-only CV page. Reset returns to the default triangle.
+- Theme picker now exposes a **Bullets** option to change the style of list bullets used in experience highlights and custom bullet-list sections. The picker is a compact 6-column icon grid offering 57 choices: 8 Unicode glyphs (triangle default, filled/hollow circle, square, small square, diamond, arrow, dash) and 49 CV-relevant Material Symbols icons including achievement markers (check, check_circle, done_all, task_alt, star, kid_star, grade, verified, workspace_premium, emoji_events, military_tech), impact (bolt, trending_up, insights, analytics, leaderboard, rocket_launch, local_fire_department, auto_awesome), tools (build, handyman, engineering, construction, terminal, code), arrows (arrow_forward, arrow_right_alt, double_arrow, chevron_right, north_east), globes (public, language, travel_explore), education (school, menu_book, lightbulb, psychology), work (business_center, edit_note, fact_check), markers (flag, bookmark, key, favorite, thumb_up), creativity (palette), and social (hub, groups, handshake). Hovering a cell shows the style name as a tooltip. Bullet style is stored alongside primary color, gradient, and font in the per-dataset `data.theme` blob, propagates to language siblings via the existing theme pipeline, and applies on both the admin preview and the public read-only CV page. Reset returns to the default triangle.
 
 ## [1.38.1] - 2026-04-19
 
