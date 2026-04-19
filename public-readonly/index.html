@@ -910,8 +910,20 @@
             root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
             // Default --gradient-start to primary and --gradient-end to accent
             // so existing themes look identical when no custom values are set.
-            root.style.setProperty('--gradient-start', gradientStart || hex);
-            root.style.setProperty('--gradient-end', gradientEnd || accent);
+            // When a custom gradient IS set, it also drives the header gradient
+            // so the whole theme feels consistent.
+            const hasCustomGradient = !!(gradientStart || gradientEnd);
+            const gs = gradientStart || hex;
+            const ge = gradientEnd || accent;
+            root.style.setProperty('--gradient-start', gs);
+            root.style.setProperty('--gradient-end', ge);
+            if (hasCustomGradient) {
+                root.style.setProperty('--header-gradient-start', gs);
+                root.style.setProperty('--header-gradient-end', ge);
+            } else {
+                root.style.setProperty('--header-gradient-start', hslToHexPublic(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+                root.style.setProperty('--header-gradient-end', hslToHexPublic(hsl.h, hsl.s, 15));
+            }
             const family = fontFamily || 'Inter';
             if (family !== 'Inter') ensureFontLoadedPublic(family);
             root.style.setProperty('--font-family', "'" + family + "', var(--font-family-default)");

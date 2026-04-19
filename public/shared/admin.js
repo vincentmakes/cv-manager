@@ -4172,12 +4172,22 @@ function applyThemeToCSS(theme) {
     root.style.setProperty('--very-light', hslToHex(hsl.h, 20, 97));
 
     // Gradient endpoints: explicit overrides OR auto-derived. Defaults match the
-    // pre-1.38 calculated gradient (primary → accent) so existing themes are
-    // visually unchanged when the user hasn't customized the gradient.
+    // pre-1.38 calculated gradient (primary → accent for body gradients, primary-dark → dark
+    // for the CV header) so existing themes are visually unchanged when the user hasn't
+    // customized the gradient. When a custom gradient IS set, both the body-level and
+    // header gradients adopt the user's chosen colors so the whole theme feels consistent.
+    const hasCustomGradient = !!(theme && (theme.gradientStart || theme.gradientEnd));
     const gradientStart = (theme && theme.gradientStart) || autoGradientStart(hex);
     const gradientEnd   = (theme && theme.gradientEnd)   || autoGradientEnd(hex);
     root.style.setProperty('--gradient-start', gradientStart);
     root.style.setProperty('--gradient-end',   gradientEnd);
+    if (hasCustomGradient) {
+        root.style.setProperty('--header-gradient-start', gradientStart);
+        root.style.setProperty('--header-gradient-end',   gradientEnd);
+    } else {
+        root.style.setProperty('--header-gradient-start', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
+        root.style.setProperty('--header-gradient-end',   hslToHex(hsl.h, hsl.s, 15));
+    }
 
     const family = (theme && theme.fontFamily) || 'Inter';
     root.style.setProperty('--font-family', `'${family}', var(--font-family-default)`);
