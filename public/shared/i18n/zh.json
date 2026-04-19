@@ -31,6 +31,8 @@
     "theme.violet": "紫罗兰色",
     "theme.rose": "玫瑰色",
     "theme.font": "字体",
+    "theme.bullets": "项目符号",
+    "theme.bullet_sample": "示例项目",
     "theme.use_custom_gradient": "使用自定义渐变",
     "theme.gradient_start": "起点",
     "theme.gradient_end": "终点",

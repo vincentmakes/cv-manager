@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.39.0] - 2026-04-19
+
+### Added
+- Theme picker now exposes a **Bullets** option to change the style of list bullets used in experience highlights and custom bullet-list sections. Choose between 8 Unicode glyphs (triangle default, filled/hollow circle, square/small square, diamond, arrow, dash) and 16 CV-relevant Material Symbols icons (check, check_circle, done_all, task_alt, star, auto_awesome, bolt, trending_up, insights, rocket_launch, verified, workspace_premium, emoji_events, military_tech, lightbulb, code). The picker displays each option with a live preview of the bullet next to a sample line. Bullet style is stored alongside primary color, gradient, and font in the per-dataset `data.theme` blob, propagates to language siblings via the existing theme pipeline, and applies on both the admin preview and the public read-only CV page. Reset returns to the default triangle.
+
 ## [1.38.1] - 2026-04-19
 
 ### Fixed

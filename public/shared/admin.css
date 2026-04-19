@@ -1554,6 +1554,96 @@
 .theme-font-option:hover { background: var(--gray-50); }
 .theme-font-option.active { background: var(--light); color: var(--primary); }
 
+/* Bullet style picker — matches font picker layout, but each option
+   shows the bullet glyph/icon next to a sample sentence. */
+.theme-bullet-picker { position: relative; }
+.theme-bullet-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--gray-700);
+    text-align: left;
+}
+.theme-bullet-trigger:hover { border-color: var(--gray-500); }
+.theme-bullet-trigger .material-symbols-outlined { font-size: 18px; }
+.theme-bullet-trigger .bullet-preview {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+    min-width: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.theme-bullet-trigger .bullet-preview.material-symbols-outlined {
+    font-size: 18px;
+    font-weight: 400;
+}
+.theme-bullet-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 5;
+    display: none;
+    padding: 4px 0;
+}
+.theme-bullet-list.active { display: block; }
+.theme-bullet-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 12px;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray-900);
+    text-align: left;
+}
+.theme-bullet-option:hover { background: var(--gray-50); }
+.theme-bullet-option.active {
+    background: var(--light);
+    border-left-color: var(--primary);
+    color: var(--primary);
+}
+.theme-bullet-option .bullet-preview {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+    min-width: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.theme-bullet-option .bullet-preview.material-symbols-outlined {
+    font-size: 18px;
+    font-weight: 400;
+}
+.theme-bullet-option .bullet-sample {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .theme-gradient-picker { margin-top: 10px; padding: 10px; background: var(--gray-50); border-radius: var(--radius-sm); }
 
 /* Gradient pair presets — each swatch shows the actual gradient, click sets

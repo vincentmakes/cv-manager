@@ -31,6 +31,8 @@
     "theme.violet": "Violeta",
     "theme.rose": "Rosa claro",
     "theme.font": "Tipo de letra",
+    "theme.bullets": "Marcadores",
+    "theme.bullet_sample": "Item de exemplo",
     "theme.use_custom_gradient": "Usar degradê personalizado",
     "theme.gradient_start": "Início",
     "theme.gradient_end": "Fim",

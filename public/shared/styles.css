@@ -1084,6 +1084,116 @@ body {
     margin-bottom: 0;
 }
 
+/* Theme bullet styles — driven by the `data-bullet-style` attribute set on
+   <body> by the theme picker. Default (triangle) matches the baseline
+   content: '▹' declared above. Each rule below overrides both bullet
+   locations (experience highlights + custom bullet-list sections) so a
+   single setting applies consistently across the CV. */
+
+/* Unicode-glyph styles */
+body[data-bullet-style="bullet"] .item-highlights li::before,
+body[data-bullet-style="bullet"] .custom-bullet-list li::before { content: '●'; }
+body[data-bullet-style="hollow_circle"] .item-highlights li::before,
+body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content: '○'; }
+body[data-bullet-style="square"] .item-highlights li::before,
+body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; }
+body[data-bullet-style="small_square"] .item-highlights li::before,
+body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; }
+body[data-bullet-style="diamond"] .item-highlights li::before,
+body[data-bullet-style="diamond"] .custom-bullet-list li::before { content: '◆'; }
+body[data-bullet-style="arrow"] .item-highlights li::before,
+body[data-bullet-style="arrow"] .custom-bullet-list li::before { content: '▸'; }
+body[data-bullet-style="dash"] .item-highlights li::before,
+body[data-bullet-style="dash"] .custom-bullet-list li::before { content: '—'; font-weight: normal; }
+
+/* Material Symbols icon styles — require swapping the pseudo-element's font. */
+body[data-bullet-style^="check"] .item-highlights li::before,
+body[data-bullet-style^="check"] .custom-bullet-list li::before,
+body[data-bullet-style="done_all"] .item-highlights li::before,
+body[data-bullet-style="done_all"] .custom-bullet-list li::before,
+body[data-bullet-style="task_alt"] .item-highlights li::before,
+body[data-bullet-style="task_alt"] .custom-bullet-list li::before,
+body[data-bullet-style="star"] .item-highlights li::before,
+body[data-bullet-style="star"] .custom-bullet-list li::before,
+body[data-bullet-style="auto_awesome"] .item-highlights li::before,
+body[data-bullet-style="auto_awesome"] .custom-bullet-list li::before,
+body[data-bullet-style="bolt"] .item-highlights li::before,
+body[data-bullet-style="bolt"] .custom-bullet-list li::before,
+body[data-bullet-style="trending_up"] .item-highlights li::before,
+body[data-bullet-style="trending_up"] .custom-bullet-list li::before,
+body[data-bullet-style="insights"] .item-highlights li::before,
+body[data-bullet-style="insights"] .custom-bullet-list li::before,
+body[data-bullet-style="rocket_launch"] .item-highlights li::before,
+body[data-bullet-style="rocket_launch"] .custom-bullet-list li::before,
+body[data-bullet-style="verified"] .item-highlights li::before,
+body[data-bullet-style="verified"] .custom-bullet-list li::before,
+body[data-bullet-style="workspace_premium"] .item-highlights li::before,
+body[data-bullet-style="workspace_premium"] .custom-bullet-list li::before,
+body[data-bullet-style="emoji_events"] .item-highlights li::before,
+body[data-bullet-style="emoji_events"] .custom-bullet-list li::before,
+body[data-bullet-style="military_tech"] .item-highlights li::before,
+body[data-bullet-style="military_tech"] .custom-bullet-list li::before,
+body[data-bullet-style="lightbulb"] .item-highlights li::before,
+body[data-bullet-style="lightbulb"] .custom-bullet-list li::before,
+body[data-bullet-style="code"] .item-highlights li::before,
+body[data-bullet-style="code"] .custom-bullet-list li::before {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.2;
+}
+body[data-bullet-style="check"] .item-highlights li::before,
+body[data-bullet-style="check"] .custom-bullet-list li::before { content: 'check'; }
+body[data-bullet-style="check_circle"] .item-highlights li::before,
+body[data-bullet-style="check_circle"] .custom-bullet-list li::before { content: 'check_circle'; }
+body[data-bullet-style="done_all"] .item-highlights li::before,
+body[data-bullet-style="done_all"] .custom-bullet-list li::before { content: 'done_all'; }
+body[data-bullet-style="task_alt"] .item-highlights li::before,
+body[data-bullet-style="task_alt"] .custom-bullet-list li::before { content: 'task_alt'; }
+body[data-bullet-style="star"] .item-highlights li::before,
+body[data-bullet-style="star"] .custom-bullet-list li::before { content: 'star'; }
+body[data-bullet-style="auto_awesome"] .item-highlights li::before,
+body[data-bullet-style="auto_awesome"] .custom-bullet-list li::before { content: 'auto_awesome'; }
+body[data-bullet-style="bolt"] .item-highlights li::before,
+body[data-bullet-style="bolt"] .custom-bullet-list li::before { content: 'bolt'; }
+body[data-bullet-style="trending_up"] .item-highlights li::before,
+body[data-bullet-style="trending_up"] .custom-bullet-list li::before { content: 'trending_up'; }
+body[data-bullet-style="insights"] .item-highlights li::before,
+body[data-bullet-style="insights"] .custom-bullet-list li::before { content: 'insights'; }
+body[data-bullet-style="rocket_launch"] .item-highlights li::before,
+body[data-bullet-style="rocket_launch"] .custom-bullet-list li::before { content: 'rocket_launch'; }
+body[data-bullet-style="verified"] .item-highlights li::before,
+body[data-bullet-style="verified"] .custom-bullet-list li::before { content: 'verified'; }
+body[data-bullet-style="workspace_premium"] .item-highlights li::before,
+body[data-bullet-style="workspace_premium"] .custom-bullet-list li::before { content: 'workspace_premium'; }
+body[data-bullet-style="emoji_events"] .item-highlights li::before,
+body[data-bullet-style="emoji_events"] .custom-bullet-list li::before { content: 'emoji_events'; }
+body[data-bullet-style="military_tech"] .item-highlights li::before,
+body[data-bullet-style="military_tech"] .custom-bullet-list li::before { content: 'military_tech'; }
+body[data-bullet-style="lightbulb"] .item-highlights li::before,
+body[data-bullet-style="lightbulb"] .custom-bullet-list li::before { content: 'lightbulb'; }
+body[data-bullet-style="code"] .item-highlights li::before,
+body[data-bullet-style="code"] .custom-bullet-list li::before { content: 'code'; }
+
+/* Custom bullet-list uses more line-height than item-highlights — bump the
+   icon padding to keep the icon aligned with the first text baseline. */
+body[data-bullet-style="check"] .custom-bullet-list li::before,
+body[data-bullet-style="check_circle"] .custom-bullet-list li::before,
+body[data-bullet-style="done_all"] .custom-bullet-list li::before,
+body[data-bullet-style="task_alt"] .custom-bullet-list li::before,
+body[data-bullet-style="star"] .custom-bullet-list li::before,
+body[data-bullet-style="auto_awesome"] .custom-bullet-list li::before,
+body[data-bullet-style="bolt"] .custom-bullet-list li::before,
+body[data-bullet-style="trending_up"] .custom-bullet-list li::before,
+body[data-bullet-style="insights"] .custom-bullet-list li::before,
+body[data-bullet-style="rocket_launch"] .custom-bullet-list li::before,
+body[data-bullet-style="verified"] .custom-bullet-list li::before,
+body[data-bullet-style="workspace_premium"] .custom-bullet-list li::before,
+body[data-bullet-style="emoji_events"] .custom-bullet-list li::before,
+body[data-bullet-style="military_tech"] .custom-bullet-list li::before,
+body[data-bullet-style="lightbulb"] .custom-bullet-list li::before,
+body[data-bullet-style="code"] .custom-bullet-list li::before { top: 1px; }
+
 /* Free Text Layout */
 .custom-free-text-blocks {
     display: flex;

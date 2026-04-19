@@ -888,12 +888,17 @@
                 const fontFamily = (allSettings && allSettings.themeFontFamily !== undefined) ? allSettings.themeFontFamily : (await api('/api/settings/themeFontFamily')).value;
                 const gradientStart = (allSettings && allSettings.themeGradientStart !== undefined) ? allSettings.themeGradientStart : (await api('/api/settings/themeGradientStart')).value;
                 const gradientEnd = (allSettings && allSettings.themeGradientEnd !== undefined) ? allSettings.themeGradientEnd : (await api('/api/settings/themeGradientEnd')).value;
-                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter' });
+                let bulletStyle = null;
+                try {
+                    bulletStyle = (allSettings && allSettings.themeBulletStyle !== undefined) ? allSettings.themeBulletStyle : (await api('/api/settings/themeBulletStyle')).value;
+                } catch (e) { /* optional */ }
+                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter', bulletStyle: bulletStyle || 'triangle' });
             } catch (err) { /* Ignore — defaults stand */ }
         }
 
         function applyThemePublic(theme) {
             applyColorToCSSPublic(theme.primary || '#0066ff', theme.gradientStart || null, theme.gradientEnd || null, theme.fontFamily || 'Inter');
+            if (document.body) document.body.dataset.bulletStyle = theme.bulletStyle || 'triangle';
         }
 
         function applyColorToCSSPublic(hex, gradientStart, gradientEnd, fontFamily) {

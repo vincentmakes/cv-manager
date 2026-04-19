@@ -1585,6 +1585,35 @@ describe('Backend API', () => {
             assert.strictEqual(theme.gradientEnd, null);
         });
 
+        it('PUT /api/theme rejects invalid bulletStyle', async () => {
+            const r = await fetch(`${BASE_URL}/api/theme`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ primary: '#0066ff', bulletStyle: 'not-a-style' })
+            });
+            assert.strictEqual(r.status, 400);
+        });
+
+        it('PUT /api/theme persists bulletStyle into settings and dataset.data.theme', async () => {
+            const a = await createDs('Bullet Style Dataset');
+            const result = await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#0066ff', bulletStyle: 'star', applyToAll: true
+            });
+            assert.strictEqual(result.success, true);
+            const settingsTheme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(settingsTheme.bulletStyle, 'star');
+            const aData = await getJson(`${BASE_URL}/api/datasets/id/${a.id}`);
+            assert.strictEqual(aData.theme.bulletStyle, 'star');
+            await delDs(a.id);
+        });
+
+        it('PUT /api/theme defaults bulletStyle to "triangle" when omitted', async () => {
+            // Seed a non-default bullet, then omit the field on a later PUT
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', bulletStyle: 'check', applyToAll: false });
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#0066ff', applyToAll: false });
+            const theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.bulletStyle, 'triangle');
+        });
+
         it('Dataset load with embedded theme writes theme into settings', async () => {
             // Create a dataset, manually set its data.theme, then load it
             await putJson(`${BASE_URL}/api/theme`, { primary: '#aaaaaa', fontFamily: 'Inter', applyToAll: false });
