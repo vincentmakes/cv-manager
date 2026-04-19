@@ -3694,14 +3694,23 @@ const FONT_OPTIONS = [
     { family: 'JetBrains Mono', label: 'JetBrains Mono' }
 ];
 
-const THEME_DEFAULTS = { primary: '#0066ff', gradientEnd: null, fontFamily: 'Inter' };
+const THEME_DEFAULTS = { primary: '#0066ff', gradientStart: null, gradientEnd: null, fontFamily: 'Inter' };
 
 let themeState = { ...THEME_DEFAULTS };
 let applyToAllDatasets = true;
+// The gradient sub-picker has one wheel that edits whichever endpoint is
+// currently active ('start' or 'end'). We keep HSL state for each endpoint
+// so switching tabs restores the wheel to the stored color/brightness.
+let activeGradientEndpoint = 'end';
 let pickerHSL = { primary: { h: 214, s: 100, l: 50 }, gradient: { h: 214, s: 100, l: 35 } };
 let wheelDragState = { primary: false, gradient: false };
 let wheelCtx = { primary: null, gradient: null };
 const loadedFontSet = new Set(['Inter']);
+
+// Preset grids are scoped by container ID so the selector for target=primary
+// doesn't accidentally match .color-preset elements that live inside the
+// gradient sub-picker (the root cause of the "end point not impacted" bug).
+const PRESET_CONTAINER = { primary: 'primaryPresets', gradient: 'gradientPresets' };
 
 // Backward-compat alias kept because other parts of admin.js may still read currentColor
 let currentColor = themeState.primary;
@@ -3747,25 +3756,25 @@ function initColorPicker() {
         useGradientToggle.addEventListener('change', () => {
             const wrapper = document.getElementById('gradientPickerWrapper');
             if (useGradientToggle.checked) {
-                if (!themeState.gradientEnd) {
-                    // Seed from current auto-derived accent so the user sees the
-                    // "current" gradient endpoint as the starting point.
-                    const hsl = hexToHSL(themeState.primary);
-                    themeState.gradientEnd = hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l);
-                }
-                pickerHSL.gradient = hexToHSL(themeState.gradientEnd);
+                seedCustomGradient();
                 if (wrapper) wrapper.style.display = 'block';
-                const gSlider = document.getElementById('gradientBrightness');
-                if (gSlider) gSlider.value = pickerHSL.gradient.l;
-                drawColorWheel('gradient');
-                updateColorPickerUI('gradient', themeState.gradientEnd);
+                activateGradientEndpoint(activeGradientEndpoint);
             } else {
+                themeState.gradientStart = null;
                 themeState.gradientEnd = null;
                 if (wrapper) wrapper.style.display = 'none';
             }
             applyThemeToCSS(themeState);
         });
     }
+
+    // Endpoint tabs swap which color the single gradient wheel is editing.
+    document.querySelectorAll('.gradient-endpoint-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.stopPropagation();
+            activateGradientEndpoint(tab.dataset.endpoint);
+        });
+    });
 
     initFontDropdown();
 
@@ -3808,6 +3817,14 @@ function setupWheelEvents(target) {
     canvas.addEventListener('touchend', stop);
 }
 
+// Write `hex` back into the correct field on themeState. For target='gradient'
+// this respects which endpoint tab is currently active.
+function commitTargetColor(target, hex) {
+    if (target === 'primary') { themeState.primary = hex; currentColor = hex; return; }
+    if (activeGradientEndpoint === 'start') themeState.gradientStart = hex;
+    else themeState.gradientEnd = hex;
+}
+
 function setupBrightness(target) {
     const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
     const slider = document.getElementById(sliderId);
@@ -3818,8 +3835,7 @@ function setupBrightness(target) {
         drawColorWheel(target);
         // Recompute color from stored (h,s,l) — avoids canvas-resampling drift
         const hex = hslToHex(pickerHSL[target].h, pickerHSL[target].s, newL);
-        if (target === 'primary') { themeState.primary = hex; currentColor = hex; }
-        else themeState.gradientEnd = hex;
+        commitTargetColor(target, hex);
         updateColorPickerUI(target, hex);
         applyThemeToCSS(themeState);
     });
@@ -3832,8 +3848,7 @@ function setupHexInput(target) {
     input.addEventListener('change', (e) => {
         const hex = e.target.value;
         if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
-        if (target === 'primary') { themeState.primary = hex.toLowerCase(); currentColor = themeState.primary; }
-        else themeState.gradientEnd = hex.toLowerCase();
+        commitTargetColor(target, hex.toLowerCase());
         pickerHSL[target] = hexToHSL(hex);
         const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
         const slider = document.getElementById(sliderId);
@@ -3845,12 +3860,15 @@ function setupHexInput(target) {
 }
 
 function setupPresets(target) {
-    const selector = target === 'primary' ? '.color-preset' : '.gradient-preset';
-    document.querySelectorAll(selector).forEach(preset => {
+    // Scope by container ID so clicks on gradient swatches don't also fire
+    // the primary handler (their shared .color-preset class would otherwise
+    // match both selectors).
+    const container = document.getElementById(PRESET_CONTAINER[target]);
+    if (!container) return;
+    container.querySelectorAll('.color-preset').forEach(preset => {
         preset.addEventListener('click', () => {
             const color = preset.dataset.color;
-            if (target === 'primary') { themeState.primary = color; currentColor = color; }
-            else themeState.gradientEnd = color;
+            commitTargetColor(target, color);
             pickerHSL[target] = hexToHSL(color);
             const sliderId = target === 'primary' ? 'colorBrightness' : 'gradientBrightness';
             const slider = document.getElementById(sliderId);
@@ -3882,10 +3900,54 @@ function pickColorAt(target, e) {
     const hex = hslToHex(h, s, l);
 
     pickerHSL[target] = { h: Math.round(h), s, l };
-    if (target === 'primary') { themeState.primary = hex; currentColor = hex; }
-    else themeState.gradientEnd = hex;
+    commitTargetColor(target, hex);
     updateColorPickerUI(target, hex);
     applyThemeToCSS(themeState);
+}
+
+// Auto-derivation helpers: when no custom gradient is set we want the colors
+// to feel like the "nice calculated gradient" the theme used to produce.
+function autoGradientStart(primary) {
+    // Keep identical to --primary so the legacy behavior is preserved.
+    return primary;
+}
+function autoGradientEnd(primary) {
+    const hsl = hexToHSL(primary);
+    // +15° hue rotation, same S/L — matches the pre-1.38 --accent value.
+    return hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l);
+}
+
+// First time the user flips "Use custom gradient" on, seed both endpoints
+// from the auto-derived values so there's no jarring flash and so the sub-
+// picker starts on the current gradient (which they can then tweak).
+function seedCustomGradient() {
+    if (!themeState.gradientStart) themeState.gradientStart = autoGradientStart(themeState.primary);
+    if (!themeState.gradientEnd)   themeState.gradientEnd   = autoGradientEnd(themeState.primary);
+}
+
+// Point the single gradient wheel at `which` endpoint ('start' or 'end').
+function activateGradientEndpoint(which) {
+    activeGradientEndpoint = which;
+    document.querySelectorAll('.gradient-endpoint-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.endpoint === which);
+    });
+    const color = which === 'start' ? themeState.gradientStart : themeState.gradientEnd;
+    if (!color) return;
+    pickerHSL.gradient = hexToHSL(color);
+    const slider = document.getElementById('gradientBrightness');
+    if (slider) slider.value = pickerHSL.gradient.l;
+    drawColorWheel('gradient');
+    updateColorPickerUI('gradient', color);
+}
+
+function updateGradientSwatches() {
+    const primary = themeState.primary || '#0066ff';
+    const startColor = themeState.gradientStart || autoGradientStart(primary);
+    const endColor = themeState.gradientEnd || autoGradientEnd(primary);
+    const startSwatch = document.getElementById('gradientStartSwatch');
+    const endSwatch = document.getElementById('gradientEndSwatch');
+    if (startSwatch) startSwatch.style.backgroundColor = startColor;
+    if (endSwatch) endSwatch.style.backgroundColor = endColor;
 }
 
 function positionCursorFromHex(target, hex) {
@@ -3911,15 +3973,18 @@ function updateColorPickerUI(target, hex) {
     }
     const previewId = target === 'primary' ? 'colorPreview' : 'gradientPreview';
     const inputId = target === 'primary' ? 'colorHexInput' : 'gradientHexInput';
-    const presetSel = target === 'primary' ? '.color-preset' : '.gradient-preset';
     const preview = document.getElementById(previewId);
     const input = document.getElementById(inputId);
     if (preview) preview.style.backgroundColor = hex;
     if (input) input.value = hex.toUpperCase();
-    document.querySelectorAll(presetSel).forEach(preset => {
-        preset.classList.toggle('active', preset.dataset.color.toLowerCase() === hex.toLowerCase());
-    });
+    const presetContainer = document.getElementById(PRESET_CONTAINER[target]);
+    if (presetContainer) {
+        presetContainer.querySelectorAll('.color-preset').forEach(preset => {
+            preset.classList.toggle('active', preset.dataset.color.toLowerCase() === hex.toLowerCase());
+        });
+    }
     positionCursorFromHex(target, hex);
+    updateGradientSwatches();
 }
 
 function drawColorWheel(target) {
@@ -3988,6 +4053,7 @@ async function loadTheme() {
         const theme = await api('/api/theme');
         if (theme) {
             themeState.primary = theme.primary || THEME_DEFAULTS.primary;
+            themeState.gradientStart = theme.gradientStart || null;
             themeState.gradientEnd = theme.gradientEnd || null;
             themeState.fontFamily = theme.fontFamily || THEME_DEFAULTS.fontFamily;
         }
@@ -4001,22 +4067,21 @@ async function loadTheme() {
     }
     currentColor = themeState.primary;
     pickerHSL.primary = hexToHSL(themeState.primary);
-    if (themeState.gradientEnd) pickerHSL.gradient = hexToHSL(themeState.gradientEnd);
 
     const slider = document.getElementById('colorBrightness');
     if (slider) slider.value = pickerHSL.primary.l;
     drawColorWheel('primary');
     updateColorPickerUI('primary', themeState.primary);
 
+    const hasCustomGradient = !!(themeState.gradientStart || themeState.gradientEnd);
     const useGradientToggle = document.getElementById('themeUseGradient');
     const gradWrapper = document.getElementById('gradientPickerWrapper');
-    if (useGradientToggle) useGradientToggle.checked = !!themeState.gradientEnd;
-    if (gradWrapper) gradWrapper.style.display = themeState.gradientEnd ? 'block' : 'none';
-    if (themeState.gradientEnd) {
-        const gSlider = document.getElementById('gradientBrightness');
-        if (gSlider) gSlider.value = pickerHSL.gradient.l;
-        drawColorWheel('gradient');
-        updateColorPickerUI('gradient', themeState.gradientEnd);
+    if (useGradientToggle) useGradientToggle.checked = hasCustomGradient;
+    if (gradWrapper) gradWrapper.style.display = hasCustomGradient ? 'block' : 'none';
+    if (hasCustomGradient) {
+        // Fill in whichever endpoint is missing so both tabs have a color
+        seedCustomGradient();
+        activateGradientEndpoint(activeGradientEndpoint);
     }
 
     updateFontTrigger(themeState.fontFamily);
@@ -4026,6 +4091,7 @@ async function loadTheme() {
     if (applyAllToggle) applyAllToggle.checked = applyToAllDatasets;
 
     applyThemeToCSS(themeState);
+    updateGradientSwatches();
 }
 
 function toggleColorPicker() {
@@ -4035,7 +4101,11 @@ function toggleColorPicker() {
     if (dropdown.classList.contains('active')) {
         // BUG A fix: re-position cursor to current color when opening
         updateColorPickerUI('primary', themeState.primary);
-        if (themeState.gradientEnd) updateColorPickerUI('gradient', themeState.gradientEnd);
+        if (themeState.gradientStart || themeState.gradientEnd) {
+            seedCustomGradient();
+            activateGradientEndpoint(activeGradientEndpoint);
+        }
+        updateGradientSwatches();
         preloadAllPickerFonts();
     }
 }
@@ -4045,6 +4115,7 @@ async function applyThemeColor() {
     try {
         await api('/api/theme', { method: 'PUT', body: {
             primary: themeState.primary,
+            gradientStart: themeState.gradientStart,
             gradientEnd: themeState.gradientEnd,
             fontFamily: themeState.fontFamily,
             applyToAll: applyToAllDatasets,
@@ -4065,6 +4136,7 @@ async function resetThemeColor() {
     try {
         await api('/api/theme', { method: 'PUT', body: {
             primary: themeState.primary,
+            gradientStart: null,
             gradientEnd: null,
             fontFamily: 'Inter',
             applyToAll: applyToAllDatasets,
@@ -4099,9 +4171,13 @@ function applyThemeToCSS(theme) {
     root.style.setProperty('--light', hslToHex(hsl.h, 30, 90));
     root.style.setProperty('--very-light', hslToHex(hsl.h, 20, 97));
 
-    // Gradient endpoint: explicit override OR auto-derived (matches old --accent value)
-    const gradientEnd = (theme && theme.gradientEnd) || hslToHex((hsl.h + 15) % 360, hsl.s, hsl.l);
-    root.style.setProperty('--gradient-end', gradientEnd);
+    // Gradient endpoints: explicit overrides OR auto-derived. Defaults match the
+    // pre-1.38 calculated gradient (primary → accent) so existing themes are
+    // visually unchanged when the user hasn't customized the gradient.
+    const gradientStart = (theme && theme.gradientStart) || autoGradientStart(hex);
+    const gradientEnd   = (theme && theme.gradientEnd)   || autoGradientEnd(hex);
+    root.style.setProperty('--gradient-start', gradientStart);
+    root.style.setProperty('--gradient-end',   gradientEnd);
 
     const family = (theme && theme.fontFamily) || 'Inter';
     root.style.setProperty('--font-family', `'${family}', var(--font-family-default)`);

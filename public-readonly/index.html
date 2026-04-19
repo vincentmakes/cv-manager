@@ -886,16 +886,17 @@
             try {
                 const primary = (allSettings && allSettings.themeColor !== undefined) ? allSettings.themeColor : (await api('/api/settings/themeColor')).value;
                 const fontFamily = (allSettings && allSettings.themeFontFamily !== undefined) ? allSettings.themeFontFamily : (await api('/api/settings/themeFontFamily')).value;
+                const gradientStart = (allSettings && allSettings.themeGradientStart !== undefined) ? allSettings.themeGradientStart : (await api('/api/settings/themeGradientStart')).value;
                 const gradientEnd = (allSettings && allSettings.themeGradientEnd !== undefined) ? allSettings.themeGradientEnd : (await api('/api/settings/themeGradientEnd')).value;
-                applyThemePublic({ primary: primary || '#0066ff', gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter' });
+                applyThemePublic({ primary: primary || '#0066ff', gradientStart: gradientStart || null, gradientEnd: gradientEnd || null, fontFamily: fontFamily || 'Inter' });
             } catch (err) { /* Ignore — defaults stand */ }
         }
 
         function applyThemePublic(theme) {
-            applyColorToCSSPublic(theme.primary || '#0066ff', theme.gradientEnd || null, theme.fontFamily || 'Inter');
+            applyColorToCSSPublic(theme.primary || '#0066ff', theme.gradientStart || null, theme.gradientEnd || null, theme.fontFamily || 'Inter');
         }
 
-        function applyColorToCSSPublic(hex, gradientEnd, fontFamily) {
+        function applyColorToCSSPublic(hex, gradientStart, gradientEnd, fontFamily) {
             const root = document.documentElement;
             const hsl = hexToHSLPublic(hex);
 
@@ -907,6 +908,9 @@
             root.style.setProperty('--dark', hslToHexPublic(hsl.h, hsl.s, 15));
             root.style.setProperty('--light', hslToHexPublic(hsl.h, 30, 90));
             root.style.setProperty('--very-light', hslToHexPublic(hsl.h, 20, 97));
+            // Default --gradient-start to primary and --gradient-end to accent
+            // so existing themes look identical when no custom values are set.
+            root.style.setProperty('--gradient-start', gradientStart || hex);
             root.style.setProperty('--gradient-end', gradientEnd || accent);
             const family = fontFamily || 'Inter';
             if (family !== 'Inter') ensureFontLoadedPublic(family);

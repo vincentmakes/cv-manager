@@ -41,7 +41,7 @@
                         <div class="color-preview" id="colorPreview"></div>
                         <input type="text" class="color-hex-input" id="colorHexInput" value="#0066ff" maxlength="7">
                     </div>
-                    <div class="color-presets">
+                    <div class="color-presets" id="primaryPresets">
                         <div class="color-preset" style="background: #0066ff" data-color="#0066ff" data-i18n-title="theme.blue" title="Blue (Default)"></div>
                         <div class="color-preset" style="background: #059669" data-color="#059669" data-i18n-title="theme.emerald" title="Emerald"></div>
                         <div class="color-preset" style="background: #7c3aed" data-color="#7c3aed" data-i18n-title="theme.purple" title="Purple"></div>
@@ -77,6 +77,16 @@
                             <span data-i18n="theme.use_custom_gradient">Use custom gradient end color</span>
                         </label>
                         <div class="theme-gradient-picker" id="gradientPickerWrapper" style="display:none;">
+                            <div class="gradient-endpoint-tabs">
+                                <button type="button" class="gradient-endpoint-tab" data-endpoint="start">
+                                    <span class="gradient-endpoint-swatch" id="gradientStartSwatch"></span>
+                                    <span data-i18n="theme.gradient_start">Start</span>
+                                </button>
+                                <button type="button" class="gradient-endpoint-tab active" data-endpoint="end">
+                                    <span class="gradient-endpoint-swatch" id="gradientEndSwatch"></span>
+                                    <span data-i18n="theme.gradient_end">End</span>
+                                </button>
+                            </div>
                             <div class="color-wheel-container">
                                 <canvas id="gradientWheel" width="180" height="180"></canvas>
                                 <div class="color-wheel-cursor" id="gradientWheelCursor"></div>
@@ -89,15 +99,15 @@
                                 <div class="color-preview" id="gradientPreview"></div>
                                 <input type="text" class="color-hex-input" id="gradientHexInput" value="#003c99" maxlength="7">
                             </div>
-                            <div class="color-presets">
-                                <div class="gradient-preset color-preset" style="background: #003c99" data-color="#003c99"></div>
-                                <div class="gradient-preset color-preset" style="background: #0e2954" data-color="#0e2954"></div>
-                                <div class="gradient-preset color-preset" style="background: #014737" data-color="#014737"></div>
-                                <div class="gradient-preset color-preset" style="background: #4a044e" data-color="#4a044e"></div>
-                                <div class="gradient-preset color-preset" style="background: #7c2d12" data-color="#7c2d12"></div>
-                                <div class="gradient-preset color-preset" style="background: #831843" data-color="#831843"></div>
-                                <div class="gradient-preset color-preset" style="background: #1f2937" data-color="#1f2937"></div>
-                                <div class="gradient-preset color-preset" style="background: #312e81" data-color="#312e81"></div>
+                            <div class="color-presets" id="gradientPresets">
+                                <div class="color-preset" style="background: #003c99" data-color="#003c99"></div>
+                                <div class="color-preset" style="background: #0e2954" data-color="#0e2954"></div>
+                                <div class="color-preset" style="background: #014737" data-color="#014737"></div>
+                                <div class="color-preset" style="background: #4a044e" data-color="#4a044e"></div>
+                                <div class="color-preset" style="background: #7c2d12" data-color="#7c2d12"></div>
+                                <div class="color-preset" style="background: #831843" data-color="#831843"></div>
+                                <div class="color-preset" style="background: #1f2937" data-color="#1f2937"></div>
+                                <div class="color-preset" style="background: #312e81" data-color="#312e81"></div>
                             </div>
                         </div>
                     </div>

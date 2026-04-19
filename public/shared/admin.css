@@ -1557,6 +1557,34 @@
 .theme-gradient-picker { margin-top: 10px; padding: 10px; background: var(--gray-50); border-radius: var(--radius-sm); }
 .theme-gradient-picker .color-presets { grid-template-columns: repeat(8, 1fr); }
 
+.gradient-endpoint-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.gradient-endpoint-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--gray-700);
+}
+.gradient-endpoint-tab:hover { border-color: var(--gray-500); }
+.gradient-endpoint-tab.active { border-color: var(--primary); color: var(--primary); background: var(--very-light); }
+.gradient-endpoint-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--gray-300);
+    flex-shrink: 0;
+}
+
 /* ===========================
    Settings Modal Styles
    =========================== */

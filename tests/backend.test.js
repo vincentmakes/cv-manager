@@ -1536,7 +1536,7 @@ describe('Backend API', () => {
             await delDs(a.id); await delDs(b.id);
         });
 
-        it('PUT /api/theme with applyToAll=false only updates currentDatasetId, not others', async () => {
+        it('PUT /api/theme with applyToAll=false only updates currentDatasetId (and its language siblings), not unrelated datasets', async () => {
             const a = await createDs('Theme Solo A');
             const b = await createDs('Theme Solo B');
             // Seed both with one theme via applyToAll
@@ -1547,16 +1547,41 @@ describe('Backend API', () => {
             const bData = await getJson(`${BASE_URL}/api/datasets/id/${b.id}`);
             assert.strictEqual(aData.theme.primary, '#0000ff', 'A picks up the new theme');
             assert.strictEqual(aData.theme.fontFamily, 'Lato');
-            assert.strictEqual(bData.theme.primary, '#00ff00', 'B retains the prior bulk-applied theme');
+            assert.strictEqual(bData.theme.primary, '#00ff00', 'B (no shared language_group) retains the prior bulk-applied theme');
             await delDs(a.id); await delDs(b.id);
         });
 
-        it('PUT /api/theme clears gradient end when null is passed', async () => {
-            await putJson(`${BASE_URL}/api/theme`, { primary: '#abcdef', gradientEnd: '#123456', applyToAll: false });
+        it('PUT /api/theme with applyToAll=false also propagates to language siblings', async () => {
+            // Two datasets in the same language_group
+            const en = await createDs('Theme Sibling Group');
+            const frRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Theme Sibling Group', language: 'fr', language_group: en.language_group })
+            });
+            const fr = await frRes.json();
+            // Apply a per-dataset theme (toggle off) on the English one
+            await putJson(`${BASE_URL}/api/theme`, {
+                primary: '#aabbcc', gradientStart: '#112233', gradientEnd: '#445566',
+                fontFamily: 'Roboto', applyToAll: false, currentDatasetId: en.id
+            });
+            const enData = await getJson(`${BASE_URL}/api/datasets/id/${en.id}`);
+            const frData = await getJson(`${BASE_URL}/api/datasets/id/${fr.id}`);
+            assert.strictEqual(enData.theme.primary, '#aabbcc');
+            assert.strictEqual(frData.theme.primary, '#aabbcc', 'sibling FR variant inherits the new theme');
+            assert.strictEqual(frData.theme.gradientStart, '#112233');
+            assert.strictEqual(frData.theme.gradientEnd, '#445566');
+            assert.strictEqual(frData.theme.fontFamily, 'Roboto');
+            await delDs(en.id); await delDs(fr.id);
+        });
+
+        it('PUT /api/theme persists both gradientStart and gradientEnd; clears them when null', async () => {
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#abcdef', gradientStart: '#222222', gradientEnd: '#123456', applyToAll: false });
             let theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.gradientStart, '#222222');
             assert.strictEqual(theme.gradientEnd, '#123456');
-            await putJson(`${BASE_URL}/api/theme`, { primary: '#abcdef', gradientEnd: null, applyToAll: false });
+            await putJson(`${BASE_URL}/api/theme`, { primary: '#abcdef', gradientStart: null, gradientEnd: null, applyToAll: false });
             theme = await getJson(`${BASE_URL}/api/theme`);
+            assert.strictEqual(theme.gradientStart, null);
             assert.strictEqual(theme.gradientEnd, null);
         });
 
