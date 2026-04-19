@@ -9,7 +9,12 @@
     left: 0;
     right: 0;
     height: 54px;
-    background: linear-gradient(135deg, var(--primary-dark), var(--dark));
+    /* Mirrors the CV header gradient — in default mode the auto-derived
+       endpoints resolve to the same primary-dark → dark colors used pre-1.41,
+       so existing themes look identical. When the user picks a custom
+       gradient, the toolbar follows their start/end the same way the CV
+       header does. */
+    background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2274,7 +2279,7 @@
         flex-direction: column;
         gap: 2px;
         padding: 8px 12px;
-        background: linear-gradient(135deg, var(--primary-dark), var(--dark));
+        background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end));
         box-shadow: var(--shadow-lg);
         z-index: 999;
         border-top: 1px solid rgba(255,255,255,0.1);

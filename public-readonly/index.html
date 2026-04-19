@@ -962,13 +962,12 @@
                 root.style.setProperty('--header-gradient-start', autoPrimaryDark);
                 root.style.setProperty('--header-gradient-end', hslToHexPublic(hsl.h, hsl.s, 15));
             }
-            // Preserve the default-theme invariants when a custom gradient is
-            // active: --primary-dark mirrors the header-gradient-start (drives
-            // item titles, cert names, custom-section item titles); --accent
-            // mirrors gradient-end (timeline branch strokes, item-card
-            // highlight pulse). Locking them keeps the CV's body text and
-            // accent strokes inside the chosen palette.
-            root.style.setProperty('--primary-dark', hasCustomGradient ? gs : autoPrimaryDark);
+            // When a custom gradient is active, both --primary-dark (item
+            // titles, cert names, custom-section titles) and --accent (timeline
+            // branch strokes, item-card highlight pulse) follow the user's
+            // chosen gradient end so the CV's body text and accent strokes
+            // stay inside the chosen palette.
+            root.style.setProperty('--primary-dark', hasCustomGradient ? ge : autoPrimaryDark);
             root.style.setProperty('--accent', hasCustomGradient ? ge : autoAccent);
             const family = fontFamily || 'Inter';
             if (family !== 'Inter') ensureFontLoadedPublic(family);

@@ -4492,17 +4492,16 @@ function applyThemeToCSS(theme) {
         root.style.setProperty('--header-gradient-end',   hslToHex(hsl.h, hsl.s, 15));
     }
 
-    // Preserve the default-theme invariants when a custom gradient is active:
-    //   --primary-dark == --header-gradient-start  (item titles, cert names,
-    //                                               custom-section item titles)
-    //   --accent       == --gradient-end           (timeline branch strokes,
-    //                                               item-card highlight pulse)
-    // Both pairs share an identical auto-derivation formula in the default
-    // theme, so keeping them locked together when the user picks a custom
-    // gradient stops the CV's text and accent strokes from drifting out of
-    // the chosen palette.
+    // When a custom gradient is active, both --primary-dark (drives item
+    // titles, cert names, custom-section item titles) and --accent (timeline
+    // branch strokes, item-card highlight pulse) follow the user's chosen
+    // gradient end. The semantic name "primary-dark" stays meaningful — the
+    // gradient end is typically the darker of the two endpoints (see the
+    // built-in pair presets) and reads better as body-text color than the
+    // start would. When no custom gradient is set, both variables continue
+    // to auto-derive from primary so existing themes look unchanged.
     if (hasCustomGradient) {
-        root.style.setProperty('--primary-dark', gradientStart);
+        root.style.setProperty('--primary-dark', gradientEnd);
         root.style.setProperty('--accent', gradientEnd);
     } else {
         root.style.setProperty('--primary-dark', hslToHex(hsl.h, hsl.s, Math.max(hsl.l - 15, 10)));
