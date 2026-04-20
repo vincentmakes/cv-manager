@@ -714,65 +714,140 @@
             }
         }
         
-        // Load and inject tracking code
-        async function loadTrackingCode(allSettings) {
+        // Consent state lives entirely in the visitor's browser — the server
+        // never sees it. 'accepted' | 'rejected' | null (undecided).
+        const CONSENT_STORAGE_KEY = 'cv_tracking_consent';
+
+        function getStoredConsent() {
+            try { return localStorage.getItem(CONSENT_STORAGE_KEY); } catch (e) { return null; }
+        }
+        function setStoredConsent(value) {
+            try { localStorage.setItem(CONSENT_STORAGE_KEY, value); } catch (e) {}
+        }
+        function clearStoredConsent() {
+            try { localStorage.removeItem(CONSENT_STORAGE_KEY); } catch (e) {}
+        }
+
+        // Actually fetch the snippet and inject its scripts. Extracted from the
+        // old loadTrackingCode() so it can be called after the user accepts.
+        async function injectTrackingSnippet(allSettings) {
             try {
-                // Skip if tracking code was already injected server-side
                 if (document.querySelector('script[src*="googletagmanager.com"], script[src*="google-analytics.com"], script[src*="plausible.io"], script[src*="matomo"]')) {
                     return;
                 }
-                const result = (allSettings && allSettings.trackingCode !== undefined) ? { value: allSettings.trackingCode } : await api('/api/settings/trackingCode');
-                if (result.value && result.value.trim()) {
-                    // Create a container to parse the tracking code
-                    const trackingContainer = document.createElement('div');
-                    trackingContainer.id = 'tracking-code-container';
-                    trackingContainer.innerHTML = result.value;
-                    
-                    // Append non-script elements to head first (meta tags, etc.)
-                    Array.from(trackingContainer.children).forEach(child => {
-                        if (child.tagName !== 'SCRIPT') {
-                            document.head.appendChild(child.cloneNode(true));
-                        }
-                    });
-                    
-                    // Separate external scripts (with src) from inline scripts
-                    const scripts = trackingContainer.querySelectorAll('script');
-                    const externalScripts = [];
-                    const inlineScripts = [];
-                    scripts.forEach(s => {
-                        if (s.src || s.getAttribute('src')) {
-                            externalScripts.push(s);
-                        } else {
-                            inlineScripts.push(s);
-                        }
-                    });
-                    
-                    // Load external scripts first, wait for them to load
-                    await Promise.all(externalScripts.map(oldScript => {
-                        return new Promise((resolve) => {
-                            const newScript = document.createElement('script');
-                            Array.from(oldScript.attributes).forEach(attr => {
-                                newScript.setAttribute(attr.name, attr.value);
-                            });
-                            newScript.onload = resolve;
-                            newScript.onerror = resolve; // Don't block on failure
-                            document.head.appendChild(newScript);
-                        });
-                    }));
-                    
-                    // Then execute inline scripts
-                    inlineScripts.forEach(oldScript => {
-                        const newScript = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => {
-                            newScript.setAttribute(attr.name, attr.value);
-                        });
-                        newScript.textContent = oldScript.textContent;
-                        document.head.appendChild(newScript);
-                    });
-                }
+                const result = (allSettings && allSettings.trackingCode !== undefined)
+                    ? { value: allSettings.trackingCode }
+                    : await api('/api/settings/trackingCode');
+                if (!result.value || !result.value.trim()) return;
+
+                const trackingContainer = document.createElement('div');
+                trackingContainer.id = 'tracking-code-container';
+                trackingContainer.innerHTML = result.value;
+
+                Array.from(trackingContainer.children).forEach(child => {
+                    if (child.tagName !== 'SCRIPT') {
+                        document.head.appendChild(child.cloneNode(true));
+                    }
+                });
+
+                const scripts = trackingContainer.querySelectorAll('script');
+                const externalScripts = [];
+                const inlineScripts = [];
+                scripts.forEach(s => {
+                    if (s.src || s.getAttribute('src')) externalScripts.push(s);
+                    else inlineScripts.push(s);
+                });
+
+                await Promise.all(externalScripts.map(oldScript => new Promise((resolve) => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.onload = resolve;
+                    newScript.onerror = resolve;
+                    document.head.appendChild(newScript);
+                })));
+
+                inlineScripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.textContent = oldScript.textContent;
+                    document.head.appendChild(newScript);
+                });
             } catch (err) {
-                // Silently fail - tracking is optional
                 console.log('Tracking code not loaded:', err.message);
+            }
+        }
+
+        function showCookieBanner() {
+            const banner = document.getElementById('cookieBanner');
+            if (!banner) return;
+            banner.hidden = false;
+            const acceptBtn = document.getElementById('cookieAcceptBtn');
+            if (acceptBtn && typeof acceptBtn.focus === 'function') {
+                try { acceptBtn.focus({ preventScroll: true }); } catch (e) { acceptBtn.focus(); }
+            }
+        }
+        function hideCookieBanner() {
+            const banner = document.getElementById('cookieBanner');
+            if (banner) banner.hidden = true;
+        }
+        function showPreferencesLink() {
+            const link = document.getElementById('cookiePreferencesLink');
+            if (link) link.hidden = false;
+        }
+
+        function wireCookieBannerButtons() {
+            const acceptBtn = document.getElementById('cookieAcceptBtn');
+            const rejectBtn = document.getElementById('cookieRejectBtn');
+            const prefsLink = document.getElementById('cookiePreferencesLink');
+            if (acceptBtn && !acceptBtn.dataset.wired) {
+                acceptBtn.dataset.wired = '1';
+                acceptBtn.addEventListener('click', () => {
+                    setStoredConsent('accepted');
+                    hideCookieBanner();
+                    showPreferencesLink();
+                    injectTrackingSnippet();
+                });
+            }
+            if (rejectBtn && !rejectBtn.dataset.wired) {
+                rejectBtn.dataset.wired = '1';
+                rejectBtn.addEventListener('click', () => {
+                    const previouslyAccepted = getStoredConsent() === 'accepted';
+                    setStoredConsent('rejected');
+                    hideCookieBanner();
+                    showPreferencesLink();
+                    // Scripts already evaluated can't be cleanly unloaded — reload
+                    // so further beacons don't fire with the new rejected state.
+                    if (previouslyAccepted) window.location.reload();
+                });
+            }
+            if (prefsLink && !prefsLink.dataset.wired) {
+                prefsLink.dataset.wired = '1';
+                prefsLink.addEventListener('click', () => {
+                    clearStoredConsent();
+                    showCookieBanner();
+                });
+            }
+        }
+
+        // Consent-aware entry point. When trackingConsentRequired is off, behaves
+        // exactly like before. When on, gates the snippet behind the banner.
+        async function loadTrackingCode(allSettings) {
+            wireCookieBannerButtons();
+            const consentRequired = allSettings && allSettings.trackingConsentRequired !== undefined
+                ? allSettings.trackingConsentRequired === 'true'
+                : (await api('/api/settings/trackingConsentRequired').catch(() => ({ value: null }))).value === 'true';
+
+            if (!consentRequired) {
+                await injectTrackingSnippet(allSettings);
+                return;
+            }
+
+            showPreferencesLink();
+            const stored = getStoredConsent();
+            if (stored === 'accepted') {
+                await injectTrackingSnippet();
+            } else {
+                showCookieBanner();
             }
         }
         
@@ -1070,5 +1145,16 @@
             }
         });
     </script>
+
+    <!-- Cookie Consent Banner (shown when trackingConsentRequired is enabled) -->
+    <div class="cookie-banner no-print" id="cookieBanner" role="dialog" aria-labelledby="cookieBannerTitle" aria-live="polite" hidden>
+        <h2 class="cookie-banner-title" id="cookieBannerTitle" data-i18n="consent.banner_title">Cookies &amp; analytics</h2>
+        <p class="cookie-banner-body" data-i18n="consent.banner_body">This site uses analytics cookies to understand how visitors interact with the page. Nothing is loaded until you choose.</p>
+        <div class="cookie-banner-actions">
+            <button class="cookie-banner-btn cookie-banner-btn-reject" id="cookieRejectBtn" data-i18n="consent.reject">Reject</button>
+            <button class="cookie-banner-btn cookie-banner-btn-accept" id="cookieAcceptBtn" data-i18n="consent.accept">Accept</button>
+        </div>
+    </div>
+    <button class="cookie-preferences-link no-print" id="cookiePreferencesLink" hidden data-i18n="consent.preferences_link">Cookie preferences</button>
 </body>
 </html>

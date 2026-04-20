@@ -2118,6 +2118,34 @@
     font-style: italic;
 }
 
+.settings-info-box {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    margin: 0 0 10px;
+    border: 1px solid var(--primary-light, #b3d1ff);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 102, 255, 0.06);
+    color: var(--gray-700);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.settings-info-box .material-symbols-outlined {
+    color: var(--primary);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.settings-info-box-title {
+    font-weight: 600;
+    color: var(--gray-800, #2a2a2a);
+    margin-bottom: 2px;
+}
+
+.settings-info-box-body { color: var(--gray-600, #555); }
+
 /* Settings Select Dropdown */
 .settings-select {
     min-width: 140px;

@@ -188,6 +188,16 @@ function getTrackingCode() {
     } catch (e) { return ''; }
 }
 
+// When enabled, the public page must ask visitors for consent before loading the
+// tracking snippet. SSR injection is skipped and the snippet value is withheld
+// from the public API until the client records an explicit opt-in.
+function isTrackingConsentRequired() {
+    try {
+        const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingConsentRequired');
+        return setting?.value === 'true';
+    } catch (e) { return false; }
+}
+
 function servePublicIndex(req, res) {
     try {
         // Check if a default dataset exists — serve from it instead of live DB
@@ -230,7 +240,7 @@ function servePublicIndex(req, res) {
 
             // Inject tracking code right after <head> (server-side for GA verification)
             const trackingCode = getTrackingCode();
-            if (trackingCode) {
+            if (trackingCode && !isTrackingConsentRequired()) {
                 html = html.replace('<head>', `<head>\n${trackingCode}`);
             }
 
@@ -263,7 +273,7 @@ function servePublicIndex(req, res) {
 
         // Inject tracking code right after <head> (server-side for GA verification)
         const trackingCode = getTrackingCode();
-        if (trackingCode) {
+        if (trackingCode && !isTrackingConsentRequired()) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
 
@@ -310,7 +320,7 @@ function serveDatasetPage(req, res, lang) {
 
         // Inject tracking code right after <head> (server-side for GA verification)
         const trackingCode = getTrackingCode();
-        if (trackingCode) {
+        if (trackingCode && !isTrackingConsentRequired()) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
 
@@ -1626,7 +1636,8 @@ if (PUBLIC_ONLY) {
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
         })));
     });
-    publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
+    publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); if (isTrackingConsentRequired()) delete result.trackingCode; res.json(result); });
+    publicApp.get('/api/settings/trackingCode', (req, res) => { if (isTrackingConsentRequired()) return res.json({ value: null, consentRequired: true }); const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode'); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT id, job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });
@@ -3434,7 +3445,7 @@ if (PUBLIC_ONLY) {
 
             // Inject tracking code if configured
             const trackingCode = getTrackingCode();
-            if (trackingCode) {
+            if (trackingCode && !isTrackingConsentRequired()) {
                 html = html.replace('<head>', `<head>\n${trackingCode}`);
             }
 
@@ -3588,7 +3599,8 @@ if (PUBLIC_ONLY) {
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
         })));
     });
-    publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); res.json(result); });
+    publicApp.get('/api/settings', (req, res) => { const settings = db.prepare('SELECT * FROM settings').all(); const result = {}; settings.forEach(s => { result[s.key] = s.value; }); if (isTrackingConsentRequired()) delete result.trackingCode; res.json(result); });
+    publicApp.get('/api/settings/trackingCode', (req, res) => { if (isTrackingConsentRequired()) return res.json({ value: null, consentRequired: true }); const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('trackingCode'); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/settings/:key', (req, res) => { const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key); res.json({ value: setting?.value || null }); });
     publicApp.get('/api/experiences', (req, res) => { res.json(db.prepare('SELECT job_title, company_name, start_date, end_date, location, country_code, highlights, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: true }))); });
     publicApp.get('/api/certifications', (req, res) => { res.json(db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all().map(c => ({ ...c, visible: true }))); });

@@ -2768,7 +2768,13 @@ async function loadPublicSettings() {
     // Load tracking code
     const trackingCode = await api('/api/settings/trackingCode');
     document.getElementById('settingTrackingCode').value = trackingCode.value || '';
-    
+
+    // Load tracking consent requirement
+    const trackingConsentSetting = await api('/api/settings/trackingConsentRequired');
+    const trackingConsentEl = document.getElementById('settingTrackingConsentRequired');
+    if (trackingConsentEl) trackingConsentEl.checked = trackingConsentSetting.value === 'true';
+
+
     // Load date format setting
     const dateFormat = await api('/api/settings/dateFormat');
     document.getElementById('settingDateFormat').value = dateFormat.value || 'MMM YYYY';
@@ -2941,7 +2947,14 @@ async function saveSettings() {
         // Save tracking code
         const trackingCode = document.getElementById('settingTrackingCode').value;
         await api('/api/settings/trackingCode', { method: 'PUT', body: { value: trackingCode } });
-        
+
+        // Save tracking consent requirement
+        const trackingConsentEl = document.getElementById('settingTrackingConsentRequired');
+        if (trackingConsentEl) {
+            await api('/api/settings/trackingConsentRequired', { method: 'PUT', body: { value: trackingConsentEl.checked.toString() } });
+        }
+
+
         // Also save date format
         const dateFormat = document.getElementById('settingDateFormat').value;
         await api('/api/settings/dateFormat', { method: 'PUT', body: { value: dateFormat } });

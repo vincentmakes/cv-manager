@@ -1882,6 +1882,87 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Tracking consent gating', () => {
+        const SNIPPET = '<script>window.__cvTrackingFlag = "yes";</script>';
+
+        async function setConsentRequired(value) {
+            const res = await fetch(`${BASE_URL}/api/settings/trackingConsentRequired`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value }),
+            });
+            assert.strictEqual(res.status, 200);
+        }
+
+        async function setTrackingCode(value) {
+            const res = await fetch(`${BASE_URL}/api/settings/trackingCode`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value }),
+            });
+            assert.strictEqual(res.status, 200);
+        }
+
+        it('injects snippet into public HTML when consent is not required', async () => {
+            await setTrackingCode(SNIPPET);
+            await setConsentRequired('false');
+            const res = await fetch(PUBLIC_URL);
+            assert.strictEqual(res.status, 200);
+            const html = await res.text();
+            assert.ok(html.includes('__cvTrackingFlag'), 'snippet should be present in SSR HTML when consent is off');
+        });
+
+        it('omits snippet from public HTML when consent is required', async () => {
+            await setTrackingCode(SNIPPET);
+            await setConsentRequired('true');
+            const res = await fetch(PUBLIC_URL);
+            assert.strictEqual(res.status, 200);
+            const html = await res.text();
+            assert.ok(!html.includes('__cvTrackingFlag'), 'snippet must not be in SSR HTML when consent is required');
+        });
+
+        it('public /api/settings/trackingCode returns null + consentRequired flag when gated', async () => {
+            await setTrackingCode(SNIPPET);
+            await setConsentRequired('true');
+            const res = await fetch(`${PUBLIC_URL}/api/settings/trackingCode`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.strictEqual(data.value, null);
+            assert.strictEqual(data.consentRequired, true);
+        });
+
+        it('public /api/settings/trackingCode returns the snippet when not gated', async () => {
+            await setTrackingCode(SNIPPET);
+            await setConsentRequired('false');
+            const res = await fetch(`${PUBLIC_URL}/api/settings/trackingCode`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.strictEqual(data.value, SNIPPET);
+        });
+
+        it('public bulk /api/settings omits trackingCode when gated', async () => {
+            await setTrackingCode(SNIPPET);
+            await setConsentRequired('true');
+            const res = await fetch(`${PUBLIC_URL}/api/settings`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.strictEqual(data.trackingCode, undefined);
+            assert.strictEqual(data.trackingConsentRequired, 'true');
+        });
+
+        it('admin /api/settings/trackingCode returns the snippet even when gated', async () => {
+            await setTrackingCode(SNIPPET);
+            await setConsentRequired('true');
+            const res = await fetch(`${BASE_URL}/api/settings/trackingCode`);
+            assert.strictEqual(res.status, 200);
+            const data = await res.json();
+            assert.strictEqual(data.value, SNIPPET);
+            // Cleanup so later tests aren't affected
+            await setConsentRequired('false');
+            await setTrackingCode('');
+        });
+    });
+
     describe('Profile Picture Library', () => {
         // A 1x1 PNG — smallest valid image payload for the upload test.
         const tinyPngBytes = Buffer.from([
