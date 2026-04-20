@@ -2003,8 +2003,8 @@ body.has-preview-banner .container {
 
 /* Mobile print - show timeline again (only if not hidden by user choice) */
 @media print {
-    #section-timeline:not(.hidden-print) { display: block !important; }
-    #section-timeline:not(.hidden-print) .timeline-container { display: block !important; }
+    #section-timeline:not(.hidden-print):not(.is-hidden) { display: block !important; }
+    #section-timeline:not(.hidden-print):not(.is-hidden) .timeline-container { display: block !important; }
 }
 
 /* Print pagination is handled via JavaScript-injected @page rules */

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.41.1] - 2026-04-19
+
+### Fixed
+- Hiding the timeline section (via the section-visibility toggle, `.is-hidden`) now correctly omits it from printed output instead of printing it as a faded, dashed-border block. The mobile-width print override — which re-enables the timeline in print to counteract the `@media (max-width: 768px)` mobile hide — used `#section-timeline:not(.hidden-print)` and had higher CSS specificity than the generic `.is-hidden { display: none !important; }` rule, so the override won in print and the dimmed `.is-hidden` box still printed. The override now also excludes `.is-hidden`, so genuinely hidden timelines are absent from print output on every viewport width. Hiding non-timeline sections was already correct; this bug was specific to the timeline because it is the only section with a mobile-print re-enable rule.
+
 ## [1.41.0] - 2026-04-19
 
 ### Added
