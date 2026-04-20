@@ -1124,8 +1124,8 @@ body[data-bullet-kind="icon"] .custom-bullet-list li::before {
     font-size: 14px;
     line-height: 1.2;
     /* Material Symbols have more top padding than the triangle baseline;
-       nudge down so the glyph aligns with the triangle/arrow/diamond line. */
-    top: 1px;
+       nudge down so the glyph sits on the text baseline in both contexts. */
+    top: 2px;
 }
 body[data-bullet-style="check"] .item-highlights li::before,
 body[data-bullet-style="check"] .custom-bullet-list li::before { content: 'check'; }
