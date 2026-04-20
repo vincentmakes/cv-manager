@@ -4,6 +4,13 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.41.2] - 2026-04-20
+
+### Fixed
+- Section reorder overlay: the dashed placeholder that marks the dragged pill's slot no longer collapses to a thin strip on desktop. It was sized from `getBoundingClientRect().height`, which could return an intermediate value when the pill was measured while the overlay was still committing its `display:none → display:flex` handoff (the entrance animation is in its delay/FROM state, so computed layout hadn't settled). The drag now takes dimensions from `pill.offsetWidth` / `pill.offsetHeight` — both transform-free and force-layout — and applies width as well as height to the placeholder so the slot can't collapse if the flex container reflows. A CSS safety net (`min-height: 44px; flex-shrink: 0;`) also prevents the placeholder from being crushed on short viewports (≤ 90vh dialog cap). Mobile behavior is unchanged.
+- Bullet picker alignment: Material Symbols icon bullets (37 styles) now sit on the text baseline instead of floating a couple pixels above it. The shared icon rule gained `top: 2px` to account for Material Symbols' built-in top padding, replacing the former `.custom-bullet-list`-only 1px nudge that didn't fix `.item-highlights`. The `small_square` glyph also now uses `font-size: 11px; top: 1px` to match the other small Unicode bullets (`bullet`, `hollow_circle`, `square`). `triangle`, `arrow`, `diamond`, and `dash` already sat correctly and are unchanged.
+- Bullet picker `dash` glyph is now visibly shorter: the em-dash `—` (U+2014) was replaced with an en-dash `–` (U+2013) in both the rendered CSS and the picker preview so they match.
+
 ## [1.41.1] - 2026-04-19
 
 ### Fixed

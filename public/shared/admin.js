@@ -3742,7 +3742,7 @@ const BULLET_STYLES = [
     { id: 'small_square', glyph: '▪' },
     { id: 'diamond', glyph: '◆' },
     { id: 'arrow', glyph: '▸' },
-    { id: 'dash', glyph: '—' },
+    { id: 'dash', glyph: '–' },
     { id: 'check', icon: 'check' },
     { id: 'check_circle', icon: 'check_circle' },
     { id: 'done_all', icon: 'done_all' },
@@ -5736,8 +5736,15 @@ function beginReorderDrag(key, pointerEvent, opts = {}) {
     if (reorderState.dragging) endReorderDrag();
 
     const rect = pill.getBoundingClientRect();
-    const pointerX = pointerEvent.clientX ?? (rect.left + rect.width / 2);
-    const pointerY = pointerEvent.clientY ?? (rect.top + rect.height / 2);
+    // offsetWidth / offsetHeight are transform-free and force layout, so they
+    // return the pill's stable border-box dimensions even while the entrance
+    // animation is in its delay / FROM state. rect.width / rect.height can be
+    // intermediate during the overlay's display:none → display:flex handoff
+    // on desktop, which collapses the placeholder to a thin strip.
+    const pillW = pill.offsetWidth || rect.width;
+    const pillH = pill.offsetHeight || rect.height;
+    const pointerX = pointerEvent.clientX ?? (rect.left + pillW / 2);
+    const pointerY = pointerEvent.clientY ?? (rect.top + pillH / 2);
 
     // If the pointer is outside the pill (e.g. drag initiated from the
     // section-heading handle on the left of the page), center the pill on
@@ -5745,19 +5752,21 @@ function beginReorderDrag(key, pointerEvent, opts = {}) {
     // the pill floats far from the cursor and is hard to reach on a small
     // trackpad. Caller can also force this via opts.snapPillToCursor.
     const pointerOutsidePill =
-        pointerX < rect.left || pointerX > rect.right ||
-        pointerY < rect.top || pointerY > rect.bottom;
+        pointerX < rect.left || pointerX > rect.left + pillW ||
+        pointerY < rect.top || pointerY > rect.top + pillH;
     const snap = opts.snapPillToCursor || pointerOutsidePill;
 
-    // Placeholder keeps the slot while the pill floats
+    // Placeholder keeps the slot while the pill floats. Lock in both
+    // dimensions so the slot can't collapse if the flex container reflows.
     const placeholder = document.createElement('div');
     placeholder.className = 'reorder-placeholder';
-    placeholder.style.height = `${rect.height}px`;
+    placeholder.style.width = `${pillW}px`;
+    placeholder.style.height = `${pillH}px`;
     pill.parentNode.insertBefore(placeholder, pill);
 
     pill.classList.add('dragging');
-    pill.style.width = `${rect.width}px`;
-    pill.style.height = `${rect.height}px`;
+    pill.style.width = `${pillW}px`;
+    pill.style.height = `${pillH}px`;
     pill.style.position = 'fixed';
     pill.style.left = `${rect.left}px`;
     pill.style.top = `${rect.top}px`;
@@ -5768,8 +5777,8 @@ function beginReorderDrag(key, pointerEvent, opts = {}) {
         key,
         pill,
         placeholder,
-        offsetX: snap ? rect.width / 2 : pointerX - rect.left,
-        offsetY: snap ? rect.height / 2 : pointerY - rect.top,
+        offsetX: snap ? pillW / 2 : pointerX - rect.left,
+        offsetY: snap ? pillH / 2 : pointerY - rect.top,
         pointerId: pointerEvent.pointerId
     };
 

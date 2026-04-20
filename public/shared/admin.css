@@ -3110,6 +3110,11 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     border: 2px dashed rgba(255, 255, 255, 0.45);
     border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.08);
+    /* Safety net: if the inline height ever comes back as 0/intermediate, the
+       slot still renders at pill-height. Also prevent the flex column from
+       crushing the slot when the dialog hits its 90vh cap. */
+    min-height: 44px;
+    flex-shrink: 0;
 }
 
 .reorder-footer {
