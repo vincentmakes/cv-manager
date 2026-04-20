@@ -767,9 +767,16 @@
                         <div class="settings-field-desc" data-i18n="settings.advanced.tracking_code_desc">
                             Paste your analytics tracking code here (Google Analytics, Matomo, etc.). This code will be injected into the public CV pages.
                         </div>
-                        <textarea 
-                            id="settingTrackingCode" 
-                            class="tracking-code-input" 
+                        <div class="settings-info-box">
+                            <span class="material-symbols-outlined" style="font-size:16px">lightbulb</span>
+                            <div>
+                                <div class="settings-info-box-title" data-i18n="settings.advanced.cookieless_suggestion_title">Tip: prefer cookieless analytics</div>
+                                <div class="settings-info-box-body" data-i18n="settings.advanced.cookieless_suggestion">Cookieless tools like Plausible, Umami, or Matomo (cookieless mode) typically don't require a consent banner under GDPR/ePrivacy. If you use Google Analytics or another cookie-based tool, enable the consent option below.</div>
+                            </div>
+                        </div>
+                        <textarea
+                            id="settingTrackingCode"
+                            class="tracking-code-input"
                             placeholder="<!-- Paste your tracking code here -->&#10;&lt;script&gt;&#10;  // Example: Google Analytics&#10;&lt;/script&gt;"
                             spellcheck="false"
                         ></textarea>
@@ -777,6 +784,18 @@
                             <span class="material-symbols-outlined" style="font-size:12px">info</span>
                             Code is inserted before the closing &lt;/head&gt; tag. Changes are saved when you click "Save Changes".
                         </div>
+                    </div>
+
+                    <!-- Tracking Consent Setting -->
+                    <div class="settings-option">
+                        <div class="settings-option-info">
+                            <div class="settings-option-title" data-i18n="settings.advanced.tracking_consent_required">Require cookie consent</div>
+                            <div class="settings-option-desc" data-i18n="settings.advanced.tracking_consent_required_desc">Show a GDPR consent banner on the public page and only load the tracking code after the visitor accepts. Leave off when using cookieless analytics.</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingTrackingConsentRequired">
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
 

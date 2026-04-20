@@ -4,6 +4,12 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.42.0] - 2026-04-20
+
+### Added
+- New **Require cookie consent** toggle in Settings → Advanced (next to the Tracking Code field). When enabled, the public CV page shows a GDPR consent banner and only loads the configured analytics snippet after the visitor clicks *Accept*; the snippet is also withheld from the public `/api/settings/trackingCode` endpoint and stripped from the bulk `/api/settings` response so it can't be fetched pre-consent. The visitor's choice is stored in `localStorage` and can be revoked via a "Cookie preferences" link that appears once consent has been required on a visit. Default is off, so existing installs behave exactly as before. Banner strings and the new settings labels are translated across all 8 supported locales.
+- Inline "Tip: prefer cookieless analytics" info box in the Tracking Code settings field recommending Plausible, Umami, or Matomo cookieless mode — these typically don't require a consent banner under GDPR/ePrivacy, providing a simpler alternative to the opt-in consent flow.
+
 ## [1.41.2] - 2026-04-20
 
 ### Fixed
