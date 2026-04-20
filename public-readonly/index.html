@@ -792,7 +792,11 @@
         }
         function showPreferencesLink() {
             const link = document.getElementById('cookiePreferencesLink');
-            if (link) link.hidden = false;
+            if (!link) return;
+            link.hidden = false;
+            // Mirror the (possibly translated) title into aria-label for SR users.
+            const title = link.getAttribute('title');
+            if (title) link.setAttribute('aria-label', title);
         }
 
         function wireCookieBannerButtons() {
@@ -1155,6 +1159,8 @@
             <button class="cookie-banner-btn cookie-banner-btn-accept" id="cookieAcceptBtn" data-i18n="consent.accept">Accept</button>
         </div>
     </div>
-    <button class="cookie-preferences-link no-print" id="cookiePreferencesLink" hidden data-i18n="consent.preferences_link">Cookie preferences</button>
+    <button class="cookie-preferences-link no-print" id="cookiePreferencesLink" hidden data-i18n-title="consent.preferences_link" title="Cookie preferences" aria-label="Cookie preferences">
+        <span class="material-symbols-outlined" aria-hidden="true">cookie</span>
+    </button>
 </body>
 </html>
