@@ -1105,13 +1105,13 @@ body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content
 body[data-bullet-style="square"] .item-highlights li::before,
 body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; font-size: 9px; top: 2px; }
 body[data-bullet-style="small_square"] .item-highlights li::before,
-body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; }
+body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; font-size: 11px; top: 1px; }
 body[data-bullet-style="diamond"] .item-highlights li::before,
 body[data-bullet-style="diamond"] .custom-bullet-list li::before { content: '◆'; }
 body[data-bullet-style="arrow"] .item-highlights li::before,
 body[data-bullet-style="arrow"] .custom-bullet-list li::before { content: '▸'; }
 body[data-bullet-style="dash"] .item-highlights li::before,
-body[data-bullet-style="dash"] .custom-bullet-list li::before { content: '—'; font-weight: normal; }
+body[data-bullet-style="dash"] .custom-bullet-list li::before { content: '–'; font-weight: normal; }
 
 /* Material Symbols icon styles — one shared rule targets every icon bullet
    via `data-bullet-kind="icon"`, which admin.js / public-readonly set based
@@ -1123,6 +1123,9 @@ body[data-bullet-kind="icon"] .custom-bullet-list li::before {
     font-weight: 400;
     font-size: 14px;
     line-height: 1.2;
+    /* Material Symbols have more top padding than the triangle baseline;
+       nudge down so the glyph sits on the text baseline in both contexts. */
+    top: 2px;
 }
 body[data-bullet-style="check"] .item-highlights li::before,
 body[data-bullet-style="check"] .custom-bullet-list li::before { content: 'check'; }
@@ -1218,10 +1221,6 @@ body[data-bullet-style="local_fire_department"] .item-highlights li::before,
 body[data-bullet-style="local_fire_department"] .custom-bullet-list li::before { content: 'local_fire_department'; }
 body[data-bullet-style="edit_note"] .item-highlights li::before,
 body[data-bullet-style="edit_note"] .custom-bullet-list li::before { content: 'edit_note'; }
-
-/* Custom bullet-list has more line-height than item-highlights; nudge the
-   icon down 1px so it aligns with the first text baseline. */
-body[data-bullet-kind="icon"] .custom-bullet-list li::before { top: 1px; }
 
 /* Free Text Layout */
 .custom-free-text-blocks {
