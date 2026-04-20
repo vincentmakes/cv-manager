@@ -593,6 +593,13 @@ body {
     content: '▹';
     position: absolute;
     left: 0;
+    top: 0;
+    /* Fixed-height flex box centers whatever glyph/icon fills it on the
+       first text line of the li, independent of the glyph's own font-size.
+       13px × 1.6 line-height = 20.8px (matches the li's first-line height). */
+    height: 20.8px;
+    display: inline-flex;
+    align-items: center;
     color: var(--primary);
     font-weight: bold;
 }
@@ -1083,6 +1090,11 @@ body {
     content: '▹';
     position: absolute;
     left: 0;
+    top: 0;
+    /* Same flex-centering trick as .item-highlights — see the comment there. */
+    height: 20.8px;
+    display: inline-flex;
+    align-items: center;
     color: var(--primary);
     font-weight: bold;
 }
@@ -1097,15 +1109,17 @@ body {
    locations (experience highlights + custom bullet-list sections) so a
    single setting applies consistently across the CV. */
 
-/* Unicode-glyph styles */
+/* Unicode-glyph styles — font-size controls the glyph's visual size; the
+   flex-centering on the baseline ::before rule handles vertical alignment,
+   so no per-style `top` nudges are needed. */
 body[data-bullet-style="bullet"] .item-highlights li::before,
-body[data-bullet-style="bullet"] .custom-bullet-list li::before { content: '●'; font-size: 9px; top: 2px; }
+body[data-bullet-style="bullet"] .custom-bullet-list li::before { content: '●'; font-size: 9px; }
 body[data-bullet-style="hollow_circle"] .item-highlights li::before,
-body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content: '○'; font-size: 10px; top: 1px; }
+body[data-bullet-style="hollow_circle"] .custom-bullet-list li::before { content: '○'; font-size: 10px; }
 body[data-bullet-style="square"] .item-highlights li::before,
-body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; font-size: 9px; top: 5px; }
+body[data-bullet-style="square"] .custom-bullet-list li::before { content: '■'; font-size: 9px; }
 body[data-bullet-style="small_square"] .item-highlights li::before,
-body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; font-size: 11px; top: 1px; }
+body[data-bullet-style="small_square"] .custom-bullet-list li::before { content: '▪'; font-size: 11px; }
 body[data-bullet-style="diamond"] .item-highlights li::before,
 body[data-bullet-style="diamond"] .custom-bullet-list li::before { content: '◆'; }
 body[data-bullet-style="arrow"] .item-highlights li::before,
@@ -1122,10 +1136,7 @@ body[data-bullet-kind="icon"] .custom-bullet-list li::before {
     font-family: 'Material Symbols Outlined';
     font-weight: 400;
     font-size: 14px;
-    line-height: 1.2;
-    /* Material Symbols have more top padding than the triangle baseline;
-       nudge down so the glyph sits on the text baseline in both contexts. */
-    top: 2px;
+    line-height: 1;
 }
 body[data-bullet-style="check"] .item-highlights li::before,
 body[data-bullet-style="check"] .custom-bullet-list li::before { content: 'check'; }
@@ -1922,6 +1933,9 @@ body.has-preview-banner .container {
     .item-location { font-size: 11px; }
     .item-summary { font-size: 11px; }
     .item-highlights li { font-size: 11px; margin-bottom: 2px; }
+    /* 11px × 1.6 line-height — keep bullets vertically centered on print. */
+    .item-highlights li::before,
+    .custom-bullet-list li::before { height: 17.6px; }
     
     /* Certs - force grid layout like desktop */
     .cert-grid { 
