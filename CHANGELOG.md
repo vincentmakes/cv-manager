@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.47.2] - 2026-04-21
+
+### Fixed
+- **Profile-picture crop was not reflected on the public site when a default dataset existed.** The public page has two render paths: the live-profile path goes through `scripts.js`'s shared `loadProfile` (which was already updated to apply the crop), but when a default dataset is configured the page instead calls `loadDatasetPreview` → `renderProfileFromData` — a separate inline copy of the render logic in `public-readonly/index.html` that had no knowledge of `picture_crop`. Added the `applyProfilePictureCrop(pic, p.picture_crop)` call alongside the `pic.src` assignment in `renderProfileFromData` so the crop is applied on the dataset-snapshot render path too. Snapshots created before 1.47.0 have no `picture_crop` field and render at the neutral default, so there's no visual regression for existing installs.
+
 ## [1.47.1] - 2026-04-21
 
 ### Fixed

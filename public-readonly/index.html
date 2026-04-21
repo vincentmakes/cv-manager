@@ -391,6 +391,7 @@
                 pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
                 pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
                 pic.src = '/uploads/' + encodeURIComponent(fname) + '?' + new Date().getTime();
+                if (typeof applyProfilePictureCrop === 'function') applyProfilePictureCrop(pic, p.picture_crop);
                 profileImg.style.display = 'flex';
             } else {
                 pic.onload = null;
