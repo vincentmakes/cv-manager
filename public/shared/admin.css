@@ -3195,11 +3195,75 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     .section-reorder-handle { display: none !important; }
 }
 
-/* Copy-section modal */
+/* Copy-section modal — two-step flow (list → diff preview) */
+.copy-section-step { display: none; }
+#copySectionModalBody[data-step="list"] .copy-section-step-list { display: block; }
+#copySectionModalBody[data-step="diff"] .copy-section-step-diff { display: flex; flex-direction: column; gap: 10px; }
+
+/* Footer buttons are shown depending on the current step. */
+#copySectionModalOverlay .copy-section-back-btn,
+#copySectionModalOverlay .copy-section-confirm-btn { display: none; }
+#copySectionModalOverlay .modal-body[data-step="diff"] ~ .modal-footer .copy-section-back-btn,
+#copySectionModalOverlay .modal-body[data-step="diff"] ~ .modal-footer .copy-section-confirm-btn { display: inline-flex; }
+
 .copy-section-subtitle {
     margin: 0 0 12px;
     font-size: 14px;
     color: var(--gray-700);
+}
+
+.copy-section-diff-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-700);
+}
+.copy-section-diff-label-before { color: #b91c1c; }
+.copy-section-diff-label-after { color: #15803d; }
+.copy-section-diff-arrow { font-size: 18px; color: var(--gray-500); }
+
+.copy-section-diff {
+    margin: 0;
+    padding: 12px 14px;
+    max-height: 50vh;
+    overflow: auto;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--gray-900);
+}
+.copy-section-diff .diff-line {
+    display: block;
+    padding: 0 6px;
+    border-left: 3px solid transparent;
+}
+.copy-section-diff .diff-added {
+    background: #dcfce7;
+    border-left-color: #15803d;
+    color: #14532d;
+}
+.copy-section-diff .diff-added::before { content: "+ "; color: #15803d; }
+.copy-section-diff .diff-removed {
+    background: #fee2e2;
+    border-left-color: #b91c1c;
+    color: #7f1d1d;
+}
+.copy-section-diff .diff-removed::before { content: "− "; color: #b91c1c; }
+.copy-section-diff .diff-context::before { content: "  "; }
+.copy-section-diff-empty {
+    padding: 18px;
+    text-align: center;
+    color: var(--gray-600);
+    font-style: italic;
 }
 .copy-section-current {
     display: flex;

@@ -928,22 +928,39 @@
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p class="copy-section-subtitle" id="copySectionSubtitle"></p>
-                <div class="copy-section-current" id="copySectionCurrent">
-                    <span class="copy-section-current-label" data-i18n="copy_section.from">From:</span>
-                    <div class="copy-section-current-info" id="copySectionCurrentInfo"></div>
+            <div class="modal-body" id="copySectionModalBody" data-step="list">
+                <div class="copy-section-step copy-section-step-list">
+                    <p class="copy-section-subtitle" id="copySectionSubtitle"></p>
+                    <div class="copy-section-current" id="copySectionCurrent">
+                        <span class="copy-section-current-label" data-i18n="copy_section.from">From:</span>
+                        <div class="copy-section-current-info" id="copySectionCurrentInfo"></div>
+                    </div>
+                    <div class="copy-section-warning" role="alert">
+                        <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                        <span data-i18n="copy_section.warning">The section's content in the target CV will be overwritten. This cannot be undone.</span>
+                    </div>
+                    <h4 class="copy-section-list-title" data-i18n="copy_section.choose_target">Choose a target CV</h4>
+                    <div id="copySectionTargetList" class="copy-section-target-list"></div>
                 </div>
-                <div class="copy-section-warning" role="alert">
-                    <span class="material-symbols-outlined" aria-hidden="true">warning</span>
-                    <span data-i18n="copy_section.warning">The section's content in the target CV will be overwritten. This cannot be undone.</span>
+                <div class="copy-section-step copy-section-step-diff">
+                    <div class="copy-section-diff-header">
+                        <span class="copy-section-diff-label copy-section-diff-label-before" data-i18n="copy_section.diff_before">Current target content</span>
+                        <span class="copy-section-diff-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        <span class="copy-section-diff-label copy-section-diff-label-after" data-i18n="copy_section.diff_after">After copy</span>
+                    </div>
+                    <pre class="copy-section-diff" id="copySectionDiff" aria-live="polite"></pre>
                 </div>
-                <h4 class="copy-section-list-title" data-i18n="copy_section.choose_target">Choose a target CV</h4>
-                <div id="copySectionTargetList" class="copy-section-target-list"></div>
             </div>
             <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <button class="btn btn-ghost copy-section-back-btn" id="copySectionBackBtn" type="button" onclick="setCopySectionStep('list')">
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+                        <span data-i18n="copy_section.back">Back</span>
+                    </button>
+                </div>
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeCopySectionModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary copy-section-confirm-btn" id="copySectionConfirmBtn" type="button" onclick="confirmCopySectionToTarget()" data-i18n="copy_section.confirm_button">Copy & overwrite</button>
                 </div>
             </div>
         </div>

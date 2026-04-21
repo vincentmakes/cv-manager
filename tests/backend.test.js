@@ -2009,6 +2009,73 @@ describe('Backend API', () => {
             assert.strictEqual(res.status, 404);
             await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
         });
+
+        describe('copy-section-diff preview', () => {
+            async function getDiff(id, sectionKey) {
+                return postJson(`${BASE_URL}/api/datasets/${id}/copy-section-diff`, { sectionKey });
+            }
+
+            it('rejects invalid sectionKey with 400', async () => {
+                const ds = await createDataset('Diff Invalid Key');
+                const r = await getDiff(ds.id, 'timeline');
+                assert.strictEqual(r.status, 400);
+                await fetch(`${BASE_URL}/api/datasets/${ds.id}`, { method: 'DELETE' });
+            });
+
+            it('returns 404 when the target dataset is missing', async () => {
+                const r = await getDiff(999999, 'experience');
+                assert.strictEqual(r.status, 404);
+            });
+
+            it('returns before/after/parts and detects added lines after live mutation', async () => {
+                // Seed live with one experience, snapshot, then mutate live so
+                // the diff must report the change.
+                const seed = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Diff-seed-role', company_name: 'DiffCo',
+                    start_date: '2020-01', end_date: '', location: 'L1', highlights: ['old-highlight'],
+                });
+                assert.strictEqual(seed.status, 200);
+                const seedExp = await seed.json();
+
+                const target = await createDataset('Diff Experience Target');
+
+                // Mutate: add a second experience so live now differs from the
+                // snapshot that was captured when the target was created.
+                const second = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Diff-added-role', company_name: 'DiffCo2',
+                    start_date: '2022-05', end_date: '', location: 'L2', highlights: ['new-highlight'],
+                });
+                assert.strictEqual(second.status, 200);
+                const secondExp = await second.json();
+
+                const r = await getDiff(target.id, 'experience');
+                assert.strictEqual(r.status, 200);
+                const body = await r.json();
+                assert.strictEqual(typeof body.before, 'string');
+                assert.strictEqual(typeof body.after, 'string');
+                assert.ok(Array.isArray(body.parts), 'parts should be an array');
+                assert.strictEqual(body.unchanged, false);
+                // The new experience's content must appear in an `added` part.
+                const addedText = body.parts.filter(p => p.added).map(p => p.value).join('');
+                assert.ok(addedText.includes('Diff-added-role'), 'added parts should contain the newly-added role');
+
+                await fetch(`${BASE_URL}/api/experiences/${seedExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/experiences/${secondExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+            });
+
+            it('reports unchanged=true when target already matches live', async () => {
+                // Fresh target snapshots live, so with no mutation afterwards
+                // the serialized before/after must be identical.
+                const target = await createDataset('Diff Unchanged Target');
+                const r = await getDiff(target.id, 'about');
+                assert.strictEqual(r.status, 200);
+                const body = await r.json();
+                assert.strictEqual(body.unchanged, true);
+                assert.strictEqual(body.before, body.after);
+                await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+            });
+        });
     });
 
     describe('Public API (port)', () => {

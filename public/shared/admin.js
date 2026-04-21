@@ -3166,8 +3166,11 @@ async function openCopySectionModal(sectionKey) {
         list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.loading') || 'Loading...')}</p>`;
     }
 
+    setCopySectionStep('list');
     overlay.classList.add('active');
     overlay.setAttribute('data-section-key', sectionKey);
+    overlay.removeAttribute('data-target-id');
+    overlay.removeAttribute('data-target-name');
 
     try {
         const datasets = await api('/api/datasets');
@@ -3203,7 +3206,10 @@ function closeCopySectionModal() {
     if (overlay) {
         overlay.classList.remove('active');
         overlay.removeAttribute('data-section-key');
+        overlay.removeAttribute('data-target-id');
+        overlay.removeAttribute('data-target-name');
     }
+    setCopySectionStep('list');
 }
 
 function renderCopySectionTargetList(datasets, sectionKey) {
@@ -3231,7 +3237,7 @@ function renderCopySectionTargetList(datasets, sectionKey) {
             ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`
             : '';
         return `
-            <button type="button" class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" onclick="confirmCopySectionToTarget(${ds.id}, '${safeName}')">
+            <button type="button" class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" onclick="showCopySectionDiff(${ds.id}, '${safeName}')">
                 ${chips}
                 <span class="cvm-name">${escapeHtml(ds.name)}</span>
                 ${defaultBadge}
@@ -3240,16 +3246,77 @@ function renderCopySectionTargetList(datasets, sectionKey) {
     }).join('');
 }
 
-async function confirmCopySectionToTarget(targetId, targetName) {
+function setCopySectionStep(step) {
+    const body = document.getElementById('copySectionModalBody');
+    if (body) body.setAttribute('data-step', step);
+}
+
+// Stage 2 of the copy flow: fetch a server-computed line diff between the
+// target dataset's current section content and the live CV's section content,
+// and render it inline. Confirming here triggers the actual copy.
+async function showCopySectionDiff(targetId, targetName) {
     const overlay = document.getElementById('copySectionModalOverlay');
     if (!overlay) return;
     const sectionKey = overlay.getAttribute('data-section-key');
     if (!sectionKey) return;
 
-    const sectionName = copySectionDisplayName(sectionKey);
-    const confirmMsg = t('copy_section.confirm', { section: sectionName, target: targetName });
-    if (!confirm(confirmMsg)) return;
+    overlay.setAttribute('data-target-id', String(targetId));
+    overlay.setAttribute('data-target-name', targetName);
 
+    const pre = document.getElementById('copySectionDiff');
+    if (pre) pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_loading'))}</span>`;
+
+    setCopySectionStep('diff');
+
+    try {
+        const result = await api(`/api/datasets/${targetId}/copy-section-diff`, {
+            method: 'POST',
+            body: { sectionKey }
+        });
+        renderCopySectionDiff(result);
+    } catch (err) {
+        if (pre) pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml((err && err.message) || t('copy_section.diff_error'))}</span>`;
+    }
+}
+
+// Render jsdiff's diffLines() parts into color-coded rows. Each part has
+// { value, added?, removed? }; we split on newlines so each logical line
+// becomes its own DOM row (otherwise long runs of context would render as a
+// single blob and the +/- markers wouldn't line up).
+function renderCopySectionDiff(result) {
+    const pre = document.getElementById('copySectionDiff');
+    if (!pre) return;
+    if (!result || (!result.before && !result.after)) {
+        pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_no_content'))}</span>`;
+        return;
+    }
+    if (result.unchanged) {
+        pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_no_changes'))}</span>`;
+        return;
+    }
+    const rows = [];
+    (result.parts || []).forEach(part => {
+        const cls = part.added ? 'diff-added' : (part.removed ? 'diff-removed' : 'diff-context');
+        const lines = String(part.value).split('\n');
+        // Trailing empty entry from split on "…\n" is not a real line.
+        if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+        lines.forEach(line => {
+            rows.push(`<span class="diff-line ${cls}">${escapeHtml(line) || '&nbsp;'}</span>`);
+        });
+    });
+    pre.innerHTML = rows.join('');
+}
+
+async function confirmCopySectionToTarget() {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+    const sectionKey = overlay.getAttribute('data-section-key');
+    const targetId = overlay.getAttribute('data-target-id');
+    const targetName = overlay.getAttribute('data-target-name') || '';
+    if (!sectionKey || !targetId) return;
+
+    const btn = document.getElementById('copySectionConfirmBtn');
+    if (btn) btn.disabled = true;
     try {
         const result = await api(`/api/datasets/${targetId}/copy-section-from-live`, {
             method: 'POST',
@@ -3263,6 +3330,8 @@ async function confirmCopySectionToTarget(targetId, targetName) {
         toast(t('copy_section.toast_success', { target: targetName }));
     } catch (err) {
         toast((err && err.message) || t('copy_section.toast_error'), 'error');
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 

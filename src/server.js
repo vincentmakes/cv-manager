@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
 const archiver = require('archiver');
+const { diffLines } = require('diff');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -2691,6 +2692,133 @@ if (PUBLIC_ONLY) {
     // For custom sections, match on section_key first, then case-insensitive name;
     // otherwise append a new entry. Timeline has no content of its own and is rejected.
     const BUILTIN_COPYABLE_SECTIONS = new Set(['about', 'experience', 'certifications', 'education', 'skills', 'projects']);
+
+    // Produce a stable, human-readable plain-text snapshot of a single section
+    // extracted from a CV data blob. Used as input to diffLines() so the copy-
+    // section preview shows meaningful added/removed rows instead of JSON noise.
+    function serializeSection(data, sectionKey) {
+        if (!data) return '';
+        const join = (parts) => parts.filter(p => p != null && String(p).trim() !== '').join(' · ');
+        const dateRange = (s, e) => {
+            const a = formatDateShort(s || '');
+            const b = e ? formatDateShort(e) : 'Present';
+            if (!a && !b) return '';
+            if (!a) return b;
+            return `${a} – ${b}`;
+        };
+        const lines = [];
+        if (sectionKey === 'about') {
+            const p = data.profile || {};
+            lines.push(`Name: ${p.name || ''}`);
+            if (p.initials) lines.push(`Initials: ${p.initials}`);
+            if (p.title) lines.push(`Title: ${p.title}`);
+            if (p.subtitle) lines.push(`Subtitle: ${p.subtitle}`);
+            if (p.location) lines.push(`Location: ${p.location}`);
+            if (p.email) lines.push(`Email: ${p.email}`);
+            if (p.phone) lines.push(`Phone: ${p.phone}`);
+            if (p.linkedin) lines.push(`LinkedIn: ${p.linkedin}`);
+            if (p.languages) lines.push(`Languages: ${p.languages}`);
+            if (p.bio) {
+                lines.push('Bio:');
+                String(p.bio).split(/\r?\n/).forEach(b => lines.push(`  ${b}`));
+            }
+        } else if (sectionKey === 'experience') {
+            (data.experiences || []).forEach(e => {
+                lines.push(`• ${e.job_title || ''} — ${e.company_name || ''}`);
+                const meta = join([dateRange(e.start_date, e.end_date), e.location, e.country_code]);
+                if (meta) lines.push(`  ${meta}`);
+                if (e.summary) lines.push(`  ${e.summary}`);
+                (e.highlights || []).forEach(h => lines.push(`  - ${h}`));
+                lines.push('');
+            });
+        } else if (sectionKey === 'certifications') {
+            (data.certifications || []).forEach(c => {
+                lines.push(`• ${c.name || ''} — ${c.provider || ''}`);
+                const meta = join([
+                    c.issue_date ? `Issued ${formatDateShort(c.issue_date)}` : '',
+                    c.expiry_date ? `Expires ${formatDateShort(c.expiry_date)}` : '',
+                    c.credential_id ? `ID ${c.credential_id}` : ''
+                ]);
+                if (meta) lines.push(`  ${meta}`);
+                lines.push('');
+            });
+        } else if (sectionKey === 'education') {
+            (data.education || []).forEach(e => {
+                lines.push(`• ${e.degree_title || ''} — ${e.institution_name || ''}`);
+                const meta = dateRange(e.start_date, e.end_date);
+                if (meta) lines.push(`  ${meta}`);
+                if (e.description) {
+                    String(e.description).split(/\r?\n/).forEach(l => lines.push(`  ${l}`));
+                }
+                lines.push('');
+            });
+        } else if (sectionKey === 'skills') {
+            (data.skills || []).forEach(cat => {
+                const items = (cat.skills || []).join(', ');
+                lines.push(`• ${cat.name || ''}${cat.icon && cat.icon !== 'default' ? ` (${cat.icon})` : ''}`);
+                if (items) lines.push(`  ${items}`);
+                lines.push('');
+            });
+        } else if (sectionKey === 'projects') {
+            (data.projects || []).forEach(p => {
+                lines.push(`• ${p.title || ''}`);
+                if (p.description) lines.push(`  ${p.description}`);
+                const techs = Array.isArray(p.technologies) ? p.technologies.join(', ') : '';
+                if (techs) lines.push(`  Tech: ${techs}`);
+                if (p.link) lines.push(`  Link: ${p.link}`);
+                lines.push('');
+            });
+        } else if (sectionKey.startsWith('custom_')) {
+            const cs = (data.customSections || []).find(s => s && s.section_key === sectionKey);
+            if (cs) {
+                lines.push(`${cs.name || ''} [${cs.layout_type || 'custom'}]`);
+                if (cs.icon) lines.push(`Icon: ${cs.icon}`);
+                lines.push('');
+                (cs.items || []).forEach(it => {
+                    if (it.title) lines.push(`• ${it.title}`);
+                    else lines.push('•');
+                    if (it.subtitle) lines.push(`  ${it.subtitle}`);
+                    if (it.description) {
+                        String(it.description).split(/\r?\n/).forEach(l => lines.push(`  ${l}`));
+                    }
+                    if (it.link) lines.push(`  Link: ${it.link}`);
+                    if (it.icon) lines.push(`  Icon: ${it.icon}`);
+                    lines.push('');
+                });
+            }
+        }
+        return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd();
+    }
+
+    // Build the before/after snapshots and a line-level diff the client can
+    // render so the user previews exactly which rows will change before
+    // committing to the overwrite.
+    app.post('/api/datasets/:id/copy-section-diff', (req, res) => {
+        const { sectionKey } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            let targetData;
+            try { targetData = JSON.parse(dataset.data); }
+            catch { return res.status(500).json({ error: 'Target dataset data is corrupted' }); }
+            const liveData = gatherCvData();
+            const before = serializeSection(targetData, sectionKey);
+            const after = serializeSection(liveData, sectionKey);
+            const parts = diffLines(before + '\n', after + '\n');
+            res.json({ before, after, parts, unchanged: before === after });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
     app.post('/api/datasets/:id/copy-section-from-live', (req, res) => {
         const { sectionKey } = req.body || {};
         if (!sectionKey || typeof sectionKey !== 'string') {
