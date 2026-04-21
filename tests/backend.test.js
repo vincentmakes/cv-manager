@@ -633,6 +633,28 @@ describe('Backend API', () => {
             });
         });
 
+        it('PUT /api/sections/:name/print-compact works independently for projects', async () => {
+            // Toggle projects compact on
+            await fetch(`${BASE_URL}/api/sections/projects/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: true }),
+            });
+
+            const order = await (await fetch(`${BASE_URL}/api/sections/order`)).json();
+            const projects = order.find(s => s.key === 'projects');
+            const skills = order.find(s => s.key === 'skills');
+            assert.strictEqual(projects.print_compact, true, 'projects print_compact is on');
+            assert.strictEqual(skills.print_compact, false, 'skills print_compact stays off — flag is per-section');
+
+            // Restore
+            await fetch(`${BASE_URL}/api/sections/projects/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: false }),
+            });
+        });
+
         it('PUT /api/sections/:name/print-compact returns 404 for unknown section', async () => {
             const res = await fetch(`${BASE_URL}/api/sections/does_not_exist/print-compact`, {
                 method: 'PUT',

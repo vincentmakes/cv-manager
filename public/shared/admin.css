@@ -78,6 +78,42 @@
 .icon-btn svg { width: 16px; height: 16px; }
 .icon-btn .material-symbols-outlined { font-size: 16px; }
 
+/* Custom hover tooltip for section-action icon buttons.
+   Reads the button's title attribute so the bubble tracks locale changes
+   automatically — admin.js already rewrites title when the locale switches. */
+.section-actions .icon-btn { position: relative; }
+.section-actions .icon-btn[title]:hover::after,
+.section-actions .icon-btn[title]:focus-visible::after {
+    content: attr(title);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    padding: 5px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 50;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.section-actions .icon-btn[title]:hover::before,
+.section-actions .icon-btn[title]:focus-visible::before {
+    content: '';
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #1f2937;
+    pointer-events: none;
+    z-index: 50;
+}
+
 /* Item Actions */
 .item-actions {
     position: absolute;
