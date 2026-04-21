@@ -609,6 +609,76 @@ describe('Backend API', () => {
             assert.strictEqual(res.status, 404);
         });
 
+        it('PUT /api/sections/:name/print-compact toggles print_compact without affecting visible or print_visible', async () => {
+            const res = await fetch(`${BASE_URL}/api/sections/skills/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: true }),
+            });
+            assert.strictEqual(res.status, 200);
+
+            const orderRes = await fetch(`${BASE_URL}/api/sections/order`);
+            const order = await orderRes.json();
+            const skills = order.find(s => s.key === 'skills');
+            assert.ok(skills, 'skills section present in order');
+            assert.strictEqual(skills.print_compact, true, 'print_compact persisted as true');
+            assert.strictEqual(skills.visible, true, 'visible stays true when only print_compact was toggled');
+            assert.strictEqual(skills.print_visible, true, 'print_visible stays true when only print_compact was toggled');
+
+            // Restore
+            await fetch(`${BASE_URL}/api/sections/skills/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: false }),
+            });
+        });
+
+        it('PUT /api/sections/:name/print-compact returns 404 for unknown section', async () => {
+            const res = await fetch(`${BASE_URL}/api/sections/does_not_exist/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: true }),
+            });
+            assert.strictEqual(res.status, 404);
+        });
+
+        it('PUT /api/sections/order preserves print_compact round-trip', async () => {
+            // Turn on print_compact for skills
+            await fetch(`${BASE_URL}/api/sections/skills/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: true }),
+            });
+
+            // Send the full order back through the bulk endpoint, including the flag
+            const orderRes = await fetch(`${BASE_URL}/api/sections/order`);
+            const order = await orderRes.json();
+            const payload = order.map((s, idx) => ({
+                key: s.key,
+                visible: s.visible,
+                print_visible: s.print_visible !== false,
+                print_compact: s.print_compact === true,
+                sort_order: idx,
+            }));
+            const putRes = await fetch(`${BASE_URL}/api/sections/order`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sections: payload }),
+            });
+            assert.strictEqual(putRes.status, 200);
+
+            const after = await (await fetch(`${BASE_URL}/api/sections/order`)).json();
+            const skills = after.find(s => s.key === 'skills');
+            assert.strictEqual(skills.print_compact, true, 'print_compact survived the round-trip');
+
+            // Restore
+            await fetch(`${BASE_URL}/api/sections/skills/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: false }),
+            });
+        });
+
         // --- Reorder ---
         it('PUT /api/reorder/:type reorders items', async () => {
             // Create two experiences

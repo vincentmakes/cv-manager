@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.45.0] - 2026-04-21
+
+### Added
+- **Compact print layout for Skills & Expertise.** The Skills section header in the admin UI gains a new `compress` icon button next to the existing visibility and print-visibility toggles. When enabled, printing the CV (Ctrl/Cmd-P) or exporting the public page collapses the four-column card grid into inline text lines (`**Category:** skill1, skill2, skill3`), reclaiming significant vertical space on long CVs. The on-screen rendering is untouched — the layout only changes inside `@media print`. The flag is stored as a new `print_compact` column on the `section_visibility` table (defaults to 0 on existing installs, so no visual change for anyone who doesn't opt in) and is surfaced in the `GET /api/sections/order` response plus a new `PUT /api/sections/:name/print-compact` endpoint. The bulk `PUT /api/sections/order` also round-trips the flag so dataset import/export preserves it. The public read-only page mirrors the class on load so visitors printing from `/` or `/v/{slug}` see the same compact layout. Two new i18n keys (`action.toggle_print_compact`, `toast.section_print_compact_updated`) translated across all 8 supported locales. Current scope is the Skills section only; the column is generic so other sections can opt in later by adding CSS rules.
+
 ## [1.44.0] - 2026-04-21
 
 ### Added
