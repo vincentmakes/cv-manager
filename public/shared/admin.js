@@ -809,6 +809,9 @@ function renderCustomSection(section) {
                     <button class="icon-btn" onclick="openCustomSectionRenameModal(${section.id})" title="${t('custom_section.rename_title')}" aria-label="${t('custom_section.rename_title')}">
                         <span class="material-symbols-outlined">edit</span>
                     </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('${section.section_key}')" title="${t('action.copy_to_dataset')}" aria-label="${t('action.copy_to_dataset')}">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                     <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="${t('action.toggle_visibility')}" id="toggle-${section.section_key}">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -3126,6 +3129,149 @@ function closeCvManager() {
     document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
 }
 
+// ===========================
+// Copy section to another dataset
+// ===========================
+
+// Resolve the human-readable display name for a section key — used in the
+// copy-section modal subtitle and confirmation prompt. Falls back to the key
+// itself so the user always sees something meaningful.
+function copySectionDisplayName(sectionKey) {
+    const builtinI18nKey = `section.${sectionKey}`;
+    const translated = t(builtinI18nKey);
+    if (translated && translated !== builtinI18nKey) return translated;
+    // Custom section: look up in loaded customSections
+    if (typeof customSections !== 'undefined' && Array.isArray(customSections)) {
+        const cs = customSections.find(c => c && c.section_key === sectionKey);
+        if (cs) return cs.display_name || cs.name || sectionKey;
+    }
+    return sectionKey;
+}
+
+async function openCopySectionModal(sectionKey) {
+    if (!sectionKey || sectionKey === 'timeline') return;
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+
+    const sectionName = copySectionDisplayName(sectionKey);
+    const subtitle = document.getElementById('copySectionSubtitle');
+    if (subtitle) {
+        subtitle.textContent = t('copy_section.subtitle', { section: sectionName });
+    }
+
+    const list = document.getElementById('copySectionTargetList');
+    if (list) {
+        list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.loading') || 'Loading...')}</p>`;
+    }
+
+    overlay.classList.add('active');
+    overlay.setAttribute('data-section-key', sectionKey);
+
+    try {
+        const datasets = await api('/api/datasets');
+        renderCopySectionTargetList(datasets, sectionKey);
+    } catch (err) {
+        if (list) list.innerHTML = `<p class="cvm-empty">${escapeHtml(err.message || String(err))}</p>`;
+    }
+}
+
+function closeCopySectionModal() {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.removeAttribute('data-section-key');
+    }
+}
+
+function renderCopySectionTargetList(datasets, sectionKey) {
+    const list = document.getElementById('copySectionTargetList');
+    if (!list) return;
+    const targets = (datasets || []).filter(ds => ds && ds.id !== activeDatasetId);
+    if (targets.length === 0) {
+        list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.empty'))}</p>`;
+        return;
+    }
+
+    // Compute which version_groups contain multiple versions so we know when
+    // to render the version chip (mirrors the manager's renderVersionBlock).
+    const versionCountsByGroup = {};
+    (datasets || []).forEach(ds => {
+        if (!ds || !ds.version_group) return;
+        const vg = ds.version_group;
+        if (!versionCountsByGroup[vg]) versionCountsByGroup[vg] = new Set();
+        versionCountsByGroup[vg].add(ds.version || 1);
+    });
+
+    list.innerHTML = targets.map(ds => {
+        const isDefault = !!ds.is_default;
+        const hasMultipleVersions = ds.version_group && versionCountsByGroup[ds.version_group] && versionCountsByGroup[ds.version_group].size > 1;
+        const chips = renderDatasetChips(ds, {
+            versionBadge: hasMultipleVersions ? (ds.version || 1) : null,
+            isDefault,
+            isDefaultSibling: false
+        });
+        const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
+        const defaultBadge = isDefault
+            ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`
+            : '';
+        return `
+            <button type="button" class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" onclick="confirmCopySectionToTarget(${ds.id}, '${safeName}')">
+                ${chips}
+                <span class="cvm-name">${escapeHtml(ds.name)}</span>
+                ${defaultBadge}
+                <span class="copy-section-arrow material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>`;
+    }).join('');
+}
+
+async function confirmCopySectionToTarget(targetId, targetName) {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+    const sectionKey = overlay.getAttribute('data-section-key');
+    if (!sectionKey) return;
+
+    const sectionName = copySectionDisplayName(sectionKey);
+    const confirmMsg = t('copy_section.confirm', { section: sectionName, target: targetName });
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const result = await api(`/api/datasets/${targetId}/copy-section-from-live`, {
+            method: 'POST',
+            body: { sectionKey }
+        });
+        if (result && result.error) {
+            toast(result.error || t('copy_section.toast_error'), 'error');
+            return;
+        }
+        closeCopySectionModal();
+        toast(t('copy_section.toast_success', { target: targetName }));
+    } catch (err) {
+        toast((err && err.message) || t('copy_section.toast_error'), 'error');
+    }
+}
+
+// Shared chip-rendering helper — used by the CV manager list and the
+// copy-section target picker so both stay visually identical.
+// Returns HTML for the Language badge, optional Version badge, and — when
+// called with options.inlinePublicChip — the Public/share icon inline with
+// the dataset name. For the manager's legacy inline-with-name public chip,
+// pass `{ inlinePublicChip: true, datasetNameHtml: ... }`; otherwise the
+// public chip is returned as a separate standalone badge.
+function renderDatasetChips(ds, opts = {}) {
+    if (!ds) return '';
+    const dsLang = ds.language || 'en';
+    const versionBadge = opts.versionBadge || null;
+    const parts = [];
+    parts.push(`<span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>`);
+    if (versionBadge) {
+        parts.push(`<span class="dataset-version-badge">v${versionBadge}</span>`);
+    }
+    if (!opts.inlinePublicChip && !opts.suppressPublicChip && ds.is_public && !opts.isDefault && !opts.isDefaultSibling) {
+        parts.push(`<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>`);
+    }
+    return parts.join('');
+}
+
 function renderCvManagerList(datasets) {
     const container = document.getElementById('datasetsList');
     if (!container) return;
@@ -3163,14 +3309,19 @@ function renderCvManagerList(datasets) {
         const urlHtml = urlText ? `<span class="cvm-url">${urlText}</span>` : '';
         const showToggle = ds.slug && !isDefault && !isDefSib;
 
+        const chips = renderDatasetChips(ds, {
+            versionBadge: opts.versionBadge || null,
+            isDefault,
+            isDefaultSibling: isDefSib,
+            suppressPublicChip: true
+        });
         return `
             <div class="${classes.join(' ')}" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" data-lang="${dsLang}">
                 <label class="cvm-radio" title="${isDefault ? t('datasets.default_hint') : ''}">
                     <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
                     <span class="radio-dot"></span>
                 </label>
-                <span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>
-                ${opts.versionBadge ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>` : ''}
+                ${chips}
                 <span class="cvm-name">${escapeHtml(ds.name)}${ds.is_public && !isDefault && !isDefSib ? ` <span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>` : ''}</span>
                 ${isDefault
                     ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`
