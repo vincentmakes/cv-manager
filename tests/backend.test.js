@@ -2376,4 +2376,191 @@ describe('Backend API', () => {
         });
     });
 
+    // The undo/redo feature in admin.js is built on the round-trip
+    // GET /api/cv  →  POST /api/import  (with the snapshot as body).
+    // These tests guard the contract that the snapshot returned by /api/cv is
+    // a valid /api/import body that fully restores the prior content slice.
+    describe('Undo/Redo snapshot round-trip (/api/cv ↔ /api/import)', () => {
+        async function snapshot() {
+            const res = await fetch(`${BASE_URL}/api/cv`);
+            assert.strictEqual(res.status, 200);
+            return await res.json();
+        }
+        async function importSnapshot(data) {
+            const res = await fetch(`${BASE_URL}/api/import`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            assert.strictEqual(res.status, 200);
+            const body = await res.json();
+            assert.strictEqual(body.success, true);
+        }
+
+        it('profile edit round-trips: snapshot before, mutate, restore, profile matches snapshot', async () => {
+            // Capture pre-mutation state
+            const before = await snapshot();
+            const originalName = before.profile.name;
+
+            // Mutate
+            const mutated = { ...before.profile, name: 'UNDO_TEST_NAME_1' };
+            await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(mutated)
+            });
+
+            const afterMutation = await snapshot();
+            assert.strictEqual(afterMutation.profile.name, 'UNDO_TEST_NAME_1', 'Mutation should have landed');
+
+            // "Undo" by importing the captured snapshot
+            await importSnapshot(before);
+
+            const restored = await snapshot();
+            assert.strictEqual(restored.profile.name, originalName, 'Profile name should be restored');
+        });
+
+        it('experience CRUD round-trips: deleted experience comes back via snapshot import', async () => {
+            // Create an experience to ensure there's something to delete
+            const createRes = await fetch(`${BASE_URL}/api/experiences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    job_title: 'Undo Test Role',
+                    company_name: 'Undo Test Co',
+                    start_date: '2020-01',
+                    end_date: '2021-06',
+                    location: 'Test City',
+                    highlights: ['First highlight', 'Second highlight'],
+                    visible: true
+                })
+            });
+            assert.strictEqual(createRes.status, 200);
+
+            // Capture snapshot AFTER create — this is what undo of a delete restores to
+            const snap = await snapshot();
+            const originalCount = snap.experiences.length;
+            const targetExp = snap.experiences.find(e => e.job_title === 'Undo Test Role');
+            assert.ok(targetExp, 'Created experience should be in snapshot');
+            const originalHighlights = targetExp.highlights;
+
+            // Delete it
+            const delRes = await fetch(`${BASE_URL}/api/experiences/${targetExp.id}`, { method: 'DELETE' });
+            assert.strictEqual(delRes.status, 200);
+
+            const afterDelete = await snapshot();
+            assert.strictEqual(
+                afterDelete.experiences.find(e => e.job_title === 'Undo Test Role'),
+                undefined,
+                'Experience should be gone after delete'
+            );
+
+            // Restore via snapshot
+            await importSnapshot(snap);
+
+            const restored = await snapshot();
+            assert.strictEqual(restored.experiences.length, originalCount, 'Experience count should be restored');
+            const restoredExp = restored.experiences.find(e => e.job_title === 'Undo Test Role');
+            assert.ok(restoredExp, 'Experience should reappear');
+            assert.deepStrictEqual(
+                restoredExp.highlights,
+                originalHighlights,
+                'Highlights should be preserved on restore'
+            );
+
+            // Cleanup
+            await fetch(`${BASE_URL}/api/experiences/${restoredExp.id}`, { method: 'DELETE' });
+        });
+
+        it('custom section + items round-trip: snapshot import restores section and items', async () => {
+            // Create a custom section with two items
+            const createSection = await fetch(`${BASE_URL}/api/custom-sections`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'Undo Test Section',
+                    layout_type: 'list',
+                    icon: 'layers'
+                })
+            });
+            assert.strictEqual(createSection.status, 200);
+            const sectionResult = await createSection.json();
+            const sectionId = sectionResult.id;
+            assert.ok(sectionId, 'Section creation should return id');
+
+            await fetch(`${BASE_URL}/api/custom-sections/${sectionId}/items`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: 'Undo Item One', description: 'First' })
+            });
+            await fetch(`${BASE_URL}/api/custom-sections/${sectionId}/items`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: 'Undo Item Two', description: 'Second' })
+            });
+
+            // Snapshot AFTER create
+            const snap = await snapshot();
+            const targetSection = snap.customSections.find(s => s.name === 'Undo Test Section');
+            assert.ok(targetSection, 'Custom section should be in snapshot');
+            assert.strictEqual(targetSection.items.length, 2, 'Section should have 2 items');
+
+            // Delete the section (cascades items)
+            const delRes = await fetch(`${BASE_URL}/api/custom-sections/${sectionId}`, { method: 'DELETE' });
+            assert.strictEqual(delRes.status, 200);
+
+            const afterDelete = await snapshot();
+            assert.strictEqual(
+                afterDelete.customSections.find(s => s.name === 'Undo Test Section'),
+                undefined,
+                'Section should be gone after delete'
+            );
+
+            // Restore
+            await importSnapshot(snap);
+
+            const restored = await snapshot();
+            const restoredSection = restored.customSections.find(s => s.name === 'Undo Test Section');
+            assert.ok(restoredSection, 'Section should reappear after import');
+            assert.strictEqual(restoredSection.items.length, 2, 'Both items should be restored');
+            const titles = restoredSection.items.map(i => i.title).sort();
+            assert.deepStrictEqual(titles, ['Undo Item One', 'Undo Item Two'], 'Item titles should match');
+
+            // Cleanup
+            await fetch(`${BASE_URL}/api/custom-sections/${restoredSection.id}`, { method: 'DELETE' });
+        });
+
+        it('section order round-trip: snapshot import restores section_order', async () => {
+            // Capture original
+            const snap = await snapshot();
+            const originalOrder = snap.sectionOrder.map(s => s.key);
+            assert.ok(originalOrder.length >= 2, 'Need at least 2 sections to test reorder');
+
+            // Reorder by reversing the section_order
+            const reordered = [...snap.sectionOrder].reverse().map((s, idx) => ({
+                key: s.key,
+                visible: s.visible,
+                print_visible: s.print_visible !== false,
+                sort_order: idx
+            }));
+            const orderRes = await fetch(`${BASE_URL}/api/sections/order`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sections: reordered })
+            });
+            assert.strictEqual(orderRes.status, 200);
+
+            const afterReorder = await snapshot();
+            const newOrder = afterReorder.sectionOrder.map(s => s.key);
+            assert.notDeepStrictEqual(newOrder, originalOrder, 'Order should have changed');
+
+            // Restore via snapshot
+            await importSnapshot(snap);
+
+            const restored = await snapshot();
+            const restoredOrder = restored.sectionOrder.map(s => s.key);
+            assert.deepStrictEqual(restoredOrder, originalOrder, 'Section order should be restored');
+        });
+    });
+
 });

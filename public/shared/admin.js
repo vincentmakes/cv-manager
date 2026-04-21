@@ -1979,28 +1979,30 @@ async function confirmDelete(endpoint, id) {
 
 // Show All Items
 async function showAllItems() {
-    const cv = await api('/api/cv');
-    
-    for (const section of Object.keys(sectionVisibility)) {
-        await api(`/api/sections/${section}`, { method: 'PUT', body: { visible: true } });
-    }
-    
-    for (const exp of cv.experiences) {
-        await api(`/api/experiences/${exp.id}`, { method: 'PUT', body: { ...exp, visible: true } });
-    }
-    for (const cert of cv.certifications) {
-        await api(`/api/certifications/${cert.id}`, { method: 'PUT', body: { ...cert, visible: true } });
-    }
-    for (const edu of cv.education) {
-        await api(`/api/education/${edu.id}`, { method: 'PUT', body: { ...edu, visible: true } });
-    }
-    for (const skill of cv.skills) {
-        await api(`/api/skills/${skill.id}`, { method: 'PUT', body: { ...skill, visible: true } });
-    }
-    for (const proj of cv.projects) {
-        await api(`/api/projects/${proj.id}`, { method: 'PUT', body: { ...proj, visible: true } });
-    }
-    
+    await UndoManager.batch(async () => {
+        const cv = await api('/api/cv');
+
+        for (const section of Object.keys(sectionVisibility)) {
+            await api(`/api/sections/${section}`, { method: 'PUT', body: { visible: true } });
+        }
+
+        for (const exp of cv.experiences) {
+            await api(`/api/experiences/${exp.id}`, { method: 'PUT', body: { ...exp, visible: true } });
+        }
+        for (const cert of cv.certifications) {
+            await api(`/api/certifications/${cert.id}`, { method: 'PUT', body: { ...cert, visible: true } });
+        }
+        for (const edu of cv.education) {
+            await api(`/api/education/${edu.id}`, { method: 'PUT', body: { ...edu, visible: true } });
+        }
+        for (const skill of cv.skills) {
+            await api(`/api/skills/${skill.id}`, { method: 'PUT', body: { ...skill, visible: true } });
+        }
+        for (const proj of cv.projects) {
+            await api(`/api/projects/${proj.id}`, { method: 'PUT', body: { ...proj, visible: true } });
+        }
+    });
+
     await initAdmin();
     toast(t('toast.all_visible'));
     autoSaveActiveDataset();
@@ -2062,6 +2064,9 @@ async function importData(event) {
                 toast(result.error, 'error');
                 return;
             }
+            // Imported data wholesale-replaces the live state — earlier history
+            // doesn't refer to anything coherent anymore.
+            if (typeof UndoManager !== 'undefined') UndoManager.clear();
             // Clear active dataset — imported data doesn't belong to any dataset
             hideActiveDatasetBanner();
             // Switch UI locale to match imported language
@@ -3366,6 +3371,7 @@ async function submitSaveAs() {
         if (versionGroup) body.version_group = versionGroup;
         const result = await api('/api/datasets', { method: 'POST', body });
         if (result.success) {
+            if (typeof UndoManager !== 'undefined') UndoManager.clear();
             await applyLoadedDatasetResult({
                 id: result.id,
                 name,
@@ -3645,6 +3651,9 @@ async function loadDataset(id, name) {
     try {
         const result = await api(`/api/datasets/${id}/load`, { method: 'POST' });
         if (result.success) {
+            // Switching datasets replaces the entire content slice — any prior
+            // undo history would restore data that no longer belongs.
+            if (typeof UndoManager !== 'undefined') UndoManager.clear();
             // Set active dataset state BEFORE initAdmin (so initAdmin skips auto-load)
             await applyLoadedDatasetResult(result);
             persistActiveDataset();
@@ -3676,8 +3685,10 @@ async function deleteDataset(id, name) {
             toast(result.error, 'error');
             return;
         }
-        // If we deleted the active dataset, clear the banner
+        // If we deleted the active dataset, the live tables may have been
+        // swapped to another default — earlier undo history is no longer valid.
         if (activeDatasetId === id) {
+            if (typeof UndoManager !== 'undefined') UndoManager.clear();
             hideActiveDatasetBanner();
         }
         await loadDatasetsList();
@@ -4623,7 +4634,28 @@ document.addEventListener('keydown', (e) => {
         closeCustomItemModal();
         const langDropdown = document.getElementById('languagePickerDropdown');
         if (langDropdown) langDropdown.classList.remove('active');
+        return;
     }
+
+    // Undo / Redo: skip if a modal is open or focus is on an editable element
+    // so native form undo and modal-internal flows aren't disrupted.
+    const isMod = e.ctrlKey || e.metaKey;
+    if (!isMod) return;
+    const key = e.key.toLowerCase();
+    const isUndo = key === 'z' && !e.shiftKey;
+    const isRedo = (key === 'z' && e.shiftKey) || key === 'y';
+    if (!isUndo && !isRedo) return;
+
+    const tgt = e.target;
+    const tag = tgt && tgt.tagName ? tgt.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || (tgt && tgt.isContentEditable)) return;
+    if (currentModal && currentModal.type !== null) return;
+    // Also skip if any modal-overlay is currently active
+    const openModal = document.querySelector('.modal-overlay.active');
+    if (openModal) return;
+
+    e.preventDefault();
+    if (isUndo) undoAction(); else redoAction();
 });
 
 // ===========================

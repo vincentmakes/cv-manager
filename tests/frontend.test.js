@@ -51,6 +51,42 @@ describe('Frontend files', () => {
             const file = path.join(ROOT, 'public', 'shared', 'admin.css');
             assert.ok(fs.existsSync(file), 'public/shared/admin.css should exist');
         });
+
+        it('Undo/Redo toolbar buttons exist in admin index.html', () => {
+            const file = path.join(ROOT, 'public', 'index.html');
+            const content = fs.readFileSync(file, 'utf8');
+            assert.ok(content.includes('id="undoBtn"'), 'should have #undoBtn');
+            assert.ok(content.includes('id="redoBtn"'), 'should have #redoBtn');
+            assert.ok(content.includes('onclick="undoAction()"'), 'undo button should call undoAction()');
+            assert.ok(content.includes('onclick="redoAction()"'), 'redo button should call redoAction()');
+        });
+
+        it('toast element has no-print class so it is excluded from printed output', () => {
+            const file = path.join(ROOT, 'public', 'index.html');
+            const content = fs.readFileSync(file, 'utf8');
+            const m = content.match(/<div[^>]*id="toast"[^>]*>/);
+            assert.ok(m, 'should have a #toast element');
+            assert.ok(/class="[^"]*\bno-print\b/.test(m[0]), '#toast should include the no-print class');
+        });
+
+        it('@media print block in admin.css hides .toast', () => {
+            const file = path.join(ROOT, 'public', 'shared', 'admin.css');
+            const content = fs.readFileSync(file, 'utf8');
+            // Look for .toast hide rule inside the print block; print block may
+            // appear more than once, so just verify the rule exists somewhere
+            // and that an @media print block exists.
+            assert.ok(/@media\s+print\s*\{/.test(content), 'admin.css should contain @media print block');
+            assert.ok(/\.toast\s*\{\s*display:\s*none\s*!important/.test(content),
+                'admin.css should hide .toast with display:none !important inside print styles');
+        });
+
+        it('UndoManager symbol is defined in shared/scripts.js', () => {
+            const file = path.join(ROOT, 'public', 'shared', 'scripts.js');
+            const content = fs.readFileSync(file, 'utf8');
+            assert.ok(/\bUndoManager\b/.test(content), 'scripts.js should declare UndoManager');
+            assert.ok(/function\s+undoAction\s*\(/.test(content), 'scripts.js should expose undoAction()');
+            assert.ok(/function\s+redoAction\s*\(/.test(content), 'scripts.js should expose redoAction()');
+        });
     });
 
     describe('Public interface', () => {

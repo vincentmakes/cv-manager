@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.43.0] - 2026-04-21
+
+### Added
+- **Undo / Redo for the admin UI.** Two new icon-only toolbar buttons (Undo, Redo) sit at the start of the admin toolbar, and the standard keyboard shortcuts (`Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, `Ctrl+Y`) revert or replay the most recent content change. Coverage: profile edits, full CRUD on experiences / certifications / education / skills / projects, custom-section + item CRUD, section visibility and print-visibility toggles, and section reordering. The "Show all items" bulk action collapses into a single undo step. Implementation captures a snapshot of the live CV state via `GET /api/cv` after each successful mutation and restores via `POST /api/import` (the same atomic-replace path used by user import), so no new backend endpoints were added. History caps at 50 entries and is in-memory only — it's wiped when you load, create, or delete a saved dataset, or run the user-facing Import (those operations replace the live state wholesale, so older history would no longer refer to anything coherent). Page reload also clears history. Modals, text inputs, and `contenteditable` elements opt out of the shortcut so native form undo continues to work mid-edit. Theme, settings, section rename, file uploads (logos, profile pictures), and dataset operations are intentionally **not** undoable in this release. Six new toast / button labels (`toolbar.undo`, `toolbar.redo`, `toast.undone`, `toast.redone`, `toast.nothing_to_undo`, `toast.nothing_to_redo`) translated across all 8 supported locales.
+
+### Fixed
+- Toast notifications no longer appear in the printed PDF / Print preview. The toast element gained the `no-print` class and `@media print` now hides `.toast` outright, so an auto-save (or any of the new undo/redo) toast that happens to be on-screen when the user hits Print is excluded from the output.
+
 ## [1.42.0] - 2026-04-20
 
 ### Added

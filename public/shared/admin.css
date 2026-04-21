@@ -2820,6 +2820,7 @@
 
 @media print {
     .toolbar, .add-btn, .item-actions, .section-actions, .no-print { display: none !important; }
+    .toast { display: none !important; }
     .container { margin-top: 0 !important; max-width: 100% !important; margin: 0 !important; padding: 0 10px !important; }
     .section { page-break-inside: avoid; break-inside: avoid; }
     #section-experience { page-break-inside: auto; break-inside: auto; }
