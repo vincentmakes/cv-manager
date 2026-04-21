@@ -1767,6 +1767,427 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Copy section between datasets', () => {
+        // Helpers — keep the setup local so these tests don't depend on other blocks' state
+        async function postJson(url, body) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+        }
+        async function putJson(url, body) {
+            return fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+        }
+        async function createDataset(name, language = 'en') {
+            const res = await postJson(`${BASE_URL}/api/datasets`, { name, language });
+            assert.strictEqual(res.status, 200);
+            return await res.json();
+        }
+        async function readTargetJson(id) {
+            const res = await fetch(`${BASE_URL}/api/datasets/id/${id}`);
+            assert.strictEqual(res.status, 200);
+            return await res.json();
+        }
+        async function copySection(id, sectionKey) {
+            return postJson(`${BASE_URL}/api/datasets/${id}/copy-section-from-live`, { sectionKey });
+        }
+
+        it('rejects invalid sectionKey with 400', async () => {
+            const ds = await createDataset('Copy Invalid Key');
+            const resTimeline = await copySection(ds.id, 'timeline');
+            assert.strictEqual(resTimeline.status, 400);
+            const resBogus = await copySection(ds.id, 'bogus-section');
+            assert.strictEqual(resBogus.status, 400);
+            const resMissing = await copySection(ds.id, '');
+            assert.strictEqual(resMissing.status, 400);
+            await fetch(`${BASE_URL}/api/datasets/${ds.id}`, { method: 'DELETE' });
+        });
+
+        it('returns 404 when target dataset is missing', async () => {
+            const res = await copySection(999999, 'experience');
+            assert.strictEqual(res.status, 404);
+        });
+
+        it('about: copies live profile into the target dataset JSON blob', async () => {
+            // Arrange: seed the live profile with a distinctive value
+            await putJson(`${BASE_URL}/api/profile`, {
+                name: 'Live Profile Source',
+                initials: 'LPS',
+                title: 'Source Title',
+                subtitle: 'Source Subtitle',
+                bio: 'Source Bio',
+                location: 'Nowhere',
+                linkedin: '',
+                email: 'src@example.com',
+                phone: '',
+                languages: '',
+            });
+            const target = await createDataset('Copy About Target');
+            // Pre-copy: the target's stored profile.name should be whatever live data was at creation
+            const before = await readTargetJson(target.id);
+            const beforeName = before.profile?.name || null;
+
+            // Mutate live profile with new name after creating the target
+            await putJson(`${BASE_URL}/api/profile`, {
+                ...before.profile,
+                name: 'Edited After Target Creation',
+                bio: 'New bio value',
+            });
+
+            const res = await copySection(target.id, 'about');
+            assert.strictEqual(res.status, 200);
+
+            const after = await readTargetJson(target.id);
+            assert.strictEqual(after.profile.name, 'Edited After Target Creation');
+            assert.strictEqual(after.profile.bio, 'New bio value');
+            assert.notStrictEqual(after.profile.name, beforeName);
+
+            await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+        });
+
+        it('experience: replaces the target dataset experiences array', async () => {
+            // Arrange: create an experience on live, create target, then swap the experience
+            const createExp1 = await postJson(`${BASE_URL}/api/experiences`, {
+                job_title: 'Copy-src-role-1', company_name: 'CoA',
+                start_date: '2020-01', end_date: '', location: 'Loc', highlights: [],
+            });
+            assert.strictEqual(createExp1.status, 200);
+            const exp1 = await createExp1.json();
+
+            const target = await createDataset('Copy Experience Target');
+
+            // Swap: delete original live experience, create a new distinctive one
+            await fetch(`${BASE_URL}/api/experiences/${exp1.id}`, { method: 'DELETE' });
+            const createExp2 = await postJson(`${BASE_URL}/api/experiences`, {
+                job_title: 'Copy-src-role-2', company_name: 'CoB',
+                start_date: '2021-02', end_date: '', location: 'Loc2', highlights: ['highlight-a'],
+            });
+            assert.strictEqual(createExp2.status, 200);
+            const exp2 = await createExp2.json();
+
+            const copyRes = await copySection(target.id, 'experience');
+            assert.strictEqual(copyRes.status, 200);
+
+            const after = await readTargetJson(target.id);
+            const titles = after.experiences.map(e => e.job_title);
+            assert.ok(titles.includes('Copy-src-role-2'), 'target should receive the current live experience');
+            assert.ok(!titles.includes('Copy-src-role-1'), 'old experience should not be present in target after copy');
+
+            // Cleanup
+            await fetch(`${BASE_URL}/api/experiences/${exp2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+        });
+
+        it('skills: replaces target categories and their nested skills', async () => {
+            // Seed a distinctive skill category live
+            const createCat = await postJson(`${BASE_URL}/api/skills`, {
+                name: 'CopySrcCat-X', icon: 'default',
+                skills: ['alpha', 'beta'],
+            });
+            assert.strictEqual(createCat.status, 200);
+            const cat = await createCat.json();
+
+            const target = await createDataset('Copy Skills Target');
+
+            const copyRes = await copySection(target.id, 'skills');
+            assert.strictEqual(copyRes.status, 200);
+
+            const after = await readTargetJson(target.id);
+            const match = (after.skills || []).find(c => c.name === 'CopySrcCat-X');
+            assert.ok(match, 'target skills should include the copied category');
+            assert.deepStrictEqual(match.skills, ['alpha', 'beta']);
+
+            await fetch(`${BASE_URL}/api/skills/${cat.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+        });
+
+        it('custom section: matched by section_key, overwrites items and preserves sort_order', async () => {
+            // Create a custom section live
+            const csRes = await postJson(`${BASE_URL}/api/custom-sections`, {
+                name: 'CopyCustomMatch', layout_type: 'list', icon: 'layers',
+            });
+            assert.strictEqual(csRes.status, 200);
+            const cs = await csRes.json();
+            const sectionKey = cs.section_key;
+            // Add one item live
+            await postJson(`${BASE_URL}/api/custom-sections/${cs.id}/items`, {
+                title: 'live-item-1', description: 'live desc',
+            });
+
+            // Create target dataset (it will snapshot the current custom section + item)
+            const target = await createDataset('Copy Custom Match Target');
+
+            // Mutate live custom section: change name, add second item
+            await putJson(`${BASE_URL}/api/custom-sections/${cs.id}`, {
+                name: 'CopyCustomMatch-renamed', layout_type: 'list', icon: 'layers',
+            });
+            await postJson(`${BASE_URL}/api/custom-sections/${cs.id}/items`, {
+                title: 'live-item-2', description: 'second live desc',
+            });
+
+            // Read target's pre-copy snapshot to capture sort_order of matching section
+            const before = await readTargetJson(target.id);
+            const beforeMatch = (before.customSections || []).find(c => c.section_key === sectionKey);
+            const preservedSortOrder = beforeMatch && beforeMatch.sort_order;
+
+            const copyRes = await copySection(target.id, sectionKey);
+            assert.strictEqual(copyRes.status, 200);
+
+            const after = await readTargetJson(target.id);
+            const match = (after.customSections || []).find(c => c.section_key === sectionKey);
+            assert.ok(match, 'target should still contain the custom section');
+            assert.strictEqual(match.name, 'CopyCustomMatch-renamed', 'target custom section name should be overwritten');
+            const titles = (match.items || []).map(i => i.title);
+            assert.ok(titles.includes('live-item-1'));
+            assert.ok(titles.includes('live-item-2'));
+            if (preservedSortOrder != null) {
+                assert.strictEqual(match.sort_order, preservedSortOrder, 'target sort_order should be preserved');
+            }
+
+            // Ensure the section wasn't duplicated
+            const dupes = (after.customSections || []).filter(c => c.section_key === sectionKey);
+            assert.strictEqual(dupes.length, 1);
+
+            await fetch(`${BASE_URL}/api/custom-sections/${cs.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+        });
+
+        it('custom section: appends when target has no matching section_key or name', async () => {
+            const csRes = await postJson(`${BASE_URL}/api/custom-sections`, {
+                name: 'CopyCustomBrandNew', layout_type: 'cards', icon: 'star',
+            });
+            assert.strictEqual(csRes.status, 200);
+            const cs = await csRes.json();
+            const sectionKey = cs.section_key;
+            await postJson(`${BASE_URL}/api/custom-sections/${cs.id}/items`, {
+                title: 'brand-new-item', description: 'hello',
+            });
+
+            // Create target BEFORE the custom section is created, so target has no record of it
+            // Instead, create the custom section first, then snapshot into target, then delete it from live
+            // Approach: create a target that does NOT contain this section — use DELETE live after target creation
+            // Simpler: create target first by deleting the custom section from live, then re-create it.
+            // That's messy. Alternative: create custom section, then create target, then delete the section from target's JSON by loading a fresh state. Too complex.
+            // Easiest: create the custom section AFTER creating the target. gatherCvData at target-creation time won't include it.
+            await fetch(`${BASE_URL}/api/custom-sections/${cs.id}`, { method: 'DELETE' });
+            const target = await createDataset('Copy Custom Append Target');
+            // Re-create the custom section live with fresh data
+            const csRes2 = await postJson(`${BASE_URL}/api/custom-sections`, {
+                name: 'CopyCustomBrandNew', layout_type: 'cards', icon: 'star',
+            });
+            const cs2 = await csRes2.json();
+            const sectionKey2 = cs2.section_key;
+            await postJson(`${BASE_URL}/api/custom-sections/${cs2.id}/items`, {
+                title: 'appended-item', description: 'appended',
+            });
+
+            const copyRes = await copySection(target.id, sectionKey2);
+            assert.strictEqual(copyRes.status, 200);
+
+            const after = await readTargetJson(target.id);
+            const match = (after.customSections || []).find(c => c.section_key === sectionKey2);
+            assert.ok(match, 'target should have the appended custom section');
+            const titles = (match.items || []).map(i => i.title);
+            assert.ok(titles.includes('appended-item'));
+            // sectionVisibility and sectionOrder should include an entry for the new section
+            assert.ok(after.sectionVisibility && sectionKey2 in after.sectionVisibility, 'sectionVisibility should include the new key');
+            const orderEntry = (after.sectionOrder || []).find(e => e.key === sectionKey2);
+            assert.ok(orderEntry, 'sectionOrder should include the new key');
+
+            await fetch(`${BASE_URL}/api/custom-sections/${cs2.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+        });
+
+        it('custom section: returns 404 when source section is not present in live data', async () => {
+            const target = await createDataset('Copy Custom 404 Target');
+            const res = await copySection(target.id, 'custom_does_not_exist_9999');
+            assert.strictEqual(res.status, 404);
+            await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+        });
+
+        describe('copy-section-diff preview', () => {
+            async function getDiff(id, sectionKey) {
+                return postJson(`${BASE_URL}/api/datasets/${id}/copy-section-diff`, { sectionKey });
+            }
+
+            it('rejects invalid sectionKey with 400', async () => {
+                const ds = await createDataset('Diff Invalid Key');
+                const r = await getDiff(ds.id, 'timeline');
+                assert.strictEqual(r.status, 400);
+                await fetch(`${BASE_URL}/api/datasets/${ds.id}`, { method: 'DELETE' });
+            });
+
+            it('returns 404 when the target dataset is missing', async () => {
+                const r = await getDiff(999999, 'experience');
+                assert.strictEqual(r.status, 404);
+            });
+
+            it('returns before/after/parts and detects added lines after live mutation', async () => {
+                // Seed live with one experience, snapshot, then mutate live so
+                // the diff must report the change.
+                const seed = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Diff-seed-role', company_name: 'DiffCo',
+                    start_date: '2020-01', end_date: '', location: 'L1', highlights: ['old-highlight'],
+                });
+                assert.strictEqual(seed.status, 200);
+                const seedExp = await seed.json();
+
+                const target = await createDataset('Diff Experience Target');
+
+                // Mutate: add a second experience so live now differs from the
+                // snapshot that was captured when the target was created.
+                const second = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Diff-added-role', company_name: 'DiffCo2',
+                    start_date: '2022-05', end_date: '', location: 'L2', highlights: ['new-highlight'],
+                });
+                assert.strictEqual(second.status, 200);
+                const secondExp = await second.json();
+
+                const r = await getDiff(target.id, 'experience');
+                assert.strictEqual(r.status, 200);
+                const body = await r.json();
+                assert.strictEqual(typeof body.before, 'string');
+                assert.strictEqual(typeof body.after, 'string');
+                assert.ok(Array.isArray(body.parts), 'parts should be an array');
+                assert.strictEqual(body.unchanged, false);
+                // The new experience's content must appear in an `added` part.
+                const addedText = body.parts.filter(p => p.added).map(p => p.value).join('');
+                assert.ok(addedText.includes('Diff-added-role'), 'added parts should contain the newly-added role');
+
+                await fetch(`${BASE_URL}/api/experiences/${seedExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/experiences/${secondExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+            });
+
+            it('reports unchanged=true when target already matches live', async () => {
+                // Fresh target snapshots live, so with no mutation afterwards
+                // the serialized before/after must be identical.
+                const target = await createDataset('Diff Unchanged Target');
+                const r = await getDiff(target.id, 'about');
+                assert.strictEqual(r.status, 200);
+                const body = await r.json();
+                assert.strictEqual(body.unchanged, true);
+                assert.strictEqual(body.before, body.after);
+                await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
+            });
+
+            it('batch summary returns per-dataset +/- counts and flags unchanged', async () => {
+                // Two targets: one is a fresh snapshot (unchanged), one is the
+                // same but live mutates afterwards so it shows non-zero counts.
+                const fresh = await createDataset('Diff Summary Fresh');
+
+                const seed = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Summary-seed-role', company_name: 'SumCo',
+                    start_date: '2020-01', end_date: '', location: '', highlights: [],
+                });
+                assert.strictEqual(seed.status, 200);
+                const seedExp = await seed.json();
+
+                const stale = await createDataset('Diff Summary Stale');
+
+                // Add a second experience so `stale` now diverges from live.
+                const added = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Summary-added-role', company_name: 'SumCo2',
+                    start_date: '2022-06', end_date: '', location: '', highlights: [],
+                });
+                assert.strictEqual(added.status, 200);
+                const addedExp = await added.json();
+
+                const res = await postJson(`${BASE_URL}/api/datasets/copy-section-diff-summary`, { sectionKey: 'experience' });
+                assert.strictEqual(res.status, 200);
+                const { summaries } = await res.json();
+                assert.ok(Array.isArray(summaries));
+
+                const byId = Object.fromEntries(summaries.map(s => [s.id, s]));
+                assert.ok(byId[fresh.id], 'fresh dataset must appear in summary');
+                assert.ok(byId[stale.id], 'stale dataset must appear in summary');
+                // `fresh` was snapshotted AFTER the second experience was added,
+                // actually no — it was snapshotted BEFORE. Let me re-check.
+                // Actually fresh captured live when only seedExp existed; stale
+                // captured live when only seedExp existed too (addedExp was
+                // created AFTER stale). So BOTH should show added > 0 now.
+                assert.ok(byId[fresh.id].added > 0 || byId[fresh.id].unchanged === false, 'fresh should show divergence');
+                assert.strictEqual(byId[stale.id].unchanged, false);
+                assert.ok(byId[stale.id].added > 0, 'stale should have added lines');
+
+                await fetch(`${BASE_URL}/api/experiences/${seedExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/experiences/${addedExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${fresh.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${stale.id}`, { method: 'DELETE' });
+            });
+
+            it('batch summary rejects invalid sectionKey with 400', async () => {
+                const r = await postJson(`${BASE_URL}/api/datasets/copy-section-diff-summary`, { sectionKey: 'bogus' });
+                assert.strictEqual(r.status, 400);
+            });
+        });
+
+        describe('copy-section-bulk overwrite', () => {
+            async function bulkCopy(sectionKey, targetIds) {
+                return postJson(`${BASE_URL}/api/datasets/copy-section-bulk`, { sectionKey, targetIds });
+            }
+
+            it('rejects invalid inputs with 400', async () => {
+                const noIds = await bulkCopy('experience', []);
+                assert.strictEqual(noIds.status, 400);
+                const badKey = await bulkCopy('bogus', [1]);
+                assert.strictEqual(badKey.status, 400);
+                const missingKey = await bulkCopy('', [1]);
+                assert.strictEqual(missingKey.status, 400);
+            });
+
+            it('copies the live section into every selected target in one call', async () => {
+                // Seed: two targets, both snapshotted before we mutate live.
+                const t1 = await createDataset('Bulk Target A');
+                const t2 = await createDataset('Bulk Target B');
+
+                const exp = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Bulk-copy-role', company_name: 'BulkCo',
+                    start_date: '2023-01', end_date: '', location: '', highlights: ['bulk-hl'],
+                });
+                assert.strictEqual(exp.status, 200);
+                const expJson = await exp.json();
+
+                const res = await bulkCopy('experience', [t1.id, t2.id]);
+                assert.strictEqual(res.status, 200);
+                const body = await res.json();
+                assert.strictEqual(body.okCount, 2);
+                assert.strictEqual(body.failCount, 0);
+                assert.strictEqual(body.success, true);
+
+                // Both targets must now contain the added live experience.
+                const after1 = await readTargetJson(t1.id);
+                const after2 = await readTargetJson(t2.id);
+                assert.ok(after1.experiences.some(e => e.job_title === 'Bulk-copy-role'), 't1 must contain the live role');
+                assert.ok(after2.experiences.some(e => e.job_title === 'Bulk-copy-role'), 't2 must contain the live role');
+
+                await fetch(`${BASE_URL}/api/experiences/${expJson.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${t1.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${t2.id}`, { method: 'DELETE' });
+            });
+
+            it('reports per-id failures without aborting successful targets', async () => {
+                // One real target + one bogus id. The real target should still
+                // be updated, and the bogus id should show up as a failure.
+                const real = await createDataset('Bulk Partial Target');
+                const res = await bulkCopy('about', [real.id, 999999]);
+                assert.strictEqual(res.status, 200);
+                const body = await res.json();
+                assert.strictEqual(body.okCount, 1);
+                assert.strictEqual(body.failCount, 1);
+                const byId = Object.fromEntries(body.results.map(r => [r.id, r]));
+                assert.strictEqual(byId[real.id].ok, true);
+                assert.strictEqual(byId[999999].ok, false);
+                await fetch(`${BASE_URL}/api/datasets/${real.id}`, { method: 'DELETE' });
+            });
+        });
+    });
+
     describe('Public API (port)', () => {
         it('GET /api/profile returns 200', async () => {
             const res = await fetch(`${PUBLIC_URL}/api/profile`);

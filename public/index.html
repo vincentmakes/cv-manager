@@ -309,6 +309,9 @@
                     <button class="icon-btn" onclick="openModal('profile')" data-i18n-title="action.edit_about" title="Edit About">
                         <span class="material-symbols-outlined">edit</span>
                     </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('about')" data-i18n-title="action.copy_to_dataset" title="Copy to another CV">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('about')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-about">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -356,6 +359,9 @@
                     <button class="icon-btn" onclick="openSectionRenameModal('experience')" data-i18n-title="settings.sections.rename" title="Rename section">
                         <span class="material-symbols-outlined">drive_file_rename_outline</span>
                     </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('experience')" data-i18n-title="action.copy_to_dataset" title="Copy to another CV">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('experience')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-experience">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -381,6 +387,9 @@
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="openSectionRenameModal('certifications')" data-i18n-title="settings.sections.rename" title="Rename section">
                         <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('certifications')" data-i18n-title="action.copy_to_dataset" title="Copy to another CV">
+                        <span class="material-symbols-outlined">content_copy</span>
                     </button>
                     <button class="icon-btn" onclick="toggleSection('certifications')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-certifications">
                         <span class="material-symbols-outlined">visibility</span>
@@ -408,6 +417,9 @@
                     <button class="icon-btn" onclick="openSectionRenameModal('education')" data-i18n-title="settings.sections.rename" title="Rename section">
                         <span class="material-symbols-outlined">drive_file_rename_outline</span>
                     </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('education')" data-i18n-title="action.copy_to_dataset" title="Copy to another CV">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('education')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-education">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -434,6 +446,9 @@
                     <button class="icon-btn" onclick="openSectionRenameModal('skills')" data-i18n-title="settings.sections.rename" title="Rename section">
                         <span class="material-symbols-outlined">drive_file_rename_outline</span>
                     </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('skills')" data-i18n-title="action.copy_to_dataset" title="Copy to another CV">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                     <button class="icon-btn" onclick="toggleSection('skills')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-skills">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -459,6 +474,9 @@
                 <div class="section-actions no-print">
                     <button class="icon-btn" onclick="openSectionRenameModal('projects')" data-i18n-title="settings.sections.rename" title="Rename section">
                         <span class="material-symbols-outlined">drive_file_rename_outline</span>
+                    </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('projects')" data-i18n-title="action.copy_to_dataset" title="Copy to another CV">
+                        <span class="material-symbols-outlined">content_copy</span>
                     </button>
                     <button class="icon-btn" onclick="toggleSection('projects')" data-i18n-title="action.toggle_visibility" title="Toggle Visibility" id="toggle-projects">
                         <span class="material-symbols-outlined">visibility</span>
@@ -896,6 +914,63 @@
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeSectionRenameModal()" data-i18n="btn.cancel">Cancel</button>
                     <button class="btn btn-primary" onclick="saveSectionRename()" data-i18n="btn.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Section to Another Dataset Modal -->
+    <div class="modal-overlay" id="copySectionModalOverlay">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="copy_section.title">Copy section to another CV</h3>
+                <button class="modal-close" onclick="closeCopySectionModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="copySectionModalBody" data-step="list">
+                <div class="copy-section-step copy-section-step-list">
+                    <p class="copy-section-subtitle" id="copySectionSubtitle"></p>
+                    <div class="copy-section-current" id="copySectionCurrent">
+                        <span class="copy-section-current-label" data-i18n="copy_section.from">From:</span>
+                        <div class="copy-section-current-info" id="copySectionCurrentInfo"></div>
+                    </div>
+                    <div class="copy-section-warning" role="alert">
+                        <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                        <span data-i18n="copy_section.warning">The section's content in the target CV will be overwritten. This cannot be undone.</span>
+                    </div>
+                    <div class="copy-section-list-toolbar">
+                        <h4 class="copy-section-list-title" data-i18n="copy_section.choose_target">Choose a target CV</h4>
+                        <label class="copy-section-selectall">
+                            <input type="checkbox" id="copySectionSelectAll">
+                            <span data-i18n="copy_section.select_all">Select all</span>
+                        </label>
+                    </div>
+                    <div id="copySectionTargetList" class="copy-section-target-list"></div>
+                </div>
+                <div class="copy-section-step copy-section-step-diff">
+                    <div class="copy-section-diff-header">
+                        <span class="copy-section-diff-label copy-section-diff-label-before" data-i18n="copy_section.diff_before">Current target content</span>
+                        <span class="copy-section-diff-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        <span class="copy-section-diff-label copy-section-diff-label-after" data-i18n="copy_section.diff_after">After copy</span>
+                    </div>
+                    <pre class="copy-section-diff" id="copySectionDiff" aria-live="polite"></pre>
+                </div>
+                <div class="copy-section-step copy-section-step-bulk">
+                    <p class="copy-section-bulk-subtitle" id="copySectionBulkSubtitle"></p>
+                    <ul class="copy-section-bulk-list" id="copySectionBulkList"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <button class="btn btn-ghost copy-section-back-btn" id="copySectionBackBtn" type="button" onclick="copySectionBackToList()">
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+                        <span data-i18n="copy_section.back">Back</span>
+                    </button>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeCopySectionModal()" data-i18n="btn.cancel">Cancel</button>
+                    <button class="btn btn-primary copy-section-confirm-btn" id="copySectionConfirmBtn" type="button" onclick="onCopySectionConfirmClick()" data-i18n="copy_section.confirm_button">Copy & overwrite</button>
                 </div>
             </div>
         </div>

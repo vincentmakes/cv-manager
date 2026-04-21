@@ -3194,3 +3194,283 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     .reorder-overlay,
     .section-reorder-handle { display: none !important; }
 }
+
+/* Copy-section modal — two-step flow (list → diff preview) */
+.copy-section-step { display: none; }
+#copySectionModalBody[data-step="list"] .copy-section-step-list { display: block; }
+#copySectionModalBody[data-step="diff"] .copy-section-step-diff { display: flex; flex-direction: column; gap: 10px; }
+
+/* Footer buttons are shown depending on the current step. The Back button
+ * only appears after the user has drilled in (diff or bulk). The confirm
+ * button is visible on every step — its label + click behaviour vary. */
+#copySectionModalOverlay .copy-section-back-btn { display: none; }
+#copySectionModalOverlay .modal-body[data-step="diff"] ~ .modal-footer .copy-section-back-btn,
+#copySectionModalOverlay .modal-body[data-step="bulk"] ~ .modal-footer .copy-section-back-btn { display: inline-flex; }
+
+.copy-section-subtitle {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--gray-700);
+}
+
+.copy-section-diff-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-700);
+}
+.copy-section-diff-label-before { color: #b91c1c; }
+.copy-section-diff-label-after { color: #15803d; }
+.copy-section-diff-arrow { font-size: 18px; color: var(--gray-500); }
+
+.copy-section-diff {
+    margin: 0;
+    padding: 12px 14px;
+    max-height: 50vh;
+    overflow: auto;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--gray-900);
+}
+.copy-section-diff .diff-line {
+    display: block;
+    padding: 0 6px;
+    border-left: 3px solid transparent;
+}
+.copy-section-diff .diff-added {
+    background: #dcfce7;
+    border-left-color: #15803d;
+    color: #14532d;
+}
+.copy-section-diff .diff-added::before { content: "+ "; color: #15803d; }
+.copy-section-diff .diff-removed {
+    background: #fee2e2;
+    border-left-color: #b91c1c;
+    color: #7f1d1d;
+}
+.copy-section-diff .diff-removed::before { content: "− "; color: #b91c1c; }
+.copy-section-diff .diff-context::before { content: "  "; }
+.copy-section-diff-empty {
+    padding: 18px;
+    text-align: center;
+    color: var(--gray-600);
+    font-style: italic;
+}
+
+/* Per-row +/- chips in the target picker — sit between the default badge
+ * and the chevron, aligned to the right edge of the row. */
+.copy-section-diffstat {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+.copy-section-diffstat-added,
+.copy-section-diffstat-removed,
+.copy-section-diffstat-equal {
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+.copy-section-diffstat-added {
+    background: #dcfce7;
+    color: #14532d;
+}
+.copy-section-diffstat-removed {
+    background: #fee2e2;
+    color: #7f1d1d;
+}
+.copy-section-diffstat-equal {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-weight: 500;
+}
+.copy-section-current {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+.copy-section-current-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.copy-section-current-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.copy-section-current-info .cvm-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    color: var(--gray-900);
+}
+.copy-section-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(230, 126, 34, 0.35);
+    background: rgba(230, 126, 34, 0.08);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--gray-800);
+}
+.copy-section-warning .material-symbols-outlined {
+    color: #d97706;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.copy-section-list-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.copy-section-target-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.copy-section-target-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    transition: background 0.12s, border-color 0.12s;
+}
+.copy-section-target-row:hover {
+    background: var(--gray-50);
+    border-color: var(--primary);
+}
+.copy-section-target-row .cvm-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.copy-section-target-row .copy-section-arrow {
+    color: var(--gray-500);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.copy-section-target-check {
+    flex-shrink: 0;
+    margin: 0;
+    cursor: pointer;
+}
+.copy-section-preview-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+.copy-section-preview-btn:hover {
+    background: var(--gray-100);
+    color: var(--primary);
+}
+.copy-section-preview-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.copy-section-list-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+.copy-section-selectall {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--gray-700);
+    cursor: pointer;
+}
+.copy-section-selectall input {
+    margin: 0;
+    cursor: pointer;
+}
+.copy-section-selectall input:disabled { cursor: not-allowed; opacity: 0.5; }
+
+#copySectionModalBody[data-step="bulk"] .copy-section-step-bulk {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.copy-section-bulk-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: var(--gray-700);
+}
+.copy-section-bulk-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 50vh;
+    overflow: auto;
+}
+.copy-section-bulk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+.copy-section-bulk-row .cvm-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

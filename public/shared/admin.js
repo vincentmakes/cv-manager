@@ -809,6 +809,9 @@ function renderCustomSection(section) {
                     <button class="icon-btn" onclick="openCustomSectionRenameModal(${section.id})" title="${t('custom_section.rename_title')}" aria-label="${t('custom_section.rename_title')}">
                         <span class="material-symbols-outlined">edit</span>
                     </button>
+                    <button class="icon-btn" onclick="openCopySectionModal('${section.section_key}')" title="${t('action.copy_to_dataset')}" aria-label="${t('action.copy_to_dataset')}">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                     <button class="icon-btn ${visible ? 'active' : ''}" onclick="toggleSection('${section.section_key}')" title="${t('action.toggle_visibility')}" id="toggle-${section.section_key}">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -3126,6 +3129,465 @@ function closeCvManager() {
     document.querySelectorAll('.cvm-overflow-menu').forEach(el => el.remove());
 }
 
+// ===========================
+// Copy section to another dataset
+// ===========================
+
+// Resolve the human-readable display name for a section key — used in the
+// copy-section modal subtitle and confirmation prompt. Falls back to the key
+// itself so the user always sees something meaningful.
+function copySectionDisplayName(sectionKey) {
+    const builtinI18nKey = `section.${sectionKey}`;
+    const translated = t(builtinI18nKey);
+    if (translated && translated !== builtinI18nKey) return translated;
+    // Custom section: look up in loaded customSections
+    if (typeof customSections !== 'undefined' && Array.isArray(customSections)) {
+        const cs = customSections.find(c => c && c.section_key === sectionKey);
+        if (cs) return cs.display_name || cs.name || sectionKey;
+    }
+    return sectionKey;
+}
+
+// Module-scoped state for the copy-section picker: selected target IDs
+// (ordered Set) and a cache of the per-target diff summaries so the bulk
+// confirmation screen can show +/- counts without a second round-trip.
+const copySectionSelectedIds = new Set();
+let copySectionTargets = [];
+let copySectionDiffSummary = {};
+
+async function openCopySectionModal(sectionKey) {
+    if (!sectionKey || sectionKey === 'timeline') return;
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+
+    const sectionName = copySectionDisplayName(sectionKey);
+    const subtitle = document.getElementById('copySectionSubtitle');
+    if (subtitle) {
+        subtitle.textContent = t('copy_section.subtitle', { section: sectionName });
+    }
+
+    renderCopySectionCurrentCv();
+
+    copySectionSelectedIds.clear();
+    copySectionTargets = [];
+    copySectionDiffSummary = {};
+
+    const list = document.getElementById('copySectionTargetList');
+    if (list) {
+        list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.loading') || 'Loading...')}</p>`;
+    }
+
+    setCopySectionStep('list');
+    overlay.classList.add('active');
+    overlay.setAttribute('data-section-key', sectionKey);
+    overlay.removeAttribute('data-target-id');
+    overlay.removeAttribute('data-target-name');
+
+    const selectAll = document.getElementById('copySectionSelectAll');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        selectAll.onchange = onCopySectionSelectAllChange;
+    }
+    updateCopySectionConfirmButton();
+
+    try {
+        const datasets = await api('/api/datasets');
+        renderCopySectionTargetList(datasets, sectionKey);
+    } catch (err) {
+        if (list) list.innerHTML = `<p class="cvm-empty">${escapeHtml(err.message || String(err))}</p>`;
+    }
+}
+
+// Render the "From: <language> v<n> <name>" pill above the warning so the
+// user can confirm which CV they're copying from before selecting a target.
+function renderCopySectionCurrentCv() {
+    const info = document.getElementById('copySectionCurrentInfo');
+    if (!info) return;
+    const name = activeDatasetName || t('datasets.editing');
+    const ds = {
+        language: activeDatasetLanguage || 'en',
+        version: activeDatasetVersion || 1,
+        is_public: !!activeDatasetIsPublic,
+        is_default: !!activeDatasetIsDefault
+    };
+    const chips = renderDatasetChips(ds, {
+        versionBadge: ds.version,
+        isDefault: ds.is_default,
+        isDefaultSibling: false,
+        forcePublicChip: true
+    });
+    info.innerHTML = `${chips}<span class="cvm-name">${escapeHtml(name)}</span>`;
+}
+
+function closeCopySectionModal() {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.removeAttribute('data-section-key');
+        overlay.removeAttribute('data-target-id');
+        overlay.removeAttribute('data-target-name');
+    }
+    setCopySectionStep('list');
+}
+
+function renderCopySectionTargetList(datasets, sectionKey) {
+    const list = document.getElementById('copySectionTargetList');
+    if (!list) return;
+    const targets = (datasets || []).filter(ds => ds && ds.id !== activeDatasetId);
+    copySectionTargets = targets;
+    if (targets.length === 0) {
+        list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.empty'))}</p>`;
+        const selectAll = document.getElementById('copySectionSelectAll');
+        if (selectAll) selectAll.disabled = true;
+        return;
+    }
+    const selectAll = document.getElementById('copySectionSelectAll');
+    if (selectAll) selectAll.disabled = false;
+
+    // Each row is a label wrapping a checkbox + dataset info + a preview
+    // button. The whole label toggles selection; the preview button opens
+    // the single-target diff view without toggling.
+    list.innerHTML = targets.map(ds => {
+        const isDefault = !!ds.is_default;
+        const chips = renderDatasetChips(ds, {
+            versionBadge: ds.version || 1,
+            isDefault,
+            isDefaultSibling: false,
+            forcePublicChip: true
+        });
+        const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
+        const defaultBadge = isDefault
+            ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`
+            : '';
+        return `
+            <label class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}">
+                <input type="checkbox" class="copy-section-target-check" value="${ds.id}" onchange="onCopySectionTargetToggle(${ds.id}, this.checked)">
+                ${chips}
+                <span class="cvm-name">${escapeHtml(ds.name)}</span>
+                ${defaultBadge}
+                <span class="copy-section-diffstat" data-diffstat-id="${ds.id}" aria-hidden="true"></span>
+                <button type="button" class="copy-section-preview-btn" title="${escapeHtml(t('copy_section.preview_diff'))}" onclick="event.preventDefault(); event.stopPropagation(); showCopySectionDiff(${ds.id}, '${safeName}')">
+                    <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                </button>
+            </label>`;
+    }).join('');
+
+    fetchCopySectionDiffSummary(sectionKey);
+    updateCopySectionConfirmButton();
+    syncCopySectionSelectAll();
+}
+
+function onCopySectionTargetToggle(id, checked) {
+    const numId = Number(id);
+    if (checked) copySectionSelectedIds.add(numId);
+    else copySectionSelectedIds.delete(numId);
+    updateCopySectionConfirmButton();
+    syncCopySectionSelectAll();
+}
+
+function onCopySectionSelectAllChange(e) {
+    const checked = !!(e && e.target && e.target.checked);
+    copySectionSelectedIds.clear();
+    if (checked) {
+        copySectionTargets.forEach(ds => copySectionSelectedIds.add(Number(ds.id)));
+    }
+    document.querySelectorAll('.copy-section-target-check').forEach(cb => {
+        cb.checked = checked;
+    });
+    updateCopySectionConfirmButton();
+}
+
+// Keep the Select-all checkbox's state (checked / unchecked / indeterminate)
+// in sync with the row checkboxes so it always mirrors reality.
+function syncCopySectionSelectAll() {
+    const selectAll = document.getElementById('copySectionSelectAll');
+    if (!selectAll) return;
+    const total = copySectionTargets.length;
+    const selected = copySectionSelectedIds.size;
+    selectAll.checked = total > 0 && selected === total;
+    selectAll.indeterminate = selected > 0 && selected < total;
+}
+
+function updateCopySectionConfirmButton() {
+    const btn = document.getElementById('copySectionConfirmBtn');
+    if (!btn) return;
+    const count = copySectionSelectedIds.size;
+    btn.disabled = count === 0;
+    // Label changes based on count so the user always knows exactly how many
+    // CVs will be affected before confirming.
+    if (count <= 1) btn.textContent = t('copy_section.confirm_button');
+    else btn.textContent = t('copy_section.confirm_button_n', { n: count });
+}
+
+// Batch-fetch +/- line counts for every target dataset and drop them into each
+// row's diffstat slot. Failures are silent (per-row chip just stays empty) so
+// the picker remains usable even if the summary endpoint errors. The fetched
+// summaries are cached in copySectionDiffSummary so the bulk confirm view can
+// show them without a second request.
+async function fetchCopySectionDiffSummary(sectionKey) {
+    try {
+        const result = await api('/api/datasets/copy-section-diff-summary', {
+            method: 'POST',
+            body: { sectionKey }
+        });
+        const summaries = (result && result.summaries) || [];
+        copySectionDiffSummary = {};
+        summaries.forEach(s => {
+            copySectionDiffSummary[s.id] = s;
+            const slot = document.querySelector(`.copy-section-diffstat[data-diffstat-id="${s.id}"]`);
+            if (!slot) return;
+            if (s.error) { slot.innerHTML = ''; return; }
+            if (s.unchanged) {
+                slot.innerHTML = `<span class="copy-section-diffstat-equal" title="${escapeHtml(t('copy_section.diff_no_changes'))}">=</span>`;
+                return;
+            }
+            const added = s.added || 0;
+            const removed = s.removed || 0;
+            const parts = [];
+            if (added) parts.push(`<span class="copy-section-diffstat-added">+${added}</span>`);
+            if (removed) parts.push(`<span class="copy-section-diffstat-removed">−${removed}</span>`);
+            slot.innerHTML = parts.join('');
+        });
+    } catch (err) {
+        // Intentionally silent — the user can still click a target and see
+        // the full diff; the chips are just a preview hint.
+    }
+}
+
+// Dispatcher for the footer primary button. Behaviour depends on the current
+// step: from the list, route to the diff preview (1 selected) or bulk confirm
+// (2+ selected). From the diff step, execute the single-target copy. From the
+// bulk-confirm step, execute the bulk copy.
+function onCopySectionConfirmClick() {
+    const body = document.getElementById('copySectionModalBody');
+    const step = body ? body.getAttribute('data-step') : 'list';
+    if (step === 'diff') return confirmCopySectionToTarget();
+    if (step === 'bulk') return confirmCopySectionBulk();
+    const ids = Array.from(copySectionSelectedIds);
+    if (ids.length === 0) return;
+    if (ids.length === 1) {
+        const ds = copySectionTargets.find(d => Number(d.id) === Number(ids[0]));
+        const name = ds ? ds.name : '';
+        showCopySectionDiff(ids[0], name);
+        return;
+    }
+    showCopySectionBulkConfirm();
+}
+
+// Step 2b of the flow (N > 1): render a checklist of the selected targets with
+// their cached +/- stats so the user can review before committing. A single
+// button here fires the bulk endpoint.
+function showCopySectionBulkConfirm() {
+    const list = document.getElementById('copySectionBulkList');
+    const subtitle = document.getElementById('copySectionBulkSubtitle');
+    const selected = copySectionTargets.filter(ds => copySectionSelectedIds.has(Number(ds.id)));
+    if (subtitle) {
+        subtitle.textContent = t('copy_section.bulk_subtitle', { n: selected.length });
+    }
+    if (list) {
+        list.innerHTML = selected.map(ds => {
+            const summary = copySectionDiffSummary[ds.id] || {};
+            let stat = '';
+            if (summary.unchanged) {
+                stat = `<span class="copy-section-diffstat-equal" title="${escapeHtml(t('copy_section.diff_no_changes'))}">=</span>`;
+            } else if (summary.error) {
+                stat = '';
+            } else {
+                const parts = [];
+                if (summary.added) parts.push(`<span class="copy-section-diffstat-added">+${summary.added}</span>`);
+                if (summary.removed) parts.push(`<span class="copy-section-diffstat-removed">−${summary.removed}</span>`);
+                stat = parts.join(' ');
+            }
+            const chips = renderDatasetChips(ds, {
+                versionBadge: ds.version || 1,
+                isDefault: !!ds.is_default,
+                isDefaultSibling: false,
+                forcePublicChip: true
+            });
+            return `<li class="copy-section-bulk-row">
+                ${chips}
+                <span class="cvm-name">${escapeHtml(ds.name)}</span>
+                <span class="copy-section-diffstat">${stat}</span>
+            </li>`;
+        }).join('');
+    }
+    setCopySectionStep('bulk');
+    const confirmBtn = document.getElementById('copySectionConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = t('copy_section.confirm_button_n', { n: selected.length });
+    }
+}
+
+async function confirmCopySectionBulk() {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+    const sectionKey = overlay.getAttribute('data-section-key');
+    const targetIds = Array.from(copySectionSelectedIds);
+    if (!sectionKey || targetIds.length === 0) return;
+
+    const btn = document.getElementById('copySectionConfirmBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const result = await api('/api/datasets/copy-section-bulk', {
+            method: 'POST',
+            body: { sectionKey, targetIds }
+        });
+        if (result && result.error) {
+            toast(result.error || t('copy_section.toast_error'), 'error');
+            return;
+        }
+        const ok = result && result.okCount || 0;
+        const fail = result && result.failCount || 0;
+        closeCopySectionModal();
+        if (fail > 0) {
+            toast(t('copy_section.toast_bulk_partial', { ok, fail }), 'error');
+        } else {
+            toast(t('copy_section.toast_bulk_success', { n: ok }));
+        }
+    } catch (err) {
+        toast((err && err.message) || t('copy_section.toast_error'), 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+function setCopySectionStep(step) {
+    const body = document.getElementById('copySectionModalBody');
+    if (body) body.setAttribute('data-step', step);
+}
+
+// Back button target — returns to the list step and re-syncs the confirm
+// button to the current selection (which may have been stale while the diff
+// or bulk step was open).
+function copySectionBackToList() {
+    setCopySectionStep('list');
+    updateCopySectionConfirmButton();
+}
+
+// Stage 2 of the copy flow: fetch a server-computed line diff between the
+// target dataset's current section content and the live CV's section content,
+// and render it inline. Confirming here triggers the actual copy.
+async function showCopySectionDiff(targetId, targetName) {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+    const sectionKey = overlay.getAttribute('data-section-key');
+    if (!sectionKey) return;
+
+    overlay.setAttribute('data-target-id', String(targetId));
+    overlay.setAttribute('data-target-name', targetName);
+
+    const pre = document.getElementById('copySectionDiff');
+    if (pre) pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_loading'))}</span>`;
+
+    setCopySectionStep('diff');
+    // In the diff step the confirm button applies to the previewed target
+    // regardless of selection state, so force-enable it and show the singular
+    // label (the bulk step handles the plural label separately).
+    const confirmBtn = document.getElementById('copySectionConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = t('copy_section.confirm_button');
+    }
+
+    try {
+        const result = await api(`/api/datasets/${targetId}/copy-section-diff`, {
+            method: 'POST',
+            body: { sectionKey }
+        });
+        renderCopySectionDiff(result);
+    } catch (err) {
+        if (pre) pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml((err && err.message) || t('copy_section.diff_error'))}</span>`;
+    }
+}
+
+// Render jsdiff's diffLines() parts into color-coded rows. Each part has
+// { value, added?, removed? }; we split on newlines so each logical line
+// becomes its own DOM row (otherwise long runs of context would render as a
+// single blob and the +/- markers wouldn't line up).
+function renderCopySectionDiff(result) {
+    const pre = document.getElementById('copySectionDiff');
+    if (!pre) return;
+    if (!result || (!result.before && !result.after)) {
+        pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_no_content'))}</span>`;
+        return;
+    }
+    if (result.unchanged) {
+        pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_no_changes'))}</span>`;
+        return;
+    }
+    const rows = [];
+    (result.parts || []).forEach(part => {
+        const cls = part.added ? 'diff-added' : (part.removed ? 'diff-removed' : 'diff-context');
+        const lines = String(part.value).split('\n');
+        // Trailing empty entry from split on "…\n" is not a real line.
+        if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+        lines.forEach(line => {
+            rows.push(`<span class="diff-line ${cls}">${escapeHtml(line) || '&nbsp;'}</span>`);
+        });
+    });
+    pre.innerHTML = rows.join('');
+}
+
+async function confirmCopySectionToTarget() {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+    const sectionKey = overlay.getAttribute('data-section-key');
+    const targetId = overlay.getAttribute('data-target-id');
+    const targetName = overlay.getAttribute('data-target-name') || '';
+    if (!sectionKey || !targetId) return;
+
+    const btn = document.getElementById('copySectionConfirmBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const result = await api(`/api/datasets/${targetId}/copy-section-from-live`, {
+            method: 'POST',
+            body: { sectionKey }
+        });
+        if (result && result.error) {
+            toast(result.error || t('copy_section.toast_error'), 'error');
+            return;
+        }
+        closeCopySectionModal();
+        toast(t('copy_section.toast_success', { target: targetName }));
+    } catch (err) {
+        toast((err && err.message) || t('copy_section.toast_error'), 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+// Shared chip-rendering helper — used by the CV manager list and the
+// copy-section target picker so both stay visually identical.
+// Returns HTML for the Language badge, optional Version badge, and — when
+// called with options.inlinePublicChip — the Public/share icon inline with
+// the dataset name. For the manager's legacy inline-with-name public chip,
+// pass `{ inlinePublicChip: true, datasetNameHtml: ... }`; otherwise the
+// public chip is returned as a separate standalone badge.
+function renderDatasetChips(ds, opts = {}) {
+    if (!ds) return '';
+    const dsLang = ds.language || 'en';
+    const versionBadge = opts.versionBadge || null;
+    const parts = [];
+    parts.push(`<span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>`);
+    if (versionBadge) {
+        parts.push(`<span class="dataset-version-badge">v${versionBadge}</span>`);
+    }
+    // Public chip: by default the manager suppresses it on default / default-sibling
+    // rows (since "Public" is already implied by the "radio = served at root" state).
+    // Callers that always want the chip — e.g. the copy-section picker — pass
+    // forcePublicChip: true.
+    const showPublic = !opts.inlinePublicChip
+        && !opts.suppressPublicChip
+        && ds.is_public
+        && (opts.forcePublicChip || (!opts.isDefault && !opts.isDefaultSibling));
+    if (showPublic) {
+        parts.push(`<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>`);
+    }
+    return parts.join('');
+}
+
 function renderCvManagerList(datasets) {
     const container = document.getElementById('datasetsList');
     if (!container) return;
@@ -3163,14 +3625,19 @@ function renderCvManagerList(datasets) {
         const urlHtml = urlText ? `<span class="cvm-url">${urlText}</span>` : '';
         const showToggle = ds.slug && !isDefault && !isDefSib;
 
+        const chips = renderDatasetChips(ds, {
+            versionBadge: opts.versionBadge || null,
+            isDefault,
+            isDefaultSibling: isDefSib,
+            suppressPublicChip: true
+        });
         return `
             <div class="${classes.join(' ')}" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" data-lang="${dsLang}">
                 <label class="cvm-radio" title="${isDefault ? t('datasets.default_hint') : ''}">
                     <input type="radio" name="dataset-default" ${isDefault ? 'checked' : ''} onchange="setDatasetDefault(${ds.id}, '${safeName}')">
                     <span class="radio-dot"></span>
                 </label>
-                <span class="dataset-lang-badge">${dsLang.toUpperCase()}</span>
-                ${opts.versionBadge ? `<span class="dataset-version-badge">v${opts.versionBadge}</span>` : ''}
+                ${chips}
                 <span class="cvm-name">${escapeHtml(ds.name)}${ds.is_public && !isDefault && !isDefSib ? ` <span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>` : ''}</span>
                 ${isDefault
                     ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`

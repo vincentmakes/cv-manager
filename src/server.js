@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
 const archiver = require('archiver');
+const { diffLines } = require('diff');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -2684,6 +2685,344 @@ if (PUBLIC_ONLY) {
             propagateStructure(req.params.id);
             res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public });
         } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    // Copy a single section from the live CV into another saved dataset.
+    // The live DB is never mutated — only the target dataset's stored JSON blob.
+    // For custom sections, match on section_key first, then case-insensitive name;
+    // otherwise append a new entry. Timeline has no content of its own and is rejected.
+    const BUILTIN_COPYABLE_SECTIONS = new Set(['about', 'experience', 'certifications', 'education', 'skills', 'projects']);
+
+    // Produce a stable, human-readable plain-text snapshot of a single section
+    // extracted from a CV data blob. Used as input to diffLines() so the copy-
+    // section preview shows meaningful added/removed rows instead of JSON noise.
+    function serializeSection(data, sectionKey) {
+        if (!data) return '';
+        const join = (parts) => parts.filter(p => p != null && String(p).trim() !== '').join(' · ');
+        const dateRange = (s, e) => {
+            const a = formatDateShort(s || '');
+            const b = e ? formatDateShort(e) : 'Present';
+            if (!a && !b) return '';
+            if (!a) return b;
+            return `${a} – ${b}`;
+        };
+        const lines = [];
+        if (sectionKey === 'about') {
+            const p = data.profile || {};
+            lines.push(`Name: ${p.name || ''}`);
+            if (p.initials) lines.push(`Initials: ${p.initials}`);
+            if (p.title) lines.push(`Title: ${p.title}`);
+            if (p.subtitle) lines.push(`Subtitle: ${p.subtitle}`);
+            if (p.location) lines.push(`Location: ${p.location}`);
+            if (p.email) lines.push(`Email: ${p.email}`);
+            if (p.phone) lines.push(`Phone: ${p.phone}`);
+            if (p.linkedin) lines.push(`LinkedIn: ${p.linkedin}`);
+            if (p.languages) lines.push(`Languages: ${p.languages}`);
+            if (p.bio) {
+                lines.push('Bio:');
+                String(p.bio).split(/\r?\n/).forEach(b => lines.push(`  ${b}`));
+            }
+        } else if (sectionKey === 'experience') {
+            (data.experiences || []).forEach(e => {
+                lines.push(`• ${e.job_title || ''} — ${e.company_name || ''}`);
+                const meta = join([dateRange(e.start_date, e.end_date), e.location, e.country_code]);
+                if (meta) lines.push(`  ${meta}`);
+                if (e.summary) lines.push(`  ${e.summary}`);
+                (e.highlights || []).forEach(h => lines.push(`  - ${h}`));
+                lines.push('');
+            });
+        } else if (sectionKey === 'certifications') {
+            (data.certifications || []).forEach(c => {
+                lines.push(`• ${c.name || ''} — ${c.provider || ''}`);
+                const meta = join([
+                    c.issue_date ? `Issued ${formatDateShort(c.issue_date)}` : '',
+                    c.expiry_date ? `Expires ${formatDateShort(c.expiry_date)}` : '',
+                    c.credential_id ? `ID ${c.credential_id}` : ''
+                ]);
+                if (meta) lines.push(`  ${meta}`);
+                lines.push('');
+            });
+        } else if (sectionKey === 'education') {
+            (data.education || []).forEach(e => {
+                lines.push(`• ${e.degree_title || ''} — ${e.institution_name || ''}`);
+                const meta = dateRange(e.start_date, e.end_date);
+                if (meta) lines.push(`  ${meta}`);
+                if (e.description) {
+                    String(e.description).split(/\r?\n/).forEach(l => lines.push(`  ${l}`));
+                }
+                lines.push('');
+            });
+        } else if (sectionKey === 'skills') {
+            (data.skills || []).forEach(cat => {
+                const items = (cat.skills || []).join(', ');
+                lines.push(`• ${cat.name || ''}${cat.icon && cat.icon !== 'default' ? ` (${cat.icon})` : ''}`);
+                if (items) lines.push(`  ${items}`);
+                lines.push('');
+            });
+        } else if (sectionKey === 'projects') {
+            (data.projects || []).forEach(p => {
+                lines.push(`• ${p.title || ''}`);
+                if (p.description) lines.push(`  ${p.description}`);
+                const techs = Array.isArray(p.technologies) ? p.technologies.join(', ') : '';
+                if (techs) lines.push(`  Tech: ${techs}`);
+                if (p.link) lines.push(`  Link: ${p.link}`);
+                lines.push('');
+            });
+        } else if (sectionKey.startsWith('custom_')) {
+            const cs = (data.customSections || []).find(s => s && s.section_key === sectionKey);
+            if (cs) {
+                lines.push(`${cs.name || ''} [${cs.layout_type || 'custom'}]`);
+                if (cs.icon) lines.push(`Icon: ${cs.icon}`);
+                lines.push('');
+                (cs.items || []).forEach(it => {
+                    if (it.title) lines.push(`• ${it.title}`);
+                    else lines.push('•');
+                    if (it.subtitle) lines.push(`  ${it.subtitle}`);
+                    if (it.description) {
+                        String(it.description).split(/\r?\n/).forEach(l => lines.push(`  ${l}`));
+                    }
+                    if (it.link) lines.push(`  Link: ${it.link}`);
+                    if (it.icon) lines.push(`  Icon: ${it.icon}`);
+                    lines.push('');
+                });
+            }
+        }
+        return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd();
+    }
+
+    // Build the before/after snapshots and a line-level diff the client can
+    // render so the user previews exactly which rows will change before
+    // committing to the overwrite.
+    app.post('/api/datasets/:id/copy-section-diff', (req, res) => {
+        const { sectionKey } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            let targetData;
+            try { targetData = JSON.parse(dataset.data); }
+            catch { return res.status(500).json({ error: 'Target dataset data is corrupted' }); }
+            const liveData = gatherCvData();
+            const before = serializeSection(targetData, sectionKey);
+            const after = serializeSection(liveData, sectionKey);
+            const parts = diffLines(before + '\n', after + '\n');
+            res.json({ before, after, parts, unchanged: before === after });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // Batch summary: for every saved dataset, compute how many lines would be
+    // added/removed if the given section were copied from live into that dataset.
+    // Powers the per-row +N / -M chips in the copy-section picker so the user
+    // sees the impact of each target at a glance before clicking.
+    app.post('/api/datasets/copy-section-diff-summary', (req, res) => {
+        const { sectionKey } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        try {
+            const liveData = gatherCvData();
+            const after = serializeSection(liveData, sectionKey);
+            const rows = db.prepare('SELECT id, data FROM saved_datasets').all();
+            const summaries = rows.map(row => {
+                let before = '';
+                try { before = serializeSection(JSON.parse(row.data), sectionKey); }
+                catch { return { id: row.id, error: 'corrupted' }; }
+                if (before === after) return { id: row.id, added: 0, removed: 0, unchanged: true };
+                let added = 0, removed = 0;
+                diffLines(before + '\n', after + '\n').forEach(part => {
+                    if (part.added) added += part.count || 0;
+                    else if (part.removed) removed += part.count || 0;
+                });
+                return { id: row.id, added, removed, unchanged: false };
+            });
+            res.json({ summaries });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // Mutate `targetData` (a parsed saved_dataset.data blob) in place so that
+    // the given section's content matches `liveData`. Throws an Error with a
+    // .status property when validation fails so callers can surface HTTP codes.
+    // Shared by the single-target and bulk copy endpoints.
+    function applyCopyToTargetData(targetData, sectionKey, liveData) {
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            const err = new Error('Invalid or non-copyable sectionKey');
+            err.status = 400;
+            throw err;
+        }
+        if (isBuiltin) {
+            switch (sectionKey) {
+                case 'about': targetData.profile = liveData.profile; break;
+                case 'experience': targetData.experiences = liveData.experiences; break;
+                case 'certifications': targetData.certifications = liveData.certifications; break;
+                case 'education': targetData.education = liveData.education; break;
+                case 'skills': targetData.skills = liveData.skills; break;
+                case 'projects': targetData.projects = liveData.projects; break;
+            }
+            return;
+        }
+        const liveCustomSections = Array.isArray(liveData.customSections) ? liveData.customSections : [];
+        const source = liveCustomSections.find(cs => cs && cs.section_key === sectionKey);
+        if (!source) {
+            const err = new Error('Source custom section not found');
+            err.status = 404;
+            throw err;
+        }
+        if (!Array.isArray(targetData.customSections)) targetData.customSections = [];
+        const targetCustoms = targetData.customSections;
+        let existingIdx = targetCustoms.findIndex(cs => cs && cs.section_key === source.section_key);
+        if (existingIdx === -1 && source.name) {
+            const srcNameLower = String(source.name).toLowerCase();
+            existingIdx = targetCustoms.findIndex(cs => cs && typeof cs.name === 'string' && cs.name.toLowerCase() === srcNameLower);
+        }
+        if (existingIdx !== -1) {
+            const preservedSortOrder = targetCustoms[existingIdx].sort_order;
+            targetCustoms[existingIdx] = {
+                ...targetCustoms[existingIdx],
+                section_key: source.section_key,
+                name: source.name,
+                layout_type: source.layout_type,
+                icon: source.icon,
+                metadata: source.metadata,
+                visible: source.visible,
+                items: Array.isArray(source.items) ? source.items.map(i => ({ ...i })) : [],
+                sort_order: preservedSortOrder != null ? preservedSortOrder : source.sort_order
+            };
+        } else {
+            const maxOrder = targetCustoms.reduce((m, cs) => Math.max(m, cs && typeof cs.sort_order === 'number' ? cs.sort_order : 0), 0);
+            targetCustoms.push({
+                section_key: source.section_key,
+                name: source.name,
+                layout_type: source.layout_type,
+                icon: source.icon,
+                metadata: source.metadata,
+                visible: source.visible,
+                items: Array.isArray(source.items) ? source.items.map(i => ({ ...i })) : [],
+                sort_order: maxOrder + 1,
+                display_name: null
+            });
+        }
+        if (!targetData.sectionVisibility || typeof targetData.sectionVisibility !== 'object') {
+            targetData.sectionVisibility = {};
+        }
+        targetData.sectionVisibility[source.section_key] = !!source.visible;
+        if (!Array.isArray(targetData.sectionOrder)) targetData.sectionOrder = [];
+        const existingOrderIdx = targetData.sectionOrder.findIndex(e => e && e.key === source.section_key);
+        if (existingOrderIdx === -1) {
+            const maxOrder = targetData.sectionOrder.reduce((m, e) => Math.max(m, e && typeof e.sort_order === 'number' ? e.sort_order : 0), 0);
+            targetData.sectionOrder.push({
+                key: source.section_key,
+                sort_order: maxOrder + 1,
+                visible: !!source.visible,
+                display_name: null,
+                name: source.name,
+                default_name: source.name
+            });
+        } else {
+            const entry = targetData.sectionOrder[existingOrderIdx];
+            entry.visible = !!source.visible;
+            if (!entry.display_name) {
+                entry.name = source.name;
+                entry.default_name = entry.default_name || source.name;
+            }
+        }
+    }
+
+    app.post('/api/datasets/:id/copy-section-from-live', (req, res) => {
+        const { sectionKey } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        try {
+            const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
+            if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+            let targetData;
+            try { targetData = JSON.parse(dataset.data); }
+            catch { return res.status(500).json({ error: 'Target dataset data is corrupted' }); }
+            const liveData = gatherCvData();
+            try {
+                applyCopyToTargetData(targetData, sectionKey, liveData);
+            } catch (e) {
+                return res.status(e.status || 500).json({ error: e.message });
+            }
+            db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+                .run(JSON.stringify(targetData), req.params.id);
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // Bulk overwrite: copy the same section from live into every target in one
+    // shot so users can "sync this section across these 5 CVs" without clicking
+    // through five times. Per-target errors are reported individually so one
+    // corrupt row doesn't block the rest.
+    app.post('/api/datasets/copy-section-bulk', (req, res) => {
+        const { sectionKey, targetIds } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        if (!Array.isArray(targetIds) || targetIds.length === 0) {
+            return res.status(400).json({ error: 'targetIds must be a non-empty array' });
+        }
+        try {
+            const liveData = gatherCvData();
+            const updateStmt = db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+            const selectStmt = db.prepare('SELECT id, data FROM saved_datasets WHERE id = ?');
+            const run = db.transaction(() => {
+                const results = [];
+                for (const rawId of targetIds) {
+                    const id = parseInt(rawId, 10);
+                    if (!Number.isFinite(id)) { results.push({ id: rawId, ok: false, error: 'invalid id' }); continue; }
+                    const row = selectStmt.get(id);
+                    if (!row) { results.push({ id, ok: false, error: 'not found' }); continue; }
+                    let targetData;
+                    try { targetData = JSON.parse(row.data); }
+                    catch { results.push({ id, ok: false, error: 'corrupted' }); continue; }
+                    try {
+                        applyCopyToTargetData(targetData, sectionKey, liveData);
+                    } catch (e) {
+                        results.push({ id, ok: false, error: e.message });
+                        continue;
+                    }
+                    updateStmt.run(JSON.stringify(targetData), id);
+                    results.push({ id, ok: true });
+                }
+                return results;
+            });
+            const results = run();
+            const okCount = results.filter(r => r.ok).length;
+            res.json({ success: okCount > 0, okCount, failCount: results.length - okCount, results });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     });
     app.post('/api/datasets/:id/load', (req, res) => { const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id); if (!dataset) return res.status(404).json({ error: 'Dataset not found' }); try { const data = JSON.parse(dataset.data); const importData = db.transaction(() => { if (data.theme && typeof data.theme === 'object') { const t = data.theme; const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'); if (t.primary && /^#[0-9a-fA-F]{6}$/.test(t.primary)) upsert.run('themeColor', t.primary); if (t.fontFamily) upsert.run('themeFontFamily', t.fontFamily); if (t.bulletStyle && ALLOWED_BULLET_STYLES.has(t.bulletStyle)) upsert.run('themeBulletStyle', t.bulletStyle); if (t.gradientStart && /^#[0-9a-fA-F]{6}$/.test(t.gradientStart)) upsert.run('themeGradientStart', t.gradientStart); else db.prepare('DELETE FROM settings WHERE key = ?').run('themeGradientStart'); if (t.gradientEnd && /^#[0-9a-fA-F]{6}$/.test(t.gradientEnd)) upsert.run('themeGradientEnd', t.gradientEnd); else db.prepare('DELETE FROM settings WHERE key = ?').run('themeGradientEnd'); if (t.sectionTitleColor && /^#[0-9a-fA-F]{6}$/.test(t.sectionTitleColor)) upsert.run('themeSectionTitleColor', t.sectionTitleColor); else db.prepare('DELETE FROM settings WHERE key = ?').run('themeSectionTitleColor'); if (Number.isInteger(t.sectionRadius) && t.sectionRadius >= SECTION_RADIUS_MIN && t.sectionRadius <= SECTION_RADIUS_MAX) upsert.run('themeSectionRadius', String(t.sectionRadius)); else db.prepare('DELETE FROM settings WHERE key = ?').run('themeSectionRadius'); } if (data.profile) { const p = data.profile; db.prepare(`UPDATE profile SET name = ?, initials = ?, title = ?, subtitle = ?, bio = ?, location = ?, linkedin = ?, email = ?, phone = ?, languages = ?, profile_picture_enabled = ?, picture_filename = ?, picture_propagate = ? WHERE id = 1`).run(p.name, p.initials, p.title, p.subtitle, p.bio, p.location, p.linkedin, p.email, p.phone, p.languages, p.profile_picture_enabled == null ? 1 : (p.profile_picture_enabled ? 1 : 0), p.picture_filename || null, p.picture_propagate == null ? 1 : (p.picture_propagate ? 1 : 0)); } if (data.experiences) { db.prepare('DELETE FROM experiences').run(); const stmt = db.prepare(`INSERT INTO experiences (job_title, company_name, start_date, end_date, location, country_code, highlights, summary, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.experiences.forEach((e, idx) => { stmt.run(e.job_title, e.company_name, e.start_date, e.end_date, e.location, e.country_code || '', JSON.stringify(e.highlights || []), e.summary || null, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.certifications) { db.prepare('DELETE FROM certifications').run(); const stmt = db.prepare(`INSERT INTO certifications (name, provider, issue_date, expiry_date, credential_id, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.certifications.forEach((c, idx) => { stmt.run(c.name, c.provider, c.issue_date, c.expiry_date, c.credential_id, idx, c.visible != false ? 1 : 0, c.logo_filename || null, c.logo_propagate ? 1 : 0); }); } if (data.education) { db.prepare('DELETE FROM education').run(); const stmt = db.prepare(`INSERT INTO education (degree_title, institution_name, start_date, end_date, description, sort_order, visible, logo_filename, logo_propagate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.education.forEach((e, idx) => { stmt.run(e.degree_title, e.institution_name, e.start_date, e.end_date, e.description, idx, e.visible != false ? 1 : 0, e.logo_filename || null, e.logo_propagate ? 1 : 0); }); } if (data.skills) { db.prepare('DELETE FROM skills').run(); db.prepare('DELETE FROM skill_categories').run(); const catStmt = db.prepare('INSERT INTO skill_categories (name, icon, sort_order, visible) VALUES (?, ?, ?, ?)'); const skillStmt = db.prepare('INSERT INTO skills (category_id, name, sort_order) VALUES (?, ?, ?)'); data.skills.forEach((cat, catIdx) => { const result = catStmt.run(cat.name, cat.icon || 'default', catIdx, cat.visible != false ? 1 : 0); const categoryId = result.lastInsertRowid; if (cat.skills) { cat.skills.forEach((skill, skillIdx) => { skillStmt.run(categoryId, skill, skillIdx); }); } }); } if (data.projects) { db.prepare('DELETE FROM projects').run(); const stmt = db.prepare(`INSERT INTO projects (title, description, technologies, link, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?)`); data.projects.forEach((p, idx) => { stmt.run(p.title, p.description, JSON.stringify(p.technologies || []), p.link, idx, p.visible != false ? 1 : 0); }); } if (data.customSections && Array.isArray(data.customSections)) { db.prepare('DELETE FROM custom_section_items').run(); db.prepare('DELETE FROM custom_sections').run(); db.prepare("DELETE FROM section_visibility WHERE section_name LIKE 'custom_%'").run(); const sectionStmt = db.prepare(`INSERT INTO custom_sections (name, section_key, layout_type, icon, sort_order, visible, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)`); const itemStmt = db.prepare(`INSERT INTO custom_section_items (section_id, title, subtitle, description, link, icon, image, metadata, sort_order, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); data.customSections.forEach((s, idx) => { const sectionKey = s.section_key || `custom_${Date.now()}_${idx}`; const sectionMetadata = s.metadata ? (typeof s.metadata === 'string' ? s.metadata : JSON.stringify(s.metadata)) : null; const result = sectionStmt.run(s.name, sectionKey, s.layout_type || 'grid-3', s.icon || 'layers', s.sort_order !== undefined ? s.sort_order : idx, s.visible != false ? 1 : 0, sectionMetadata); const sectionId = result.lastInsertRowid; db.prepare('INSERT OR REPLACE INTO section_visibility (section_name, visible, sort_order, display_name) VALUES (?, ?, ?, ?)').run(sectionKey, s.visible != false ? 1 : 0, s.sort_order !== undefined ? s.sort_order : idx, s.display_name || null); if (s.items && Array.isArray(s.items)) { s.items.forEach((item, itemIdx) => { itemStmt.run(sectionId, item.title || null, item.subtitle || null, item.description || null, item.link || null, item.icon || null, item.image || null, item.metadata ? (typeof item.metadata === 'string' ? item.metadata : JSON.stringify(item.metadata)) : null, item.sort_order !== undefined ? item.sort_order : itemIdx, item.visible != false ? 1 : 0); }); } }); } if (data.sectionOrder && Array.isArray(data.sectionOrder)) { data.sectionOrder.forEach(s => { db.prepare('UPDATE section_visibility SET visible = ?, sort_order = ?, display_name = ? WHERE section_name = ?').run(s.visible != false ? 1 : 0, s.sort_order || 0, s.display_name || null, s.key); }); } else if (data.sectionVisibility) { for (const [section, visible] of Object.entries(data.sectionVisibility)) { db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible ? 1 : 0, section); } } }); importData(); res.json({ success: true, id: dataset.id, name: dataset.name, language: dataset.language || 'en', language_group: dataset.language_group, version_group: dataset.version_group, version: dataset.version || 1, is_default: !!dataset.is_default, is_public: !!dataset.is_public, theme: data.theme || null }); } catch (err) { res.status(500).json({ error: err.message }); } });
     app.delete('/api/datasets/:id', (req, res) => {

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.44.0] - 2026-04-21
+
+### Added
+- **Copy a section between CVs.** Every editable section header in the admin UI (About, Experience, Certifications, Education, Skills, Projects, and every custom section) gains a new Copy icon button between the Edit and Visibility buttons. Clicking it opens a target picker that lists every other saved dataset with its Language, Version, and Public chips — the same badges used in the CV Manager list — so the current CV can never appear as its own target. For built-in sections the target dataset's stored JSON for that section is wholesale replaced with the currently loaded live content. For custom sections the target is matched first by `section_key`, then by case-insensitive name; a match is overwritten (items, layout, icon, metadata, visibility) while preserving the target's `sort_order`, and a miss appends the section to the target with a fresh `sort_order` plus entries in `sectionVisibility` and `sectionOrder`. A warning banner and a confirmation dialog make the overwrite explicit. Timeline has no copy button because it has no content of its own — it's a derived view of `show_on_timeline` flags stored on other sections' items. The live DB is never mutated; only the selected target dataset's stored snapshot changes. New `POST /api/datasets/:id/copy-section-from-live` endpoint (admin only). Ten new i18n keys (`action.copy_to_dataset`, `copy_section.title`, `copy_section.subtitle`, `copy_section.warning`, `copy_section.choose_target`, `copy_section.empty`, `copy_section.loading`, `copy_section.confirm`, `copy_section.toast_success`, `copy_section.toast_error`) translated across all 8 supported locales.
+
 ## [1.43.0] - 2026-04-21
 
 ### Added
