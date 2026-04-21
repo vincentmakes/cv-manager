@@ -12,6 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="/shared/styles.css">
     <link rel="stylesheet" href="/shared/admin.css">
+    <!-- Cropper.js for LinkedIn-style profile picture zoom/pan (admin only) -->
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
+    <script defer src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
 </head>
 <body>
     <!-- Toolbar -->
@@ -498,6 +501,31 @@
                 <span data-i18n="action.add_project">Add Project</span>
             </button>
         </section>
+    </div>
+
+    <!-- Profile Picture Cropper Modal (LinkedIn-style zoom/pan) -->
+    <div class="cropper-modal no-print" id="cropperModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="cropperModalTitle">
+        <div class="cropper-modal-inner">
+            <div class="cropper-modal-header">
+                <h3 id="cropperModalTitle" data-i18n="modal.adjust_picture">Adjust Profile Picture</h3>
+                <button type="button" class="modal-close" onclick="closeCropperModal()" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="cropper-stage">
+                <img id="cropperImage" alt="">
+            </div>
+            <p class="cropper-hint" data-i18n="form.adjust_hint">Drag to reposition, use the slider or pinch to zoom.</p>
+            <div class="cropper-controls">
+                <label for="cropperZoom" data-i18n="form.zoom">Zoom</label>
+                <input type="range" id="cropperZoom" min="1" max="4" step="0.01" value="1">
+            </div>
+            <div class="cropper-actions">
+                <button type="button" class="btn btn-ghost" onclick="resetCropperCrop()" data-i18n="btn.reset_crop">Reset</button>
+                <button type="button" class="btn btn-ghost" onclick="closeCropperModal()" data-i18n="btn.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveCropperCrop()" data-i18n="btn.save">Save</button>
+            </div>
+        </div>
     </div>
 
     <!-- Edit Modal -->

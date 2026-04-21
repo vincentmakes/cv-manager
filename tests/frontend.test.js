@@ -655,6 +655,82 @@ describe('Frontend files', () => {
         });
     });
 
+    describe('Profile picture cropper (LinkedIn-style adjustment)', () => {
+        it('index.html loads Cropper.js CDN', () => {
+            const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
+            assert.ok(html.includes('cropper.min.css'), 'should link cropper.min.css');
+            assert.ok(html.includes('cropper.min.js'), 'should script cropper.min.js');
+        });
+
+        it('index.html has the cropper modal markup', () => {
+            const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
+            assert.ok(html.includes('id="cropperModal"'), 'should have #cropperModal');
+            assert.ok(html.includes('id="cropperImage"'), 'should have #cropperImage');
+            assert.ok(html.includes('id="cropperZoom"'), 'should have #cropperZoom slider');
+        });
+
+        it('public-readonly/index.html does NOT load Cropper.js (display-only)', () => {
+            const html = fs.readFileSync(path.join(ROOT, 'public-readonly', 'index.html'), 'utf8');
+            assert.ok(!html.includes('cropper.min.js'), 'public page must not include Cropper.js');
+        });
+
+        it('admin.js references cropper controller functions', () => {
+            const js = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'admin.js'), 'utf8');
+            assert.ok(js.includes('openCropperForExisting'), 'admin.js should define openCropperForExisting');
+            assert.ok(js.includes('openCropperForNewUpload'), 'admin.js should define openCropperForNewUpload');
+            assert.ok(js.includes('saveCropperCrop'), 'admin.js should define saveCropperCrop');
+            assert.ok(js.includes('readCropFromCropper'), 'admin.js should define readCropFromCropper');
+        });
+
+        it('scripts.js exposes applyProfilePictureCrop helper', () => {
+            const js = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
+            assert.ok(/function\s+applyProfilePictureCrop\s*\(/.test(js),
+                'scripts.js should define applyProfilePictureCrop');
+        });
+
+        it('readCropFromCropper ↔ cropToCropperData round-trip preserves the crop', () => {
+            // Extract the two pure math helpers from admin.js and evaluate them in a
+            // sandboxed Function so the test doesn't need a browser or Cropper.js.
+            const js = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'admin.js'), 'utf8');
+            const readMatch = js.match(/function readCropFromCropper\(cropperData, naturalSize\)\s*\{[\s\S]*?^\}/m);
+            const toMatch = js.match(/function cropToCropperData\(crop, naturalSize\)\s*\{[\s\S]*?^\}/m);
+            assert.ok(readMatch, 'readCropFromCropper should exist');
+            assert.ok(toMatch, 'cropToCropperData should exist');
+            const readFn = new Function('cropperData', 'naturalSize', readMatch[0]
+                .replace(/^function readCropFromCropper\(cropperData, naturalSize\)\s*\{/, '')
+                .replace(/\}$/, '') + '\nreturn readCropFromCropper(cropperData, naturalSize);');
+            // Evil eval: the body uses DEFAULT_CROP — inline it.
+            const readBody = readMatch[0]
+                .replace(/^function readCropFromCropper\(cropperData, naturalSize\)\s*\{/, '')
+                .replace(/\}$/, '')
+                .replace(/\{\s*\.\.\.DEFAULT_CROP\s*\}/g, '{ offsetX: 0, offsetY: 0, zoom: 1 }');
+            const readImpl = new Function('cropperData', 'naturalSize', readBody);
+            const toBody = toMatch[0]
+                .replace(/^function cropToCropperData\(crop, naturalSize\)\s*\{/, '')
+                .replace(/\}$/, '');
+            const toImpl = new Function('crop', 'naturalSize', toBody);
+
+            const cases = [
+                { W: 1000, H: 800,  crop: { offsetX: 0,   offsetY: 0,   zoom: 1 } },   // landscape, centered
+                { W: 600,  H: 900,  crop: { offsetX: -15, offsetY: 10,  zoom: 1.5 } }, // portrait, off-centre
+                { W: 500,  H: 500,  crop: { offsetX: 20,  offsetY: -8,  zoom: 2 } },   // square
+                { W: 1200, H: 600,  crop: { offsetX: 0,   offsetY: 0,   zoom: 3 } },   // wide, heavy zoom
+            ];
+            for (const { W, H, crop } of cases) {
+                const size = { w: W, h: H };
+                const data = toImpl(crop, size);
+                const round = readImpl(data, size);
+                const near = (a, b) => Math.abs(a - b) < 0.01;
+                assert.ok(near(round.offsetX, crop.offsetX),
+                    `offsetX round-trip for ${W}x${H}: got ${round.offsetX}, expected ${crop.offsetX}`);
+                assert.ok(near(round.offsetY, crop.offsetY),
+                    `offsetY round-trip for ${W}x${H}: got ${round.offsetY}, expected ${crop.offsetY}`);
+                assert.ok(near(round.zoom, crop.zoom),
+                    `zoom round-trip for ${W}x${H}: got ${round.zoom}, expected ${crop.zoom}`);
+            }
+        });
+    });
+
     describe('Code quality', () => {
         it('no console.log in frontend JavaScript files (except error handling)', () => {
             const files = [

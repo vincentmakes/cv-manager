@@ -2710,6 +2710,182 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Profile Picture Crop (LinkedIn-style adjustment)', () => {
+        // Reuse the tiny-PNG helper + upload flow from the library block. Tests are
+        // independent but share the uploaded state inside this run.
+        const tinyPngBytes = Buffer.from([
+            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+            0x89, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41,
+            0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+            0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+            0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+            0x42, 0x60, 0x82
+        ]);
+        async function uploadPic() {
+            const fd = new FormData();
+            fd.append('picture', new Blob([tinyPngBytes], { type: 'image/png' }), 'test.png');
+            const res = await fetch(`${BASE_URL}/api/profile/picture`, { method: 'POST', body: fd });
+            assert.strictEqual(res.status, 200);
+            return (await res.json()).filename;
+        }
+        async function setPropagate(enabled) {
+            const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            await fetch(`${BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...profile, picture_propagate: enabled }),
+            });
+        }
+        async function putCrop(body) {
+            return fetch(`${BASE_URL}/api/profile/picture/crop`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+        }
+
+        it('rejects non-numeric offsetX with 400', async () => {
+            await uploadPic();
+            const res = await putCrop({ offsetX: 'nope', offsetY: 0, zoom: 1 });
+            assert.strictEqual(res.status, 400);
+        });
+
+        it('rejects missing zoom with 400', async () => {
+            await uploadPic();
+            const res = await putCrop({ offsetX: 10, offsetY: -5 });
+            assert.strictEqual(res.status, 400);
+        });
+
+        it('clamps out-of-range values (zoom=10 -> 4, offset=999 -> 100)', async () => {
+            await uploadPic();
+            const res = await putCrop({ offsetX: 999, offsetY: -999, zoom: 10 });
+            assert.strictEqual(res.status, 200);
+            const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            const crop = JSON.parse(profile.picture_crop);
+            assert.strictEqual(crop.zoom, 4);
+            assert.strictEqual(crop.offsetX, 100);
+            assert.strictEqual(crop.offsetY, -100);
+        });
+
+        it('stores and returns crop via GET /api/profile', async () => {
+            await uploadPic();
+            const res = await putCrop({ offsetX: 12.5, offsetY: -7.25, zoom: 1.75 });
+            assert.strictEqual(res.status, 200);
+            const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.ok(profile.picture_crop, 'picture_crop must be populated');
+            const crop = JSON.parse(profile.picture_crop);
+            assert.strictEqual(crop.offsetX, 12.5);
+            assert.strictEqual(crop.offsetY, -7.25);
+            assert.strictEqual(crop.zoom, 1.75);
+        });
+
+        it('returns 400 when no picture is set', async () => {
+            // Ensure a picture exists so we can delete it cleanly
+            await uploadPic();
+            await fetch(`${BASE_URL}/api/profile/picture`, { method: 'DELETE' });
+            const res = await putCrop({ offsetX: 0, offsetY: 0, zoom: 1 });
+            assert.strictEqual(res.status, 400);
+        });
+
+        it('new upload resets crop to NULL', async () => {
+            await uploadPic();
+            await putCrop({ offsetX: 10, offsetY: 10, zoom: 2 });
+            const before = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.ok(before.picture_crop);
+            await uploadPic();
+            const after = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.strictEqual(after.picture_crop, null, 'new upload must clear the crop');
+        });
+
+        it('applyToAll:true propagates crop to every dataset snapshot', async () => {
+            await uploadPic();
+            const mk = (name) => fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `${name} ${Date.now()}${Math.random()}` }),
+            }).then(r => r.json());
+            const a = await mk('Crop Global A');
+            const b = await mk('Crop Global B');
+
+            const res = await putCrop({ offsetX: 3, offsetY: 4, zoom: 1.5, applyToAll: true });
+            assert.strictEqual(res.status, 200);
+
+            const aData = await (await fetch(`${BASE_URL}/api/datasets/id/${a.id}`)).json();
+            const bData = await (await fetch(`${BASE_URL}/api/datasets/id/${b.id}`)).json();
+            const aCrop = JSON.parse(aData.profile.picture_crop);
+            const bCrop = JSON.parse(bData.profile.picture_crop);
+            assert.strictEqual(aCrop.offsetX, 3);
+            assert.strictEqual(bCrop.offsetY, 4);
+            assert.strictEqual(aCrop.zoom, 1.5);
+        });
+
+        it('applyToAll:false mirrors crop to language siblings only', async () => {
+            await uploadPic();
+            const group = `grp-${Date.now()}-${Math.random()}`;
+            const en = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Crop Sib EN ${Date.now()}`, language: 'en' }),
+            }).then(r => r.json());
+            const fr = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Crop Sib EN ${Date.now()}`, language: 'fr', language_group: en.language_group }),
+            }).then(r => r.json());
+            const unrelated = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Crop Unrelated ${Date.now()}` }),
+            }).then(r => r.json());
+
+            const res = await putCrop({ offsetX: -11, offsetY: 22, zoom: 2.2, applyToAll: false, current_dataset_id: en.id });
+            assert.strictEqual(res.status, 200);
+
+            const enData = await (await fetch(`${BASE_URL}/api/datasets/id/${en.id}`)).json();
+            const frData = await (await fetch(`${BASE_URL}/api/datasets/id/${fr.id}`)).json();
+            const unData = await (await fetch(`${BASE_URL}/api/datasets/id/${unrelated.id}`)).json();
+
+            assert.ok(enData.profile.picture_crop, 'active dataset carries the crop');
+            assert.ok(frData.profile.picture_crop, 'language sibling carries the crop');
+            assert.strictEqual(JSON.parse(enData.profile.picture_crop).offsetY, 22);
+            assert.strictEqual(JSON.parse(frData.profile.picture_crop).zoom, 2.2);
+            // Unrelated dataset's snapshot was created before the crop call and falls
+            // outside the language group, so it must still have no crop set.
+            assert.ok(
+                !unData.profile.picture_crop || JSON.parse(unData.profile.picture_crop).offsetY !== 22,
+                'unrelated dataset must not receive the siblings-scoped crop'
+            );
+        });
+
+        it('dataset save+load restores picture_crop onto the live profile', async () => {
+            await uploadPic();
+            await putCrop({ offsetX: 8, offsetY: -4, zoom: 1.25, applyToAll: true });
+
+            const created = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: `Crop Restore ${Date.now()}` }),
+            }).then(r => r.json());
+
+            // Change live crop so we can verify the load restores the snapshot's value.
+            await putCrop({ offsetX: 0, offsetY: 0, zoom: 3, applyToAll: false });
+            const mid = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.strictEqual(JSON.parse(mid.picture_crop).zoom, 3);
+
+            const loadRes = await fetch(`${BASE_URL}/api/datasets/${created.id}/load`, { method: 'POST' });
+            assert.strictEqual(loadRes.status, 200);
+            const after = await (await fetch(`${BASE_URL}/api/profile`)).json();
+            assert.ok(after.picture_crop, 'crop must be restored from the snapshot');
+            const crop = JSON.parse(after.picture_crop);
+            assert.strictEqual(crop.offsetX, 8);
+            assert.strictEqual(crop.offsetY, -4);
+            assert.strictEqual(crop.zoom, 1.25);
+        });
+    });
+
     describe('Security', () => {
         it('public /api/profile does not expose email or phone', async () => {
             // Store profile with sensitive data via admin
