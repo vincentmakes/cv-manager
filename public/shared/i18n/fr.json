@@ -86,6 +86,7 @@
     "action.copy_to_dataset": "Copier vers un autre CV",
     "copy_section.title": "Copier la section vers un autre CV",
     "copy_section.subtitle": "Sélectionnez un CV cible pour recevoir la section '{{section}}'.",
+    "copy_section.from": "Depuis :",
     "copy_section.warning": "Le contenu de cette section dans le CV cible sera écrasé. Cette action est irréversible.",
     "copy_section.choose_target": "Choisir un CV cible",
     "copy_section.empty": "Aucun autre CV disponible. Créez d'abord un autre jeu de données.",

@@ -86,6 +86,7 @@
     "action.copy_to_dataset": "Copiar a otro CV",
     "copy_section.title": "Copiar sección a otro CV",
     "copy_section.subtitle": "Selecciona un CV de destino para recibir la sección '{{section}}'.",
+    "copy_section.from": "Desde:",
     "copy_section.warning": "El contenido de esta sección en el CV de destino se sobrescribirá. Esta acción no se puede deshacer.",
     "copy_section.choose_target": "Elige un CV de destino",
     "copy_section.empty": "No hay otros CV disponibles. Crea primero otro conjunto de datos.",

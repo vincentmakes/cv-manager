@@ -86,6 +86,7 @@
     "action.copy_to_dataset": "复制到另一份简历",
     "copy_section.title": "将板块复制到另一份简历",
     "copy_section.subtitle": "选择接收 '{{section}}' 板块的目标简历。",
+    "copy_section.from": "来源:",
     "copy_section.warning": "目标简历中该板块的内容将被覆盖。此操作无法撤销。",
     "copy_section.choose_target": "选择目标简历",
     "copy_section.empty": "没有其他可用的简历。请先创建另一个数据集。",

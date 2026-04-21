@@ -86,6 +86,7 @@
     "action.copy_to_dataset": "In einen anderen Lebenslauf kopieren",
     "copy_section.title": "Abschnitt in einen anderen Lebenslauf kopieren",
     "copy_section.subtitle": "Wähle einen Ziel-Lebenslauf, der den Abschnitt '{{section}}' erhalten soll.",
+    "copy_section.from": "Von:",
     "copy_section.warning": "Der Inhalt dieses Abschnitts im Ziel-Lebenslauf wird überschrieben. Dies kann nicht rückgängig gemacht werden.",
     "copy_section.choose_target": "Ziel-Lebenslauf auswählen",
     "copy_section.empty": "Keine weiteren Lebensläufe verfügbar. Erstelle zuerst einen weiteren Datensatz.",

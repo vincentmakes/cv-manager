@@ -3201,6 +3201,40 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     font-size: 14px;
     color: var(--gray-700);
 }
+.copy-section-current {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+.copy-section-current-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.copy-section-current-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.copy-section-current-info .cvm-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    color: var(--gray-900);
+}
 .copy-section-warning {
     display: flex;
     align-items: flex-start;

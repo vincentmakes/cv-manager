@@ -86,6 +86,7 @@
     "action.copy_to_dataset": "Kopiëren naar een ander cv",
     "copy_section.title": "Sectie naar een ander cv kopiëren",
     "copy_section.subtitle": "Kies een doel-cv om de sectie '{{section}}' te ontvangen.",
+    "copy_section.from": "Van:",
     "copy_section.warning": "De inhoud van deze sectie in het doel-cv wordt overschreven. Dit kan niet ongedaan worden gemaakt.",
     "copy_section.choose_target": "Kies een doel-cv",
     "copy_section.empty": "Geen andere cv's beschikbaar. Maak eerst een ander dataset aan.",

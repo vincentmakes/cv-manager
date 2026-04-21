@@ -3159,6 +3159,8 @@ async function openCopySectionModal(sectionKey) {
         subtitle.textContent = t('copy_section.subtitle', { section: sectionName });
     }
 
+    renderCopySectionCurrentCv();
+
     const list = document.getElementById('copySectionTargetList');
     if (list) {
         list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.loading') || 'Loading...')}</p>`;
@@ -3173,6 +3175,27 @@ async function openCopySectionModal(sectionKey) {
     } catch (err) {
         if (list) list.innerHTML = `<p class="cvm-empty">${escapeHtml(err.message || String(err))}</p>`;
     }
+}
+
+// Render the "From: <language> v<n> <name>" pill above the warning so the
+// user can confirm which CV they're copying from before selecting a target.
+function renderCopySectionCurrentCv() {
+    const info = document.getElementById('copySectionCurrentInfo');
+    if (!info) return;
+    const name = activeDatasetName || t('datasets.editing');
+    const ds = {
+        language: activeDatasetLanguage || 'en',
+        version: activeDatasetVersion || 1,
+        is_public: !!activeDatasetIsPublic,
+        is_default: !!activeDatasetIsDefault
+    };
+    const chips = renderDatasetChips(ds, {
+        versionBadge: ds.version,
+        isDefault: ds.is_default,
+        isDefaultSibling: false,
+        forcePublicChip: true
+    });
+    info.innerHTML = `${chips}<span class="cvm-name">${escapeHtml(name)}</span>`;
 }
 
 function closeCopySectionModal() {
@@ -3192,23 +3215,16 @@ function renderCopySectionTargetList(datasets, sectionKey) {
         return;
     }
 
-    // Compute which version_groups contain multiple versions so we know when
-    // to render the version chip (mirrors the manager's renderVersionBlock).
-    const versionCountsByGroup = {};
-    (datasets || []).forEach(ds => {
-        if (!ds || !ds.version_group) return;
-        const vg = ds.version_group;
-        if (!versionCountsByGroup[vg]) versionCountsByGroup[vg] = new Set();
-        versionCountsByGroup[vg].add(ds.version || 1);
-    });
-
     list.innerHTML = targets.map(ds => {
         const isDefault = !!ds.is_default;
-        const hasMultipleVersions = ds.version_group && versionCountsByGroup[ds.version_group] && versionCountsByGroup[ds.version_group].size > 1;
+        // Always show the version chip in the picker so users can distinguish
+        // versions at a glance, and always show the public chip when the
+        // dataset is public (forcePublicChip) regardless of default-ness.
         const chips = renderDatasetChips(ds, {
-            versionBadge: hasMultipleVersions ? (ds.version || 1) : null,
+            versionBadge: ds.version || 1,
             isDefault,
-            isDefaultSibling: false
+            isDefaultSibling: false,
+            forcePublicChip: true
         });
         const safeName = escapeHtml(ds.name).replace(/'/g, "\\'");
         const defaultBadge = isDefault
@@ -3266,7 +3282,15 @@ function renderDatasetChips(ds, opts = {}) {
     if (versionBadge) {
         parts.push(`<span class="dataset-version-badge">v${versionBadge}</span>`);
     }
-    if (!opts.inlinePublicChip && !opts.suppressPublicChip && ds.is_public && !opts.isDefault && !opts.isDefaultSibling) {
+    // Public chip: by default the manager suppresses it on default / default-sibling
+    // rows (since "Public" is already implied by the "radio = served at root" state).
+    // Callers that always want the chip — e.g. the copy-section picker — pass
+    // forcePublicChip: true.
+    const showPublic = !opts.inlinePublicChip
+        && !opts.suppressPublicChip
+        && ds.is_public
+        && (opts.forcePublicChip || (!opts.isDefault && !opts.isDefaultSibling));
+    if (showPublic) {
         parts.push(`<span class="cvm-shared-icon" title="${escapeHtml(t('datasets.shared'))}">${materialIcon('share', 12)}</span>`);
     }
     return parts.join('');
