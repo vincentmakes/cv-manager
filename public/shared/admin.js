@@ -1381,7 +1381,7 @@ function profileForm(d) {
             <label class="form-label">${t('form.profile_picture')}</label>
             <div class="profile-upload-container">
                 <div class="profile-upload-preview" id="profileUploadPreview">
-                    <img src="${d.picture_filename ? '/uploads/' + encodeURIComponent(d.picture_filename) : '/uploads/picture.jpeg'}?${Date.now()}" alt="" id="profilePreviewImg" onerror="this.style.display='none';document.getElementById('profilePreviewInitials').style.display='flex';">
+                    <img src="${d.picture_filename ? '/uploads/' + encodeURIComponent(d.picture_filename) : '/uploads/picture.jpeg'}?${Date.now()}" alt="" id="profilePreviewImg" data-picture-crop='${d.picture_crop ? escapeHtml(typeof d.picture_crop === 'string' ? d.picture_crop : JSON.stringify(d.picture_crop)) : ''}' onload="applyProfilePictureCrop(this, this.getAttribute('data-picture-crop') || null);" onerror="this.style.display='none';document.getElementById('profilePreviewInitials').style.display='flex';">
                     <div class="profile-preview-initials" id="profilePreviewInitials" style="display:none;">${escapeHtml(d.initials || 'CV')}</div>
                 </div>
                 <div class="profile-upload-actions">
@@ -1396,6 +1396,10 @@ function profileForm(d) {
                     <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('f-picture').click()">
                         <span class="material-symbols-outlined" style="font-size:14px">image</span>
                         ${t('form.choose_image')}
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="adjustPictureBtn" onclick="openCropperForExisting()" ${d.picture_filename ? '' : 'disabled'}>
+                        <span class="material-symbols-outlined" style="font-size:14px">crop</span>
+                        ${t('form.adjust_picture')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="showPicturePicker()">
                         <span class="material-symbols-outlined" style="font-size:14px">inventory_2</span>
@@ -2160,6 +2164,9 @@ function checked(id) {
 
 // Profile Picture Functions
 let pendingProfilePicture = null;
+// Crop metadata queued alongside a pending upload/reuse; applied server-side after the
+// file is saved. null means "no change"; { offsetX, offsetY, zoom } overrides.
+let pendingProfilePictureCrop = null;
 
 function previewProfilePicture(input) {
     if (input.files && input.files[0]) {
@@ -2170,6 +2177,7 @@ function previewProfilePicture(input) {
             return;
         }
         pendingProfilePicture = file;
+        pendingProfilePictureCrop = null;
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = document.getElementById('profilePreviewImg');
@@ -2177,6 +2185,11 @@ function previewProfilePicture(input) {
             img.src = e.target.result;
             img.style.display = 'block';
             initials.style.display = 'none';
+            applyProfilePictureCrop(img, null);
+            // Open the cropper automatically so the user can frame the new image
+            // (LinkedIn parity: uploading opens the adjuster; they can Cancel to
+            // accept the default centered cover-fit).
+            openCropperForNewUpload(e.target.result);
         };
         reader.readAsDataURL(file);
     }
@@ -2184,17 +2197,26 @@ function previewProfilePicture(input) {
 
 function removeProfilePicture() {
     pendingProfilePicture = 'remove';
+    pendingProfilePictureCrop = null;
     const img = document.getElementById('profilePreviewImg');
     const initials = document.getElementById('profilePreviewInitials');
     img.style.display = 'none';
     initials.style.display = 'flex';
+    applyProfilePictureCrop(img, null);
     document.getElementById('f-picture').value = '';
+    const adjustBtn = document.getElementById('adjustPictureBtn');
+    if (adjustBtn) adjustBtn.disabled = true;
 }
 
 async function uploadProfilePicture() {
     // Siblings of a localized dataset should share the picture even when "Apply to all datasets" is off.
     // The server uses this to look up the language_group and sync the siblings.
     const ctxId = activeDatasetId || '';
+    // Snapshot + clear the queued crop up-front so an early return (remove path)
+    // doesn't leave a stale crop behind to be applied on the next save.
+    const queuedCrop = pendingProfilePictureCrop;
+    pendingProfilePictureCrop = null;
+    let filenameResult = null;
     if (pendingProfilePicture === 'remove') {
         const url = ctxId ? `/api/profile/picture?current_dataset_id=${encodeURIComponent(ctxId)}` : '/api/profile/picture';
         try { await fetch(url, { method: 'DELETE' }); } catch (err) {}
@@ -2205,13 +2227,12 @@ async function uploadProfilePicture() {
         const filename = pendingProfilePicture.reuse;
         try {
             await api('/api/profile/picture/select', { method: 'PUT', body: { filename, current_dataset_id: ctxId || undefined } });
+            filenameResult = filename;
         } catch (err) {
             toast(t('toast.upload_failed'), 'error');
         }
         pendingProfilePicture = null;
-        return filename;
-    }
-    if (pendingProfilePicture && pendingProfilePicture instanceof File) {
+    } else if (pendingProfilePicture && pendingProfilePicture instanceof File) {
         const formData = new FormData();
         formData.append('picture', pendingProfilePicture);
         if (ctxId) formData.append('current_dataset_id', String(ctxId));
@@ -2219,14 +2240,25 @@ async function uploadProfilePicture() {
             const response = await fetch('/api/profile/picture', { method: 'POST', body: formData });
             if (!response.ok) throw new Error('Upload failed');
             const result = await response.json();
-            pendingProfilePicture = null;
-            return result.filename || null;
+            filenameResult = result.filename || null;
         } catch (err) {
             toast(t('toast.upload_failed'), 'error');
         }
         pendingProfilePicture = null;
     }
-    return null;
+    // Apply queued crop after the file is live on the server. The server resets
+    // picture_crop on upload/select, so we always PUT our queued value (even
+    // defaults) to replace the server's NULL with the user's intent.
+    if (filenameResult && queuedCrop) {
+        try {
+            const propagate = checked('f-picturePropagate');
+            await api('/api/profile/picture/crop', {
+                method: 'PUT',
+                body: { offsetX: queuedCrop.offsetX, offsetY: queuedCrop.offsetY, zoom: queuedCrop.zoom, applyToAll: propagate, current_dataset_id: ctxId || undefined }
+            });
+        } catch (err) { /* non-fatal: default crop remains */ }
+    }
+    return filenameResult;
 }
 
 async function showPicturePicker() {
@@ -2268,17 +2300,193 @@ async function deleteUnusedPicture(filename) {
 
 function selectExistingPicture(filename) {
     pendingProfilePicture = { reuse: filename };
+    pendingProfilePictureCrop = null;
     const img = document.getElementById('profilePreviewImg');
     const initials = document.getElementById('profilePreviewInitials');
     if (img) {
         img.src = `/uploads/${encodeURIComponent(filename)}?${Date.now()}`;
         img.style.display = 'block';
+        applyProfilePictureCrop(img, null);
     }
     if (initials) initials.style.display = 'none';
     const grid = document.getElementById('picturePickerGrid');
     if (grid) grid.style.display = 'none';
     const fileInput = document.getElementById('f-picture');
     if (fileInput) fileInput.value = '';
+    const adjustBtn = document.getElementById('adjustPictureBtn');
+    if (adjustBtn) adjustBtn.disabled = false;
+}
+
+// --- LinkedIn-style profile picture cropper (zoom + pan) ---
+//
+// The math:
+//   Let W, H = natural image size, L = min(W, H). The display circle uses
+//   object-fit: cover, so the image is scaled to side length L before any
+//   crop is applied. Our stored zoom is relative to that cover-fit baseline,
+//   so zoom = L / cropBoxWidth (Cropper returns crop-box dims in natural px).
+//   Offsets are the difference between the crop-box centre and the image centre
+//   as a percentage of the natural dimensions — they become the object-position
+//   CSS value on the display img.
+//
+// readCropFromCropper and seedCropperFromCrop are kept pure so tests can
+// round-trip them without instantiating Cropper.
+const DEFAULT_CROP = { offsetX: 0, offsetY: 0, zoom: 1 };
+let cropperInstance = null;
+let cropperMode = null;         // 'new' (file pending) | 'existing'
+let cropperNaturalSize = { w: 0, h: 0 };
+let cropperInitialCrop = null;
+
+function readCropFromCropper(cropperData, naturalSize) {
+    const W = naturalSize.w, H = naturalSize.h;
+    if (!W || !H || !cropperData || !cropperData.width) return { ...DEFAULT_CROP };
+    const L = Math.min(W, H);
+    const zoomRaw = L / cropperData.width;
+    const zoom = Math.max(1, Math.min(4, zoomRaw));
+    const percentX = ((cropperData.x + cropperData.width / 2) / W) * 100;
+    const percentY = ((cropperData.y + cropperData.height / 2) / H) * 100;
+    return {
+        offsetX: Math.max(-100, Math.min(100, percentX - 50)),
+        offsetY: Math.max(-100, Math.min(100, percentY - 50)),
+        zoom
+    };
+}
+
+function cropToCropperData(crop, naturalSize) {
+    const W = naturalSize.w, H = naturalSize.h;
+    const L = Math.min(W, H);
+    const width = L / (crop.zoom || 1);
+    const percentX = 50 + (crop.offsetX || 0);
+    const percentY = 50 + (crop.offsetY || 0);
+    const cx = (percentX / 100) * W;
+    const cy = (percentY / 100) * H;
+    return {
+        x: cx - width / 2,
+        y: cy - width / 2,
+        width,
+        height: width,
+        rotate: 0,
+        scaleX: 1,
+        scaleY: 1
+    };
+}
+
+function seedCropperFromCrop(crop) {
+    if (!cropperInstance) return;
+    cropperInstance.setData(cropToCropperData(crop, cropperNaturalSize));
+}
+
+function openCropperForNewUpload(dataUrl) {
+    _openCropper(dataUrl, 'new', { ...DEFAULT_CROP });
+}
+
+async function openCropperForExisting() {
+    try {
+        const profile = await api('/api/profile');
+        if (!profile || !profile.picture_filename) {
+            toast(t('toast.no_picture'), 'info');
+            return;
+        }
+        let crop = { ...DEFAULT_CROP };
+        if (profile.picture_crop) {
+            try { crop = { ...crop, ...JSON.parse(profile.picture_crop) }; } catch {}
+        }
+        const src = '/uploads/' + encodeURIComponent(profile.picture_filename) + '?t=' + Date.now();
+        _openCropper(src, 'existing', crop);
+    } catch (err) {
+        toast(t('toast.upload_failed'), 'error');
+    }
+}
+
+function _openCropper(src, mode, initialCrop) {
+    if (typeof Cropper === 'undefined') {
+        toast(t('toast.upload_failed'), 'error');
+        return;
+    }
+    cropperMode = mode;
+    cropperInitialCrop = initialCrop;
+    const modal = document.getElementById('cropperModal');
+    const img = document.getElementById('cropperImage');
+    if (!modal || !img) return;
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+    img.onload = () => {
+        cropperNaturalSize = { w: img.naturalWidth, h: img.naturalHeight };
+        cropperInstance = new Cropper(img, {
+            aspectRatio: 1,
+            viewMode: 1,
+            dragMode: 'move',
+            background: false,
+            autoCropArea: 1,
+            guides: false,
+            center: false,
+            cropBoxMovable: false,
+            cropBoxResizable: false,
+            toggleDragModeOnDblclick: false,
+            ready: () => seedCropperFromCrop(initialCrop)
+        });
+    };
+    img.src = src;
+    modal.style.display = 'flex';
+    const zoomSlider = document.getElementById('cropperZoom');
+    if (zoomSlider) {
+        zoomSlider.value = String(initialCrop.zoom || 1);
+        zoomSlider.oninput = () => {
+            if (!cropperInstance) return;
+            const z = Math.max(1, Math.min(4, parseFloat(zoomSlider.value) || 1));
+            const current = cropperInstance.getData(true);
+            // Preserve the crop centre while changing zoom.
+            const cx = current.x + current.width / 2;
+            const cy = current.y + current.height / 2;
+            const L = Math.min(cropperNaturalSize.w, cropperNaturalSize.h);
+            const newSide = L / z;
+            cropperInstance.setData({ x: cx - newSide / 2, y: cy - newSide / 2, width: newSide, height: newSide, rotate: 0, scaleX: 1, scaleY: 1 });
+        };
+    }
+}
+
+function resetCropperCrop() {
+    seedCropperFromCrop({ ...DEFAULT_CROP });
+    const zoomSlider = document.getElementById('cropperZoom');
+    if (zoomSlider) zoomSlider.value = '1';
+}
+
+async function saveCropperCrop() {
+    if (!cropperInstance) { closeCropperModal(); return; }
+    const data = cropperInstance.getData(true);
+    const crop = readCropFromCropper(data, cropperNaturalSize);
+    if (cropperMode === 'existing') {
+        // Image is already on the server — PUT the crop only.
+        try {
+            const ctxId = activeDatasetId || '';
+            const propagate = checked('f-picturePropagate');
+            await api('/api/profile/picture/crop', {
+                method: 'PUT',
+                body: { offsetX: crop.offsetX, offsetY: crop.offsetY, zoom: crop.zoom, applyToAll: propagate, current_dataset_id: ctxId || undefined }
+            });
+            toast(t('toast.crop_saved'), 'success');
+            // Reflect in the 80px preview + the live header circle.
+            const previewImg = document.getElementById('profilePreviewImg');
+            if (previewImg) applyProfilePictureCrop(previewImg, crop);
+            const headerImg = document.getElementById('profilePicture');
+            if (headerImg) applyProfilePictureCrop(headerImg, crop);
+        } catch (err) {
+            toast(t('toast.upload_failed'), 'error');
+        }
+    } else {
+        // New upload: queue the crop and update the preview; upload happens on
+        // profile-form save (uploadProfilePicture will PUT the crop afterwards).
+        pendingProfilePictureCrop = crop;
+        const previewImg = document.getElementById('profilePreviewImg');
+        if (previewImg) applyProfilePictureCrop(previewImg, crop);
+    }
+    closeCropperModal();
+}
+
+function closeCropperModal() {
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+    const modal = document.getElementById('cropperModal');
+    if (modal) modal.style.display = 'none';
+    cropperMode = null;
+    cropperInitialCrop = null;
 }
 
 // Company logo upload

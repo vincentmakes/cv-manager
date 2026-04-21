@@ -333,6 +333,39 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Apply stored crop metadata to a profile-picture <img>. The crop is expressed as
+// percent offsets (-100..100) and a scale factor (1..4). We use object-position +
+// transform with a shared origin so the visible centre stays anchored through scale.
+// Accepts either a JSON string (as stored in DB) or a parsed object; null/invalid
+// clears all crop-related inline styles so default framing is restored.
+function applyProfilePictureCrop(imgEl, crop) {
+    if (!imgEl) return;
+    let c = null;
+    if (crop) {
+        try { c = typeof crop === 'string' ? JSON.parse(crop) : crop; } catch { c = null; }
+    }
+    if (!c || typeof c !== 'object') {
+        imgEl.style.objectPosition = '';
+        imgEl.style.transform = '';
+        imgEl.style.transformOrigin = '';
+        return;
+    }
+    const ox = Number.isFinite(c.offsetX) ? c.offsetX : 0;
+    const oy = Number.isFinite(c.offsetY) ? c.offsetY : 0;
+    const z = Number.isFinite(c.zoom) && c.zoom > 0 ? c.zoom : 1;
+    if (ox === 0 && oy === 0 && z === 1) {
+        imgEl.style.objectPosition = '';
+        imgEl.style.transform = '';
+        imgEl.style.transformOrigin = '';
+        return;
+    }
+    const posX = 50 + ox;
+    const posY = 50 + oy;
+    imgEl.style.objectPosition = `${posX}% ${posY}%`;
+    imgEl.style.transformOrigin = `${posX}% ${posY}%`;
+    imgEl.style.transform = `scale(${z})`;
+}
+
 // Validate that a string is an http(s) URL. Used for optional URL fields.
 function isValidUrl(v) {
     if (!v) return false;
@@ -672,6 +705,7 @@ async function loadProfile(includePrivate = false) {
         pic.onload = () => { pic.style.display = 'block'; initials.style.display = 'none'; };
         pic.onerror = () => { pic.style.display = 'none'; initials.style.display = 'block'; };
         pic.src = '/uploads/' + encodeURIComponent(fname) + '?' + new Date().getTime();
+        applyProfilePictureCrop(pic, p.picture_crop);
         profileImg.style.display = 'flex';
     } else {
         pic.onload = null;

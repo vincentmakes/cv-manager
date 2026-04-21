@@ -4,6 +4,16 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.47.1] - 2026-04-21
+
+### Fixed
+- **Profile-picture cropper modal no longer bleeds through to the form behind it.** The outer dialog was named `.cropper-modal`, which collides with Cropper.js's own `.cropper-modal` class — the library's internal dark overlay (the mask outside the crop box) was inheriting our `position: fixed; inset: 0;` rules and getting stretched across the viewport, pushing the form and the original modal backdrop through the dialog area. Renamed the outer wrapper + inner panel + header to `.pp-crop-modal*` so Cropper.js's internal elements keep their intended sizing and our dialog chrome stays opaque.
+
+## [1.47.0] - 2026-04-21
+
+### Added
+- **LinkedIn-style profile-picture adjustment (zoom + pan).** Uploading or re-opening a profile picture now opens a circular cropper (powered by [Cropper.js](https://github.com/fengyuanchen/cropperjs), loaded via CDN) with a drag-to-reposition stage and a zoom slider (1× to 4×). The original upload is preserved untouched on disk; only normalized crop metadata (`offsetX`, `offsetY`, `zoom`) is stored, applied on every render via CSS `object-position` + `transform: scale()`, and honoured by both the admin page and the public read-only page. A new **Adjust** button in the profile modal lets users re-frame the saved picture at any time without re-uploading. New `picture_crop TEXT` column on `profile` with auto-migration; new `PUT /api/profile/picture/crop` endpoint (values are clamped server-side); uploading, selecting, or removing a picture resets the crop to defaults. Crop propagation follows the existing `picture_propagate` flag semantics: ON mirrors into every dataset snapshot, OFF mirrors only into language siblings of the active dataset, exactly mirroring how the filename already propagates. Seven new i18n keys (`form.adjust_picture`, `form.adjust_hint`, `form.zoom`, `modal.adjust_picture`, `btn.reset_crop`, `toast.crop_saved`, `toast.no_picture`) translated across all 8 supported locales. Existing installs render exactly as before because the default crop `{offsetX:0, offsetY:0, zoom:1}` is visually identical to today's centered `object-fit: cover` baseline.
+
 ## [1.46.0] - 2026-04-21
 
 ### Added
