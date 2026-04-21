@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.47.1] - 2026-04-21
+
+### Fixed
+- **Profile-picture cropper modal no longer bleeds through to the form behind it.** The outer dialog was named `.cropper-modal`, which collides with Cropper.js's own `.cropper-modal` class — the library's internal dark overlay (the mask outside the crop box) was inheriting our `position: fixed; inset: 0;` rules and getting stretched across the viewport, pushing the form and the original modal backdrop through the dialog area. Renamed the outer wrapper + inner panel + header to `.pp-crop-modal*` so Cropper.js's internal elements keep their intended sizing and our dialog chrome stays opaque.
+
 ## [1.47.0] - 2026-04-21
 
 ### Added

@@ -503,10 +503,12 @@
         </section>
     </div>
 
-    <!-- Profile Picture Cropper Modal (LinkedIn-style zoom/pan) -->
-    <div class="cropper-modal no-print" id="cropperModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="cropperModalTitle">
-        <div class="cropper-modal-inner">
-            <div class="cropper-modal-header">
+    <!-- Profile Picture Cropper Modal (LinkedIn-style zoom/pan). Outer classes
+         use a `pp-crop-` prefix to avoid colliding with Cropper.js's own
+         `.cropper-modal` class (the dark overlay inside the crop container). -->
+    <div class="pp-crop-modal no-print" id="cropperModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="cropperModalTitle">
+        <div class="pp-crop-modal-inner">
+            <div class="pp-crop-modal-header">
                 <h3 id="cropperModalTitle" data-i18n="modal.adjust_picture">Adjust Profile Picture</h3>
                 <button type="button" class="modal-close" onclick="closeCropperModal()" aria-label="Close">
                     <span class="material-symbols-outlined">close</span>
