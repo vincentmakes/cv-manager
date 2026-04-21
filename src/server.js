@@ -580,6 +580,16 @@ if (!PUBLIC_ONLY) {
         }
     } catch (err) { console.log('Migration check (display_name):', err.message); }
 
+    // Step 2f: Migration - add print_compact column to section_visibility if missing
+    try {
+        const sectionVisInfo3 = db.prepare("PRAGMA table_info(section_visibility)").all();
+        const hasPrintCompact = sectionVisInfo3.some(col => col.name === 'print_compact');
+        if (!hasPrintCompact) {
+            console.log('Migrating section_visibility table: adding print_compact column');
+            db.exec('ALTER TABLE section_visibility ADD COLUMN print_compact INTEGER DEFAULT 0');
+        }
+    } catch (err) { console.log('Migration check (print_compact):', err.message); }
+
     // Step 2e2: Create section_title_overrides table (per-language rename storage)
     // and migrate any existing global section_visibility.display_name values into
     // it, seeding one row per section, per language actually present in saved_datasets.
@@ -1617,7 +1627,7 @@ if (PUBLIC_ONLY) {
         const sectionKeys = new Set(sections.map(s => s.section_name));
         customSections.forEach(cs => {
             if (!sectionKeys.has(cs.section_key)) {
-                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
+                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, print_compact: 0, display_name: null });
             }
         });
         sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -1633,6 +1643,7 @@ if (PUBLIC_ONLY) {
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,
+            print_compact: s.print_compact === 1,
             sort_order: s.sort_order || 0,
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
         })));
@@ -2160,7 +2171,7 @@ if (PUBLIC_ONLY) {
         customSections.forEach(cs => {
             if (!sectionKeys.has(cs.section_key)) {
                 db.prepare('INSERT OR IGNORE INTO section_visibility (section_name, visible, sort_order) VALUES (?, ?, ?)').run(cs.section_key, cs.visible ? 1 : 0, cs.sort_order || 0);
-                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
+                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, print_compact: 0, display_name: null });
             }
         });
         sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -2182,12 +2193,13 @@ if (PUBLIC_ONLY) {
                 language_display_name: languageOverride,
                 visible: !!s.visible,
                 print_visible: s.print_visible !== 0,
+                print_compact: s.print_compact === 1,
                 sort_order: s.sort_order || 0,
                 is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
             };
         }));
     });
-    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible != false ? 1 : 0, section.sort_order, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+    app.put('/api/sections/order', (req, res) => { const { sections } = req.body; if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Invalid sections data' }); const updateOrder = db.transaction(() => { sections.forEach(section => { const existing = db.prepare('SELECT print_compact FROM section_visibility WHERE section_name = ?').get(section.key); const printCompact = section.print_compact !== undefined ? (section.print_compact ? 1 : 0) : (existing ? (existing.print_compact ? 1 : 0) : 0); db.prepare('UPDATE section_visibility SET visible = ?, print_visible = ?, print_compact = ?, sort_order = ? WHERE section_name = ?').run(section.visible ? 1 : 0, section.print_visible != false ? 1 : 0, printCompact, section.sort_order, section.key); if (section.key.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ?, sort_order = ? WHERE section_key = ?').run(section.visible ? 1 : 0, section.sort_order, section.key); } }); }); try { updateOrder(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
     // Rename a section title for the active dataset, optionally propagating to
     // every other dataset sharing the same language. Siblings in the same
@@ -2248,6 +2260,7 @@ if (PUBLIC_ONLY) {
     });
     app.put('/api/sections/:name', (req, res) => { const sectionName = req.params.name; const visible = req.body.visible ? 1 : 0; db.prepare('UPDATE section_visibility SET visible = ? WHERE section_name = ?').run(visible, sectionName); if (sectionName.startsWith('custom_')) { db.prepare('UPDATE custom_sections SET visible = ? WHERE section_key = ?').run(visible, sectionName); } res.json({ success: true }); });
     app.put('/api/sections/:name/print', (req, res) => { const sectionName = req.params.name; const printVisible = req.body.print_visible ? 1 : 0; const result = db.prepare('UPDATE section_visibility SET print_visible = ? WHERE section_name = ?').run(printVisible, sectionName); if (result.changes === 0) return res.status(404).json({ error: 'Section not found' }); res.json({ success: true }); });
+    app.put('/api/sections/:name/print-compact', (req, res) => { const sectionName = req.params.name; const printCompact = req.body.print_compact ? 1 : 0; const result = db.prepare('UPDATE section_visibility SET print_compact = ? WHERE section_name = ?').run(printCompact, sectionName); if (result.changes === 0) return res.status(404).json({ error: 'Section not found' }); res.json({ success: true }); });
 
     app.get('/api/experiences', (req, res) => { const experiences = db.prepare('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC').all(); res.json(experiences.map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [], visible: !!e.visible }))); });
     app.get('/api/experiences/:id', (req, res) => { const exp = db.prepare('SELECT * FROM experiences WHERE id = ?').get(req.params.id); if (!exp) return res.status(404).json({ error: 'Not found' }); res.json({ ...exp, highlights: exp.highlights ? JSON.parse(exp.highlights) : [], visible: !!exp.visible }); });
@@ -3918,7 +3931,7 @@ if (PUBLIC_ONLY) {
         const sectionKeys = new Set(sections.map(s => s.section_name));
         customSections.forEach(cs => {
             if (!sectionKeys.has(cs.section_key)) {
-                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, display_name: null });
+                sections.push({ section_name: cs.section_key, visible: cs.visible ? 1 : 0, sort_order: cs.sort_order || 0, print_visible: 1, print_compact: 0, display_name: null });
             }
         });
         sections.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -3934,6 +3947,7 @@ if (PUBLIC_ONLY) {
             default_name: defaultName(s),
             visible: !!s.visible,
             print_visible: s.print_visible !== 0,
+            print_compact: s.print_compact === 1,
             sort_order: s.sort_order || 0,
             is_custom: !DEFAULT_SECTION_ORDER.includes(s.section_name)
         })));

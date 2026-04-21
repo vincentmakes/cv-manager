@@ -938,6 +938,12 @@
                     } else {
                         el.classList.remove('hidden-print');
                     }
+                    // Apply print-compact class so Skills (and any opted-in sections) render compactly when printing
+                    if (section.print_compact) {
+                        el.classList.add('print-compact');
+                    } else {
+                        el.classList.remove('print-compact');
+                    }
                 }
             });
             

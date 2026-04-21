@@ -4,6 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.46.0] - 2026-04-21
+
+### Added
+- **Compact print layout for Featured Projects.** The Projects section header now has the same `compress` icon button as Skills. When enabled, printing collapses the three-column project-card grid into inline `**Title** — description` lines and hides the technology tags and link icon entirely, reclaiming the most vertical space of any layout on the page. The flag reuses the existing `section_visibility.print_compact` column and the generic `PUT /api/sections/:name/print-compact` endpoint shipped in 1.45.0, so no schema or API changes were needed — just the new CSS rules under `#section-projects.print-compact` and a button wire-up in `public/index.html`.
+- **Hover tooltips on section-action buttons.** Every icon button in the admin section headers (Rename, Copy, Toggle Visibility, Toggle Print Visibility, Toggle Compact Print) now shows a styled dark tooltip bubble above the button on mouse hover and keyboard focus, reading from the existing `title` attribute via CSS `attr()`. The tooltip appears instantly, tracks locale changes automatically (since `title` is already rewritten by the i18n refresh), and is scoped to `.section-actions .icon-btn` so it doesn't affect other icon buttons elsewhere in the UI.
+
+## [1.45.0] - 2026-04-21
+
+### Added
+- **Compact print layout for Skills & Expertise.** The Skills section header in the admin UI gains a new `compress` icon button next to the existing visibility and print-visibility toggles. When enabled, printing the CV (Ctrl/Cmd-P) or exporting the public page collapses the four-column card grid into inline text lines (`**Category:** skill1, skill2, skill3`), reclaiming significant vertical space on long CVs. The on-screen rendering is untouched — the layout only changes inside `@media print`. The flag is stored as a new `print_compact` column on the `section_visibility` table (defaults to 0 on existing installs, so no visual change for anyone who doesn't opt in) and is surfaced in the `GET /api/sections/order` response plus a new `PUT /api/sections/:name/print-compact` endpoint. The bulk `PUT /api/sections/order` also round-trips the flag so dataset import/export preserves it. The public read-only page mirrors the class on load so visitors printing from `/` or `/v/{slug}` see the same compact layout. Two new i18n keys (`action.toggle_print_compact`, `toast.section_print_compact_updated`) translated across all 8 supported locales. Current scope is the Skills section only; the column is generic so other sections can opt in later by adding CSS rules.
+
 ## [1.44.0] - 2026-04-21
 
 ### Added

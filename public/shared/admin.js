@@ -1009,9 +1009,11 @@ async function loadSectionsAdmin() {
         const el = document.getElementById(`section-${s.key}`);
         const toggleBtn = document.getElementById(`toggle-${s.key}`);
         const togglePrintBtn = document.getElementById(`toggle-print-${s.key}`);
+        const togglePrintCompactBtn = document.getElementById(`toggle-print-compact-${s.key}`);
         if (el) {
             el.classList.toggle('is-hidden', !s.visible);
             el.classList.toggle('hidden-print', s.visible && s.print_visible === false);
+            el.classList.toggle('print-compact', !!s.print_compact);
         }
         if (toggleBtn) {
             toggleBtn.classList.toggle('active', s.visible);
@@ -1022,6 +1024,11 @@ async function loadSectionsAdmin() {
             togglePrintBtn.disabled = !s.visible;
             const icon = togglePrintBtn.querySelector('.material-symbols-outlined');
             if (icon) icon.textContent = printOn ? 'print' : 'print_disabled';
+        }
+        if (togglePrintCompactBtn) {
+            const compactOn = s.visible && !!s.print_compact;
+            togglePrintCompactBtn.classList.toggle('active', compactOn);
+            togglePrintCompactBtn.disabled = !s.visible;
         }
     });
     return visibilityMap;
@@ -1243,6 +1250,18 @@ async function toggleSectionPrint(section) {
     await api(`/api/sections/${section}/print`, { method: 'PUT', body: { print_visible: newValue } });
     sectionVisibility = await loadSectionsAdmin();
     toast(t('toast.section_print_visibility_updated'));
+    autoSaveActiveDataset();
+}
+
+// Toggle Section Compact Print
+async function toggleSectionPrintCompact(section) {
+    if (!sectionVisibility[section]) return;
+    const btn = document.getElementById(`toggle-print-compact-${section}`);
+    const currentlyOn = btn ? btn.classList.contains('active') : false;
+    const newValue = !currentlyOn;
+    await api(`/api/sections/${section}/print-compact`, { method: 'PUT', body: { print_compact: newValue } });
+    sectionVisibility = await loadSectionsAdmin();
+    toast(t('toast.section_print_compact_updated'));
     autoSaveActiveDataset();
 }
 
