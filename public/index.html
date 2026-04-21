@@ -18,6 +18,14 @@
     <div class="toolbar no-print">
         <div class="toolbar-title"></div>
         <div class="toolbar-actions" id="toolbarActions">
+            <button id="undoBtn" class="btn btn-secondary btn-icon-only" onclick="undoAction()" disabled
+                    data-i18n-title="toolbar.undo" title="Undo">
+                <span class="material-symbols-outlined">undo</span>
+            </button>
+            <button id="redoBtn" class="btn btn-secondary btn-icon-only" onclick="redoAction()" disabled
+                    data-i18n-title="toolbar.redo" title="Redo">
+                <span class="material-symbols-outlined">redo</span>
+            </button>
             <button class="btn btn-secondary" onclick="openCvManager()">
                 <span class="material-symbols-outlined">folder_managed</span>
                 <span data-i18n="toolbar.cv_manager">CV Manager</span>
@@ -916,7 +924,7 @@
     </div>
 
     <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <div class="toast no-print" id="toast"></div>
 
     <!-- ATS PDF Export Modal -->
     <div class="modal-overlay ats-pdf-modal" id="atsPdfModalOverlay">

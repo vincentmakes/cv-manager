@@ -108,13 +108,222 @@ const API = '';
 
 // API Helper
 async function api(endpoint, options = {}) {
+    const internal = options && options._undoInternal === true;
+    const fetchOptions = { ...(options || {}) };
+    delete fetchOptions._undoInternal;
+    const method = (options && options.method) || 'GET';
+    const willCapture = !internal
+        && typeof UndoManager !== 'undefined'
+        && UndoManager.shouldCapture(endpoint, method);
+    // Capture the pre-mutation snapshot synchronously on the first mutation of
+    // the session, so the very first undo has somewhere to roll back to.
+    if (willCapture) {
+        await UndoManager.ensureInitialSnapshot();
+    }
     const res = await fetch(API + endpoint, {
         headers: { 'Content-Type': 'application/json' },
-        ...options,
-        body: options.body ? JSON.stringify(options.body) : undefined
+        ...fetchOptions,
+        body: fetchOptions.body ? JSON.stringify(fetchOptions.body) : undefined
     });
-    return res.json();
+    const data = await res.json();
+    if (willCapture && res.ok && (!data || !data.error)) {
+        UndoManager.recordAfter().catch(() => { /* non-fatal */ });
+    }
+    return data;
 }
+
+// ===========================
+// Undo / Redo manager
+// ===========================
+//
+// Snapshot-based undo for the admin UI. After every successful mutation that
+// matches CAPTURE_RULES, we fetch /api/cv and push it onto a history stack.
+// Undo / Redo restore a snapshot via POST /api/import, which atomically replaces
+// the relevant DB tables in a single transaction. The internal call passes
+// `_undoInternal: true` so it isn't recaptured.
+//
+// Coverage: profile + experiences/certifications/education/skills/projects CRUD,
+// custom sections + items CRUD, section visibility/print toggles, section reorder.
+// Out of scope: theme, settings, section rename, file uploads, dataset ops, import.
+const UndoManager = (() => {
+    const MAX_HISTORY = 50;
+    const CAPTURE_RULES = [
+        { method: 'PUT',    pattern: /^\/api\/profile(\?.*)?$/ },
+        { method: 'POST',   pattern: /^\/api\/(experiences|certifications|education|skills|projects)(\?.*)?$/ },
+        { method: 'PUT',    pattern: /^\/api\/(experiences|certifications|education|skills|projects)\/\d+(\?.*)?$/ },
+        { method: 'DELETE', pattern: /^\/api\/(experiences|certifications|education|skills|projects)\/\d+(\?.*)?$/ },
+        { method: 'PUT',    pattern: /^\/api\/sections\/order(\?.*)?$/ },
+        { method: 'PUT',    pattern: /^\/api\/sections\/[^/]+\/print(\?.*)?$/ },
+        { method: 'PUT',    pattern: /^\/api\/sections\/[^/?]+(\?.*)?$/ },
+        { method: 'POST',   pattern: /^\/api\/custom-sections(\?.*)?$/ },
+        { method: 'PUT',    pattern: /^\/api\/custom-sections\/\d+(\?.*)?$/ },
+        { method: 'DELETE', pattern: /^\/api\/custom-sections\/\d+(\?.*)?$/ },
+        { method: 'POST',   pattern: /^\/api\/custom-sections\/\d+\/items(\?.*)?$/ },
+        { method: 'PUT',    pattern: /^\/api\/custom-sections\/\d+\/items\/\d+(\?.*)?$/ },
+        { method: 'DELETE', pattern: /^\/api\/custom-sections\/\d+\/items\/\d+(\?.*)?$/ },
+    ];
+
+    let history = [];   // array of snapshot strings (JSON.stringify of /api/cv)
+    let redoStack = []; // forward stack
+    let initialized = false;
+    let batchDepth = 0;
+    let captureQueue = Promise.resolve();
+    let opQueue = Promise.resolve();
+
+    function shouldCapture(endpoint, method) {
+        if (!endpoint || typeof endpoint !== 'string') return false;
+        if (batchDepth > 0) return false;
+        const m = (method || 'GET').toUpperCase();
+        for (const rule of CAPTURE_RULES) {
+            if (rule.method === m && rule.pattern.test(endpoint)) return true;
+        }
+        return false;
+    }
+
+    async function fetchSnapshot() {
+        try {
+            const res = await fetch(API + '/api/cv');
+            if (!res.ok) return null;
+            const data = await res.json();
+            return JSON.stringify(data);
+        } catch {
+            return null;
+        }
+    }
+
+    function pushSnapshot(snap) {
+        if (!snap) return;
+        const top = history.length ? history[history.length - 1] : null;
+        if (top === snap) return; // dedupe no-op mutations
+        history.push(snap);
+        if (history.length > MAX_HISTORY) history.shift();
+        redoStack = [];
+        updateButtons();
+    }
+
+    // Capture the pre-mutation state on the first capture-eligible call. Awaited
+    // synchronously by api() so undo on the very first mutation has somewhere
+    // to roll back to. After init, this is a no-op.
+    async function ensureInitialSnapshot() {
+        if (initialized) return;
+        initialized = true;
+        const snap = await fetchSnapshot();
+        pushSnapshot(snap);
+    }
+
+    function recordAfter() {
+        // Serialize snapshot fetches so they push in the right order even when
+        // many mutations fire in quick succession.
+        captureQueue = captureQueue.then(async () => {
+            const snap = await fetchSnapshot();
+            pushSnapshot(snap);
+        }).catch(() => { /* swallow */ });
+        return captureQueue;
+    }
+
+    function canUndo() { return history.length >= 2; }
+    function canRedo() { return redoStack.length > 0; }
+
+    function updateButtons() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        if (undoBtn) undoBtn.disabled = !canUndo();
+        if (redoBtn) redoBtn.disabled = !canRedo();
+    }
+
+    async function restore(snapStr) {
+        const data = JSON.parse(snapStr);
+        await api('/api/import', { method: 'POST', body: data, _undoInternal: true });
+        if (typeof initAdmin === 'function') {
+            await initAdmin();
+        }
+        if (typeof autoSaveActiveDataset === 'function') {
+            try { autoSaveActiveDataset(); } catch { /* non-fatal */ }
+        }
+        updateButtons();
+    }
+
+    function undo() {
+        opQueue = opQueue.then(async () => {
+            await captureQueue; // wait for any in-flight capture
+            if (!canUndo()) {
+                if (typeof toast === 'function' && typeof t === 'function') {
+                    toast(t('toast.nothing_to_undo'));
+                }
+                return;
+            }
+            const current = history.pop();
+            redoStack.push(current);
+            const target = history[history.length - 1];
+            await restore(target);
+            if (typeof toast === 'function' && typeof t === 'function') {
+                toast(t('toast.undone'));
+            }
+        }).catch((err) => {
+            console.error('Undo failed:', err);
+        });
+        return opQueue;
+    }
+
+    function redo() {
+        opQueue = opQueue.then(async () => {
+            await captureQueue;
+            if (!canRedo()) {
+                if (typeof toast === 'function' && typeof t === 'function') {
+                    toast(t('toast.nothing_to_redo'));
+                }
+                return;
+            }
+            const target = redoStack.pop();
+            history.push(target);
+            await restore(target);
+            if (typeof toast === 'function' && typeof t === 'function') {
+                toast(t('toast.redone'));
+            }
+        }).catch((err) => {
+            console.error('Redo failed:', err);
+        });
+        return opQueue;
+    }
+
+    function clear() {
+        history = [];
+        redoStack = [];
+        initialized = false;
+        updateButtons();
+    }
+
+    async function batch(fn) {
+        // Capture pre-batch state once so the batch collapses into a single
+        // undo step.
+        await ensureInitialSnapshot();
+        batchDepth++;
+        try {
+            return await fn();
+        } finally {
+            batchDepth--;
+            if (batchDepth === 0) {
+                await recordAfter();
+            }
+        }
+    }
+
+    return {
+        shouldCapture,
+        ensureInitialSnapshot,
+        recordAfter,
+        undo,
+        redo,
+        clear,
+        batch,
+        canUndo,
+        canRedo,
+        updateButtons
+    };
+})();
+
+function undoAction() { return UndoManager.undo(); }
+function redoAction() { return UndoManager.redo(); }
 
 // Utility Functions
 function escapeHtml(text) {
