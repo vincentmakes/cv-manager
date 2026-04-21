@@ -3418,9 +3418,9 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
 
 .copy-section-list-toolbar {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     margin-bottom: 6px;
 }
 .copy-section-selectall {
