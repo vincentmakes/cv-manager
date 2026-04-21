@@ -3236,14 +3236,51 @@ function renderCopySectionTargetList(datasets, sectionKey) {
         const defaultBadge = isDefault
             ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`
             : '';
+        // The diff-stat slot starts with a spinner placeholder and is filled in
+        // asynchronously by fetchCopySectionDiffSummary() so the list appears
+        // immediately even if the batch diff takes a moment.
         return `
             <button type="button" class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" onclick="showCopySectionDiff(${ds.id}, '${safeName}')">
                 ${chips}
                 <span class="cvm-name">${escapeHtml(ds.name)}</span>
                 ${defaultBadge}
+                <span class="copy-section-diffstat" data-diffstat-id="${ds.id}" aria-hidden="true"></span>
                 <span class="copy-section-arrow material-symbols-outlined" aria-hidden="true">chevron_right</span>
             </button>`;
     }).join('');
+
+    fetchCopySectionDiffSummary(sectionKey);
+}
+
+// Batch-fetch +/- line counts for every target dataset and drop them into each
+// row's diffstat slot. Failures are silent (per-row chip just stays empty) so
+// the picker remains usable even if the summary endpoint errors.
+async function fetchCopySectionDiffSummary(sectionKey) {
+    try {
+        const result = await api('/api/datasets/copy-section-diff-summary', {
+            method: 'POST',
+            body: { sectionKey }
+        });
+        const summaries = (result && result.summaries) || [];
+        summaries.forEach(s => {
+            const slot = document.querySelector(`.copy-section-diffstat[data-diffstat-id="${s.id}"]`);
+            if (!slot) return;
+            if (s.error) { slot.innerHTML = ''; return; }
+            if (s.unchanged) {
+                slot.innerHTML = `<span class="copy-section-diffstat-equal" title="${escapeHtml(t('copy_section.diff_no_changes'))}">=</span>`;
+                return;
+            }
+            const added = s.added || 0;
+            const removed = s.removed || 0;
+            const parts = [];
+            if (added) parts.push(`<span class="copy-section-diffstat-added">+${added}</span>`);
+            if (removed) parts.push(`<span class="copy-section-diffstat-removed">−${removed}</span>`);
+            slot.innerHTML = parts.join('');
+        });
+    } catch (err) {
+        // Intentionally silent — the user can still click a target and see
+        // the full diff; the chips are just a preview hint.
+    }
 }
 
 function setCopySectionStep(step) {

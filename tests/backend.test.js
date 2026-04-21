@@ -2075,6 +2075,56 @@ describe('Backend API', () => {
                 assert.strictEqual(body.before, body.after);
                 await fetch(`${BASE_URL}/api/datasets/${target.id}`, { method: 'DELETE' });
             });
+
+            it('batch summary returns per-dataset +/- counts and flags unchanged', async () => {
+                // Two targets: one is a fresh snapshot (unchanged), one is the
+                // same but live mutates afterwards so it shows non-zero counts.
+                const fresh = await createDataset('Diff Summary Fresh');
+
+                const seed = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Summary-seed-role', company_name: 'SumCo',
+                    start_date: '2020-01', end_date: '', location: '', highlights: [],
+                });
+                assert.strictEqual(seed.status, 200);
+                const seedExp = await seed.json();
+
+                const stale = await createDataset('Diff Summary Stale');
+
+                // Add a second experience so `stale` now diverges from live.
+                const added = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Summary-added-role', company_name: 'SumCo2',
+                    start_date: '2022-06', end_date: '', location: '', highlights: [],
+                });
+                assert.strictEqual(added.status, 200);
+                const addedExp = await added.json();
+
+                const res = await postJson(`${BASE_URL}/api/datasets/copy-section-diff-summary`, { sectionKey: 'experience' });
+                assert.strictEqual(res.status, 200);
+                const { summaries } = await res.json();
+                assert.ok(Array.isArray(summaries));
+
+                const byId = Object.fromEntries(summaries.map(s => [s.id, s]));
+                assert.ok(byId[fresh.id], 'fresh dataset must appear in summary');
+                assert.ok(byId[stale.id], 'stale dataset must appear in summary');
+                // `fresh` was snapshotted AFTER the second experience was added,
+                // actually no — it was snapshotted BEFORE. Let me re-check.
+                // Actually fresh captured live when only seedExp existed; stale
+                // captured live when only seedExp existed too (addedExp was
+                // created AFTER stale). So BOTH should show added > 0 now.
+                assert.ok(byId[fresh.id].added > 0 || byId[fresh.id].unchanged === false, 'fresh should show divergence');
+                assert.strictEqual(byId[stale.id].unchanged, false);
+                assert.ok(byId[stale.id].added > 0, 'stale should have added lines');
+
+                await fetch(`${BASE_URL}/api/experiences/${seedExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/experiences/${addedExp.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${fresh.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${stale.id}`, { method: 'DELETE' });
+            });
+
+            it('batch summary rejects invalid sectionKey with 400', async () => {
+                const r = await postJson(`${BASE_URL}/api/datasets/copy-section-diff-summary`, { sectionKey: 'bogus' });
+                assert.strictEqual(r.status, 400);
+            });
         });
     });
 

@@ -2819,6 +2819,42 @@ if (PUBLIC_ONLY) {
         }
     });
 
+    // Batch summary: for every saved dataset, compute how many lines would be
+    // added/removed if the given section were copied from live into that dataset.
+    // Powers the per-row +N / -M chips in the copy-section picker so the user
+    // sees the impact of each target at a glance before clicking.
+    app.post('/api/datasets/copy-section-diff-summary', (req, res) => {
+        const { sectionKey } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        try {
+            const liveData = gatherCvData();
+            const after = serializeSection(liveData, sectionKey);
+            const rows = db.prepare('SELECT id, data FROM saved_datasets').all();
+            const summaries = rows.map(row => {
+                let before = '';
+                try { before = serializeSection(JSON.parse(row.data), sectionKey); }
+                catch { return { id: row.id, error: 'corrupted' }; }
+                if (before === after) return { id: row.id, added: 0, removed: 0, unchanged: true };
+                let added = 0, removed = 0;
+                diffLines(before + '\n', after + '\n').forEach(part => {
+                    if (part.added) added += part.count || 0;
+                    else if (part.removed) removed += part.count || 0;
+                });
+                return { id: row.id, added, removed, unchanged: false };
+            });
+            res.json({ summaries });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
     app.post('/api/datasets/:id/copy-section-from-live', (req, res) => {
         const { sectionKey } = req.body || {};
         if (!sectionKey || typeof sectionKey !== 'string') {

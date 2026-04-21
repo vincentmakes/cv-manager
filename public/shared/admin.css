@@ -3265,6 +3265,38 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     color: var(--gray-600);
     font-style: italic;
 }
+
+/* Per-row +/- chips in the target picker — sit between the default badge
+ * and the chevron, aligned to the right edge of the row. */
+.copy-section-diffstat {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+.copy-section-diffstat-added,
+.copy-section-diffstat-removed,
+.copy-section-diffstat-equal {
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+.copy-section-diffstat-added {
+    background: #dcfce7;
+    color: #14532d;
+}
+.copy-section-diffstat-removed {
+    background: #fee2e2;
+    color: #7f1d1d;
+}
+.copy-section-diffstat-equal {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-weight: 500;
+}
 .copy-section-current {
     display: flex;
     align-items: center;
