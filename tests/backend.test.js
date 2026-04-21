@@ -2126,6 +2126,66 @@ describe('Backend API', () => {
                 assert.strictEqual(r.status, 400);
             });
         });
+
+        describe('copy-section-bulk overwrite', () => {
+            async function bulkCopy(sectionKey, targetIds) {
+                return postJson(`${BASE_URL}/api/datasets/copy-section-bulk`, { sectionKey, targetIds });
+            }
+
+            it('rejects invalid inputs with 400', async () => {
+                const noIds = await bulkCopy('experience', []);
+                assert.strictEqual(noIds.status, 400);
+                const badKey = await bulkCopy('bogus', [1]);
+                assert.strictEqual(badKey.status, 400);
+                const missingKey = await bulkCopy('', [1]);
+                assert.strictEqual(missingKey.status, 400);
+            });
+
+            it('copies the live section into every selected target in one call', async () => {
+                // Seed: two targets, both snapshotted before we mutate live.
+                const t1 = await createDataset('Bulk Target A');
+                const t2 = await createDataset('Bulk Target B');
+
+                const exp = await postJson(`${BASE_URL}/api/experiences`, {
+                    job_title: 'Bulk-copy-role', company_name: 'BulkCo',
+                    start_date: '2023-01', end_date: '', location: '', highlights: ['bulk-hl'],
+                });
+                assert.strictEqual(exp.status, 200);
+                const expJson = await exp.json();
+
+                const res = await bulkCopy('experience', [t1.id, t2.id]);
+                assert.strictEqual(res.status, 200);
+                const body = await res.json();
+                assert.strictEqual(body.okCount, 2);
+                assert.strictEqual(body.failCount, 0);
+                assert.strictEqual(body.success, true);
+
+                // Both targets must now contain the added live experience.
+                const after1 = await readTargetJson(t1.id);
+                const after2 = await readTargetJson(t2.id);
+                assert.ok(after1.experiences.some(e => e.job_title === 'Bulk-copy-role'), 't1 must contain the live role');
+                assert.ok(after2.experiences.some(e => e.job_title === 'Bulk-copy-role'), 't2 must contain the live role');
+
+                await fetch(`${BASE_URL}/api/experiences/${expJson.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${t1.id}`, { method: 'DELETE' });
+                await fetch(`${BASE_URL}/api/datasets/${t2.id}`, { method: 'DELETE' });
+            });
+
+            it('reports per-id failures without aborting successful targets', async () => {
+                // One real target + one bogus id. The real target should still
+                // be updated, and the bogus id should show up as a failure.
+                const real = await createDataset('Bulk Partial Target');
+                const res = await bulkCopy('about', [real.id, 999999]);
+                assert.strictEqual(res.status, 200);
+                const body = await res.json();
+                assert.strictEqual(body.okCount, 1);
+                assert.strictEqual(body.failCount, 1);
+                const byId = Object.fromEntries(body.results.map(r => [r.id, r]));
+                assert.strictEqual(byId[real.id].ok, true);
+                assert.strictEqual(byId[999999].ok, false);
+                await fetch(`${BASE_URL}/api/datasets/${real.id}`, { method: 'DELETE' });
+            });
+        });
     });
 
     describe('Public API (port)', () => {

@@ -939,7 +939,13 @@
                         <span class="material-symbols-outlined" aria-hidden="true">warning</span>
                         <span data-i18n="copy_section.warning">The section's content in the target CV will be overwritten. This cannot be undone.</span>
                     </div>
-                    <h4 class="copy-section-list-title" data-i18n="copy_section.choose_target">Choose a target CV</h4>
+                    <div class="copy-section-list-toolbar">
+                        <h4 class="copy-section-list-title" data-i18n="copy_section.choose_target">Choose a target CV</h4>
+                        <label class="copy-section-selectall">
+                            <input type="checkbox" id="copySectionSelectAll">
+                            <span data-i18n="copy_section.select_all">Select all</span>
+                        </label>
+                    </div>
                     <div id="copySectionTargetList" class="copy-section-target-list"></div>
                 </div>
                 <div class="copy-section-step copy-section-step-diff">
@@ -950,17 +956,21 @@
                     </div>
                     <pre class="copy-section-diff" id="copySectionDiff" aria-live="polite"></pre>
                 </div>
+                <div class="copy-section-step copy-section-step-bulk">
+                    <p class="copy-section-bulk-subtitle" id="copySectionBulkSubtitle"></p>
+                    <ul class="copy-section-bulk-list" id="copySectionBulkList"></ul>
+                </div>
             </div>
             <div class="modal-footer">
                 <div class="modal-footer-left">
-                    <button class="btn btn-ghost copy-section-back-btn" id="copySectionBackBtn" type="button" onclick="setCopySectionStep('list')">
+                    <button class="btn btn-ghost copy-section-back-btn" id="copySectionBackBtn" type="button" onclick="copySectionBackToList()">
                         <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
                         <span data-i18n="copy_section.back">Back</span>
                     </button>
                 </div>
                 <div class="modal-footer-right">
                     <button class="btn btn-ghost" onclick="closeCopySectionModal()" data-i18n="btn.cancel">Cancel</button>
-                    <button class="btn btn-primary copy-section-confirm-btn" id="copySectionConfirmBtn" type="button" onclick="confirmCopySectionToTarget()" data-i18n="copy_section.confirm_button">Copy & overwrite</button>
+                    <button class="btn btn-primary copy-section-confirm-btn" id="copySectionConfirmBtn" type="button" onclick="onCopySectionConfirmClick()" data-i18n="copy_section.confirm_button">Copy & overwrite</button>
                 </div>
             </div>
         </div>

@@ -3200,11 +3200,12 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
 #copySectionModalBody[data-step="list"] .copy-section-step-list { display: block; }
 #copySectionModalBody[data-step="diff"] .copy-section-step-diff { display: flex; flex-direction: column; gap: 10px; }
 
-/* Footer buttons are shown depending on the current step. */
-#copySectionModalOverlay .copy-section-back-btn,
-#copySectionModalOverlay .copy-section-confirm-btn { display: none; }
+/* Footer buttons are shown depending on the current step. The Back button
+ * only appears after the user has drilled in (diff or bulk). The confirm
+ * button is visible on every step — its label + click behaviour vary. */
+#copySectionModalOverlay .copy-section-back-btn { display: none; }
 #copySectionModalOverlay .modal-body[data-step="diff"] ~ .modal-footer .copy-section-back-btn,
-#copySectionModalOverlay .modal-body[data-step="diff"] ~ .modal-footer .copy-section-confirm-btn { display: inline-flex; }
+#copySectionModalOverlay .modal-body[data-step="bulk"] ~ .modal-footer .copy-section-back-btn { display: inline-flex; }
 
 .copy-section-subtitle {
     margin: 0 0 12px;
@@ -3390,4 +3391,86 @@ body.reorder-active .section-reorder-handle { opacity: 0; pointer-events: none; 
     color: var(--gray-500);
     font-size: 20px;
     flex-shrink: 0;
+}
+.copy-section-target-check {
+    flex-shrink: 0;
+    margin: 0;
+    cursor: pointer;
+}
+.copy-section-preview-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+.copy-section-preview-btn:hover {
+    background: var(--gray-100);
+    color: var(--primary);
+}
+.copy-section-preview-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.copy-section-list-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+.copy-section-selectall {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--gray-700);
+    cursor: pointer;
+}
+.copy-section-selectall input {
+    margin: 0;
+    cursor: pointer;
+}
+.copy-section-selectall input:disabled { cursor: not-allowed; opacity: 0.5; }
+
+#copySectionModalBody[data-step="bulk"] .copy-section-step-bulk {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.copy-section-bulk-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: var(--gray-700);
+}
+.copy-section-bulk-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 50vh;
+    overflow: auto;
+}
+.copy-section-bulk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+.copy-section-bulk-row .cvm-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

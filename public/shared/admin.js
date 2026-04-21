@@ -3148,6 +3148,13 @@ function copySectionDisplayName(sectionKey) {
     return sectionKey;
 }
 
+// Module-scoped state for the copy-section picker: selected target IDs
+// (ordered Set) and a cache of the per-target diff summaries so the bulk
+// confirmation screen can show +/- counts without a second round-trip.
+const copySectionSelectedIds = new Set();
+let copySectionTargets = [];
+let copySectionDiffSummary = {};
+
 async function openCopySectionModal(sectionKey) {
     if (!sectionKey || sectionKey === 'timeline') return;
     const overlay = document.getElementById('copySectionModalOverlay');
@@ -3161,6 +3168,10 @@ async function openCopySectionModal(sectionKey) {
 
     renderCopySectionCurrentCv();
 
+    copySectionSelectedIds.clear();
+    copySectionTargets = [];
+    copySectionDiffSummary = {};
+
     const list = document.getElementById('copySectionTargetList');
     if (list) {
         list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.loading') || 'Loading...')}</p>`;
@@ -3171,6 +3182,14 @@ async function openCopySectionModal(sectionKey) {
     overlay.setAttribute('data-section-key', sectionKey);
     overlay.removeAttribute('data-target-id');
     overlay.removeAttribute('data-target-name');
+
+    const selectAll = document.getElementById('copySectionSelectAll');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        selectAll.onchange = onCopySectionSelectAllChange;
+    }
+    updateCopySectionConfirmButton();
 
     try {
         const datasets = await api('/api/datasets');
@@ -3216,16 +3235,21 @@ function renderCopySectionTargetList(datasets, sectionKey) {
     const list = document.getElementById('copySectionTargetList');
     if (!list) return;
     const targets = (datasets || []).filter(ds => ds && ds.id !== activeDatasetId);
+    copySectionTargets = targets;
     if (targets.length === 0) {
         list.innerHTML = `<p class="cvm-empty">${escapeHtml(t('copy_section.empty'))}</p>`;
+        const selectAll = document.getElementById('copySectionSelectAll');
+        if (selectAll) selectAll.disabled = true;
         return;
     }
+    const selectAll = document.getElementById('copySectionSelectAll');
+    if (selectAll) selectAll.disabled = false;
 
+    // Each row is a label wrapping a checkbox + dataset info + a preview
+    // button. The whole label toggles selection; the preview button opens
+    // the single-target diff view without toggling.
     list.innerHTML = targets.map(ds => {
         const isDefault = !!ds.is_default;
-        // Always show the version chip in the picker so users can distinguish
-        // versions at a glance, and always show the public chip when the
-        // dataset is public (forcePublicChip) regardless of default-ness.
         const chips = renderDatasetChips(ds, {
             versionBadge: ds.version || 1,
             isDefault,
@@ -3236,25 +3260,71 @@ function renderCopySectionTargetList(datasets, sectionKey) {
         const defaultBadge = isDefault
             ? `<span class="dataset-default-badge">${escapeHtml(t('datasets.default_hint_short'))}</span>`
             : '';
-        // The diff-stat slot starts with a spinner placeholder and is filled in
-        // asynchronously by fetchCopySectionDiffSummary() so the list appears
-        // immediately even if the batch diff takes a moment.
         return `
-            <button type="button" class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}" onclick="showCopySectionDiff(${ds.id}, '${safeName}')">
+            <label class="copy-section-target-row" data-id="${ds.id}" data-name="${escapeHtml(ds.name)}">
+                <input type="checkbox" class="copy-section-target-check" value="${ds.id}" onchange="onCopySectionTargetToggle(${ds.id}, this.checked)">
                 ${chips}
                 <span class="cvm-name">${escapeHtml(ds.name)}</span>
                 ${defaultBadge}
                 <span class="copy-section-diffstat" data-diffstat-id="${ds.id}" aria-hidden="true"></span>
-                <span class="copy-section-arrow material-symbols-outlined" aria-hidden="true">chevron_right</span>
-            </button>`;
+                <button type="button" class="copy-section-preview-btn" title="${escapeHtml(t('copy_section.preview_diff'))}" onclick="event.preventDefault(); event.stopPropagation(); showCopySectionDiff(${ds.id}, '${safeName}')">
+                    <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                </button>
+            </label>`;
     }).join('');
 
     fetchCopySectionDiffSummary(sectionKey);
+    updateCopySectionConfirmButton();
+    syncCopySectionSelectAll();
+}
+
+function onCopySectionTargetToggle(id, checked) {
+    const numId = Number(id);
+    if (checked) copySectionSelectedIds.add(numId);
+    else copySectionSelectedIds.delete(numId);
+    updateCopySectionConfirmButton();
+    syncCopySectionSelectAll();
+}
+
+function onCopySectionSelectAllChange(e) {
+    const checked = !!(e && e.target && e.target.checked);
+    copySectionSelectedIds.clear();
+    if (checked) {
+        copySectionTargets.forEach(ds => copySectionSelectedIds.add(Number(ds.id)));
+    }
+    document.querySelectorAll('.copy-section-target-check').forEach(cb => {
+        cb.checked = checked;
+    });
+    updateCopySectionConfirmButton();
+}
+
+// Keep the Select-all checkbox's state (checked / unchecked / indeterminate)
+// in sync with the row checkboxes so it always mirrors reality.
+function syncCopySectionSelectAll() {
+    const selectAll = document.getElementById('copySectionSelectAll');
+    if (!selectAll) return;
+    const total = copySectionTargets.length;
+    const selected = copySectionSelectedIds.size;
+    selectAll.checked = total > 0 && selected === total;
+    selectAll.indeterminate = selected > 0 && selected < total;
+}
+
+function updateCopySectionConfirmButton() {
+    const btn = document.getElementById('copySectionConfirmBtn');
+    if (!btn) return;
+    const count = copySectionSelectedIds.size;
+    btn.disabled = count === 0;
+    // Label changes based on count so the user always knows exactly how many
+    // CVs will be affected before confirming.
+    if (count <= 1) btn.textContent = t('copy_section.confirm_button');
+    else btn.textContent = t('copy_section.confirm_button_n', { n: count });
 }
 
 // Batch-fetch +/- line counts for every target dataset and drop them into each
 // row's diffstat slot. Failures are silent (per-row chip just stays empty) so
-// the picker remains usable even if the summary endpoint errors.
+// the picker remains usable even if the summary endpoint errors. The fetched
+// summaries are cached in copySectionDiffSummary so the bulk confirm view can
+// show them without a second request.
 async function fetchCopySectionDiffSummary(sectionKey) {
     try {
         const result = await api('/api/datasets/copy-section-diff-summary', {
@@ -3262,7 +3332,9 @@ async function fetchCopySectionDiffSummary(sectionKey) {
             body: { sectionKey }
         });
         const summaries = (result && result.summaries) || [];
+        copySectionDiffSummary = {};
         summaries.forEach(s => {
+            copySectionDiffSummary[s.id] = s;
             const slot = document.querySelector(`.copy-section-diffstat[data-diffstat-id="${s.id}"]`);
             if (!slot) return;
             if (s.error) { slot.innerHTML = ''; return; }
@@ -3283,9 +3355,115 @@ async function fetchCopySectionDiffSummary(sectionKey) {
     }
 }
 
+// Dispatcher for the footer primary button. Behaviour depends on the current
+// step: from the list, route to the diff preview (1 selected) or bulk confirm
+// (2+ selected). From the diff step, execute the single-target copy. From the
+// bulk-confirm step, execute the bulk copy.
+function onCopySectionConfirmClick() {
+    const body = document.getElementById('copySectionModalBody');
+    const step = body ? body.getAttribute('data-step') : 'list';
+    if (step === 'diff') return confirmCopySectionToTarget();
+    if (step === 'bulk') return confirmCopySectionBulk();
+    const ids = Array.from(copySectionSelectedIds);
+    if (ids.length === 0) return;
+    if (ids.length === 1) {
+        const ds = copySectionTargets.find(d => Number(d.id) === Number(ids[0]));
+        const name = ds ? ds.name : '';
+        showCopySectionDiff(ids[0], name);
+        return;
+    }
+    showCopySectionBulkConfirm();
+}
+
+// Step 2b of the flow (N > 1): render a checklist of the selected targets with
+// their cached +/- stats so the user can review before committing. A single
+// button here fires the bulk endpoint.
+function showCopySectionBulkConfirm() {
+    const list = document.getElementById('copySectionBulkList');
+    const subtitle = document.getElementById('copySectionBulkSubtitle');
+    const selected = copySectionTargets.filter(ds => copySectionSelectedIds.has(Number(ds.id)));
+    if (subtitle) {
+        subtitle.textContent = t('copy_section.bulk_subtitle', { n: selected.length });
+    }
+    if (list) {
+        list.innerHTML = selected.map(ds => {
+            const summary = copySectionDiffSummary[ds.id] || {};
+            let stat = '';
+            if (summary.unchanged) {
+                stat = `<span class="copy-section-diffstat-equal" title="${escapeHtml(t('copy_section.diff_no_changes'))}">=</span>`;
+            } else if (summary.error) {
+                stat = '';
+            } else {
+                const parts = [];
+                if (summary.added) parts.push(`<span class="copy-section-diffstat-added">+${summary.added}</span>`);
+                if (summary.removed) parts.push(`<span class="copy-section-diffstat-removed">−${summary.removed}</span>`);
+                stat = parts.join(' ');
+            }
+            const chips = renderDatasetChips(ds, {
+                versionBadge: ds.version || 1,
+                isDefault: !!ds.is_default,
+                isDefaultSibling: false,
+                forcePublicChip: true
+            });
+            return `<li class="copy-section-bulk-row">
+                ${chips}
+                <span class="cvm-name">${escapeHtml(ds.name)}</span>
+                <span class="copy-section-diffstat">${stat}</span>
+            </li>`;
+        }).join('');
+    }
+    setCopySectionStep('bulk');
+    const confirmBtn = document.getElementById('copySectionConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = t('copy_section.confirm_button_n', { n: selected.length });
+    }
+}
+
+async function confirmCopySectionBulk() {
+    const overlay = document.getElementById('copySectionModalOverlay');
+    if (!overlay) return;
+    const sectionKey = overlay.getAttribute('data-section-key');
+    const targetIds = Array.from(copySectionSelectedIds);
+    if (!sectionKey || targetIds.length === 0) return;
+
+    const btn = document.getElementById('copySectionConfirmBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const result = await api('/api/datasets/copy-section-bulk', {
+            method: 'POST',
+            body: { sectionKey, targetIds }
+        });
+        if (result && result.error) {
+            toast(result.error || t('copy_section.toast_error'), 'error');
+            return;
+        }
+        const ok = result && result.okCount || 0;
+        const fail = result && result.failCount || 0;
+        closeCopySectionModal();
+        if (fail > 0) {
+            toast(t('copy_section.toast_bulk_partial', { ok, fail }), 'error');
+        } else {
+            toast(t('copy_section.toast_bulk_success', { n: ok }));
+        }
+    } catch (err) {
+        toast((err && err.message) || t('copy_section.toast_error'), 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 function setCopySectionStep(step) {
     const body = document.getElementById('copySectionModalBody');
     if (body) body.setAttribute('data-step', step);
+}
+
+// Back button target — returns to the list step and re-syncs the confirm
+// button to the current selection (which may have been stale while the diff
+// or bulk step was open).
+function copySectionBackToList() {
+    setCopySectionStep('list');
+    updateCopySectionConfirmButton();
 }
 
 // Stage 2 of the copy flow: fetch a server-computed line diff between the
@@ -3304,6 +3482,14 @@ async function showCopySectionDiff(targetId, targetName) {
     if (pre) pre.innerHTML = `<span class="copy-section-diff-empty">${escapeHtml(t('copy_section.diff_loading'))}</span>`;
 
     setCopySectionStep('diff');
+    // In the diff step the confirm button applies to the previewed target
+    // regardless of selection state, so force-enable it and show the singular
+    // label (the bulk step handles the plural label separately).
+    const confirmBtn = document.getElementById('copySectionConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = t('copy_section.confirm_button');
+    }
 
     try {
         const result = await api(`/api/datasets/${targetId}/copy-section-diff`, {

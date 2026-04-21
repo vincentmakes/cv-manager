@@ -2855,6 +2855,96 @@ if (PUBLIC_ONLY) {
         }
     });
 
+    // Mutate `targetData` (a parsed saved_dataset.data blob) in place so that
+    // the given section's content matches `liveData`. Throws an Error with a
+    // .status property when validation fails so callers can surface HTTP codes.
+    // Shared by the single-target and bulk copy endpoints.
+    function applyCopyToTargetData(targetData, sectionKey, liveData) {
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            const err = new Error('Invalid or non-copyable sectionKey');
+            err.status = 400;
+            throw err;
+        }
+        if (isBuiltin) {
+            switch (sectionKey) {
+                case 'about': targetData.profile = liveData.profile; break;
+                case 'experience': targetData.experiences = liveData.experiences; break;
+                case 'certifications': targetData.certifications = liveData.certifications; break;
+                case 'education': targetData.education = liveData.education; break;
+                case 'skills': targetData.skills = liveData.skills; break;
+                case 'projects': targetData.projects = liveData.projects; break;
+            }
+            return;
+        }
+        const liveCustomSections = Array.isArray(liveData.customSections) ? liveData.customSections : [];
+        const source = liveCustomSections.find(cs => cs && cs.section_key === sectionKey);
+        if (!source) {
+            const err = new Error('Source custom section not found');
+            err.status = 404;
+            throw err;
+        }
+        if (!Array.isArray(targetData.customSections)) targetData.customSections = [];
+        const targetCustoms = targetData.customSections;
+        let existingIdx = targetCustoms.findIndex(cs => cs && cs.section_key === source.section_key);
+        if (existingIdx === -1 && source.name) {
+            const srcNameLower = String(source.name).toLowerCase();
+            existingIdx = targetCustoms.findIndex(cs => cs && typeof cs.name === 'string' && cs.name.toLowerCase() === srcNameLower);
+        }
+        if (existingIdx !== -1) {
+            const preservedSortOrder = targetCustoms[existingIdx].sort_order;
+            targetCustoms[existingIdx] = {
+                ...targetCustoms[existingIdx],
+                section_key: source.section_key,
+                name: source.name,
+                layout_type: source.layout_type,
+                icon: source.icon,
+                metadata: source.metadata,
+                visible: source.visible,
+                items: Array.isArray(source.items) ? source.items.map(i => ({ ...i })) : [],
+                sort_order: preservedSortOrder != null ? preservedSortOrder : source.sort_order
+            };
+        } else {
+            const maxOrder = targetCustoms.reduce((m, cs) => Math.max(m, cs && typeof cs.sort_order === 'number' ? cs.sort_order : 0), 0);
+            targetCustoms.push({
+                section_key: source.section_key,
+                name: source.name,
+                layout_type: source.layout_type,
+                icon: source.icon,
+                metadata: source.metadata,
+                visible: source.visible,
+                items: Array.isArray(source.items) ? source.items.map(i => ({ ...i })) : [],
+                sort_order: maxOrder + 1,
+                display_name: null
+            });
+        }
+        if (!targetData.sectionVisibility || typeof targetData.sectionVisibility !== 'object') {
+            targetData.sectionVisibility = {};
+        }
+        targetData.sectionVisibility[source.section_key] = !!source.visible;
+        if (!Array.isArray(targetData.sectionOrder)) targetData.sectionOrder = [];
+        const existingOrderIdx = targetData.sectionOrder.findIndex(e => e && e.key === source.section_key);
+        if (existingOrderIdx === -1) {
+            const maxOrder = targetData.sectionOrder.reduce((m, e) => Math.max(m, e && typeof e.sort_order === 'number' ? e.sort_order : 0), 0);
+            targetData.sectionOrder.push({
+                key: source.section_key,
+                sort_order: maxOrder + 1,
+                visible: !!source.visible,
+                display_name: null,
+                name: source.name,
+                default_name: source.name
+            });
+        } else {
+            const entry = targetData.sectionOrder[existingOrderIdx];
+            entry.visible = !!source.visible;
+            if (!entry.display_name) {
+                entry.name = source.name;
+                entry.default_name = entry.default_name || source.name;
+            }
+        }
+    }
+
     app.post('/api/datasets/:id/copy-section-from-live', (req, res) => {
         const { sectionKey } = req.body || {};
         if (!sectionKey || typeof sectionKey !== 'string') {
@@ -2868,112 +2958,68 @@ if (PUBLIC_ONLY) {
         try {
             const dataset = db.prepare('SELECT * FROM saved_datasets WHERE id = ?').get(req.params.id);
             if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
-
             let targetData;
             try { targetData = JSON.parse(dataset.data); }
             catch { return res.status(500).json({ error: 'Target dataset data is corrupted' }); }
-
             const liveData = gatherCvData();
-
-            if (isBuiltin) {
-                switch (sectionKey) {
-                    case 'about':
-                        targetData.profile = liveData.profile;
-                        break;
-                    case 'experience':
-                        targetData.experiences = liveData.experiences;
-                        break;
-                    case 'certifications':
-                        targetData.certifications = liveData.certifications;
-                        break;
-                    case 'education':
-                        targetData.education = liveData.education;
-                        break;
-                    case 'skills':
-                        targetData.skills = liveData.skills;
-                        break;
-                    case 'projects':
-                        targetData.projects = liveData.projects;
-                        break;
-                }
-            } else {
-                // Custom section
-                const liveCustomSections = Array.isArray(liveData.customSections) ? liveData.customSections : [];
-                const source = liveCustomSections.find(cs => cs && cs.section_key === sectionKey);
-                if (!source) return res.status(404).json({ error: 'Source custom section not found' });
-
-                if (!Array.isArray(targetData.customSections)) targetData.customSections = [];
-                const targetCustoms = targetData.customSections;
-
-                let existingIdx = targetCustoms.findIndex(cs => cs && cs.section_key === source.section_key);
-                if (existingIdx === -1 && source.name) {
-                    const srcNameLower = String(source.name).toLowerCase();
-                    existingIdx = targetCustoms.findIndex(cs => cs && typeof cs.name === 'string' && cs.name.toLowerCase() === srcNameLower);
-                }
-
-                if (existingIdx !== -1) {
-                    // Overwrite content while preserving the target's sort_order
-                    const preservedSortOrder = targetCustoms[existingIdx].sort_order;
-                    targetCustoms[existingIdx] = {
-                        ...targetCustoms[existingIdx],
-                        section_key: source.section_key,
-                        name: source.name,
-                        layout_type: source.layout_type,
-                        icon: source.icon,
-                        metadata: source.metadata,
-                        visible: source.visible,
-                        items: Array.isArray(source.items) ? source.items.map(i => ({ ...i })) : [],
-                        sort_order: preservedSortOrder != null ? preservedSortOrder : source.sort_order
-                    };
-                } else {
-                    const maxOrder = targetCustoms.reduce((m, cs) => Math.max(m, cs && typeof cs.sort_order === 'number' ? cs.sort_order : 0), 0);
-                    targetCustoms.push({
-                        section_key: source.section_key,
-                        name: source.name,
-                        layout_type: source.layout_type,
-                        icon: source.icon,
-                        metadata: source.metadata,
-                        visible: source.visible,
-                        items: Array.isArray(source.items) ? source.items.map(i => ({ ...i })) : [],
-                        sort_order: maxOrder + 1,
-                        display_name: null
-                    });
-                }
-
-                // Ensure sectionVisibility reflects the source's visibility for this key
-                if (!targetData.sectionVisibility || typeof targetData.sectionVisibility !== 'object') {
-                    targetData.sectionVisibility = {};
-                }
-                targetData.sectionVisibility[source.section_key] = !!source.visible;
-
-                // Ensure sectionOrder has an entry for this section (append if missing)
-                if (!Array.isArray(targetData.sectionOrder)) targetData.sectionOrder = [];
-                const existingOrderIdx = targetData.sectionOrder.findIndex(e => e && e.key === source.section_key);
-                if (existingOrderIdx === -1) {
-                    const maxOrder = targetData.sectionOrder.reduce((m, e) => Math.max(m, e && typeof e.sort_order === 'number' ? e.sort_order : 0), 0);
-                    targetData.sectionOrder.push({
-                        key: source.section_key,
-                        sort_order: maxOrder + 1,
-                        visible: !!source.visible,
-                        display_name: null,
-                        name: source.name,
-                        default_name: source.name
-                    });
-                } else {
-                    // Keep target's sort_order and display_name; refresh visibility and name
-                    const entry = targetData.sectionOrder[existingOrderIdx];
-                    entry.visible = !!source.visible;
-                    if (!entry.display_name) {
-                        entry.name = source.name;
-                        entry.default_name = entry.default_name || source.name;
-                    }
-                }
+            try {
+                applyCopyToTargetData(targetData, sectionKey, liveData);
+            } catch (e) {
+                return res.status(e.status || 500).json({ error: e.message });
             }
-
             db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
                 .run(JSON.stringify(targetData), req.params.id);
-
             res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    });
+
+    // Bulk overwrite: copy the same section from live into every target in one
+    // shot so users can "sync this section across these 5 CVs" without clicking
+    // through five times. Per-target errors are reported individually so one
+    // corrupt row doesn't block the rest.
+    app.post('/api/datasets/copy-section-bulk', (req, res) => {
+        const { sectionKey, targetIds } = req.body || {};
+        if (!sectionKey || typeof sectionKey !== 'string') {
+            return res.status(400).json({ error: 'sectionKey is required' });
+        }
+        const isBuiltin = BUILTIN_COPYABLE_SECTIONS.has(sectionKey);
+        const isCustom = sectionKey.startsWith('custom_');
+        if (!isBuiltin && !isCustom) {
+            return res.status(400).json({ error: 'Invalid or non-copyable sectionKey' });
+        }
+        if (!Array.isArray(targetIds) || targetIds.length === 0) {
+            return res.status(400).json({ error: 'targetIds must be a non-empty array' });
+        }
+        try {
+            const liveData = gatherCvData();
+            const updateStmt = db.prepare('UPDATE saved_datasets SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+            const selectStmt = db.prepare('SELECT id, data FROM saved_datasets WHERE id = ?');
+            const run = db.transaction(() => {
+                const results = [];
+                for (const rawId of targetIds) {
+                    const id = parseInt(rawId, 10);
+                    if (!Number.isFinite(id)) { results.push({ id: rawId, ok: false, error: 'invalid id' }); continue; }
+                    const row = selectStmt.get(id);
+                    if (!row) { results.push({ id, ok: false, error: 'not found' }); continue; }
+                    let targetData;
+                    try { targetData = JSON.parse(row.data); }
+                    catch { results.push({ id, ok: false, error: 'corrupted' }); continue; }
+                    try {
+                        applyCopyToTargetData(targetData, sectionKey, liveData);
+                    } catch (e) {
+                        results.push({ id, ok: false, error: e.message });
+                        continue;
+                    }
+                    updateStmt.run(JSON.stringify(targetData), id);
+                    results.push({ id, ok: true });
+                }
+                return results;
+            });
+            const results = run();
+            const okCount = results.filter(r => r.ok).length;
+            res.json({ success: okCount > 0, okCount, failCount: results.length - okCount, results });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
