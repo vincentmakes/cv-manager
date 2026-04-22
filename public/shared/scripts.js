@@ -334,8 +334,15 @@ function escapeHtml(text) {
 }
 
 // Apply stored crop metadata to a profile-picture <img>. The crop is expressed as
-// percent offsets (-100..100) and a scale factor (1..4). We use object-position +
-// transform with a shared origin so the visible centre stays anchored through scale.
+// percent offsets (-100..100 of the image's own W/H) and a scale factor (1..4,
+// equal to L/s where L = min(W,H) and s is the crop-box side). The <img> uses
+// object-fit:cover, which first scales the image uniformly by S/L and centres
+// it in the container. We then apply translate+scale around the element centre
+// so the crop's centre lands at the container centre regardless of aspect ratio.
+// Formula: tx% = -z·(W/L)·offsetX, ty% = -z·(H/L)·offsetY.
+// Requires naturalWidth/naturalHeight, so we defer via a one-shot load listener
+// when the image hasn't finished loading yet — addEventListener (not .onload)
+// so callers that wired their own pic.onload for display toggling aren't clobbered.
 // Accepts either a JSON string (as stored in DB) or a parsed object; null/invalid
 // clears all crop-related inline styles so default framing is restored.
 function applyProfilePictureCrop(imgEl, crop) {
@@ -359,11 +366,18 @@ function applyProfilePictureCrop(imgEl, crop) {
         imgEl.style.transformOrigin = '';
         return;
     }
-    const posX = 50 + ox;
-    const posY = 50 + oy;
-    imgEl.style.objectPosition = `${posX}% ${posY}%`;
-    imgEl.style.transformOrigin = `${posX}% ${posY}%`;
-    imgEl.style.transform = `scale(${z})`;
+    const W = imgEl.naturalWidth;
+    const H = imgEl.naturalHeight;
+    if (!W || !H) {
+        imgEl.addEventListener('load', () => applyProfilePictureCrop(imgEl, crop), { once: true });
+        return;
+    }
+    const L = Math.min(W, H);
+    const tx = -z * (W / L) * ox;
+    const ty = -z * (H / L) * oy;
+    imgEl.style.objectPosition = '';
+    imgEl.style.transformOrigin = '';
+    imgEl.style.transform = `translate(${tx}%, ${ty}%) scale(${z})`;
 }
 
 // Validate that a string is an http(s) URL. Used for optional URL fields.

@@ -729,6 +729,140 @@ describe('Frontend files', () => {
                     `zoom round-trip for ${W}x${H}: got ${round.zoom}, expected ${crop.zoom}`);
             }
         });
+
+        // Extract applyProfilePictureCrop from scripts.js and run it against a
+        // stubbed <img>. The geometry contract: for a stored crop (offsetX%,
+        // offsetY%, zoom) the helper must write
+        //   transform: translate(tx%, ty%) scale(z)
+        // where tx% = -z·(W/L)·offsetX, ty% = -z·(H/L)·offsetY and L = min(W,H).
+        // This guarantees the crop centre lands at the container centre after
+        // object-fit:cover, regardless of image aspect ratio.
+        function loadApplyProfilePictureCrop() {
+            const js = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
+            const m = js.match(/function applyProfilePictureCrop\(imgEl, crop\)\s*\{[\s\S]*?^\}/m);
+            assert.ok(m, 'applyProfilePictureCrop should exist in scripts.js');
+            // Keep the declaration intact so the deferred-load path can self-reference
+            // via its own name (addEventListener → applyProfilePictureCrop(imgEl, crop)).
+            const loader = new Function(`${m[0]}\nreturn applyProfilePictureCrop;`);
+            return loader();
+        }
+
+        function stubImg(W, H, { complete = true } = {}) {
+            const listeners = [];
+            return {
+                naturalWidth: complete ? W : 0,
+                naturalHeight: complete ? H : 0,
+                complete,
+                style: {
+                    objectPosition: 'X',
+                    transform: 'X',
+                    transformOrigin: 'X'
+                },
+                addEventListener(type, cb) { if (type === 'load') listeners.push(cb); },
+                _fireLoad() { listeners.splice(0).forEach(cb => cb()); }
+            };
+        }
+
+        function parseTransform(str) {
+            const m = /translate\(([-\d.]+)%, ([-\d.]+)%\) scale\(([-\d.]+)\)/.exec(str || '');
+            if (!m) return null;
+            return { tx: parseFloat(m[1]), ty: parseFloat(m[2]), z: parseFloat(m[3]) };
+        }
+
+        it('applyProfilePictureCrop: null/invalid crop clears inline styles', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const img = stubImg(1000, 1000);
+            apply(img, null);
+            assert.strictEqual(img.style.objectPosition, '');
+            assert.strictEqual(img.style.transform, '');
+            assert.strictEqual(img.style.transformOrigin, '');
+        });
+
+        it('applyProfilePictureCrop: identity crop (offsets 0, zoom 1) clears styles', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const img = stubImg(1200, 800);
+            apply(img, { offsetX: 0, offsetY: 0, zoom: 1 });
+            assert.strictEqual(img.style.objectPosition, '');
+            assert.strictEqual(img.style.transform, '');
+            assert.strictEqual(img.style.transformOrigin, '');
+        });
+
+        it('applyProfilePictureCrop: centered crop with zoom > 1 is a pure scale', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const img = stubImg(2000, 1000);
+            apply(img, { offsetX: 0, offsetY: 0, zoom: 1.5 });
+            const t = parseTransform(img.style.transform);
+            assert.ok(t, `expected translate/scale, got: ${img.style.transform}`);
+            const near = (a, b) => Math.abs(a - b) < 1e-6;
+            assert.ok(near(t.tx, 0), `tx=${t.tx}`);
+            assert.ok(near(t.ty, 0), `ty=${t.ty}`);
+            assert.ok(near(t.z, 1.5), `z=${t.z}`);
+            assert.strictEqual(img.style.objectPosition, '');
+            assert.strictEqual(img.style.transformOrigin, '');
+        });
+
+        it('applyProfilePictureCrop: landscape off-centre crop uses W/L factor on tx', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const W = 2000, H = 1000;                // L = 1000, W/L = 2
+            const img = stubImg(W, H);
+            const crop = { offsetX: -25, offsetY: 0, zoom: 1.25 };
+            apply(img, crop);
+            const t = parseTransform(img.style.transform);
+            assert.ok(t, `expected translate/scale, got: ${img.style.transform}`);
+            // tx% = -z·(W/L)·offsetX = -1.25 · 2 · (-25) = 62.5
+            const near = (a, b) => Math.abs(a - b) < 1e-6;
+            assert.ok(near(t.tx, 62.5), `tx=${t.tx} expected 62.5`);
+            assert.ok(near(t.ty, 0), `ty=${t.ty} expected 0`);
+            assert.ok(near(t.z, 1.25), `z=${t.z} expected 1.25`);
+        });
+
+        it('applyProfilePictureCrop: portrait off-centre crop uses H/L factor on ty', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const W = 600, H = 900;                  // L = 600, H/L = 1.5
+            const img = stubImg(W, H);
+            const crop = { offsetX: 0, offsetY: 10, zoom: 1.5 };
+            apply(img, crop);
+            const t = parseTransform(img.style.transform);
+            assert.ok(t, `expected translate/scale, got: ${img.style.transform}`);
+            // ty% = -z·(H/L)·offsetY = -1.5 · 1.5 · 10 = -22.5
+            const near = (a, b) => Math.abs(a - b) < 1e-6;
+            assert.ok(near(t.tx, 0), `tx=${t.tx} expected 0`);
+            assert.ok(near(t.ty, -22.5), `ty=${t.ty} expected -22.5`);
+            assert.ok(near(t.z, 1.5), `z=${t.z} expected 1.5`);
+        });
+
+        it('applyProfilePictureCrop: square image off-centre both axes', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const img = stubImg(1000, 1000);          // W = H = L, W/L = H/L = 1
+            const crop = { offsetX: 25, offsetY: -10, zoom: 2 };
+            apply(img, crop);
+            const t = parseTransform(img.style.transform);
+            assert.ok(t, `expected translate/scale, got: ${img.style.transform}`);
+            // tx% = -2·1·25 = -50 ; ty% = -2·1·(-10) = 20
+            const near = (a, b) => Math.abs(a - b) < 1e-6;
+            assert.ok(near(t.tx, -50), `tx=${t.tx} expected -50`);
+            assert.ok(near(t.ty, 20), `ty=${t.ty} expected 20`);
+            assert.ok(near(t.z, 2), `z=${t.z} expected 2`);
+        });
+
+        it('applyProfilePictureCrop: defers when image not yet loaded, applies on load', () => {
+            const apply = loadApplyProfilePictureCrop();
+            const img = stubImg(2000, 1000, { complete: false });
+            const crop = { offsetX: -25, offsetY: 0, zoom: 1.25 };
+            apply(img, crop);
+            // Nothing written synchronously because natural dims are unknown.
+            assert.strictEqual(img.style.transform, 'X', 'must not write transform before load');
+            // Simulate the image finishing load and expose naturalWidth/Height.
+            img.naturalWidth = 2000;
+            img.naturalHeight = 1000;
+            img.complete = true;
+            img._fireLoad();
+            const t = parseTransform(img.style.transform);
+            assert.ok(t, `expected translate/scale after load, got: ${img.style.transform}`);
+            const near = (a, b) => Math.abs(a - b) < 1e-6;
+            assert.ok(near(t.tx, 62.5), `tx=${t.tx} expected 62.5`);
+            assert.ok(near(t.z, 1.25), `z=${t.z} expected 1.25`);
+        });
     });
 
     describe('Code quality', () => {
