@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.47.3] - 2026-04-22
+
+### Fixed
+- **Rendered profile picture no longer drifts and appears "more zoomed in" than the cropper box for off-centre crops.** `applyProfilePictureCrop` in `public/shared/scripts.js` was combining `object-position: P% Q%` with a matching `transform-origin: P% Q%` and `transform: scale(zoom)`. That combination is geometrically correct only when the crop is centred on the image — for any other crop, `object-position` anchors the chosen image point at the *element's* P% position (not the container's centre), and the matching `transform-origin` keeps it there through the scale, so the rendered crop sits off-axis, gets clipped on one side, and shows image content from outside the crop on the other side (visually "more zoomed and shifted"). Replaced with the correct model: keep the image centred via default `object-position`, then translate+scale from the element centre with `tx% = -zoom·(W/L)·offsetX`, `ty% = -zoom·(H/L)·offsetY` where `L = min(W,H)`. This makes the crop centre land exactly at the container centre for any aspect ratio. Requires `naturalWidth`/`naturalHeight`, so the helper now defers via a one-shot `load` listener when the image hasn't finished loading yet — using `addEventListener` rather than `.onload` so callers that wired their own `pic.onload` display toggle aren't clobbered. The stored crop encoding is unchanged, so existing datasets and DB rows render correctly on first load without migration. Added six regression tests covering the new math across landscape, portrait, and square images and the deferred-load path.
+
 ## [1.47.2] - 2026-04-21
 
 ### Fixed
