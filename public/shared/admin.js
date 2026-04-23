@@ -866,7 +866,7 @@ function renderGridLayout(items, cols) {
             <div class="custom-grid-item ${visible ? '' : 'hidden-print'}">
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+                ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
             </div>
         `;
@@ -885,7 +885,7 @@ function renderListLayout(items) {
                 <div class="custom-list-content">
                     ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                     ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                    ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+                    ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
                 </div>
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
             </div>
@@ -904,7 +904,7 @@ function renderCardsLayout(items) {
             <div class="custom-card ${visible ? '' : 'hidden-print'}">
                 ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
+                ${item.description ? `<p class="custom-card-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
             </div>
         `;
@@ -925,7 +925,7 @@ function renderBulletListLayout(items) {
                 ${item.title && !hideTitle ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${bullets.length > 0 ? `
                     <ul class="custom-bullet-list">
-                        ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
+                        ${bullets.map(bullet => `<li>${escapeHtmlWithBold(bullet)}</li>`).join('')}
                     </ul>
                 ` : ''}
             </div>
@@ -944,7 +944,7 @@ function renderFreeTextLayout(items) {
         return `
             <div class="custom-free-text ${visible ? '' : 'hidden-print'}">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
-                <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
+                <p class="custom-free-text-content">${escapeHtmlWithBold(item.description || '')}</p>
             </div>
         `;
     }).join('')}</div>`;
@@ -1149,7 +1149,7 @@ async function loadEducation() {
                     <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
-            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
+            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtmlWithBold(edu.description)}</div>` : ''}
         </article>
     `).join('');
     
@@ -1213,7 +1213,7 @@ async function loadProjects() {
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                 ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="View Project">${linkIcon()}</a>` : ''}
             </div>
-            <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
+            <p class="project-description" itemprop="description">${escapeHtmlWithBold(proj.description || '')}</p>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
             </div>
