@@ -142,6 +142,7 @@
     "form.choose_image": "Afbeelding kiezen",
     "form.remove": "Verwijderen",
     "form.picture_hint": "Aanbevolen: Vierkante afbeelding, minimaal 200x200 pixels. JPEG, PNG of WebP.",
+    "form.bold_hint": "Tip: zet tekst tussen **dubbele sterretjes** om het vet te maken.",
     "form.apply_picture_globally": "Deze foto toepassen op alle datasets",
     "form.delete_picture": "Foto verwijderen",
     "form.no_pictures_available": "Nog geen foto's in de bibliotheek. Upload er eerst een.",

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.48.0] - 2026-04-23
+
+### Added
+- **Bold text formatting via `**double asterisks**` in long-form text fields.** Professional summary (bio), experience summary and highlights, education description, project description, and every custom-section description (grid / list / cards / bullet-list / free-text / timeline summary+highlights) now render `**word**` as **word** on both the admin preview and the public read-only site. New shared `escapeHtmlWithBold` helper in `public/shared/scripts.js` applies HTML-entity escaping first and only then swaps `**…**` for `<strong>…</strong>`, so the transformation is XSS-safe: a bio of `<script>**x**</script>` renders as escaped text containing a bold "x", never as an executing script. The regex refuses to span newlines so an unclosed `**` on one line cannot bleed across fields. On the server side, a matching `stripBoldMarkers` is applied to the SEO meta description / `og:description` tags (including the static-site export) so the `**` never leaks into search previews, and the ATS PDF export's `addParagraph` / `addBulletList` helpers now parse bold runs and render them with `Helvetica-Bold`, keeping a single tagged `<P>`/`<LI>` PDF struct per paragraph so accessibility tagging does not regress. A small hint — "Tip: wrap text in \*\*double asterisks\*\* to make it bold." — sits under every affected textarea, translated across all 8 supported locales (`form.bold_hint` in en/de/fr/nl/es/it/pt/zh). Non-goals: italics, links, lists, headings, and auto-`\n`→`<br>` conversion are intentionally out of scope for this release.
+
 ## [1.47.3] - 2026-04-22
 
 ### Fixed

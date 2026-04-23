@@ -1452,6 +1452,7 @@ function profileForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.bio')}</label>
             <textarea class="form-textarea" id="f-bio">${escapeHtml(d.bio || '')}</textarea>
+            <div class="form-hint">${t('form.bold_hint')}</div>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -1548,10 +1549,12 @@ function experienceForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.summary')}</label>
             <textarea class="form-textarea" id="f-summary" rows="3">${escapeHtml(d.summary || '')}</textarea>
+            <div class="form-hint">${t('form.bold_hint')}</div>
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
+            <div class="form-hint">${t('form.bold_hint')}</div>
         </div>
     `;
 }
@@ -1626,6 +1629,7 @@ function educationForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.description')}</label>
             <textarea class="form-textarea" id="f-description">${escapeHtml(d.description || '')}</textarea>
+            <div class="form-hint">${t('form.bold_hint')}</div>
         </div>
     `;
 }
@@ -1720,6 +1724,7 @@ function projectForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.description')}</label>
             <textarea class="form-textarea" id="f-description">${escapeHtml(d.description || '')}</textarea>
+            <div class="form-hint">${t('form.bold_hint')}</div>
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.technologies')}</label>
@@ -5904,6 +5909,7 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('custom_item.bullet_points')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="8" placeholder="First bullet point\nSecond bullet point\nThird bullet point">${escapeHtml(item.description || '')}</textarea>
+                <div class="form-hint">${t('form.bold_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'free-text') {
@@ -5925,6 +5931,7 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <label class="form-label">${t('custom_item.text_content')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="10" placeholder="${t('custom_item.text_content_placeholder')}">${escapeHtml(item.description || '')}</textarea>
                 <div class="form-hint">${t('custom_item.text_content_hint')}</div>
+                <div class="form-hint">${t('form.bold_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'timeline') {
@@ -5966,10 +5973,12 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('form.summary')}</label>
                 <textarea class="form-textarea" id="ci-summary" rows="3">${escapeHtml(meta.summary || '')}</textarea>
+                <div class="form-hint">${t('form.bold_hint')}</div>
             </div>
             <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
+                <div class="form-hint">${t('form.bold_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {
@@ -6016,6 +6025,7 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('custom_item.description_optional')}</label>
                 <textarea class="form-textarea" id="ci-description">${escapeHtml(item.description || '')}</textarea>
+                <div class="form-hint">${t('form.bold_hint')}</div>
             </div>
             <div class="form-group">
                 <label class="form-label">${t('custom_item.link_url_optional')}</label>

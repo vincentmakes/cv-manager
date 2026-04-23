@@ -649,6 +649,66 @@ describe('Frontend files', () => {
             assert.ok(result.includes('delete'), 'Should contain icon name');
         });
 
+        // --- escapeHtmlWithBold tests ---
+        it('escapeHtmlWithBold: extract and test', () => {
+            const scriptsContent = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
+            // Extract escapeHtmlWithBold body
+            const match = scriptsContent.match(/function escapeHtmlWithBold\(text\)\s*\{[\s\S]*?\n\}/);
+            assert.ok(match, 'Should find escapeHtmlWithBold function');
+
+            // Provide a minimal polyfill for document.createElement used by escapeHtml.
+            // Mirrors the browser pattern: set textContent → read innerHTML entity-escaped.
+            const fakeDocument = {
+                createElement: () => {
+                    let _text = '';
+                    return {
+                        set textContent(v) { _text = v == null ? '' : String(v); },
+                        get innerHTML() {
+                            return _text
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;')
+                                .replace(/'/g, '&#39;');
+                        }
+                    };
+                }
+            };
+            // Inline escapeHtml so it's in scope for escapeHtmlWithBold.
+            const helper = `function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }`;
+            const fn = new Function('document', `${helper}\n${match[0]}\nreturn escapeHtmlWithBold;`)(fakeDocument);
+
+            // Basic bold rendering
+            assert.strictEqual(fn('hello **world**'), 'hello <strong>world</strong>');
+            assert.strictEqual(fn('**a** and **b**'), '<strong>a</strong> and <strong>b</strong>');
+
+            // XSS safety: script tags escaped, bold still rendered
+            assert.strictEqual(
+                fn('<script>**x**</script>'),
+                '&lt;script&gt;<strong>x</strong>&lt;/script&gt;'
+            );
+
+            // Unclosed ** left literal (escaped as-is)
+            assert.strictEqual(fn('a ** b'), 'a ** b');
+
+            // ** must not span newlines
+            assert.strictEqual(fn('a **\nb**'), 'a **\nb**');
+
+            // Empty / null / undefined → ''
+            assert.strictEqual(fn(''), '');
+            assert.strictEqual(fn(null), '');
+            assert.strictEqual(fn(undefined), '');
+
+            // Plain text unchanged (apart from HTML entity escaping)
+            assert.strictEqual(fn('just plain'), 'just plain');
+            assert.strictEqual(fn('5 < 10'), '5 &lt; 10');
+        });
+
         it('materialIcon: includes aria-hidden for accessibility', () => {
             const result = materialIcon('check');
             assert.ok(result.includes('aria-hidden="true"'), 'Should include aria-hidden');

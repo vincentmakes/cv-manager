@@ -1407,6 +1407,85 @@ describe('Backend API', () => {
                 assert.ok(extractLangTag(buf), 'PDF should still carry a /Lang tag');
             });
         });
+
+        describe('Bold markdown (**word**) handling', () => {
+            it('strips ** markers from og:description / meta description on SSR', async () => {
+                // The SSR path depends on whether a default dataset exists. Fetch the
+                // page once up-front to see which bio source is authoritative, then
+                // write the marker-bearing bio into that same source so we know the
+                // test exercises the stripping path regardless of earlier state.
+                const currentProfile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+                const bioWithBold = 'I built a **real-time** pipeline and led **three launches**.';
+                await fetch(`${BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...currentProfile, bio: bioWithBold }),
+                });
+
+                const res = await fetch(`${PUBLIC_URL}/`);
+                assert.strictEqual(res.status, 200);
+                const html = await res.text();
+                // Neither meta description nor og:description should ever contain literal ** markers.
+                const metas = [...html.matchAll(/<meta\s+(?:name|property)="(?:description|og:description)"\s+content="([^"]*)"/g)];
+                assert.ok(metas.length >= 1, 'response should contain at least one description meta tag');
+                for (const m of metas) {
+                    assert.ok(
+                        !m[1].includes('**'),
+                        `meta description should not contain ** markers (got: ${m[1]})`
+                    );
+                }
+            });
+
+            it('renders **bold** as Helvetica-Bold runs in ATS PDF without literal ** markers', async () => {
+                // Seed data containing **markers** in multiple fields.
+                await fetch(`${BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'PDF Bold Test',
+                        bio: 'Emphasize **achievements** in the summary.',
+                    }),
+                });
+                // Wipe previous seeded experience rows to keep the PDF small + predictable.
+                const existing = await (await fetch(`${BASE_URL}/api/experiences`)).json();
+                for (const e of existing) {
+                    await fetch(`${BASE_URL}/api/experiences/${e.id}`, { method: 'DELETE' });
+                }
+                await fetch(`${BASE_URL}/api/experiences`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        job_title: 'Bold Engineer',
+                        company_name: 'BoldCo',
+                        start_date: '2021-01',
+                        end_date: '',
+                        highlights: ['Shipped a **real-time** feature to millions of users'],
+                    }),
+                });
+
+                const res = await fetch(`${BASE_URL}/api/export/ats-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: 1, paperSize: 'A4', locale: 'en' }),
+                });
+                assert.strictEqual(res.status, 200);
+                const buf = Buffer.from(await res.arrayBuffer());
+                const latin = buf.toString('latin1');
+
+                // Bold font must be embedded because at least one run needs it.
+                assert.ok(
+                    latin.includes('Helvetica-Bold'),
+                    'PDF should embed Helvetica-Bold font once **bold** markers appear in content'
+                );
+                // Literal ** markers must not leak through to the rendered PDF text.
+                // The raw content streams in this codebase are uncompressed text, so a
+                // substring search is a reasonable smoke test.
+                assert.ok(
+                    !/\*\*[A-Za-z]/.test(latin),
+                    'rendered PDF bytes should not contain literal "**word" sequences'
+                );
+            });
+        });
     });
 
     describe('Section title overrides', () => {

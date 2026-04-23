@@ -142,6 +142,7 @@
     "form.choose_image": "选择图片",
     "form.remove": "移除",
     "form.picture_hint": "建议：正方形图片，至少 200x200 像素。支持 JPEG、PNG 或 WebP 格式。",
+    "form.bold_hint": "提示：用 **双星号** 包裹文本可将其加粗。",
     "form.apply_picture_globally": "将此照片应用于所有数据集",
     "form.delete_picture": "删除照片",
     "form.no_pictures_available": "图库中还没有照片。请先上传一张。",
