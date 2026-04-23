@@ -12,6 +12,18 @@ Cliquez sur l'**icône de modification** dans la section d'en-tête. Vous pouvez
 - **E-mail**, **Téléphone**, **LinkedIn** (affichés sous forme de badges de contact)
 - **Langues** (langues parlées, par ex. « Anglais, Français, Allemand » — affiché sous forme de badge avec une icône de globe)
 
+## Texte en gras
+
+Dans tous les champs de texte long — **Biographie**, **Résumé** et **Points forts** de l'expérience, **Description** de la formation, **Description** des projets, ainsi que les descriptions des sections personnalisées — vous pouvez mettre des mots en valeur en les entourant de deux astérisques.
+
+- Tapez `**temps réel**` → affiché comme **temps réel**
+- Fonctionne sur une même ligne ; un `**` sans `**` de fermeture reste affiché tel quel
+- Rendu dans l'aperçu de l'admin, sur le site public et dans l'export PDF ATS (en véritable gras, pas en astérisques)
+- L'export **texte brut ATS** et les méta-descriptions SEO suppriment les astérisques afin qu'elles n'apparaissent jamais dans les extraits de recherche ou les analyseurs ATS
+
+!!! tip
+    Utilisez le gras avec parcimonie — une ou deux expressions mises en valeur par puce attirent l'attention sur l'essentiel. Trop de gras dilue le signal.
+
 ## Photo de profil
 
 Dans la boîte de dialogue de modification du profil, vous pouvez télécharger une photo de profil (JPEG, PNG ou WebP). L'image remplace le cercle d'initiales. Pour la supprimer, utilisez l'option de suppression dans la même boîte de dialogue.
