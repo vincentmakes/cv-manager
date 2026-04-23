@@ -119,6 +119,32 @@ function resolveLocale(requested) {
     return 'en';
 }
 
+// Remove **bold** markers for plain-text contexts (SEO meta, ATS text, etc.).
+// Mirrors the client-side regex in escapeHtmlWithBold (scripts.js).
+function stripBoldMarkers(text) {
+    if (text == null) return '';
+    return String(text).replace(/\*\*([^*\n]+?)\*\*/g, '$1');
+}
+
+// Split a paragraph into alternating regular/bold runs for rich rendering
+// (e.g. PDF). Returns an array of { text, bold } segments. Matches the same
+// regex as stripBoldMarkers / escapeHtmlWithBold for a single source of truth.
+function splitBoldRuns(text) {
+    const s = text == null ? '' : String(text);
+    const runs = [];
+    const re = /\*\*([^*\n]+?)\*\*/g;
+    let last = 0;
+    let m;
+    while ((m = re.exec(s)) !== null) {
+        if (m.index > last) runs.push({ text: s.slice(last, m.index), bold: false });
+        runs.push({ text: m[1], bold: true });
+        last = m.index + m[0].length;
+    }
+    if (last < s.length) runs.push({ text: s.slice(last), bold: false });
+    if (runs.length === 0) runs.push({ text: s, bold: false });
+    return runs;
+}
+
 function checkFilesystemAccess(dir) {
     const testFile = path.join(dir, '.write-test-' + process.pid);
     try {
@@ -223,7 +249,7 @@ function servePublicIndex(req, res) {
             const data = JSON.parse(defaultDataset.data);
             const name = data.profile?.name || defaultDataset.name;
             const bio = data.profile?.bio || 'Professional CV';
-            const description = bio.substring(0, 160).replace(/\n/g, ' ');
+            const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
             const dsLang = defaultDataset.language || 'en';
 
             let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
@@ -258,7 +284,7 @@ function servePublicIndex(req, res) {
         const profile = db.prepare('SELECT name, title, bio FROM profile WHERE id = 1').get();
         const name = profile?.name || 'CV';
         const bio = profile?.bio || 'Professional CV';
-        const description = bio.substring(0, 160).replace(/\n/g, ' ');
+        const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
 
         let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
@@ -296,7 +322,7 @@ function serveDatasetPage(req, res, lang) {
         const data = JSON.parse(dataset.data);
         const name = data.profile?.name || dataset.name;
         const bio = data.profile?.bio || '';
-        const description = bio.substring(0, 160).replace(/\n/g, ' ');
+        const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
         const dsLang = dataset.language || 'en';
 
         let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
@@ -1534,7 +1560,7 @@ function serveAdminDatasetPage(req, res, lang) {
         const data = JSON.parse(dataset.data);
         const name = data.profile?.name || dataset.name;
         const bio = data.profile?.bio || '';
-        const description = bio.substring(0, 160).replace(/\n/g, ' ');
+        const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
         const dsLang = dataset.language || 'en';
 
         let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
@@ -3564,13 +3590,30 @@ if (PUBLIC_ONLY) {
             function addParagraph(text, fontSize, options = {}) {
                 const { color = '#000', font = 'Helvetica', indent = 0 } = options;
                 const w = contentW - indent;
-                const h = doc.fontSize(fontSize).font(font).heightOfString(text, { width: w });
+                const runs = splitBoldRuns(text);
+                const stripped = runs.map(r => r.text).join('');
+                // Base font already bold → treat **…** as no-op (text is already bold).
+                const baseIsBold = font === 'Helvetica-Bold';
+                const boldFont = baseIsBold ? font : 'Helvetica-Bold';
+                const h = doc.fontSize(fontSize).font(font).heightOfString(stripped, { width: w });
                 ensureSpace(h + 2);
                 const para = doc.struct('P');
                 docStruct.add(para);
                 para.add(doc.struct('Span', {}, () => {
-                    doc.fontSize(fontSize).font(font).fillColor(color);
-                    doc.text(text, margin + indent, y, { width: w });
+                    doc.fontSize(fontSize).fillColor(color);
+                    if (runs.length === 1 || baseIsBold) {
+                        doc.font(font).text(stripped, margin + indent, y, { width: w });
+                    } else {
+                        runs.forEach((r, i) => {
+                            doc.font(r.bold ? boldFont : font);
+                            const opts = { width: w, continued: i < runs.length - 1 };
+                            if (i === 0) {
+                                doc.text(r.text, margin + indent, y, opts);
+                            } else {
+                                doc.text(r.text, opts);
+                            }
+                        });
+                    }
                 }));
                 para.end();
                 advanceY(h + 2);
@@ -3588,7 +3631,9 @@ if (PUBLIC_ONLY) {
                 items.forEach(item => {
                     if (!item || !item.trim()) return;
                     const w = contentW - 20;
-                    const h = doc.fontSize(fontSize).font('Helvetica').heightOfString(item, { width: w });
+                    const runs = splitBoldRuns(item);
+                    const stripped = runs.map(r => r.text).join('');
+                    const h = doc.fontSize(fontSize).font('Helvetica').heightOfString(stripped, { width: w });
                     ensureSpace(h + 2);
                     const li = doc.struct('LI');
                     listStruct.add(li);
@@ -3597,8 +3642,20 @@ if (PUBLIC_ONLY) {
                         doc.text('•', margin + 8, y, { continued: false, width: 12 });
                     }));
                     li.add(doc.struct('LBody', {}, () => {
-                        doc.fontSize(fontSize).font('Helvetica').fillColor('#000');
-                        doc.text(item, margin + 20, y, { width: w });
+                        doc.fontSize(fontSize).fillColor('#000');
+                        if (runs.length === 1) {
+                            doc.font('Helvetica').text(stripped, margin + 20, y, { width: w });
+                        } else {
+                            runs.forEach((r, i) => {
+                                doc.font(r.bold ? 'Helvetica-Bold' : 'Helvetica');
+                                const opts = { width: w, continued: i < runs.length - 1 };
+                                if (i === 0) {
+                                    doc.text(r.text, margin + 20, y, opts);
+                                } else {
+                                    doc.text(r.text, opts);
+                                }
+                            });
+                        }
                     }));
                     li.end();
                     advanceY(h + 2);
@@ -3894,7 +3951,7 @@ if (PUBLIC_ONLY) {
             // Inject meta tags
             const name = profile.name || 'CV';
             const bio = profile.bio || 'Professional CV';
-            const description = bio.substring(0, 160).replace(/\n/g, ' ');
+            const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
             html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
 

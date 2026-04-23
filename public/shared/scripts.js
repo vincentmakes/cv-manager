@@ -333,6 +333,16 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Escape HTML, then render **word** as <strong>word</strong>.
+// Escaping runs first, so only safe entities remain before we inject <strong>.
+// The regex is non-greedy and forbids newlines / nested asterisks, so an
+// unclosed ** on one line cannot bold across fields or lines.
+function escapeHtmlWithBold(text) {
+    if (text == null || text === '') return '';
+    const escaped = escapeHtml(String(text));
+    return escaped.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+}
+
 // Apply stored crop metadata to a profile-picture <img>. The crop is expressed as
 // percent offsets (-100..100 of the image's own W/H) and a scale factor (1..4,
 // equal to L/s where L = min(W,H) and s is the crop-box side). The <img> uses
@@ -704,8 +714,8 @@ async function loadProfile(includePrivate = false) {
     document.getElementById('profileTitle').textContent = p.title || '';
     document.getElementById('profileSubtitle').textContent = p.subtitle || '';
     
-    // Bio - CSS white-space: pre-line handles line breaks
-    document.getElementById('aboutText').textContent = p.bio || '';
+    // Bio - CSS white-space: pre-line handles line breaks; **bold** is rendered as <strong>
+    document.getElementById('aboutText').innerHTML = escapeHtmlWithBold(p.bio || '');
     
     // Update page title
     if (p.name) document.title = `${p.name} - CV`;
@@ -1441,7 +1451,7 @@ async function loadExperiencesReadOnly() {
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
             ${exp.highlights && exp.highlights.length ? `
                 <ul class="item-highlights" itemprop="description">
-                    ${exp.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
+                    ${exp.highlights.map(h => `<li>${escapeHtmlWithBold(h)}</li>`).join('')}
                 </ul>
             ` : ''}
         </article>
@@ -1491,7 +1501,7 @@ async function loadEducationReadOnly() {
                     <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
-            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtml(edu.description)}</div>` : ''}
+            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtmlWithBold(edu.description)}</div>` : ''}
         </article>
     `).join('');
 }
@@ -1525,7 +1535,7 @@ async function loadProjectsReadOnly() {
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                 ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_project')}">${icons.link}</a>` : ''}
             </div>
-            <p class="project-description" itemprop="description">${escapeHtml(proj.description || '')}</p>
+            <p class="project-description" itemprop="description">${escapeHtmlWithBold(proj.description || '')}</p>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
             </div>
@@ -1717,13 +1727,13 @@ function renderExperienceCard(opts) {
         : '';
 
     const summaryHtml = summary
-        ? `<div class="item-summary">${escapeHtml(summary)}</div>`
+        ? `<div class="item-summary">${escapeHtmlWithBold(summary)}</div>`
         : '';
 
     let highlightsHtml = '';
     if (highlights.length) {
         const itemProp = schemaOrg ? ' itemprop="description"' : '';
-        highlightsHtml = `<ul class="item-highlights"${itemProp}>${highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>`;
+        highlightsHtml = `<ul class="item-highlights"${itemProp}>${highlights.map(h => `<li>${escapeHtmlWithBold(h)}</li>`).join('')}</ul>`;
     }
 
     const classes = ['item-card', visClass, logoClass, extraClasses].filter(Boolean).join(' ');
@@ -1839,7 +1849,7 @@ function renderGridPublic(items, cols) {
         <div class="custom-grid-item">
             ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-            ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+            ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
@@ -1856,7 +1866,7 @@ function renderListPublic(items) {
             <div class="custom-list-content">
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-item-description">${escapeHtml(item.description)}</p>` : ''}
+                ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
             </div>
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
@@ -1873,7 +1883,7 @@ function renderCardsPublic(items) {
         <div class="custom-card">
             ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-            ${item.description ? `<p class="custom-card-description">${escapeHtml(item.description)}</p>` : ''}
+            ${item.description ? `<p class="custom-card-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">${t('learn_more')}</a>` : ''}
         </div>
     `;
@@ -1896,7 +1906,7 @@ function renderBulletListPublic(items) {
                 ${item.title && !hideTitle ? `<h3 class="custom-bullet-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${bullets.length > 0 ? `
                     <ul class="custom-bullet-list">
-                        ${bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
+                        ${bullets.map(bullet => `<li>${escapeHtmlWithBold(bullet)}</li>`).join('')}
                     </ul>
                 ` : ''}
             </div>
@@ -1941,7 +1951,7 @@ function renderFreeTextPublic(items) {
         return `
             <div class="custom-free-text">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
-                <p class="custom-free-text-content">${escapeHtml(item.description || '')}</p>
+                <p class="custom-free-text-content">${escapeHtmlWithBold(item.description || '')}</p>
             </div>
         `;
     }).join('')}</div>`;
