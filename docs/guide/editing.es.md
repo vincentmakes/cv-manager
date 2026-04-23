@@ -12,6 +12,18 @@ Haga clic en el **ícono de edición** en la sección del encabezado. Puede conf
 - **Correo electrónico**, **Teléfono**, **LinkedIn** (se muestran como insignias de contacto)
 - **Idiomas** (idiomas hablados, por ejemplo, "Inglés, Francés, Alemán" — se muestra como una insignia con un ícono de globo)
 
+## Texto en negrita
+
+En cualquier campo de texto largo — **Biografía**, **Resumen** y **Puntos destacados** de la experiencia, **Descripción** de estudios, **Descripción** de proyectos y descripciones de secciones personalizadas — puede resaltar palabras encerrándolas entre dos asteriscos.
+
+- Escriba `**tiempo real**` → se muestra como **tiempo real**
+- Funciona en la misma línea; un `**` sin su `**` de cierre se deja como texto literal
+- Se renderiza en la vista previa del admin, en el sitio público y en la exportación PDF ATS (como negrita real, no como asteriscos)
+- La exportación **ATS en texto plano** y las meta-descripciones SEO eliminan los asteriscos para que no aparezcan en fragmentos de búsqueda o analizadores ATS
+
+!!! tip
+    Use la negrita con moderación — una o dos frases resaltadas por viñeta dirigen la atención a lo importante. Poner demasiado en negrita diluye la señal.
+
 ## Foto de perfil
 
 En el diálogo de edición del perfil, puede subir una foto de perfil (JPEG, PNG o WebP). La imagen reemplaza el círculo de iniciales. Para eliminarla, utilice la opción de eliminar en el mismo diálogo.

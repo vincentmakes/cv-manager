@@ -12,6 +12,18 @@ Fate clic sull'**icona di modifica** nella sezione intestazione. Potete impostar
 - **Email**, **Telefono**, **LinkedIn** (mostrati come badge di contatto)
 - **Lingue** (lingue parlate, ad es. "Inglese, Francese, Tedesco" — mostrate come badge con icona del globo)
 
+## Testo in grassetto
+
+In qualsiasi campo di testo lungo — **Biografia**, **Riassunto** e **Punti salienti** dell'esperienza, **Descrizione** dell'istruzione, **Descrizione** dei progetti e descrizioni nelle sezioni personalizzate — potete evidenziare le parole racchiudendole tra due asterischi.
+
+- Digitate `**tempo reale**` → visualizzato come **tempo reale**
+- Funziona sulla stessa riga; un `**` senza `**` di chiusura rimane come testo letterale
+- Viene reso nell'anteprima admin, sul sito pubblico e nell'export PDF ATS (come vero grassetto, non come asterischi)
+- L'esportazione **ATS testo semplice** e le meta-descrizioni SEO rimuovono gli asterischi, in modo che non compaiano mai nelle anteprime di ricerca o nei parser ATS
+
+!!! tip
+    Usate il grassetto con parsimonia — una o due frasi evidenziate per punto elenco attirano l'attenzione sull'essenziale. Troppo grassetto annacqua il segnale.
+
 ## Foto profilo
 
 Nella finestra di modifica del profilo, potete caricare una foto profilo (JPEG, PNG o WebP). L'immagine sostituisce il cerchio con le iniziali. Per rimuoverla, utilizzate l'opzione di eliminazione nella stessa finestra.

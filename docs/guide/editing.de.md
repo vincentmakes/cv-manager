@@ -12,6 +12,18 @@ Klicken Sie auf das **Bearbeiten-Symbol** im Kopfbereich. Sie können Folgendes 
 - **E-Mail**, **Telefon**, **LinkedIn** (werden als Kontakt-Badges angezeigt)
 - **Sprachen** (gesprochene Sprachen, z. B. „Englisch, Französisch, Deutsch" — werden als Badge mit einem Globus-Symbol angezeigt)
 
+## Fettgedruckter Text
+
+In allen längeren Textfeldern — **Bio**, **Zusammenfassung** und **Wichtige Erfolge** der Berufserfahrung, **Beschreibung** der Ausbildung, **Beschreibung** von Projekten sowie Beschreibungen in benutzerdefinierten Abschnitten — können Sie Wörter hervorheben, indem Sie sie in zwei Sternchen einschließen.
+
+- Tippen Sie `**Echtzeit**` → wird als **Echtzeit** dargestellt
+- Gilt innerhalb einer Zeile; ein `**` ohne schließendes `**` bleibt als literaler Text stehen
+- Wird in der Admin-Vorschau, auf der öffentlichen Seite und im ATS-PDF-Export als echter Fettdruck angezeigt (nicht als Sternchen)
+- Der **ATS-Klartext**-Export und SEO-Meta-Beschreibungen entfernen die Sternchen, damit sie nicht in Suchvorschauen oder ATS-Parsern auftauchen
+
+!!! tip
+    Verwenden Sie Fettdruck sparsam — ein oder zwei hervorgehobene Begriffe pro Aufzählungspunkt lenken den Blick auf das Wesentliche. Zu viel Fettdruck verwässert den Effekt.
+
 ## Profilbild
 
 Im Profil-Bearbeitungsdialog können Sie ein Profilbild hochladen (JPEG, PNG oder WebP). Das Bild ersetzt den Initialen-Kreis. Zum Entfernen verwenden Sie die Löschoption im selben Dialog.

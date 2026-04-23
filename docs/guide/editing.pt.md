@@ -12,6 +12,18 @@ Clique no **ícone de edição** na seção do cabeçalho. Você pode definir:
 - **Email**, **Telefone**, **LinkedIn** (exibidos como badges de contato)
 - **Idiomas** (idiomas falados, ex.: "Inglês, Francês, Alemão" — exibido como um badge com ícone de globo)
 
+## Texto em negrito
+
+Em qualquer campo de texto longo — **Bio**, **Resumo** e **Destaques** da experiência, **Descrição** da formação, **Descrição** de projetos e descrições de seções personalizadas — você pode destacar palavras envolvendo-as com dois asteriscos.
+
+- Digite `**tempo real**` → renderizado como **tempo real**
+- Funciona na mesma linha; um `**` sem `**` de fechamento permanece como texto literal
+- Renderizado na pré-visualização do admin, no site público e na exportação PDF ATS (como negrito real, não como asteriscos)
+- A exportação **ATS em texto simples** e as meta-descrições de SEO removem os asteriscos para que nunca apareçam em trechos de busca ou analisadores ATS
+
+!!! tip
+    Use o negrito com moderação — uma ou duas frases destacadas por item chamam a atenção para o essencial. Negritar demais dilui o sinal.
+
 ## Foto de Perfil
 
 No diálogo de edição do perfil, você pode enviar uma foto de perfil (JPEG, PNG ou WebP). A imagem substitui o círculo de iniciais. Para removê-la, use a opção de exclusão no mesmo diálogo.

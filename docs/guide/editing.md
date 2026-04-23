@@ -12,6 +12,18 @@ Click the **edit icon** on the header section. You can set:
 - **Email**, **Phone**, **LinkedIn** (shown as contact badges)
 - **Languages** (spoken languages, e.g., "English, French, German" — shown as a badge with a globe icon)
 
+## Bold Text
+
+In any long-form text field — **Bio**, experience **Summary** and **Highlights**, education **Description**, project **Description**, and custom-section descriptions — you can emphasize words by wrapping them in two asterisks.
+
+- Type `**real-time**` → rendered as **real-time**
+- Works on the same line; a `**` without a matching closing `**` is shown as literal text
+- Rendered on the admin preview, the public site, and in the ATS PDF export (as true bold, not asterisks)
+- The ATS **plain-text** export and SEO meta descriptions strip the asterisks so they never leak into search snippets or ATS parsers
+
+!!! tip
+    Use bold sparingly — one or two highlighted phrases per bullet draws the eye to what matters. Bolding every other word drowns out the signal.
+
 ## Profile Picture
 
 In the profile edit dialog, you can upload a profile picture (JPEG, PNG, or WebP). The image replaces the initials circle. To remove it, use the delete option in the same dialog.

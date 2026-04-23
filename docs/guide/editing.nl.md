@@ -12,6 +12,18 @@ Klik op het **bewerkingspictogram** bij de headersectie. U kunt het volgende ins
 - **E-mail**, **Telefoon**, **LinkedIn** (getoond als contactbadges)
 - **Talen** (gesproken talen, bijv. "Engels, Frans, Duits" — getoond als een badge met een wereldbolpictogram)
 
+## Vetgedrukte tekst
+
+In elk langer tekstveld — **Biografie**, **Samenvatting** en **Hoogtepunten** van werkervaring, **Beschrijving** bij opleiding, **Beschrijving** van projecten en beschrijvingen in aangepaste secties — kunt u woorden benadrukken door ze tussen twee sterretjes te zetten.
+
+- Typ `**realtime**` → weergegeven als **realtime**
+- Werkt binnen één regel; een `**` zonder afsluitende `**` blijft als letterlijke tekst staan
+- Wordt vetgedrukt weergegeven in de beheerdersweergave, op de openbare site en in de ATS-PDF-export (als echte vetgedruk, niet als sterretjes)
+- De **ATS-platte-tekst**-export en SEO-metabeschrijvingen verwijderen de sterretjes, zodat ze nooit in zoekfragmenten of ATS-parsers verschijnen
+
+!!! tip
+    Gebruik vetgedruk met mate — één of twee gemarkeerde termen per bullet trekken de aandacht naar de kern. Te veel vetgedruk verwatert het effect.
+
 ## Profielfoto
 
 In het profielbewerkingsvenster kunt u een profielfoto uploaden (JPEG, PNG of WebP). De afbeelding vervangt de initialencirkel. Om deze te verwijderen, gebruikt u de verwijderoptie in hetzelfde venster.
