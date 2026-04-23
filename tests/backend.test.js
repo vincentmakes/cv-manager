@@ -701,6 +701,46 @@ describe('Backend API', () => {
             });
         });
 
+        it('saved datasets carry print_compact through to the public API', async () => {
+            // Turn on print_compact for skills in the live DB
+            await fetch(`${BASE_URL}/api/sections/skills/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: true }),
+            });
+
+            // Create a public dataset and save the current live state into it
+            const createRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Compact Print Public' }),
+            });
+            const created = await createRes.json();
+            await fetch(`${BASE_URL}/api/datasets/${created.id}/save`, { method: 'POST' });
+            await fetch(`${BASE_URL}/api/datasets/${created.id}/public`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_public: true }),
+            });
+
+            // Fetch the dataset via the PUBLIC server's slug endpoint —
+            // this is what /v/:slug's client uses to render the CV
+            const pubRes = await fetch(`${PUBLIC_URL}/api/datasets/slug/${created.slug}`);
+            assert.strictEqual(pubRes.status, 200);
+            const pub = await pubRes.json();
+            const pubSkills = pub.sectionOrder.find(s => s.key === 'skills');
+            assert.ok(pubSkills, 'skills entry present in public dataset sectionOrder');
+            assert.strictEqual(pubSkills.print_compact, true, 'print_compact reaches the public dataset payload');
+
+            // Clean up — delete dataset, reset flag
+            await fetch(`${BASE_URL}/api/datasets/${created.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/sections/skills/print-compact`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ print_compact: false }),
+            });
+        });
+
         // --- Reorder ---
         it('PUT /api/reorder/:type reorders items', async () => {
             // Create two experiences
