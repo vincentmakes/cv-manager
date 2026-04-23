@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.48.3] - 2026-04-23
+
+### Fixed
+- **Per-section "compact print" toggle is now honored when printing from public URLs.** The Skills / Projects compact-print flag (stored in `section_visibility.print_compact`) was correctly applied on the admin page and on the public page's live-DB fallback, but any public URL that renders from a saved dataset — the default dataset served at `/`, the versioned `/v/:slug` (+ `/v/:slug/:lang`) routes, and static-site exports — ignored it, because `print_compact` (and, same shape, `print_visible`) was dropped at three points in the dataset pipeline: `gatherCvData()` in `src/server.js` didn't include the fields when building `sectionOrder` entries, and the two client-side mappers in `public-readonly/index.html` (`loadDatasetPreview` and `loadStaticData`) further stripped them while reshaping the snapshot. `renderSectionsInOrder()` reads the flag correctly — it just never saw a value, so the `.print-compact` CSS class (and its inline-text layout in `public/shared/styles.css`) was never applied and printed pages always rendered the full card grid. Added the fields to `gatherCvData()`'s snapshot and to both client mappers. While in the area, also propagated the fields through `propagateStructure()` so language-sibling datasets share the same structural choice, and preserved them on `POST /api/datasets/:id/load` and `POST /api/import` (mirroring the `section.print_compact !== undefined ? … : existing` pattern already used by `PUT /api/sections/order`) so the roundtrip stays honest. Datasets saved before this release have no flag stored and render non-compact until re-saved, which is the correct default. No schema changes, no new endpoints, no i18n strings — the CSS rules and the admin UI were already in place. Covered by a new backend test that saves a public dataset with `print_compact=true` on Skills and asserts the flag reaches `GET /api/datasets/slug/:slug` on the public port.
+
 ## [1.48.2] - 2026-04-23
 
 ### Fixed

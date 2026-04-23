@@ -258,7 +258,7 @@
                     }
                     sectionOrder = data.sectionOrder.filter(s => s.visible !== false).map(s => {
                         const fallbackName = csNameMap[s.key] || s.key;
-                        return { key: s.key, visible: s.visible, name: s.display_name || s.name || fallbackName, default_name: s.default_name || s.name || fallbackName };
+                        return { key: s.key, visible: s.visible, print_visible: s.print_visible, print_compact: s.print_compact, name: s.display_name || s.name || fallbackName, default_name: s.default_name || s.name || fallbackName };
                     });
                     renderSectionsInOrder();
                     applySectionTitles(sectionOrder);
@@ -362,7 +362,7 @@
                     }
                     sectionOrder = datasetData.sectionOrder.filter(s => s.visible !== false).map(s => {
                         const fallbackName = csNameMap[s.key] || s.key;
-                        return { key: s.key, visible: s.visible, name: s.display_name || s.name || fallbackName, default_name: s.default_name || s.name || fallbackName };
+                        return { key: s.key, visible: s.visible, print_visible: s.print_visible, print_compact: s.print_compact, name: s.display_name || s.name || fallbackName, default_name: s.default_name || s.name || fallbackName };
                     });
                     renderSectionsInOrder();
                     applySectionTitles(sectionOrder);
