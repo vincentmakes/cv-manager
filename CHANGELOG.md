@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.48.2] - 2026-04-23
+
+### Fixed
+- **`ReferenceError: escapeHtmlWithBold is not defined` on the public read-only page after upgrading from a version prior to 1.48.0.** The `public-readonly/index.html` template's inline `renderProfileFromData`, `renderEducationFromData`, and `renderProjectsFromData` functions call `escapeHtmlWithBold`, a helper added in 1.48.0 to `public/shared/scripts.js`. The template is read from disk on every request, so returning visitors always got the new HTML that calls the helper, but `/shared/scripts.js` was served by `express.static` with no cache-buster, so their browsers kept serving the pre-1.48.0 cached copy — and the first call to `escapeHtmlWithBold` inside `loadDatasetPreview` blew up, leaving the public page blank with only the console error visible. Cache-busted both shared scripts by rewriting the `<script src>` tags in `public-readonly/index.html` to include `?v=__APP_VERSION__`, and substituting the current `package.json` version in a new `readPublicIndexHtml()` helper that now fronts all six server paths that render the template (default-dataset `/`, live-DB `/` fallback, `/` error fallback, public `/v/:slug`, admin preview `/v/:slug`, and the static-site ZIP export). Because every release is required to bump `package.json` / `version.json`, the query string changes on every upgrade and the HTML/JS pair can no longer drift for returning visitors — a stale cached `scripts.js` can never satisfy a request for the new versioned URL. No client-side changes required; the static-site export also inherits the cache-buster, so offline-hosted exports stay consistent.
+
 ## [1.48.1] - 2026-04-23
 
 ### Fixed

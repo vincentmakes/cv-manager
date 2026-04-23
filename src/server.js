@@ -16,6 +16,16 @@ const PUBLIC_PORT = process.env.PUBLIC_PORT || 3001;
 // Version from package.json
 const CURRENT_VERSION = require(path.join(__dirname, '..', 'package.json')).version;
 
+// Read the public-readonly template and stamp the current app version into the
+// shared-script query strings. Cache-busts /shared/scripts.js and /shared/i18n.js
+// on every release so returning visitors can't pair new HTML with a stale cached
+// JS bundle.
+const PUBLIC_INDEX_HTML_PATH = path.join(__dirname, '../public-readonly/index.html');
+function readPublicIndexHtml() {
+    const html = fs.readFileSync(PUBLIC_INDEX_HTML_PATH, 'utf8');
+    return html.replace(/__APP_VERSION__/g, CURRENT_VERSION);
+}
+
 // Cached version check (in-memory only, never persisted)
 let versionCache = { latest: null, checkedAt: null, changelog: null };
 const VERSION_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
@@ -252,7 +262,7 @@ function servePublicIndex(req, res) {
             const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
             const dsLang = defaultDataset.language || 'en';
 
-            let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+            let html = readPublicIndexHtml();
             html = html.replace(/<html lang="[^"]*"/, `<html lang="${dsLang}"`);
             html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
@@ -286,7 +296,7 @@ function servePublicIndex(req, res) {
         const bio = profile?.bio || 'Professional CV';
         const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
 
-        let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+        let html = readPublicIndexHtml();
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
 
@@ -310,7 +320,7 @@ function servePublicIndex(req, res) {
         html = html.replace('</head>', `${themeScript}</head>`);
 
         res.type('html').send(html);
-    } catch (err) { res.sendFile(path.join(__dirname, '../public-readonly/index.html')); }
+    } catch (err) { res.type('html').send(readPublicIndexHtml()); }
 }
 
 // Serve a public dataset page by slug (for /v/:slug on public server)
@@ -325,7 +335,7 @@ function serveDatasetPage(req, res, lang) {
         const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
         const dsLang = dataset.language || 'en';
 
-        let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+        let html = readPublicIndexHtml();
         html = html.replace(/<html lang="[^"]*"/, `<html lang="${dsLang}"`);
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV (${dataset.name})</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
@@ -1563,7 +1573,7 @@ function serveAdminDatasetPage(req, res, lang) {
         const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
         const dsLang = dataset.language || 'en';
 
-        let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+        let html = readPublicIndexHtml();
         html = html.replace(/<html lang="[^"]*"/, `<html lang="${dsLang}"`);
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV (${dataset.name})</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
@@ -3946,7 +3956,7 @@ if (PUBLIC_ONLY) {
             };
 
             // Prepare HTML
-            let html = fs.readFileSync(path.join(__dirname, '../public-readonly/index.html'), 'utf8');
+            let html = readPublicIndexHtml();
 
             // Inject meta tags
             const name = profile.name || 'CV';
