@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.48.1] - 2026-04-23
+
+### Fixed
+- **`**bold**` markers now render in the admin preview for Education, Projects, and custom-section description/bullet fields.** The 1.48.0 feature shipped with a gap: only the public read-only page ran descriptions through the bold-aware HTML escaper. The admin page rebuilds the CV preview using a parallel set of renderers in `public/shared/admin.js` (`renderGridLayout`, `renderListLayout`, `renderCardsLayout`, `renderBulletListLayout`, `renderFreeTextLayout`, `loadEducation`, `loadProjects`) that were still calling plain `escapeHtml`, so users would type `**foo**` into an education description or a custom-section card and see the literal asterisks in the admin preview until they opened the public page. Switched those seven call sites to `escapeHtmlWithBold` — the same XSS-safe helper already used by `scripts.js` (escapes first, then replaces `**…**` with `<strong>…</strong>` via a non-greedy same-line regex). About (bio), Experience, and the custom-section timeline layout already routed through shared scripts.js helpers and needed no change; certifications and skills have no bold-eligible textareas.
+
 ## [1.48.0] - 2026-04-23
 
 ### Added
