@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.48.4] - 2026-04-24
+
+### Fixed
+- **Certification credential link button is now preserved when printing.** The small "open in new tab" icon rendered next to each certification name (`.cert-link`) was hidden by `.cert-link { display: none; }` inside the `@media print` block of `public/shared/styles.css`, so users printing their CV — or exporting a PDF via the browser print dialog — lost the visual cue indicating that a certification has a credential URL attached. Removed the rule so the link element participates in the printed layout like every other item inside `.cert-header`, keeping print output consistent with the on-screen rendering used on both the admin preview and the public read-only page. Affects both the edit/view mode in `public/index.html` and the public-facing `public-readonly/index.html`, which share the same stylesheet. No HTML, JS, or server-side changes required; the cert-link's existing 22×22 box and inner 12px Material icon already print cleanly at the reduced cert-card size used by the print media query.
+
 ## [1.48.3] - 2026-04-23
 
 ### Fixed
