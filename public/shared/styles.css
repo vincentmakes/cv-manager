@@ -1947,7 +1947,6 @@ body.has-preview-banner .container {
     .cert-card.has-logo { gap: 6px; }
     .cert-logo { width: 24px; height: 24px; }
     .cert-name { font-size: 11px; }
-    .cert-link { display: none; }
     .cert-date { font-size: 9px; }
     .cert-provider { font-size: 10px; }
     
