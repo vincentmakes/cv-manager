@@ -866,7 +866,7 @@ function renderGridLayout(items, cols) {
             <div class="custom-grid-item ${visible ? '' : 'hidden-print'}">
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
+                ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
             </div>
         `;
@@ -885,7 +885,7 @@ function renderListLayout(items) {
                 <div class="custom-list-content">
                     ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                     ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                    ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
+                    ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 </div>
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
             </div>
@@ -904,7 +904,7 @@ function renderCardsLayout(items) {
             <div class="custom-card ${visible ? '' : 'hidden-print'}">
                 ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-card-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
+                ${item.description ? `<div class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
             </div>
         `;
@@ -944,7 +944,7 @@ function renderFreeTextLayout(items) {
         return `
             <div class="custom-free-text ${visible ? '' : 'hidden-print'}">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
-                <p class="custom-free-text-content">${escapeHtmlWithBold(item.description || '')}</p>
+                <div class="custom-free-text-content">${renderMarkdown(item.description || '', { mode: 'block' })}</div>
             </div>
         `;
     }).join('')}</div>`;
@@ -1149,7 +1149,7 @@ async function loadEducation() {
                     <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
-            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtmlWithBold(edu.description)}</div>` : ''}
+            ${edu.description ? `<div class="item-location" itemprop="description">${renderMarkdown(edu.description, { mode: 'block' })}</div>` : ''}
         </article>
     `).join('');
     
@@ -1213,7 +1213,7 @@ async function loadProjects() {
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                 ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="View Project">${linkIcon()}</a>` : ''}
             </div>
-            <p class="project-description" itemprop="description">${escapeHtmlWithBold(proj.description || '')}</p>
+            <div class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</div>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
             </div>
@@ -1452,7 +1452,7 @@ function profileForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.bio')}</label>
             <textarea class="form-textarea" id="f-bio">${escapeHtml(d.bio || '')}</textarea>
-            <div class="form-hint">${t('form.bold_hint')}</div>
+            <div class="form-hint">${t('form.markdown_hint')}</div>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -1549,12 +1549,12 @@ function experienceForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.summary')}</label>
             <textarea class="form-textarea" id="f-summary" rows="3">${escapeHtml(d.summary || '')}</textarea>
-            <div class="form-hint">${t('form.bold_hint')}</div>
+            <div class="form-hint">${t('form.markdown_hint')}</div>
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
-            <div class="form-hint">${t('form.bold_hint')}</div>
+            <div class="form-hint">${t('form.markdown_hint')}</div>
         </div>
     `;
 }
@@ -1629,7 +1629,7 @@ function educationForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.description')}</label>
             <textarea class="form-textarea" id="f-description">${escapeHtml(d.description || '')}</textarea>
-            <div class="form-hint">${t('form.bold_hint')}</div>
+            <div class="form-hint">${t('form.markdown_hint')}</div>
         </div>
     `;
 }
@@ -1724,7 +1724,7 @@ function projectForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.description')}</label>
             <textarea class="form-textarea" id="f-description">${escapeHtml(d.description || '')}</textarea>
-            <div class="form-hint">${t('form.bold_hint')}</div>
+            <div class="form-hint">${t('form.markdown_hint')}</div>
         </div>
         <div class="form-group">
             <label class="form-label">${t('form.technologies')}</label>
@@ -5909,7 +5909,7 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('custom_item.bullet_points')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="8" placeholder="First bullet point\nSecond bullet point\nThird bullet point">${escapeHtml(item.description || '')}</textarea>
-                <div class="form-hint">${t('form.bold_hint')}</div>
+                <div class="form-hint">${t('form.markdown_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'free-text') {
@@ -5931,7 +5931,7 @@ function openCustomItemModal(sectionId, itemId = null) {
                 <label class="form-label">${t('custom_item.text_content')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="10" placeholder="${t('custom_item.text_content_placeholder')}">${escapeHtml(item.description || '')}</textarea>
                 <div class="form-hint">${t('custom_item.text_content_hint')}</div>
-                <div class="form-hint">${t('form.bold_hint')}</div>
+                <div class="form-hint">${t('form.markdown_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'timeline') {
@@ -5973,12 +5973,12 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('form.summary')}</label>
                 <textarea class="form-textarea" id="ci-summary" rows="3">${escapeHtml(meta.summary || '')}</textarea>
-                <div class="form-hint">${t('form.bold_hint')}</div>
+                <div class="form-hint">${t('form.markdown_hint')}</div>
             </div>
             <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
-                <div class="form-hint">${t('form.bold_hint')}</div>
+                <div class="form-hint">${t('form.markdown_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {
@@ -6025,7 +6025,7 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('custom_item.description_optional')}</label>
                 <textarea class="form-textarea" id="ci-description">${escapeHtml(item.description || '')}</textarea>
-                <div class="form-hint">${t('form.bold_hint')}</div>
+                <div class="form-hint">${t('form.markdown_hint')}</div>
             </div>
             <div class="form-group">
                 <label class="form-label">${t('custom_item.link_url_optional')}</label>

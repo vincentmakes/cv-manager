@@ -142,7 +142,7 @@
     "form.choose_image": "Scegli immagine",
     "form.remove": "Rimuovi",
     "form.picture_hint": "Consigliato: immagine quadrata, almeno 200x200 pixel. JPEG, PNG o WebP.",
-    "form.bold_hint": "Suggerimento: racchiudi il testo tra **doppi asterischi** per metterlo in grassetto.",
+    "form.markdown_hint": "Markdown: **grassetto**, *corsivo*, premi Invio per andare a capo, inizia una riga con - per un elenco puntato.",
     "form.apply_picture_globally": "Applica questa foto a tutti i dataset",
     "form.delete_picture": "Elimina foto",
     "form.no_pictures_available": "Nessuna foto nella libreria. Caricane una prima.",

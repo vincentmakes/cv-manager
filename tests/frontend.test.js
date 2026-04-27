@@ -649,15 +649,20 @@ describe('Frontend files', () => {
             assert.ok(result.includes('delete'), 'Should contain icon name');
         });
 
-        // --- escapeHtmlWithBold tests ---
-        it('escapeHtmlWithBold: extract and test', () => {
+        // --- renderMarkdown / escapeHtmlWithBold tests ---
+        // Helper: extract renderMarkdown + escapeHtmlWithBold from scripts.js and
+        // run them in an isolated VM with a minimal escapeHtml polyfill.
+        function loadMarkdownRenderer() {
             const scriptsContent = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
-            // Extract escapeHtmlWithBold body
-            const match = scriptsContent.match(/function escapeHtmlWithBold\(text\)\s*\{[\s\S]*?\n\}/);
-            assert.ok(match, 'Should find escapeHtmlWithBold function');
+            const inlineMatch = scriptsContent.match(/function renderMarkdownInline\(escaped\)\s*\{[\s\S]*?\n\}/);
+            const blocksMatch = scriptsContent.match(/function parseMarkdownBlocks\(text\)\s*\{[\s\S]*?\n\}/);
+            const renderMatch = scriptsContent.match(/function renderMarkdown\(text, options\)\s*\{[\s\S]*?\n\}/);
+            const aliasMatch = scriptsContent.match(/function escapeHtmlWithBold\(text\)\s*\{[\s\S]*?\n\}/);
+            assert.ok(inlineMatch, 'Should find renderMarkdownInline function');
+            assert.ok(blocksMatch, 'Should find parseMarkdownBlocks function');
+            assert.ok(renderMatch, 'Should find renderMarkdown function');
+            assert.ok(aliasMatch, 'Should find escapeHtmlWithBold function');
 
-            // Provide a minimal polyfill for document.createElement used by escapeHtml.
-            // Mirrors the browser pattern: set textContent → read innerHTML entity-escaped.
             const fakeDocument = {
                 createElement: () => {
                     let _text = '';
@@ -674,44 +679,146 @@ describe('Frontend files', () => {
                     };
                 }
             };
-            // Inline escapeHtml so it's in scope for escapeHtmlWithBold.
             const helper = `function escapeHtml(text) {
                 if (!text) return '';
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
             }`;
-            const fn = new Function('document', `${helper}\n${match[0]}\nreturn escapeHtmlWithBold;`)(fakeDocument);
+            const factory = new Function('document', [
+                helper,
+                inlineMatch[0],
+                blocksMatch[0],
+                renderMatch[0],
+                aliasMatch[0],
+                'return { renderMarkdown, escapeHtmlWithBold, parseMarkdownBlocks };'
+            ].join('\n'));
+            return factory(fakeDocument);
+        }
 
-            // Basic bold rendering
+        it('escapeHtmlWithBold: bold + XSS safety + edge cases', () => {
+            const { escapeHtmlWithBold: fn } = loadMarkdownRenderer();
+
             assert.strictEqual(fn('hello **world**'), 'hello <strong>world</strong>');
             assert.strictEqual(fn('**a** and **b**'), '<strong>a</strong> and <strong>b</strong>');
-
-            // XSS safety: script tags escaped, bold still rendered
             assert.strictEqual(
                 fn('<script>**x**</script>'),
                 '&lt;script&gt;<strong>x</strong>&lt;/script&gt;'
             );
-
-            // Unclosed ** left literal (escaped as-is)
             assert.strictEqual(fn('a ** b'), 'a ** b');
-
-            // ** must not span newlines
             assert.strictEqual(fn('a **\nb**'), 'a **\nb**');
-
-            // Empty / null / undefined → ''
             assert.strictEqual(fn(''), '');
             assert.strictEqual(fn(null), '');
             assert.strictEqual(fn(undefined), '');
-
-            // Plain text unchanged (apart from HTML entity escaping)
             assert.strictEqual(fn('just plain'), 'just plain');
             assert.strictEqual(fn('5 < 10'), '5 &lt; 10');
+        });
+
+        it('renderMarkdown: italic via *…* and _…_', () => {
+            const { renderMarkdown } = loadMarkdownRenderer();
+            const inline = (s) => renderMarkdown(s, { mode: 'inline' });
+
+            assert.strictEqual(inline('hello *world*'), 'hello <em>world</em>');
+            assert.strictEqual(inline('a _word_ here'), 'a <em>word</em> here');
+            // Underscore must not split snake_case identifiers.
+            assert.strictEqual(inline('use foo_bar_baz here'), 'use foo_bar_baz here');
+            // Whitespace-adjacent asterisks don't trigger italic.
+            assert.strictEqual(inline('a * b * c'), 'a * b * c');
+            // Bold runs first and is not re-parsed as italic.
+            assert.strictEqual(inline('**bold**'), '<strong>bold</strong>');
+            // Italic doesn't eat into a following ** sequence.
+            assert.strictEqual(inline('*x* **y**'), '<em>x</em> <strong>y</strong>');
+        });
+
+        it('renderMarkdown: inline mode strips a leading bullet marker', () => {
+            const { renderMarkdown } = loadMarkdownRenderer();
+            const inline = (s) => renderMarkdown(s, { mode: 'inline' });
+
+            // Strip "- " / "* " / "• " so line-split lists don't double-bullet.
+            assert.strictEqual(inline('- led migration'), 'led migration');
+            assert.strictEqual(inline('* second item'), 'second item');
+            assert.strictEqual(inline('• unicode bullet'), 'unicode bullet');
+            // Only a single leading marker is stripped.
+            assert.strictEqual(inline('- - still dashed'), '- still dashed');
+            // Inline bold/italic still work after the strip.
+            assert.strictEqual(inline('- **bold** start'), '<strong>bold</strong> start');
+        });
+
+        it('renderMarkdown: block mode turns newlines into <br>', () => {
+            const { renderMarkdown } = loadMarkdownRenderer();
+            const block = (s) => renderMarkdown(s, { mode: 'block' });
+
+            assert.strictEqual(block('a\nb'), 'a<br>b');
+            assert.strictEqual(block('a\n\nb'), 'a<br><br>b');
+            assert.strictEqual(block('first **bold** line\nsecond *italic* line'),
+                'first <strong>bold</strong> line<br>second <em>italic</em> line');
+            // XSS still escaped in block mode.
+            assert.strictEqual(block('<b>hi</b>\nthere'), '&lt;b&gt;hi&lt;/b&gt;<br>there');
+        });
+
+        it('renderMarkdown: block mode renders themed bullet lists from "- " lines', () => {
+            const { renderMarkdown } = loadMarkdownRenderer();
+            const block = (s) => renderMarkdown(s, { mode: 'block' });
+
+            // Single bullet line collapses to a one-item ul with the shared
+            // bullet-list class so theme-bullet CSS picks it up.
+            assert.strictEqual(
+                block('- led migration'),
+                '<ul class="custom-bullet-list"><li>led migration</li></ul>'
+            );
+            // Consecutive bullet lines collapse into one ul; "* " marker also accepted.
+            assert.strictEqual(
+                block('- a\n* b\n- c'),
+                '<ul class="custom-bullet-list"><li>a</li><li>b</li><li>c</li></ul>'
+            );
+            // Mixed paragraph + list + paragraph blocks alternate correctly.
+            assert.strictEqual(
+                block('intro\n- one\n- two\noutro'),
+                'intro<ul class="custom-bullet-list"><li>one</li><li>two</li></ul>outro'
+            );
+            // Inline markdown still applies inside <li>.
+            assert.strictEqual(
+                block('- **bold** item'),
+                '<ul class="custom-bullet-list"><li><strong>bold</strong> item</li></ul>'
+            );
+            // No literal "- " survives at the start of the rendered list item.
+            assert.ok(!block('- foo').includes('>- foo<'),
+                'rendered <li> must not start with the bullet marker');
+        });
+
+        it('parseMarkdownBlocks: groups consecutive bullet lines and preserves paragraph runs', () => {
+            const { parseMarkdownBlocks } = loadMarkdownRenderer();
+            assert.deepStrictEqual(parseMarkdownBlocks(''), []);
+            assert.deepStrictEqual(parseMarkdownBlocks(null), []);
+            assert.deepStrictEqual(parseMarkdownBlocks('plain text'),
+                [{ type: 'paragraph', lines: ['plain text'] }]);
+            assert.deepStrictEqual(parseMarkdownBlocks('- a\n- b'),
+                [{ type: 'list', lines: ['a', 'b'] }]);
+            assert.deepStrictEqual(parseMarkdownBlocks('intro\n- a\nafter'),
+                [
+                    { type: 'paragraph', lines: ['intro'] },
+                    { type: 'list', lines: ['a'] },
+                    { type: 'paragraph', lines: ['after'] }
+                ]);
         });
 
         it('materialIcon: includes aria-hidden for accessibility', () => {
             const result = materialIcon('check');
             assert.ok(result.includes('aria-hidden="true"'), 'Should include aria-hidden');
+        });
+    });
+
+    describe('Markdown hint i18n', () => {
+        it('every locale defines form.markdown_hint and no longer defines form.bold_hint', () => {
+            const localesDir = path.join(ROOT, 'public', 'shared', 'i18n');
+            const codes = ['en', 'de', 'fr', 'nl', 'es', 'it', 'pt', 'zh'];
+            for (const code of codes) {
+                const data = JSON.parse(fs.readFileSync(path.join(localesDir, `${code}.json`), 'utf8'));
+                assert.ok(typeof data['form.markdown_hint'] === 'string' && data['form.markdown_hint'].length > 0,
+                    `${code}.json should define form.markdown_hint`);
+                assert.ok(!('form.bold_hint' in data),
+                    `${code}.json must not still define form.bold_hint`);
+            }
         });
     });
 
