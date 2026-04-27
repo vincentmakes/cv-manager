@@ -142,7 +142,7 @@
     "form.choose_image": "Elegir imagen",
     "form.remove": "Eliminar",
     "form.picture_hint": "Recomendado: imagen cuadrada, al menos 200x200 píxeles. JPEG, PNG o WebP.",
-    "form.bold_hint": "Consejo: rodea el texto con **dobles asteriscos** para ponerlo en negrita.",
+    "form.markdown_hint": "Markdown: **negrita**, *cursiva*, presiona Enter para una nueva línea, empieza una línea con - para una viñeta.",
     "form.apply_picture_globally": "Aplicar esta foto a todos los conjuntos de datos",
     "form.delete_picture": "Eliminar foto",
     "form.no_pictures_available": "Aún no hay fotos en la biblioteca. Sube una primero.",

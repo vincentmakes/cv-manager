@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.0] - 2026-04-27
+
+### Added
+- **Extended markdown notation in description text fields.** The `**bold**` shortcut introduced in 1.48.0 has been generalized into a small two-mode renderer (`renderMarkdown` in `public/shared/scripts.js`) that now also handles `*italic*` / `_italic_`, and — for the bio, experience summary, education / project / custom-section description and free-text fields — turns single newlines into `<br>` so paragraphs no longer collapse into one run-on block. The line-split contexts that already render one bullet per line (work-experience highlights, custom-section bullet-list layout) additionally strip a single leading `- ` / `* ` / `• ` from each line so users typing `- foo` no longer see a literal "▹ - foo" double bullet — the theme-level bullet glyph stays the only marker. Server-side parity is preserved: SEO meta descriptions strip the new italic markers via `stripMarkdown`, the ATS PDF builder picks `Helvetica-Oblique` / `Helvetica-BoldOblique` for italic runs via `splitInlineRuns`, and `addBulletList` strips the same leading bullet marker so PDF bullets aren't doubled either. The form hint string was renamed `form.bold_hint` → `form.markdown_hint` and retranslated across all 8 locales (en, de, fr, nl, es, it, pt, zh) to reflect the broader syntax. Existing data with `**markers**` continues to render exactly as before; the change is additive.
+
 ## [1.48.4] - 2026-04-24
 
 ### Fixed

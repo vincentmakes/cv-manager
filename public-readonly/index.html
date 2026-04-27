@@ -380,7 +380,7 @@
             document.getElementById('profileName').textContent = p.name || '';
             document.getElementById('profileTitle').textContent = p.title || '';
             document.getElementById('profileSubtitle').textContent = p.subtitle || '';
-            document.getElementById('aboutText').innerHTML = escapeHtmlWithBold(p.bio || '');
+            document.getElementById('aboutText').innerHTML = renderMarkdown(p.bio || '', { mode: 'block' });
             if (p.name) document.title = `${p.name} - CV`;
             
             const pic = document.getElementById('profilePicture');
@@ -541,7 +541,7 @@
                         </div>
                         <span class="item-date">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')} - ${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</span>
                     </div>
-                    ${edu.description ? `<div class="item-location">${escapeHtmlWithBold(edu.description)}</div>` : ''}
+                    ${edu.description ? `<div class="item-location">${renderMarkdown(edu.description, { mode: 'block' })}</div>` : ''}
                 </article>
             `).join('');
         }
@@ -569,7 +569,7 @@
                         <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                         ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="${t('view_project')}">${icons.link}</a>` : ''}
                     </div>
-                    <p class="project-description" itemprop="description">${escapeHtmlWithBold(proj.description || '')}</p>
+                    <p class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</p>
                     <div class="tech-tags">${(proj.technologies || []).map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`).join('')}</div>
                 </article>
             `).join('');

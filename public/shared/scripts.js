@@ -333,14 +333,45 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Escape HTML, then render **word** as <strong>word</strong>.
-// Escaping runs first, so only safe entities remain before we inject <strong>.
-// The regex is non-greedy and forbids newlines / nested asterisks, so an
-// unclosed ** on one line cannot bold across fields or lines.
-function escapeHtmlWithBold(text) {
+// Render the small markdown subset we support in CV text fields.
+//
+//   - bold     **text**
+//   - italic   *text*  or  _text_
+//   - line break (block mode only): a single newline becomes <br>; two
+//     newlines render as a blank line.
+//
+// HTML is always escaped first, so only safe entities exist before we inject
+// the <strong>/<em>/<br> tags. Bold runs first so its asterisks are consumed
+// before italic, preventing **word** being misparsed as italic.
+//
+// Modes:
+//   - 'inline' (default): used inside containers that already supply structure
+//     (e.g. each <li> in a line-split list). Strips a single leading bullet
+//     marker ("- ", "* ", "• ") from the input so contexts that auto-bullet
+//     each line don't render a literal "▹ - foo" double bullet.
+//   - 'block': used for free-form description fields. Newlines become <br>.
+function renderMarkdown(text, options) {
     if (text == null || text === '') return '';
-    const escaped = escapeHtml(String(text));
-    return escaped.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+    const mode = options && options.mode === 'block' ? 'block' : 'inline';
+    let s = String(text);
+    if (mode === 'inline') {
+        s = s.replace(/^\s*(?:[-*•])\s+/, '');
+    }
+    let out = escapeHtml(s);
+    out = out.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?!\*)/g, '$1<em>$2</em>');
+    out = out.replace(/(^|[^A-Za-z0-9_])_(?!\s)([^_\n]+?)(?<!\s)_(?![A-Za-z0-9_])/g, '$1<em>$2</em>');
+    if (mode === 'block') {
+        out = out.replace(/\n/g, '<br>');
+    }
+    return out;
+}
+
+// Backwards-compatible alias for the inline-mode renderer. Existing call sites
+// that used to do "escape + bold" continue to work; they additionally pick up
+// italic and the leading-bullet-marker strip for free.
+function escapeHtmlWithBold(text) {
+    return renderMarkdown(text, { mode: 'inline' });
 }
 
 // Apply stored crop metadata to a profile-picture <img>. The crop is expressed as
@@ -714,8 +745,8 @@ async function loadProfile(includePrivate = false) {
     document.getElementById('profileTitle').textContent = p.title || '';
     document.getElementById('profileSubtitle').textContent = p.subtitle || '';
     
-    // Bio - CSS white-space: pre-line handles line breaks; **bold** is rendered as <strong>
-    document.getElementById('aboutText').innerHTML = escapeHtmlWithBold(p.bio || '');
+    // Bio - block mode renders **bold**, *italic*, and turns newlines into <br>.
+    document.getElementById('aboutText').innerHTML = renderMarkdown(p.bio || '', { mode: 'block' });
     
     // Update page title
     if (p.name) document.title = `${p.name} - CV`;
@@ -1501,7 +1532,7 @@ async function loadEducationReadOnly() {
                     <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
                 </span>
             </div>
-            ${edu.description ? `<div class="item-location" itemprop="description">${escapeHtmlWithBold(edu.description)}</div>` : ''}
+            ${edu.description ? `<div class="item-location" itemprop="description">${renderMarkdown(edu.description, { mode: 'block' })}</div>` : ''}
         </article>
     `).join('');
 }
@@ -1535,7 +1566,7 @@ async function loadProjectsReadOnly() {
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                 ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_project')}">${icons.link}</a>` : ''}
             </div>
-            <p class="project-description" itemprop="description">${escapeHtmlWithBold(proj.description || '')}</p>
+            <p class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</p>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
             </div>
@@ -1727,7 +1758,7 @@ function renderExperienceCard(opts) {
         : '';
 
     const summaryHtml = summary
-        ? `<div class="item-summary">${escapeHtmlWithBold(summary)}</div>`
+        ? `<div class="item-summary">${renderMarkdown(summary, { mode: 'block' })}</div>`
         : '';
 
     let highlightsHtml = '';
@@ -1849,7 +1880,7 @@ function renderGridPublic(items, cols) {
         <div class="custom-grid-item">
             ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-            ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
+            ${item.description ? `<p class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
@@ -1866,7 +1897,7 @@ function renderListPublic(items) {
             <div class="custom-list-content">
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-item-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
+                ${item.description ? `<p class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
             </div>
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
@@ -1883,7 +1914,7 @@ function renderCardsPublic(items) {
         <div class="custom-card">
             ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-            ${item.description ? `<p class="custom-card-description">${escapeHtmlWithBold(item.description)}</p>` : ''}
+            ${item.description ? `<p class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">${t('learn_more')}</a>` : ''}
         </div>
     `;
@@ -1951,7 +1982,7 @@ function renderFreeTextPublic(items) {
         return `
             <div class="custom-free-text">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
-                <p class="custom-free-text-content">${escapeHtmlWithBold(item.description || '')}</p>
+                <p class="custom-free-text-content">${renderMarkdown(item.description || '', { mode: 'block' })}</p>
             </div>
         `;
     }).join('')}</div>`;

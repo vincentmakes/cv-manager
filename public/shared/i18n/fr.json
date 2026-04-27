@@ -142,7 +142,7 @@
     "form.choose_image": "Choisir une image",
     "form.remove": "Supprimer",
     "form.picture_hint": "Recommandé : Image carrée, au moins 200x200 pixels. JPEG, PNG ou WebP.",
-    "form.bold_hint": "Astuce : entourez le texte de **doubles astérisques** pour le mettre en gras.",
+    "form.markdown_hint": "Markdown : **gras**, *italique*, appuyez sur Entrée pour passer à la ligne, commencez une ligne par - pour une puce.",
     "form.apply_picture_globally": "Appliquer cette photo à tous les jeux de données",
     "form.delete_picture": "Supprimer la photo",
     "form.no_pictures_available": "Aucune photo dans la bibliothèque. Téléchargez-en une d'abord.",

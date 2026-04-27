@@ -141,7 +141,7 @@
     "form.zoom": "Zoom",
     "form.remove": "Remove",
     "form.picture_hint": "Recommended: Square image, at least 200x200 pixels. JPEG, PNG or WebP.",
-    "form.bold_hint": "Tip: wrap text in **double asterisks** to make it bold.",
+    "form.markdown_hint": "Markdown: **bold**, *italic*, press Enter for a new line, start a line with - for a bullet.",
     "form.apply_picture_globally": "Apply this picture to all datasets",
     "form.delete_picture": "Delete picture",
     "form.no_pictures_available": "No pictures in the library yet. Upload one first.",

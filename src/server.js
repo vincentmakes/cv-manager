@@ -129,31 +129,53 @@ function resolveLocale(requested) {
     return 'en';
 }
 
-// Remove **bold** markers for plain-text contexts (SEO meta, ATS text, etc.).
-// Mirrors the client-side regex in escapeHtmlWithBold (scripts.js).
-function stripBoldMarkers(text) {
+// Strip the markdown markers we support so plain-text contexts (SEO meta,
+// ATS plaintext, etc.) don't show literal **/_/* characters. Mirrors the
+// client-side regex order in renderMarkdown (scripts.js): bold first so its
+// asterisks are consumed before italic, then italic with `*` and `_`.
+function stripMarkdown(text) {
     if (text == null) return '';
-    return String(text).replace(/\*\*([^*\n]+?)\*\*/g, '$1');
+    let s = String(text);
+    s = s.replace(/\*\*([^*\n]+?)\*\*/g, '$1');
+    s = s.replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?!\*)/g, '$1$2');
+    s = s.replace(/(^|[^A-Za-z0-9_])_(?!\s)([^_\n]+?)(?<!\s)_(?![A-Za-z0-9_])/g, '$1$2');
+    return s;
 }
 
-// Split a paragraph into alternating regular/bold runs for rich rendering
-// (e.g. PDF). Returns an array of { text, bold } segments. Matches the same
-// regex as stripBoldMarkers / escapeHtmlWithBold for a single source of truth.
-function splitBoldRuns(text) {
+// Backwards-compatible alias for callers that only stripped bold markers.
+function stripBoldMarkers(text) { return stripMarkdown(text); }
+
+// Split a paragraph into runs annotated with bold/italic flags for rich
+// rendering (e.g. the ATS PDF). Bold runs are detected first so their
+// asterisks are consumed before italic, matching renderMarkdown / stripMarkdown.
+function splitInlineRuns(text) {
     const s = text == null ? '' : String(text);
+    if (!s) return [{ text: '', bold: false, italic: false }];
+    // Private-use sentinels mark detected runs so the second/third regex pass
+    // can't re-match across an already-consumed bold/italic run. They are
+    // stripped out of the input first so user content can never inject one.
+    const safe = s.replace(/[\u0001-\u0004]/g, '');
+    const marked = safe
+        .replace(/\*\*([^*\n]+?)\*\*/g, (_m, g1) => `\u0001${g1}\u0002`)
+        .replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?!\*)/g, (_m, p, g) => `${p}\u0003${g}\u0004`)
+        .replace(/(^|[^A-Za-z0-9_])_(?!\s)([^_\n]+?)(?<!\s)_(?![A-Za-z0-9_])/g, (_m, p, g) => `${p}\u0003${g}\u0004`);
     const runs = [];
-    const re = /\*\*([^*\n]+?)\*\*/g;
-    let last = 0;
-    let m;
-    while ((m = re.exec(s)) !== null) {
-        if (m.index > last) runs.push({ text: s.slice(last, m.index), bold: false });
-        runs.push({ text: m[1], bold: true });
-        last = m.index + m[0].length;
+    let bold = false, italic = false, buf = '';
+    const flush = () => { if (buf) { runs.push({ text: buf, bold, italic }); buf = ''; } };
+    for (const ch of marked) {
+        if (ch === '\u0001') { flush(); bold = true; }
+        else if (ch === '\u0002') { flush(); bold = false; }
+        else if (ch === '\u0003') { flush(); italic = true; }
+        else if (ch === '\u0004') { flush(); italic = false; }
+        else { buf += ch; }
     }
-    if (last < s.length) runs.push({ text: s.slice(last), bold: false });
-    if (runs.length === 0) runs.push({ text: s, bold: false });
+    flush();
+    if (runs.length === 0) runs.push({ text: s, bold: false, italic: false });
     return runs;
 }
+
+// Backwards-compatible alias.
+function splitBoldRuns(text) { return splitInlineRuns(text); }
 
 function checkFilesystemAccess(dir) {
     const testFile = path.join(dir, '.write-test-' + process.pid);
@@ -3599,25 +3621,34 @@ if (PUBLIC_ONLY) {
                 advanceY(doc.heightOfString(text, { width: contentW, fontSize }) + 4);
             }
 
+            // Pick a Helvetica variant for a given run, honouring the base font's
+            // bold-ness so callers like the H2 heading still render bold-italic correctly.
+            function fontForRun(baseFont, run) {
+                const bold = !!run.bold || baseFont === 'Helvetica-Bold';
+                const italic = !!run.italic;
+                if (bold && italic) return 'Helvetica-BoldOblique';
+                if (bold) return 'Helvetica-Bold';
+                if (italic) return 'Helvetica-Oblique';
+                return 'Helvetica';
+            }
+
             function addParagraph(text, fontSize, options = {}) {
                 const { color = '#000', font = 'Helvetica', indent = 0 } = options;
                 const w = contentW - indent;
-                const runs = splitBoldRuns(text);
+                const runs = splitInlineRuns(text);
                 const stripped = runs.map(r => r.text).join('');
-                // Base font already bold → treat **…** as no-op (text is already bold).
-                const baseIsBold = font === 'Helvetica-Bold';
-                const boldFont = baseIsBold ? font : 'Helvetica-Bold';
                 const h = doc.fontSize(fontSize).font(font).heightOfString(stripped, { width: w });
                 ensureSpace(h + 2);
                 const para = doc.struct('P');
                 docStruct.add(para);
                 para.add(doc.struct('Span', {}, () => {
                     doc.fontSize(fontSize).fillColor(color);
-                    if (runs.length === 1 || baseIsBold) {
+                    const onlyRun = runs.length === 1 ? runs[0] : null;
+                    if (onlyRun && !onlyRun.bold && !onlyRun.italic) {
                         doc.font(font).text(stripped, margin + indent, y, { width: w });
                     } else {
                         runs.forEach((r, i) => {
-                            doc.font(r.bold ? boldFont : font);
+                            doc.font(fontForRun(font, r));
                             const opts = { width: w, continued: i < runs.length - 1 };
                             if (i === 0) {
                                 doc.text(r.text, margin + indent, y, opts);
@@ -3642,8 +3673,11 @@ if (PUBLIC_ONLY) {
                 docStruct.add(listStruct);
                 items.forEach(item => {
                     if (!item || !item.trim()) return;
+                    // Strip a leading bullet marker so users who type "- foo" in the
+                    // highlights textarea don't get a literal "• - foo" double bullet.
+                    const trimmed = item.replace(/^\s*(?:[-*•])\s+/, '');
                     const w = contentW - 20;
-                    const runs = splitBoldRuns(item);
+                    const runs = splitInlineRuns(trimmed);
                     const stripped = runs.map(r => r.text).join('');
                     const h = doc.fontSize(fontSize).font('Helvetica').heightOfString(stripped, { width: w });
                     ensureSpace(h + 2);
@@ -3655,11 +3689,12 @@ if (PUBLIC_ONLY) {
                     }));
                     li.add(doc.struct('LBody', {}, () => {
                         doc.fontSize(fontSize).fillColor('#000');
-                        if (runs.length === 1) {
+                        const onlyRun = runs.length === 1 ? runs[0] : null;
+                        if (onlyRun && !onlyRun.bold && !onlyRun.italic) {
                             doc.font('Helvetica').text(stripped, margin + 20, y, { width: w });
                         } else {
                             runs.forEach((r, i) => {
-                                doc.font(r.bold ? 'Helvetica-Bold' : 'Helvetica');
+                                doc.font(fontForRun('Helvetica', r));
                                 const opts = { width: w, continued: i < runs.length - 1 };
                                 if (i === 0) {
                                     doc.text(r.text, margin + 20, y, opts);

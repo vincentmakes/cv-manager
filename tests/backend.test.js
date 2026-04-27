@@ -1525,6 +1525,79 @@ describe('Backend API', () => {
                     'rendered PDF bytes should not contain literal "**word" sequences'
                 );
             });
+
+            it('renders *italic* as Helvetica-Oblique runs and strips leading "- " in bullets', async () => {
+                await fetch(`${BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'PDF Markdown Test',
+                        bio: 'Hello *world* and welcome.',
+                    }),
+                });
+                const existing = await (await fetch(`${BASE_URL}/api/experiences`)).json();
+                for (const e of existing) {
+                    await fetch(`${BASE_URL}/api/experiences/${e.id}`, { method: 'DELETE' });
+                }
+                await fetch(`${BASE_URL}/api/experiences`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        job_title: 'Markdown Engineer',
+                        company_name: 'MD Co',
+                        start_date: '2022-01',
+                        end_date: '',
+                        // Leading "- " should be stripped so the PDF bullet glyph
+                        // is not duplicated; *italic* should render in oblique font.
+                        highlights: ['- Wrote *clean* code'],
+                    }),
+                });
+
+                const res = await fetch(`${BASE_URL}/api/export/ats-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: 1, paperSize: 'A4', locale: 'en' }),
+                });
+                assert.strictEqual(res.status, 200);
+                const buf = Buffer.from(await res.arrayBuffer());
+                const latin = buf.toString('latin1');
+
+                assert.ok(
+                    latin.includes('Helvetica-Oblique'),
+                    'PDF should embed Helvetica-Oblique once *italic* markers appear in content'
+                );
+                assert.ok(
+                    !/\*[A-Za-z]+\*/.test(latin),
+                    'rendered PDF bytes should not contain literal "*word*" sequences'
+                );
+            });
+
+            it('stripMarkdown removes italic / underscore markers as well as bold', () => {
+                // Direct unit-style test of the helper exposed by the server module.
+                // We require the file fresh so we get the real exported helpers; the
+                // already-running test server is a separate child process.
+                const path = require('node:path');
+                const serverPath = path.join(__dirname, '..', 'src', 'server.js');
+                // The server module isn't a typical require()-able module (it boots
+                // listeners as a side effect), so instead read its source and extract
+                // stripMarkdown as a standalone function, mirroring the frontend test
+                // pattern. This keeps the test hermetic.
+                const fs = require('node:fs');
+                const src = fs.readFileSync(serverPath, 'utf8');
+                const m = src.match(/function stripMarkdown\(text\)\s*\{[\s\S]*?\n\}/);
+                assert.ok(m, 'should find stripMarkdown in server.js');
+                const stripMarkdown = new Function(`${m[0]}\nreturn stripMarkdown;`)();
+
+                assert.strictEqual(stripMarkdown('Built a **fast** system.'), 'Built a fast system.');
+                assert.strictEqual(stripMarkdown('A *resilient* design.'), 'A resilient design.');
+                assert.strictEqual(stripMarkdown('Very _scalable_ stack.'), 'Very scalable stack.');
+                assert.strictEqual(stripMarkdown('Mixes **bold** with *italic*.'), 'Mixes bold with italic.');
+                // snake_case identifiers must survive stripping.
+                assert.strictEqual(stripMarkdown('use foo_bar_baz here'), 'use foo_bar_baz here');
+                // Empty / null
+                assert.strictEqual(stripMarkdown(''), '');
+                assert.strictEqual(stripMarkdown(null), '');
+            });
         });
     });
 
