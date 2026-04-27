@@ -866,7 +866,7 @@ function renderGridLayout(items, cols) {
             <div class="custom-grid-item ${visible ? '' : 'hidden-print'}">
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
+                ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
             </div>
         `;
@@ -885,7 +885,7 @@ function renderListLayout(items) {
                 <div class="custom-list-content">
                     ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                     ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                    ${item.description ? `<p class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
+                    ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 </div>
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
             </div>
@@ -904,7 +904,7 @@ function renderCardsLayout(items) {
             <div class="custom-card ${visible ? '' : 'hidden-print'}">
                 ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
+                ${item.description ? `<div class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
             </div>
         `;
@@ -944,7 +944,7 @@ function renderFreeTextLayout(items) {
         return `
             <div class="custom-free-text ${visible ? '' : 'hidden-print'}">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
-                <p class="custom-free-text-content">${renderMarkdown(item.description || '', { mode: 'block' })}</p>
+                <div class="custom-free-text-content">${renderMarkdown(item.description || '', { mode: 'block' })}</div>
             </div>
         `;
     }).join('')}</div>`;
@@ -1213,7 +1213,7 @@ async function loadProjects() {
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                 ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" title="View Project">${linkIcon()}</a>` : ''}
             </div>
-            <p class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</p>
+            <div class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</div>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
             </div>

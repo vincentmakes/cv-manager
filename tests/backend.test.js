@@ -1572,6 +1572,53 @@ describe('Backend API', () => {
                 );
             });
 
+            it('routes "- " bullet lines from description fields through the PDF bullet list', async () => {
+                // Seed a project description containing markdown bullet lines.
+                // We can't substring-match rendered text in the encoded PDF stream,
+                // so instead we verify (a) the structural list operator "/L" tag
+                // appears (PDF tagged bullet list, emitted only by addBulletList)
+                // and (b) no literal "- " line marker leaks through verbatim.
+                await fetch(`${BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'PDF Description Test', bio: 'short bio' }),
+                });
+                const existingProjects = await (await fetch(`${BASE_URL}/api/projects`)).json();
+                for (const p of existingProjects) {
+                    await fetch(`${BASE_URL}/api/projects/${p.id}`, { method: 'DELETE' });
+                }
+                await fetch(`${BASE_URL}/api/projects`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Bullet Project',
+                        description: 'Highlights:\n- shipped feature A\n- reduced bundle 40%',
+                        technologies: [],
+                    }),
+                });
+
+                const res = await fetch(`${BASE_URL}/api/export/ats-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: 1, paperSize: 'A4', locale: 'en' }),
+                });
+                assert.strictEqual(res.status, 200);
+                const buf = Buffer.from(await res.arrayBuffer());
+                const latin = buf.toString('latin1');
+
+                // The PDF tagged-structure markers for a bullet list must be present.
+                // addBulletList wraps each list in /L and each item in /LI + /Lbl + /LBody.
+                assert.ok(/\/L\b/.test(latin) && /\/LI\b/.test(latin),
+                    'PDF should contain /L and /LI tagged-structure entries from addBulletList');
+                assert.ok(/\/Lbl\b/.test(latin),
+                    'PDF should contain /Lbl entries (one per bullet) from addBulletList');
+                // No literal "- shipped" / "- reduced" survives: bullet marker stripped.
+                assert.ok(!/-\s+shipped/.test(latin),
+                    'PDF text stream should not contain literal "- shipped"');
+                assert.ok(!/-\s+reduced/.test(latin),
+                    'PDF text stream should not contain literal "- reduced"');
+            });
+
             it('stripMarkdown removes italic / underscore markers as well as bold', () => {
                 // Direct unit-style test of the helper exposed by the server module.
                 // We require the file fresh so we get the real exported helpers; the

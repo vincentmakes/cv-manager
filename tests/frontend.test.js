@@ -654,8 +654,12 @@ describe('Frontend files', () => {
         // run them in an isolated VM with a minimal escapeHtml polyfill.
         function loadMarkdownRenderer() {
             const scriptsContent = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
+            const inlineMatch = scriptsContent.match(/function renderMarkdownInline\(escaped\)\s*\{[\s\S]*?\n\}/);
+            const blocksMatch = scriptsContent.match(/function parseMarkdownBlocks\(text\)\s*\{[\s\S]*?\n\}/);
             const renderMatch = scriptsContent.match(/function renderMarkdown\(text, options\)\s*\{[\s\S]*?\n\}/);
             const aliasMatch = scriptsContent.match(/function escapeHtmlWithBold\(text\)\s*\{[\s\S]*?\n\}/);
+            assert.ok(inlineMatch, 'Should find renderMarkdownInline function');
+            assert.ok(blocksMatch, 'Should find parseMarkdownBlocks function');
             assert.ok(renderMatch, 'Should find renderMarkdown function');
             assert.ok(aliasMatch, 'Should find escapeHtmlWithBold function');
 
@@ -681,7 +685,14 @@ describe('Frontend files', () => {
                 div.textContent = text;
                 return div.innerHTML;
             }`;
-            const factory = new Function('document', `${helper}\n${renderMatch[0]}\n${aliasMatch[0]}\nreturn { renderMarkdown, escapeHtmlWithBold };`);
+            const factory = new Function('document', [
+                helper,
+                inlineMatch[0],
+                blocksMatch[0],
+                renderMatch[0],
+                aliasMatch[0],
+                'return { renderMarkdown, escapeHtmlWithBold, parseMarkdownBlocks };'
+            ].join('\n'));
             return factory(fakeDocument);
         }
 
@@ -743,9 +754,52 @@ describe('Frontend files', () => {
                 'first <strong>bold</strong> line<br>second <em>italic</em> line');
             // XSS still escaped in block mode.
             assert.strictEqual(block('<b>hi</b>\nthere'), '&lt;b&gt;hi&lt;/b&gt;<br>there');
-            // Block mode does NOT strip a leading bullet marker — descriptions
-            // that happen to start with "- " keep the dash as visible content.
-            assert.strictEqual(block('- not stripped'), '- not stripped');
+        });
+
+        it('renderMarkdown: block mode renders themed bullet lists from "- " lines', () => {
+            const { renderMarkdown } = loadMarkdownRenderer();
+            const block = (s) => renderMarkdown(s, { mode: 'block' });
+
+            // Single bullet line collapses to a one-item ul with the shared
+            // bullet-list class so theme-bullet CSS picks it up.
+            assert.strictEqual(
+                block('- led migration'),
+                '<ul class="custom-bullet-list"><li>led migration</li></ul>'
+            );
+            // Consecutive bullet lines collapse into one ul; "* " marker also accepted.
+            assert.strictEqual(
+                block('- a\n* b\n- c'),
+                '<ul class="custom-bullet-list"><li>a</li><li>b</li><li>c</li></ul>'
+            );
+            // Mixed paragraph + list + paragraph blocks alternate correctly.
+            assert.strictEqual(
+                block('intro\n- one\n- two\noutro'),
+                'intro<ul class="custom-bullet-list"><li>one</li><li>two</li></ul>outro'
+            );
+            // Inline markdown still applies inside <li>.
+            assert.strictEqual(
+                block('- **bold** item'),
+                '<ul class="custom-bullet-list"><li><strong>bold</strong> item</li></ul>'
+            );
+            // No literal "- " survives at the start of the rendered list item.
+            assert.ok(!block('- foo').includes('>- foo<'),
+                'rendered <li> must not start with the bullet marker');
+        });
+
+        it('parseMarkdownBlocks: groups consecutive bullet lines and preserves paragraph runs', () => {
+            const { parseMarkdownBlocks } = loadMarkdownRenderer();
+            assert.deepStrictEqual(parseMarkdownBlocks(''), []);
+            assert.deepStrictEqual(parseMarkdownBlocks(null), []);
+            assert.deepStrictEqual(parseMarkdownBlocks('plain text'),
+                [{ type: 'paragraph', lines: ['plain text'] }]);
+            assert.deepStrictEqual(parseMarkdownBlocks('- a\n- b'),
+                [{ type: 'list', lines: ['a', 'b'] }]);
+            assert.deepStrictEqual(parseMarkdownBlocks('intro\n- a\nafter'),
+                [
+                    { type: 'paragraph', lines: ['intro'] },
+                    { type: 'list', lines: ['a'] },
+                    { type: 'paragraph', lines: ['after'] }
+                ]);
         });
 
         it('materialIcon: includes aria-hidden for accessibility', () => {

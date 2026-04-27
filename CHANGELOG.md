@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.1] - 2026-04-27
+
+### Fixed
+- **Markdown bullet lines now render with the theme bullet, in both HTML and the ATS PDF.** The 1.49.0 block-mode renderer only converted newlines to `<br>` and did not turn `- ` lines into a bullet list, so a bio or description like `- shipped feature\n- reduced bundle` rendered as a literal `- shipped feature ↵ - reduced bundle` block, ignoring the user's expectation that markdown bullets should pick up `themeBulletStyle`. Added `parseMarkdownBlocks` in both `public/shared/scripts.js` and `src/server.js` (single-source parser shared client + server) so consecutive `- ` / `* ` / `• ` lines now collapse into a `<ul class="custom-bullet-list">` — the same class the custom bullet-list section layout already uses, so the existing theme-bullet CSS selectors apply for free with zero new rules. Switched the `<p>`-wrapped description containers (`.project-description`, `.custom-item-description`, `.custom-card-description`, `.custom-free-text-content`, `.about-text`) to `<div>` because a `<ul>` cannot be nested in a `<p>` (browsers auto-close the paragraph and break the layout). On the PDF side, introduced `addMarkdownDescription(text, fontSize, opts)` that parses the same blocks and routes paragraphs through `addParagraph` and bullet lines through `addBulletList`, then rerouted bio, experience summary, education / project / custom-section descriptions through it; the bio path also stops flattening `\n+` into spaces so soft line breaks now actually appear in the PDF. With the existing italic-aware run splitting from 1.49.0, `*italic*`, `**bold**`, soft line breaks, and `- ` bullets now all render consistently in the admin preview, the public read-only page, and the ATS PDF.
+
 ## [1.49.0] - 2026-04-27
 
 ### Added

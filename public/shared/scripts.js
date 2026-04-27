@@ -337,8 +337,12 @@ function escapeHtml(text) {
 //
 //   - bold     **text**
 //   - italic   *text*  or  _text_
-//   - line break (block mode only): a single newline becomes <br>; two
-//     newlines render as a blank line.
+//   - bullet line (block mode only): a line starting with "- " or "* " becomes
+//     a <ul class="custom-bullet-list"><li>…</li></ul> entry; consecutive bullet
+//     lines collapse into one <ul>. The class is shared with the bullet-list
+//     custom layout, so the theme bullet (themeBulletStyle) applies for free.
+//   - soft line break (block mode, non-bullet lines): a single newline in the
+//     textarea renders as <br>; two newlines render as a blank line.
 //
 // HTML is always escaped first, so only safe entities exist before we inject
 // the <strong>/<em>/<br> tags. Bold runs first so its asterisks are consumed
@@ -349,22 +353,62 @@ function escapeHtml(text) {
 //     (e.g. each <li> in a line-split list). Strips a single leading bullet
 //     marker ("- ", "* ", "• ") from the input so contexts that auto-bullet
 //     each line don't render a literal "▹ - foo" double bullet.
-//   - 'block': used for free-form description fields. Newlines become <br>.
+//   - 'block': used for free-form description fields. Bullet lines become a
+//     themed <ul>; non-bullet lines become inline content joined by <br>.
+function renderMarkdownInline(escaped) {
+    let out = escaped.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?!\*)/g, '$1<em>$2</em>');
+    out = out.replace(/(^|[^A-Za-z0-9_])_(?!\s)([^_\n]+?)(?<!\s)_(?![A-Za-z0-9_])/g, '$1<em>$2</em>');
+    return out;
+}
+
+// Split block-level markdown into an array of { type: 'list' | 'paragraph', lines: string[] }.
+// Consecutive lines starting with "- " / "* " collapse into one list block; the
+// bullet marker is stripped from each entry (so the list <li> can supply its own
+// themed bullet without doubling). Everything else collects into paragraph blocks
+// preserving newlines so the renderer can join them with <br>.
+function parseMarkdownBlocks(text) {
+    const blocks = [];
+    if (text == null || text === '') return blocks;
+    let current = null;
+    for (const rawLine of String(text).split('\n')) {
+        const m = /^\s*[-*•]\s+(.*)$/.exec(rawLine);
+        if (m) {
+            if (!current || current.type !== 'list') {
+                if (current) blocks.push(current);
+                current = { type: 'list', lines: [] };
+            }
+            current.lines.push(m[1]);
+        } else {
+            if (!current || current.type !== 'paragraph') {
+                if (current) blocks.push(current);
+                current = { type: 'paragraph', lines: [] };
+            }
+            current.lines.push(rawLine);
+        }
+    }
+    if (current) blocks.push(current);
+    return blocks;
+}
+
 function renderMarkdown(text, options) {
     if (text == null || text === '') return '';
     const mode = options && options.mode === 'block' ? 'block' : 'inline';
     let s = String(text);
     if (mode === 'inline') {
         s = s.replace(/^\s*(?:[-*•])\s+/, '');
+        return renderMarkdownInline(escapeHtml(s));
     }
-    let out = escapeHtml(s);
-    out = out.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
-    out = out.replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?!\*)/g, '$1<em>$2</em>');
-    out = out.replace(/(^|[^A-Za-z0-9_])_(?!\s)([^_\n]+?)(?<!\s)_(?![A-Za-z0-9_])/g, '$1<em>$2</em>');
-    if (mode === 'block') {
-        out = out.replace(/\n/g, '<br>');
+    const out = [];
+    for (const block of parseMarkdownBlocks(s)) {
+        if (block.type === 'list') {
+            const items = block.lines.map(line => `<li>${renderMarkdownInline(escapeHtml(line))}</li>`).join('');
+            out.push(`<ul class="custom-bullet-list">${items}</ul>`);
+        } else {
+            out.push(block.lines.map(line => renderMarkdownInline(escapeHtml(line))).join('<br>'));
+        }
     }
-    return out;
+    return out.join('');
 }
 
 // Backwards-compatible alias for the inline-mode renderer. Existing call sites
@@ -1566,7 +1610,7 @@ async function loadProjectsReadOnly() {
                 <h3 class="project-title" itemprop="name">${escapeHtml(proj.title)}</h3>
                 ${proj.link ? `<a href="${escapeHtml(proj.link)}" class="project-link" target="_blank" rel="noopener" itemprop="url" title="${t('view_project')}">${icons.link}</a>` : ''}
             </div>
-            <p class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</p>
+            <div class="project-description" itemprop="description">${renderMarkdown(proj.description || '', { mode: 'block' })}</div>
             <div class="tech-tags">
                 ${(proj.technologies || []).map(t => `<span class="tech-tag" itemprop="keywords">${escapeHtml(t)}</span>`).join('')}
             </div>
@@ -1880,7 +1924,7 @@ function renderGridPublic(items, cols) {
         <div class="custom-grid-item">
             ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-            ${item.description ? `<p class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
+            ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
     `;
@@ -1897,7 +1941,7 @@ function renderListPublic(items) {
             <div class="custom-list-content">
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-                ${item.description ? `<p class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
+                ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
             </div>
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
         </div>
@@ -1914,7 +1958,7 @@ function renderCardsPublic(items) {
         <div class="custom-card">
             ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
             ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
-            ${item.description ? `<p class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</p>` : ''}
+            ${item.description ? `<div class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
             ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">${t('learn_more')}</a>` : ''}
         </div>
     `;
@@ -1982,7 +2026,7 @@ function renderFreeTextPublic(items) {
         return `
             <div class="custom-free-text">
                 ${showTitle ? `<div class="custom-item-title">${escapeHtml(item.title)}</div>` : ''}
-                <p class="custom-free-text-content">${renderMarkdown(item.description || '', { mode: 'block' })}</p>
+                <div class="custom-free-text-content">${renderMarkdown(item.description || '', { mode: 'block' })}</div>
             </div>
         `;
     }).join('')}</div>`;

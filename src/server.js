@@ -177,6 +177,36 @@ function splitInlineRuns(text) {
 // Backwards-compatible alias.
 function splitBoldRuns(text) { return splitInlineRuns(text); }
 
+// Split block-level markdown into an array of { type, lines }.
+// Mirrors parseMarkdownBlocks in public/shared/scripts.js so HTML and PDF
+// output stay structurally identical: consecutive lines starting with
+// "- " / "* " / "• " collapse into a list block (markers stripped); other
+// lines collect into paragraph blocks preserving newlines so the PDF
+// renderer can lay them out with the same line breaks the HTML uses.
+function parseMarkdownBlocks(text) {
+    const blocks = [];
+    if (text == null || text === '') return blocks;
+    let current = null;
+    for (const rawLine of String(text).split('\n')) {
+        const m = /^\s*[-*•]\s+(.*)$/.exec(rawLine);
+        if (m) {
+            if (!current || current.type !== 'list') {
+                if (current) blocks.push(current);
+                current = { type: 'list', lines: [] };
+            }
+            current.lines.push(m[1]);
+        } else {
+            if (!current || current.type !== 'paragraph') {
+                if (current) blocks.push(current);
+                current = { type: 'paragraph', lines: [] };
+            }
+            current.lines.push(rawLine);
+        }
+    }
+    if (current) blocks.push(current);
+    return blocks;
+}
+
 function checkFilesystemAccess(dir) {
     const testFile = path.join(dir, '.write-test-' + process.pid);
     try {
@@ -3710,6 +3740,25 @@ if (PUBLIC_ONLY) {
                 listStruct.end();
             }
 
+            // Render a free-form markdown description field (bio, education /
+            // project / custom-section description, etc.). Honours soft line
+            // breaks via PDFKit's native \n handling, and any line starting with
+            // "- " / "* " / "• " becomes a bullet item with the same theme-bullet
+            // semantics as the HTML side. Uses parseMarkdownBlocks so PDF and
+            // HTML stay in lockstep.
+            function addMarkdownDescription(text, fontSize, options = {}) {
+                const blocks = parseMarkdownBlocks(text);
+                if (blocks.length === 0) return;
+                blocks.forEach(block => {
+                    if (block.type === 'list') {
+                        addBulletList(block.lines, fontSize);
+                    } else {
+                        const para = block.lines.join('\n');
+                        if (para.trim()) addParagraph(para, fontSize, options);
+                    }
+                });
+            }
+
             // --- Header ---
             addHeading('H1', p.name || t('ats.name_fallback'), sz(22));
             if (p.title) addParagraph(p.title, sz(12), { color: '#444' });
@@ -3735,7 +3784,10 @@ if (PUBLIC_ONLY) {
                 about: () => {
                     if (!p.bio) return;
                     addSectionHeading(getSectionName('about'));
-                    addParagraph(p.bio.replace(/\n+/g, ' ').trim(), sz(9.5));
+                    // Honour line breaks and "- " bullet lines the user typed in
+                    // the bio textarea — PDFKit handles \n natively, and bullet
+                    // lines route through addBulletList for theme-consistent PDF.
+                    addMarkdownDescription(p.bio, sz(9.5));
                     advanceY(4);
                 },
                 experience: () => {
@@ -3776,7 +3828,7 @@ if (PUBLIC_ONLY) {
                             addParagraph(exp.location, sz(8.5), { color: '#777' });
                         }
                         if (exp.summary) {
-                            addParagraph(exp.summary, sz(9), { color: '#333' });
+                            addMarkdownDescription(exp.summary, sz(9), { color: '#333' });
                         }
                         if (exp.highlights && exp.highlights.length > 0) {
                             const bullets = exp.highlights.filter(h => h && h.trim());
@@ -3818,7 +3870,7 @@ if (PUBLIC_ONLY) {
                         // Date on its own line
                         addParagraph(dateStr, sz(9), { color: '#666' });
 
-                        if (edu.description) addParagraph(edu.description, sz(9), { color: '#555' });
+                        if (edu.description) addMarkdownDescription(edu.description, sz(9), { color: '#555' });
                     });
                     advanceY(4);
                 },
@@ -3879,7 +3931,7 @@ if (PUBLIC_ONLY) {
                         h3.end();
                         advanceY(doc.heightOfString(titleText, { width: contentW, fontSize: sz(10) }) + 2);
 
-                        if (proj.description) addParagraph(proj.description, sz(9));
+                        if (proj.description) addMarkdownDescription(proj.description, sz(9));
                         if (proj.technologies && proj.technologies.length > 0) {
                             addParagraph(`${t('ats.technologies_label')}: ${proj.technologies.join(', ')}`, sz(8.5), { color: '#666', font: 'Helvetica-Oblique' });
                         }
@@ -3910,7 +3962,7 @@ if (PUBLIC_ONLY) {
                         advanceY(doc.heightOfString(item.title, { width: contentW, fontSize: sz(10) }) + 2);
                     }
                     if (item.subtitle) addParagraph(item.subtitle, sz(9), { color: '#666' });
-                    if (item.description) addParagraph(item.description, sz(9));
+                    if (item.description) addMarkdownDescription(item.description, sz(9));
                     if (item.link) addParagraph(item.link, sz(8), { color: accentColor });
                 });
                 advanceY(4);
