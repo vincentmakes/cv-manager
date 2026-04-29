@@ -13,7 +13,7 @@ If you want to build on this project, the MIT license lets you fork it freely, a
 ### What to do instead
 
 - **Found a bug?** [Open an issue](https://github.com/vincentmakes/cv-manager/issues). Include steps to reproduce, what you expected, and what actually happened.
-- **Have an idea or suggestion?** [Start a discussion](https://github.com/vincentmakes/cv-manager/discussions). I'm genuinely open to hearing what would be useful — just don't expect a commitment or a timeline.
+- **Have an idea or suggestion?** [Start a discussion](https://github.com/vincentmakes/cv-manager/discussions). I'm genuinely open to hearing what would be useful — just don't expect a commitment or a timeline. Be reasonable and don't flood the discussion section with your personal roadmap.
 - **Want to add a translation?** That's the one area where contributions are most welcome. See [TRANSLATING.md](TRANSLATING.md).
 
 ---
