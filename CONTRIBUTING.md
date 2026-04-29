@@ -1,10 +1,26 @@
 # Contributing to CV Manager
 
-Thank you for your interest in contributing to CV Manager! This guide covers the development workflow and project conventions. For a full project overview, see the [README](README.md).
+Thank you for your interest in CV Manager!
 
-CV Manager is released under the [MIT License](LICENSE.txt).
+## First: a note on project scope
 
-## Getting Started
+CV Manager is a solo side project, maintained in my free time using paid AI tools. I'm not actively looking for pull requests right now, and I'm not in a position to review and maintain external contributions on an ongoing basis.
+
+**Please do not open pull requests unless you've discussed the change with me first and I've explicitly agreed to review it.** Unsolicited PRs — especially large ones or ones that come with full feature roadmaps — will likely be closed without review. I appreciate the enthusiasm, but a roadmap is something I get to set for my own project.
+
+If you want to build on this project, the MIT license lets you fork it freely, and this guide has everything you need to do that well.
+
+### What to do instead
+
+- **Found a bug?** [Open an issue](https://github.com/vincentmakes/cv-manager/issues). Include steps to reproduce, what you expected, and what actually happened.
+- **Have an idea or suggestion?** [Start a discussion](https://github.com/vincentmakes/cv-manager/discussions). I'm genuinely open to hearing what would be useful — just don't expect a commitment or a timeline.
+- **Want to add a translation?** That's the one area where contributions are most welcome. See [TRANSLATING.md](TRANSLATING.md).
+
+---
+
+## Fork development reference
+
+Everything below is for people who want to develop their own fork.
 
 ### Prerequisites
 
@@ -42,13 +58,6 @@ tests/frontend.test.js     # Frontend unit tests
 
 For the full architecture reference, see [CLAUDE.md](CLAUDE.md).
 
-## Development Workflow
-
-1. Branch from `main` with a descriptive name (e.g., `fix/timeline-overlap`, `feature/new-section-type`)
-2. Make focused, single-purpose changes
-3. Run tests before submitting a PR
-4. Push your branch and open a pull request against `main`
-
 ## Testing
 
 ```bash
@@ -60,13 +69,10 @@ npm run test:frontend  # Frontend unit tests only
 - Tests use Node's built-in `node:test` module (no external test framework).
 - Backend tests spawn a server on a random port (13000-14000) with a temporary SQLite database that auto-cleans up.
 - Frontend tests validate i18n key parity across all 8 locale files — missing or extra keys will fail.
-- CI runs frontend tests, backend tests, and a Docker build verification on every PR.
-
-**All tests must pass before a PR can be merged.**
 
 ## Version Bump Requirements
 
-> **Every code change must include a version bump.** This is mandatory — the admin UI uses the version number to check for updates, so skipping it breaks the update notification system.
+> **Every code change must include a version bump.** The admin UI uses the version number to check for updates, so skipping it breaks the update notification system.
 
 ### How to bump
 
@@ -104,7 +110,7 @@ If your code change adds or modifies user-visible strings, follow this checklist
 4. **Follow namespace conventions**: `toolbar.*`, `section.*`, `form.*`, `toast.*`, `action.*`, `btn.*`, `modal.*`, `settings.*`, etc.
 5. **Use `{{variable}}` syntax** for interpolation
 
-Frontend tests enforce key parity — if any locale file is missing a key, CI will fail.
+Frontend tests enforce key parity — if any locale file is missing a key, tests will fail.
 
 ## Code Conventions
 
@@ -115,12 +121,3 @@ There is no linter or formatter configured. Follow the patterns in the existing 
 - **XSS prevention**: Always use `escapeHtml()` from `scripts.js` when inserting user-provided content into HTML.
 - **Icons**: Use [Google Material Symbols Outlined](https://fonts.google.com/icons). In JavaScript, use the `materialIcon('icon_name', size)` helper. In HTML, use `<span class="material-symbols-outlined">icon_name</span>`. Brand/social logos (LinkedIn, GitHub, etc.) are an exception and use inline SVGs.
 - **Dates**: Store as `YYYY-MM` or `YYYY`. Use `normalizeDate()` when saving and `formatDate()` for display.
-
-## Pull Request Guidelines
-
-- Keep PRs focused on a single change — don't mix unrelated fixes or features.
-- Fill out the PR template completely.
-- Ensure all CI checks pass before requesting review.
-- Describe **what** changed and **why** in the PR description.
-- Include screenshots for UI changes.
-- For bug fixes, describe the root cause and how the fix addresses it.
