@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.1] - 2026-05-02
+
+### Changed
+- **Importing a CV now opens the Save As modal automatically.** Imported data wholesale-replaces the live state and is unattached to any saved dataset, so the obvious next step is to save it under a name. After a successful import the CV Manager / Save As modal opens with the name input pre-filled to the imported file's filename (without the `.json` extension), focused and selected so the user can either confirm or type over it. The language picker is already preselected to the imported file's `language` field by the existing `openCvManager` flow.
+
 ## [1.49.0] - 2026-04-27
 
 ### Added
