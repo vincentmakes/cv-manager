@@ -2108,6 +2108,17 @@ async function importData(event) {
             activeDatasetLanguage = importedLang;
             await initAdmin();
             toast(t('toast.imported'));
+
+            // Imported data isn't attached to a dataset; prompt to save it.
+            const suggestedName = file.name.replace(/\.json$/i, '');
+            await openCvManager();
+            const input = document.getElementById('saveAsNameInput');
+            if (input) {
+                input.value = suggestedName;
+                input.focus();
+                input.select();
+            }
+            updateSaveAsSubmitState();
         } catch (err) {
             toast(t('toast.invalid_file'), 'error');
         }
