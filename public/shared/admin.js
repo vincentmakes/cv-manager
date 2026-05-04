@@ -825,7 +825,7 @@ function renderCustomSection(section) {
             </div>
             <button class="add-btn no-print" onclick="manageCustomSectionItems(${section.id})">
                 <span class="material-symbols-outlined">add</span>
-                Manage Items
+                ${t('action.manage_items')}
             </button>
         </section>
     `;
@@ -867,7 +867,7 @@ function renderGridLayout(items, cols) {
                 ${item.title && !hideTitle ? `<h3 class="custom-item-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
-                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
             </div>
         `;
     }).join('')}</div>`;
@@ -887,7 +887,7 @@ function renderListLayout(items) {
                     ${item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                     ${item.description ? `<div class="custom-item-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
                 </div>
-                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">View →</a>` : ''}
+                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-item-link" target="_blank" rel="noopener">${t('view_link')}</a>` : ''}
             </div>
         `;
     }).join('')}</div>`;
@@ -905,7 +905,7 @@ function renderCardsLayout(items) {
                 ${item.title && !hideTitle ? `<h3 class="custom-card-title">${escapeHtml(item.title)}</h3>` : ''}
                 ${item.subtitle ? `<div class="custom-card-subtitle">${escapeHtml(item.subtitle)}</div>` : ''}
                 ${item.description ? `<div class="custom-card-description">${renderMarkdown(item.description, { mode: 'block' })}</div>` : ''}
-                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">Learn More →</a>` : ''}
+                ${item.link ? `<a href="${escapeHtml(item.link)}" class="custom-card-link" target="_blank" rel="noopener">${t('learn_more')}</a>` : ''}
             </div>
         `;
     }).join('')}</div>`;
@@ -1050,13 +1050,13 @@ async function loadExperiences() {
             <button class="item-btn move-btn" onclick="moveExperience(${exp.id}, 'down')" title="${t('action.move_down')}"${index === total - 1 ? ' disabled' : ''}>
                 ${moveDownIcon()}
             </button>
-            <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="Toggle Visibility">
+            <button class="item-btn" onclick="toggleVisibility('experiences', ${exp.id}, ${!exp.visible})" title="${t('action.toggle_visibility')}">
                 ${visibilityIcon(exp.visible)}
             </button>
-            <button class="item-btn" onclick="openModal('experience', ${exp.id})" title="Edit">
+            <button class="item-btn" onclick="openModal('experience', ${exp.id})" title="${t('action.edit')}">
                 ${editIcon()}
             </button>
-            <button class="item-btn delete" onclick="confirmDelete('experiences', ${exp.id})" title="Delete">
+            <button class="item-btn delete" onclick="confirmDelete('experiences', ${exp.id})" title="${t('action.delete')}">
                 ${deleteIcon()}
             </button>
         </div>`;
@@ -1089,15 +1089,15 @@ async function loadCertifications() {
         const hasLink = isValidUrl(cert.credential_id);
         return `
         <article class="cert-card ${cert.visible ? '' : 'hidden-print'}${hasLogo ? ' has-logo' : ''}" data-id="${cert.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
-            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
+            <div class="drag-handle" title="${t('action.drag_to_reorder')}">${dragHandleIcon()}</div>
             <div class="item-actions">
-                <button class="item-btn" onclick="toggleVisibility('certifications', ${cert.id}, ${!cert.visible})" title="Toggle Visibility">
+                <button class="item-btn" onclick="toggleVisibility('certifications', ${cert.id}, ${!cert.visible})" title="${t('action.toggle_visibility')}">
                     ${visibilityIcon(cert.visible)}
                 </button>
-                <button class="item-btn" onclick="openModal('certification', ${cert.id})" title="Edit">
+                <button class="item-btn" onclick="openModal('certification', ${cert.id})" title="${t('action.edit')}">
                     ${editIcon()}
                 </button>
-                <button class="item-btn delete" onclick="confirmDelete('certifications', ${cert.id})" title="Delete">
+                <button class="item-btn delete" onclick="confirmDelete('certifications', ${cert.id})" title="${t('action.delete')}">
                     ${deleteIcon()}
                 </button>
             </div>
@@ -1124,15 +1124,15 @@ async function loadEducation() {
     
     container.innerHTML = education.map(edu => `
         <article class="item-card ${edu.visible ? '' : 'hidden-print'}${edu.logo_filename ? ' has-logo' : ''}" data-id="${edu.id}" draggable="true" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
-            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
+            <div class="drag-handle" title="${t('action.drag_to_reorder')}">${dragHandleIcon()}</div>
             <div class="item-actions">
-                <button class="item-btn" onclick="toggleVisibility('education', ${edu.id}, ${!edu.visible})" title="Toggle Visibility">
+                <button class="item-btn" onclick="toggleVisibility('education', ${edu.id}, ${!edu.visible})" title="${t('action.toggle_visibility')}">
                     ${visibilityIcon(edu.visible)}
                 </button>
-                <button class="item-btn" onclick="openModal('education', ${edu.id})" title="Edit">
+                <button class="item-btn" onclick="openModal('education', ${edu.id})" title="${t('action.edit')}">
                     ${editIcon()}
                 </button>
-                <button class="item-btn delete" onclick="confirmDelete('education', ${edu.id})" title="Delete">
+                <button class="item-btn delete" onclick="confirmDelete('education', ${edu.id})" title="${t('action.delete')}">
                     ${deleteIcon()}
                 </button>
             </div>
@@ -1164,15 +1164,15 @@ async function loadSkills() {
     
     container.innerHTML = skills.map(cat => `
         <div class="skill-category ${cat.visible ? '' : 'hidden-print'}" data-id="${cat.id}" draggable="true">
-            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
+            <div class="drag-handle" title="${t('action.drag_to_reorder')}">${dragHandleIcon()}</div>
             <div class="item-actions">
-                <button class="item-btn" onclick="toggleVisibility('skills', ${cat.id}, ${!cat.visible})" title="Toggle Visibility">
+                <button class="item-btn" onclick="toggleVisibility('skills', ${cat.id}, ${!cat.visible})" title="${t('action.toggle_visibility')}">
                     ${visibilityIcon(cat.visible)}
                 </button>
-                <button class="item-btn" onclick="openModal('skill', ${cat.id})" title="Edit">
+                <button class="item-btn" onclick="openModal('skill', ${cat.id})" title="${t('action.edit')}">
                     ${editIcon()}
                 </button>
-                <button class="item-btn delete" onclick="confirmDelete('skills', ${cat.id})" title="Delete">
+                <button class="item-btn delete" onclick="confirmDelete('skills', ${cat.id})" title="${t('action.delete')}">
                     ${deleteIcon()}
                 </button>
             </div>
@@ -1197,15 +1197,15 @@ async function loadProjects() {
     
     container.innerHTML = projects.map(proj => `
         <article class="project-card ${proj.visible ? '' : 'hidden-print'}" data-id="${proj.id}" draggable="true" itemscope itemtype="https://schema.org/CreativeWork">
-            <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
+            <div class="drag-handle" title="${t('action.drag_to_reorder')}">${dragHandleIcon()}</div>
             <div class="item-actions">
-                <button class="item-btn" onclick="toggleVisibility('projects', ${proj.id}, ${!proj.visible})" title="Toggle Visibility">
+                <button class="item-btn" onclick="toggleVisibility('projects', ${proj.id}, ${!proj.visible})" title="${t('action.toggle_visibility')}">
                     ${visibilityIcon(proj.visible)}
                 </button>
-                <button class="item-btn" onclick="openModal('project', ${proj.id})" title="Edit">
+                <button class="item-btn" onclick="openModal('project', ${proj.id})" title="${t('action.edit')}">
                     ${editIcon()}
                 </button>
-                <button class="item-btn delete" onclick="confirmDelete('projects', ${proj.id})" title="Delete">
+                <button class="item-btn delete" onclick="confirmDelete('projects', ${proj.id})" title="${t('action.delete')}">
                     ${deleteIcon()}
                 </button>
             </div>
@@ -5834,17 +5834,17 @@ async function manageCustomSectionItems(sectionId) {
         <div class="custom-items-list" data-section-id="${sectionId}">
             ${items.length === 0 ? '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No items yet.</p>' : items.map(item => `
                 <div class="custom-item-row" data-id="${item.id}" draggable="true">
-                    <div class="drag-handle" title="Drag to reorder">${dragHandleIcon()}</div>
+                    <div class="drag-handle" title="${t('action.drag_to_reorder')}">${dragHandleIcon()}</div>
                     ${(section.layout_type === 'picture-grid' || section.layout_type === 'timeline') && item.image ? `<img src="/uploads/${escapeHtml(item.image)}?${Date.now()}" alt="" class="custom-item-thumb">` : ''}
                     <div class="custom-item-info">
                         <div class="custom-item-title">${escapeHtml(item.title || (section.layout_type === 'picture-grid' ? t('custom_item.picture') : 'Untitled'))}</div>
                         ${section.layout_type === 'timeline' ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle || '')}${item.metadata?.start_date ? ` | ${escapeHtml(item.metadata.start_date)} - ${item.metadata.end_date ? escapeHtml(item.metadata.end_date) : t('present')}` : ''}</div>` : (item.subtitle ? `<div class="custom-item-subtitle">${escapeHtml(item.subtitle)}</div>` : '')}
                     </div>
                     <div class="custom-item-actions">
-                        <button class="item-btn" onclick="openCustomItemModal(${sectionId}, ${item.id})" title="Edit">
+                        <button class="item-btn" onclick="openCustomItemModal(${sectionId}, ${item.id})" title="${t('action.edit')}">
                             ${editIcon()}
                         </button>
-                        <button class="item-btn delete" onclick="confirmDeleteCustomItem(${sectionId}, ${item.id})" title="Delete">
+                        <button class="item-btn delete" onclick="confirmDeleteCustomItem(${sectionId}, ${item.id})" title="${t('action.delete')}">
                             ${deleteIcon()}
                         </button>
                     </div>
