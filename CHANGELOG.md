@@ -4,6 +4,17 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.2] - 2026-05-04
+
+### Fixed
+- **Missing translations on admin item-row controls and custom-section UI ([#161](https://github.com/vincentmakes/cv-manager/issues/161)).** Several user-visible strings in `public/shared/admin.js` bypassed the i18n system and stayed in English regardless of the user's selected locale — and leaked into browser-printed PDFs. The admin-side renderer had drifted from the public-side renderer in `public/shared/scripts.js`, which already routed the same strings through `t(...)`. All call sites now go through `t(...)`:
+    - The "View →" link on grid- and list-layout custom-section items (reused existing `view_link` key).
+    - The "Learn More →" link on cards-layout custom-section items (reused existing `learn_more` key).
+    - The "Manage Items" button at the bottom of every custom section.
+    - The `title` tooltips on the per-row action controls — Toggle Visibility (reused existing `action.toggle_visibility` key), Edit, Delete, and the drag handle — across Experience, Certifications, Education, Skills, Projects, and custom-section item rows.
+
+  Added four new keys (`action.manage_items`, `action.edit`, `action.delete`, `action.drag_to_reorder`) to all 8 locale files (en, de, fr, nl, es, it, pt, zh) so key parity is preserved (enforced by `tests/frontend.test.js`).
+
 ## [1.49.1] - 2026-05-02
 
 ### Changed
