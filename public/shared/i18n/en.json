@@ -309,6 +309,8 @@
     "datasets.make_private": "Make private",
     "datasets.make_shared": "Make shared",
     "datasets.preview": "Preview",
+    "preview.banner_text": "Preview Mode — This is a saved version and not publicly accessible",
+    "preview.back_to_admin": "Back to Admin",
     "datasets.copy_url": "Copy URL",
     "datasets.legend.radio": "select which dataset visitors see at your root URL",
     "datasets.legend.toggle": "share other datasets at their own /v/slug URL",

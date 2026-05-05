@@ -519,6 +519,8 @@
     "datasets.make_private": "Rendi privato",
     "datasets.make_shared": "Condividi",
     "datasets.preview": "Anteprima",
+    "preview.banner_text": "Modalità anteprima — Questa è una versione salvata e non è accessibile pubblicamente",
+    "preview.back_to_admin": "Torna all'amministrazione",
     "datasets.copy_url": "Copia URL",
     "ats.english_headers": "Intestazioni sezione in inglese",
     "datasets.legend_default": "Mostrato sul sito pubblico",
