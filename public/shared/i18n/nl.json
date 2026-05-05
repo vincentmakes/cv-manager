@@ -519,6 +519,8 @@
     "datasets.make_private": "Privé maken",
     "datasets.make_shared": "Delen",
     "datasets.preview": "Voorbeeld",
+    "preview.banner_text": "Voorbeeldmodus — Dit is een opgeslagen versie en niet publiekelijk toegankelijk",
+    "preview.back_to_admin": "Terug naar beheer",
     "datasets.copy_url": "URL kopiëren",
     "ats.english_headers": "Sectiekoppen in het Engels",
     "datasets.legend_default": "Weergegeven op de publieke site",

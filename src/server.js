@@ -287,6 +287,201 @@ function isTrackingConsentRequired() {
     } catch (e) { return false; }
 }
 
+function escapeHtmlServer(text) {
+    if (text == null) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Pull the current live CV into the same shape as a saved-dataset blob so
+// the SSR helper has one input format to deal with.
+function gatherLiveCvData() {
+    try {
+        const profile = db.prepare('SELECT name, initials, title, subtitle, bio, location, linkedin, languages, profile_picture_enabled, picture_filename FROM profile WHERE id = 1').get() || {};
+        const experiences = db.prepare('SELECT id, job_title, company_name, start_date, end_date, location, country_code, highlights, summary, logo_filename FROM experiences WHERE visible = 1 ORDER BY sort_order ASC, start_date DESC').all().map(e => ({ ...e, highlights: e.highlights ? JSON.parse(e.highlights) : [] }));
+        const certifications = db.prepare('SELECT name, provider, issue_date, expiry_date, credential_id, logo_filename FROM certifications WHERE visible = 1 ORDER BY sort_order ASC, issue_date DESC').all();
+        const education = db.prepare('SELECT degree_title, institution_name, start_date, end_date, description, logo_filename FROM education WHERE visible = 1 ORDER BY sort_order ASC, end_date DESC').all();
+        const skillCategories = db.prepare('SELECT id, name, icon FROM skill_categories WHERE visible = 1 ORDER BY sort_order ASC').all();
+        const skillRows = db.prepare('SELECT * FROM skills ORDER BY sort_order ASC').all();
+        const skills = skillCategories.map(cat => ({ ...cat, skills: skillRows.filter(s => s.category_id === cat.id).map(s => s.name) }));
+        const projects = db.prepare('SELECT title, description, technologies, link FROM projects WHERE visible = 1 ORDER BY sort_order ASC').all().map(p => ({ ...p, technologies: p.technologies ? JSON.parse(p.technologies) : [] }));
+        const sectionRows = db.prepare('SELECT section_name, visible FROM section_visibility').all();
+        const sectionVisibility = {};
+        sectionRows.forEach(s => { sectionVisibility[s.section_name] = !!s.visible; });
+        return { profile, experiences, certifications, education, skills, projects, sectionVisibility };
+    } catch (err) {
+        return null;
+    }
+}
+
+// Server-render the CV body into the public template before sending. The
+// client JS hydrates the same nodes on load (overwriting our HTML), so this
+// only affects what crawlers and JS-disabled visitors see.
+//
+// Why this exists: Googlebot does not always run the page's JavaScript on
+// low-authority subdomains. Without SSR, the public homepage was a near-empty
+// shell with `<h1>Loading…</h1>` and empty section containers — Google
+// classified it as thin content and silently deindexed it. SSR gives crawlers
+// real CV text on first byte so the page can be indexed properly.
+function injectPublicBodySSR(html, data) {
+    if (!data) return html;
+    const e = escapeHtmlServer;
+    const profile = data.profile || {};
+    const sectionVisibility = data.sectionVisibility || {};
+
+    const name = profile.name ? e(profile.name) : '';
+    if (name) {
+        html = html.replace(
+            /<h1 class="profile-name" id="profileName" itemprop="name">[^<]*<\/h1>/,
+            `<h1 class="profile-name" id="profileName" itemprop="name">${name}</h1>`
+        );
+    }
+    if (profile.title) {
+        html = html.replace(
+            /<p class="profile-title" id="profileTitle" itemprop="jobTitle"><\/p>/,
+            `<p class="profile-title" id="profileTitle" itemprop="jobTitle">${e(profile.title)}</p>`
+        );
+    }
+    if (profile.subtitle) {
+        html = html.replace(
+            /<p class="profile-subtitle" id="profileSubtitle"><\/p>/,
+            `<p class="profile-subtitle" id="profileSubtitle">${e(profile.subtitle)}</p>`
+        );
+    }
+
+    const badges = [];
+    if (profile.location) badges.push(`<span class="contact-badge" itemprop="address">${e(profile.location)}</span>`);
+    if (profile.linkedin) badges.push(`<a href="${e(profile.linkedin)}" class="contact-badge" target="_blank" rel="noopener" itemprop="url">LinkedIn</a>`);
+    if (profile.languages) badges.push(`<span class="contact-badge">${e(profile.languages)}</span>`);
+    if (badges.length) {
+        html = html.replace(
+            /<address class="contact-badges" id="contactBadges"><\/address>/,
+            `<address class="contact-badges" id="contactBadges">${badges.join('')}</address>`
+        );
+    }
+
+    if (profile.bio) {
+        const bioText = stripBoldMarkers(profile.bio);
+        const aboutHtml = bioText.split(/\n\s*\n/).map(p => `<p>${e(p).replace(/\n/g, '<br>')}</p>`).join('');
+        html = html.replace(
+            /<div class="about-text" id="aboutText" itemprop="description"><\/div>/,
+            `<div class="about-text" id="aboutText" itemprop="description">${aboutHtml}</div>`
+        );
+    }
+
+    const experiences = (data.experiences || []).filter(x => x.visible !== false);
+    if (experiences.length) {
+        const expHtml = experiences.map(exp => {
+            const period = formatPeriod(exp.start_date, exp.end_date);
+            const summary = exp.summary ? `<div class="item-summary">${e(stripBoldMarkers(exp.summary))}</div>` : '';
+            const highlights = Array.isArray(exp.highlights) && exp.highlights.length
+                ? `<ul class="item-highlights">${exp.highlights.map(h => `<li>${e(stripBoldMarkers(h))}</li>`).join('')}</ul>`
+                : '';
+            const location = exp.location ? `<div class="item-location">${e(exp.location)}</div>` : '';
+            return `<article class="item-card" itemscope itemtype="https://schema.org/WorkExperience">
+                <div class="item-header">
+                    <div>
+                        <h3 class="item-title" itemprop="jobTitle">${e(exp.job_title || '')}</h3>
+                        <div class="item-subtitle"><span itemprop="worksFor">${e(exp.company_name || '')}</span></div>
+                    </div>
+                    <span class="item-date">${e(period)}</span>
+                </div>
+                ${location}
+                ${summary}
+                ${highlights}
+            </article>`;
+        }).join('');
+        html = html.replace(
+            /<div class="items-list" id="experienceList"><\/div>/,
+            `<div class="items-list" id="experienceList">${expHtml}</div>`
+        );
+    }
+
+    const certs = (data.certifications || []).filter(c => c.visible !== false);
+    if (certs.length) {
+        const certHtml = certs.map(cert => `
+            <article class="cert-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+                <div class="cert-content">
+                    <div class="cert-header">
+                        <div class="cert-name" itemprop="name">${e(cert.name || '')}</div>
+                    </div>
+                    <time class="cert-date" itemprop="dateCreated">${e(formatDateShort(cert.issue_date) || '')}</time>
+                    <div class="cert-provider" itemprop="issuedBy">${e(cert.provider || '')}</div>
+                </div>
+            </article>`).join('');
+        html = html.replace(
+            /<div class="cert-grid" id="certGrid"><\/div>/,
+            `<div class="cert-grid" id="certGrid">${certHtml}</div>`
+        );
+    }
+
+    const edu = (data.education || []).filter(x => x.visible !== false);
+    if (edu.length) {
+        const eduHtml = edu.map(item => {
+            const period = formatPeriod(item.start_date, item.end_date);
+            const desc = item.description ? `<div class="item-location">${e(stripBoldMarkers(item.description))}</div>` : '';
+            return `<article class="item-card" itemscope itemtype="https://schema.org/EducationalOccupationalCredential">
+                <div class="item-header">
+                    <div>
+                        <h3 class="item-title" itemprop="name">${e(item.degree_title || '')}</h3>
+                        <div class="item-subtitle"><span itemprop="name">${e(item.institution_name || '')}</span></div>
+                    </div>
+                    <span class="item-date">${e(period)}</span>
+                </div>
+                ${desc}
+            </article>`;
+        }).join('');
+        html = html.replace(
+            /<div class="items-list" id="educationList"><\/div>/,
+            `<div class="items-list" id="educationList">${eduHtml}</div>`
+        );
+    }
+
+    const skillCats = (data.skills || []).filter(s => s.visible !== false);
+    if (skillCats.length) {
+        const skillsHtml = skillCats.map(cat => `
+            <div class="skill-category">
+                <div class="skill-category-title">${e(cat.name || '')}</div>
+                <div class="skill-tags">${(cat.skills || []).map(s => `<span class="skill-tag">${e(s)}</span>`).join('')}</div>
+            </div>`).join('');
+        html = html.replace(
+            /<div class="skills-grid" id="skillsGrid"><\/div>/,
+            `<div class="skills-grid" id="skillsGrid">${skillsHtml}</div>`
+        );
+    }
+
+    const projects = (data.projects || []).filter(p => p.visible !== false);
+    if (projects.length) {
+        const projHtml = projects.map(p => `
+            <article class="project-card" itemscope itemtype="https://schema.org/CreativeWork">
+                <div class="project-header">
+                    <h3 class="project-title" itemprop="name">${e(p.title || '')}</h3>
+                </div>
+                <div class="project-description" itemprop="description">${e(stripBoldMarkers(p.description || ''))}</div>
+                <div class="tech-tags">${(p.technologies || []).map(t => `<span class="tech-tag">${e(t)}</span>`).join('')}</div>
+            </article>`).join('');
+        html = html.replace(
+            /<div class="projects-grid" id="projectsGrid"><\/div>/,
+            `<div class="projects-grid" id="projectsGrid">${projHtml}</div>`
+        );
+    }
+
+    Object.keys(sectionVisibility).forEach(key => {
+        if (sectionVisibility[key] === false) {
+            const safeKey = String(key).replace(/[^a-z0-9_-]/gi, '');
+            if (!safeKey) return;
+            const re = new RegExp(`<section class="section" id="section-${safeKey}"`, 'g');
+            html = html.replace(re, `<section class="section is-hidden" style="display:none" id="section-${safeKey}"`);
+        }
+    });
+
+    return html;
+}
+
 function servePublicIndex(req, res) {
     try {
         // Check if a default dataset exists — serve from it instead of live DB
@@ -339,16 +534,23 @@ function servePublicIndex(req, res) {
             const datasetScript = `<script>window.DATASET_ID = ${defaultDataset.id}; window.DATASET_SLUG = "${defaultDataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_IS_DEFAULT = true; window.DATASET_THEME = ${JSON.stringify(datasetTheme)};${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
             html = html.replace('</head>', `${datasetScript}</head>`);
 
+            html = injectPublicBodySSR(html, data);
             return res.type('html').send(html);
         }
 
         // Fallback: serve from live DB (no default dataset set)
-        const profile = db.prepare('SELECT name, title, bio FROM profile WHERE id = 1').get();
-        const name = profile?.name || 'CV';
-        const bio = profile?.bio || 'Professional CV';
+        const liveData = gatherLiveCvData();
+        const profile = liveData?.profile || {};
+        const name = profile.name || 'CV';
+        const bio = profile.bio || 'Professional CV';
         const description = stripBoldMarkers(bio).substring(0, 160).replace(/\n/g, ' ');
+        const liveLang = (() => {
+            try { return db.prepare('SELECT value FROM settings WHERE key = ?').get('language')?.value || 'en'; }
+            catch (e) { return 'en'; }
+        })();
 
         let html = readPublicIndexHtml();
+        html = html.replace(/<html lang="[^"]*"/, `<html lang="${liveLang}"`);
         html = html.replace(/<title>[^<]*<\/title>/, `<title>${name} - CV</title>`);
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">`);
 
@@ -371,6 +573,7 @@ function servePublicIndex(req, res) {
         const themeScript = `<script>window.DATASET_THEME = ${JSON.stringify(fallbackTheme)};</script>`;
         html = html.replace('</head>', `${themeScript}</head>`);
 
+        html = injectPublicBodySSR(html, liveData);
         res.type('html').send(html);
     } catch (err) { res.type('html').send(readPublicIndexHtml()); }
 }
@@ -413,6 +616,7 @@ function serveDatasetPage(req, res, lang) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
 
+        html = injectPublicBodySSR(html, data);
         res.type('html').send(html);
     } catch (err) {
         if (err.message?.includes('no such column')) return res.status(404).send('Not found');

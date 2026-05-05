@@ -519,6 +519,8 @@
     "datasets.make_private": "设为私密",
     "datasets.make_shared": "设为共享",
     "datasets.preview": "预览",
+    "preview.banner_text": "预览模式 — 这是已保存的版本，未公开访问",
+    "preview.back_to_admin": "返回管理后台",
     "datasets.copy_url": "复制链接",
     "ats.english_headers": "章节标题使用英文",
     "datasets.legend_default": "显示在公开网站上",

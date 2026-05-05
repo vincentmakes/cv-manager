@@ -29,18 +29,6 @@
         <div class="public-lang-dropdown" id="publicLangDropdown"></div>
     </div>
 
-    <!-- Preview Banner (only shown for versioned dataset URLs) -->
-    <div class="preview-banner no-print" id="previewBanner" style="display: none;">
-        <div class="preview-banner-content">
-            <span class="material-symbols-outlined" style="font-size:18px">visibility</span>
-            <span class="preview-banner-text">Preview Mode — This is a saved version and not publicly accessible</span>
-        </div>
-        <a href="/" class="preview-banner-btn">
-            <span class="material-symbols-outlined" style="font-size:14px">arrow_back</span>
-            Back to Admin
-        </a>
-    </div>
-    
     <div class="container" role="main">
         <!-- ATS-friendly hidden text version -->
         <div id="ats-content" class="ats-only" aria-hidden="true"></div>
@@ -295,9 +283,11 @@
                     return;
                 }
                 
-                // Show preview banner only in admin preview mode (not on public-facing versioned URLs)
+                // Show preview banner only in admin preview mode (not on public-facing versioned URLs).
+                // Banner DOM is built here rather than shipped in the HTML so the banner copy
+                // never appears in raw HTML on canonical public pages (a soft-404 SEO signal).
                 if (window.DATASET_PREVIEW) {
-                    document.getElementById('previewBanner').style.display = 'flex';
+                    injectPreviewBanner();
                     document.body.classList.add('has-preview-banner');
                 }
                 
@@ -373,6 +363,24 @@
             }
         }
         
+        function injectPreviewBanner() {
+            if (document.getElementById('previewBanner')) return;
+            const banner = document.createElement('div');
+            banner.className = 'preview-banner no-print';
+            banner.id = 'previewBanner';
+            banner.style.display = 'flex';
+            banner.innerHTML = `
+                <div class="preview-banner-content">
+                    <span class="material-symbols-outlined" style="font-size:18px">visibility</span>
+                    <span class="preview-banner-text">${escapeHtml(t('preview.banner_text'))}</span>
+                </div>
+                <a href="/" class="preview-banner-btn">
+                    <span class="material-symbols-outlined" style="font-size:14px">arrow_back</span>
+                    ${escapeHtml(t('preview.back_to_admin'))}
+                </a>`;
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+
         // Render functions for dataset data
         function renderProfileFromData(p) {
             if (!p) return;

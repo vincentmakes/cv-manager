@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.3] - 2026-05-05
+
+### Fixed
+- **Public site was being deindexed by Google after the multi-language rollout.** Two issues combined into a strong "don't index" signal:
+    1. The admin "Preview Mode — This is a saved version and not publicly accessible" banner was hardcoded into `public-readonly/index.html` and only hidden via CSS. Crawlers read hidden text, so every public page advertised itself as not publicly accessible — a textbook soft-404 signal that caused Google to drop the URL even after re-indexing requests.
+    2. The public homepage was a near-empty shell server-side: `<h1>Loading…</h1>` with empty section containers. All CV content was hydrated client-side, but Googlebot frequently skips the second render pass on low-authority subdomains and treated the page as thin content.
+
+  The preview banner DOM is now built and inserted from JavaScript only when `window.DATASET_PREVIEW` is true (admin preview context), so its text never appears in HTML served to public visitors. `servePublicIndex` and `serveDatasetPage` in `src/server.js` now server-render the profile, about, experience, certifications, education, skills, and projects sections into the HTML before sending — the client JS still hydrates the same nodes on load, so behaviour is unchanged for users while crawlers see real CV content on first byte. Also set `<html lang>` correctly in the live-DB fallback path (it was already correct on the default-dataset path).
+
 ## [1.49.2] - 2026-05-04
 
 ### Fixed
