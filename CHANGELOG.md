@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.4] - 2026-05-06
+
+### Added
+- **`<link rel="canonical">` on public CV pages.** Crawlers were free to index the same CV under multiple URL variants (http vs https, with/without trailing query strings, alternate hostnames behind reverse proxies). The public root and the live-CV fallback now emit a canonical link derived from the request — honoring `X-Forwarded-Proto` and `X-Forwarded-Host` the same way `/sitemap.xml` and `/robots.txt` already do, so no extra config is required. `/v/:slug` pages emit a canonical only when `slugsIndex` is enabled; when slugs are `noindex`, the tag is intentionally omitted. Implemented as a single `buildCanonicalTag(req)` helper in `src/server.js` reused at all three SSR sites.
+
 ## [1.49.3] - 2026-05-05
 
 ### Fixed

@@ -2634,6 +2634,93 @@ describe('Backend API', () => {
         });
     });
 
+    describe('Canonical link injection', () => {
+        it('emits canonical from request host on public root', async () => {
+            // Node's fetch reserves the Host header, so simulate the deployed-host
+            // case via X-Forwarded-Host (the realistic reverse-proxy path).
+            const res = await fetch(PUBLIC_URL, {
+                headers: { 'X-Forwarded-Host': 'cv.example.com' },
+            });
+            assert.strictEqual(res.status, 200);
+            const text = await res.text();
+            assert.match(text, /<link rel="canonical" href="http:\/\/cv\.example\.com\/">/);
+        });
+
+        it('honors X-Forwarded-Proto and X-Forwarded-Host', async () => {
+            const res = await fetch(PUBLIC_URL, {
+                headers: {
+                    'X-Forwarded-Proto': 'https',
+                    'X-Forwarded-Host': 'cv.example.com',
+                },
+            });
+            assert.strictEqual(res.status, 200);
+            const text = await res.text();
+            assert.match(text, /<link rel="canonical" href="https:\/\/cv\.example\.com\/">/);
+        });
+
+        it('omits canonical on /v/:slug when slugsIndex is disabled', async () => {
+            // Default state — slugsIndex unset
+            const createRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Canonical NoIndex' }),
+            });
+            const created = await createRes.json();
+            await fetch(`${BASE_URL}/api/datasets/${created.id}/save`, { method: 'POST' });
+            await fetch(`${BASE_URL}/api/datasets/${created.id}/public`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_public: true }),
+            });
+
+            const res = await fetch(`${PUBLIC_URL}/v/${created.slug}`, {
+                headers: { 'X-Forwarded-Host': 'cv.example.com' },
+            });
+            assert.strictEqual(res.status, 200);
+            const text = await res.text();
+            assert.doesNotMatch(text, /<link rel="canonical"/);
+            assert.match(text, /<meta name="robots"[^>]*content="noindex/);
+
+            await fetch(`${BASE_URL}/api/datasets/${created.id}`, { method: 'DELETE' });
+        });
+
+        it('emits canonical on /v/:slug when slugsIndex is enabled', async () => {
+            await fetch(`${BASE_URL}/api/settings/slugsIndex`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: 'true' }),
+            });
+
+            const createRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Canonical Indexable' }),
+            });
+            const created = await createRes.json();
+            await fetch(`${BASE_URL}/api/datasets/${created.id}/save`, { method: 'POST' });
+            await fetch(`${BASE_URL}/api/datasets/${created.id}/public`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_public: true }),
+            });
+
+            const res = await fetch(`${PUBLIC_URL}/v/${created.slug}`, {
+                headers: { 'X-Forwarded-Host': 'cv.example.com' },
+            });
+            assert.strictEqual(res.status, 200);
+            const text = await res.text();
+            const expected = new RegExp(`<link rel="canonical" href="http://cv\\.example\\.com/v/${created.slug}">`);
+            assert.match(text, expected);
+
+            await fetch(`${BASE_URL}/api/datasets/${created.id}`, { method: 'DELETE' });
+            await fetch(`${BASE_URL}/api/settings/slugsIndex`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: 'false' }),
+            });
+        });
+    });
+
     describe('Tracking consent gating', () => {
         const SNIPPET = '<script>window.__cvTrackingFlag = "yes";</script>';
 
