@@ -2634,6 +2634,67 @@ describe('Backend API', () => {
         });
     });
 
+    describe('robots.txt API allow-list', () => {
+        it('does not block public read-only API paths from JS-rendering crawlers', async () => {
+            // Make sure the indexable branch is exercised.
+            await fetch(`${BASE_URL}/api/settings/robotsMeta`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: 'index, follow' }),
+            });
+
+            const res = await fetch(`${PUBLIC_URL}/robots.txt`);
+            assert.strictEqual(res.status, 200);
+            const text = await res.text();
+
+            // Sanity: the rule the public site relies on for hydration must not
+            // be a bare blanket block. The Disallow may still appear as the
+            // catch-all fallback, but explicit Allow rules for the read-only
+            // endpoints must precede it (longer-prefix Allow wins for Google).
+            const requiredAllows = [
+                '/api/profile',
+                '/api/sections',
+                '/api/settings',
+                '/api/experiences',
+                '/api/certifications',
+                '/api/education',
+                '/api/skills',
+                '/api/projects',
+                '/api/timeline',
+                '/api/custom-sections',
+                '/api/cv',
+                '/api/datasets/slug/',
+                '/api/datasets/id/',
+            ];
+            for (const path of requiredAllows) {
+                assert.ok(
+                    text.includes(`Allow: ${path}`),
+                    `robots.txt is missing Allow rule for ${path}; full body:\n${text}`,
+                );
+            }
+        });
+
+        it('still emits a single global Disallow when robotsMeta is noindex', async () => {
+            await fetch(`${BASE_URL}/api/settings/robotsMeta`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: 'noindex, nofollow' }),
+            });
+
+            const res = await fetch(`${PUBLIC_URL}/robots.txt`);
+            assert.strictEqual(res.status, 200);
+            const text = await res.text();
+            assert.match(text, /^User-agent: \*\nDisallow: \/$/);
+
+            // Restore default so subsequent tests see the indexable branch.
+            await fetch(`${BASE_URL}/api/settings/robotsMeta`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: 'index, follow' }),
+            });
+        });
+    });
+
     describe('Canonical link injection', () => {
         it('emits canonical from request host on public root', async () => {
             // Node's fetch reserves the Host header, so simulate the deployed-host
