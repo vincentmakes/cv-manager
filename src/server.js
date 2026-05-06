@@ -307,6 +307,42 @@ function buildCanonicalTag(req) {
     return `    <link rel="canonical" href="${escapeHtmlServer(url)}">`;
 }
 
+// Public read-only API paths the public site fetches client-side. Listed here
+// (rather than just dropping `Disallow: /api/`) so that JS-rendering crawlers
+// like Googlebot can hydrate the page while any future `/api/*` route that
+// isn't on this list stays blocked by the trailing `Disallow: /api/` — most
+// specific match wins per Google's robots.txt rules. Keep in sync with the
+// `publicApp.get('/api/...')` routes below.
+const PUBLIC_API_ALLOW_PATHS = [
+    '/api/profile',
+    '/api/sections',
+    '/api/settings',
+    '/api/experiences',
+    '/api/certifications',
+    '/api/education',
+    '/api/skills',
+    '/api/projects',
+    '/api/timeline',
+    '/api/custom-sections',
+    '/api/layout-types',
+    '/api/social-platforms',
+    '/api/cv',
+    '/api/datasets/slug/',
+    '/api/datasets/id/'
+];
+
+function buildRobotsTxt(req) {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+    const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
+    const metaValue = robotsMeta?.value || 'index, follow';
+    if (metaValue.includes('noindex')) {
+        return `User-agent: *\nDisallow: /`;
+    }
+    const allows = PUBLIC_API_ALLOW_PATHS.map(p => `Allow: ${p}`).join('\n');
+    return `User-agent: *\nAllow: /\n${allows}\nDisallow: /api/\nSitemap: ${protocol}://${host}/sitemap.xml`;
+}
+
 // Pull the current live CV into the same shape as a saved-dataset blob so
 // the SSR helper has one input format to deal with.
 function gatherLiveCvData() {
@@ -1978,17 +2014,8 @@ if (PUBLIC_ONLY) {
     });
 
     publicApp.get('/robots.txt', (req, res) => {
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-        const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
-        const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta');
-        const metaValue = robotsMeta?.value || 'index, follow';
-        const isNoIndex = metaValue.includes('noindex');
         res.setHeader('Content-Type', 'text/plain');
-        if (isNoIndex) {
-            res.send(`User-agent: *\nDisallow: /`);
-        } else {
-            res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`);
-        }
+        res.send(buildRobotsTxt(req));
     });
 
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
@@ -4400,7 +4427,7 @@ if (PUBLIC_ONLY) {
         next();
     });
     publicApp.get('/sitemap.xml', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; res.setHeader('Content-Type', 'application/xml'); res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${protocol}://${host}/</loc><lastmod>${new Date().toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>`); });
-    publicApp.get('/robots.txt', (req, res) => { const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https'; const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'; const robotsMeta = db.prepare('SELECT value FROM settings WHERE key = ?').get('robotsMeta'); const metaValue = robotsMeta?.value || 'index, follow'; const isNoIndex = metaValue.includes('noindex'); res.setHeader('Content-Type', 'text/plain'); if (isNoIndex) { res.send(`User-agent: *\nDisallow: /`); } else { res.send(`User-agent: *\nAllow: /\nSitemap: ${protocol}://${host}/sitemap.xml\nDisallow: /api/`); } });
+    publicApp.get('/robots.txt', (req, res) => { res.setHeader('Content-Type', 'text/plain'); res.send(buildRobotsTxt(req)); });
     publicApp.use('/shared', express.static(path.join(__dirname, '../public/shared')));
     // Favicon and icons (public uses icon-public.png with eye badge)
     const publicIconPathB = path.join(__dirname, '../icon-public.png');

@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.49.5] - 2026-05-06
+
+### Fixed
+- **Googlebot reported `Blocked by robots.txt` for public read-only API endpoints** (e.g. `/api/datasets/id/:id`, `/api/settings/language`). The public site hydrates client-side from `/api/*` JSON, so a JS-rendering crawler that can't fetch those endpoints sees the SSR shell only and skips re-render — degrading indexing. The public server's `robots.txt` previously had a blanket `Disallow: /api/`, which blocked all of it. The public server only ever exposes a curated set of GET-only, rate-limited, sensitive-field-filtered endpoints, so it's safe to expose those to crawlers. `robots.txt` now emits explicit `Allow:` rules for each public read-only API path (`/api/profile`, `/api/sections`, `/api/settings`, `/api/experiences`, `/api/certifications`, `/api/education`, `/api/skills`, `/api/projects`, `/api/timeline`, `/api/custom-sections`, `/api/layout-types`, `/api/social-platforms`, `/api/cv`, `/api/datasets/slug/`, `/api/datasets/id/`) before the trailing `Disallow: /api/`, so the longest-prefix-wins rule keeps anything not on the allow-list blocked by default. Both `robots.txt` handlers (the dual-server and PUBLIC_ONLY paths) now share a single `buildRobotsTxt(req)` helper in `src/server.js` so they can't drift, with regression tests covering both the indexable and `noindex` branches.
+
 ## [1.49.4] - 2026-05-06
 
 ### Added
