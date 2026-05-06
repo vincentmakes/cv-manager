@@ -297,6 +297,16 @@ function escapeHtmlServer(text) {
         .replace(/'/g, '&#39;');
 }
 
+// Build a <link rel="canonical"> tag from the request, honoring reverse-proxy
+// headers (X-Forwarded-Proto / X-Forwarded-Host) the same way sitemap.xml /
+// robots.txt do. Uses req.path so query strings and fragments are stripped.
+function buildCanonicalTag(req) {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+    const url = `${protocol}://${host}${req.path}`;
+    return `    <link rel="canonical" href="${escapeHtmlServer(url)}">`;
+}
+
 // Pull the current live CV into the same shape as a saved-dataset blob so
 // the SSR helper has one input format to deal with.
 function gatherLiveCvData() {
@@ -528,6 +538,9 @@ function servePublicIndex(req, res) {
                 html = html.replace('<head>', `<head>\n${trackingCode}`);
             }
 
+            // Inject canonical link derived from the request (honors reverse-proxy headers)
+            html = html.replace('</head>', `${buildCanonicalTag(req)}\n</head>`);
+
             // Inject default dataset ID and language info (no DATASET_PREVIEW = no preview banner)
             const siblings = getDatasetSiblings(defaultDataset);
             const datasetTheme = data.theme || gatherTheme();
@@ -568,6 +581,9 @@ function servePublicIndex(req, res) {
             html = html.replace('<head>', `<head>\n${trackingCode}`);
         }
 
+        // Inject canonical link derived from the request (honors reverse-proxy headers)
+        html = html.replace('</head>', `${buildCanonicalTag(req)}\n</head>`);
+
         // Inject theme so the public page can apply font/gradient before paint
         const fallbackTheme = gatherTheme();
         const themeScript = `<script>window.DATASET_THEME = ${JSON.stringify(fallbackTheme)};</script>`;
@@ -598,17 +614,20 @@ function serveDatasetPage(req, res, lang) {
         const ogTags = `\n    <meta property="og:title" content="${name} - CV (${dataset.name})">\n    <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">\n    <meta property="og:type" content="profile">`;
         html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}">${ogTags}`);
 
+        // Apply noindex if slugsIndex setting is not enabled; only emit canonical when indexable
+        const slugsIndexSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('slugsIndex');
+        const slugIsIndexable = slugsIndexSetting && slugsIndexSetting.value === 'true';
+        if (!slugIsIndexable) {
+            html = html.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" id="metaRobots" content="noindex, nofollow">');
+        } else {
+            html = html.replace('</head>', `${buildCanonicalTag(req)}\n</head>`);
+        }
+
         // Inject dataset context with language info and exact ID
         const siblings = getDatasetSiblings(dataset);
         const datasetTheme = data.theme || gatherTheme();
         const datasetScript = `<script>window.DATASET_ID = ${dataset.id}; window.DATASET_SLUG = "${dataset.slug}"; window.DATASET_LANG = "${dsLang}"; window.DATASET_THEME = ${JSON.stringify(datasetTheme)};${siblings.length > 1 ? ` window.DATASET_SIBLINGS = ${JSON.stringify(siblings)};` : ''}</script>`;
         html = html.replace('</head>', `${datasetScript}</head>`);
-
-        // Apply noindex if slugsIndex setting is not enabled
-        const slugsIndexSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('slugsIndex');
-        if (!slugsIndexSetting || slugsIndexSetting.value !== 'true') {
-            html = html.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" id="metaRobots" content="noindex, nofollow">');
-        }
 
         // Inject tracking code right after <head> (server-side for GA verification)
         const trackingCode = getTrackingCode();
