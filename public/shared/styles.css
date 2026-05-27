@@ -2042,19 +2042,24 @@ body.has-preview-banner .container {
         margin: 0;
     }
     /* Compact print: project link sits inline right after the title as a small,
-       borderless icon. Without this override .project-link's display:flex +
-       28px box + grey button background bumps it onto its own line.
-       The Material icon span has an inline style="font-size:14px" from
-       materialIcon(), so the !important is required to scale it down. */
+       borderless icon. Without this override .project-link's default display:flex
+       + 28px box + grey button background bumps it onto its own line.
+       Notes on PDF clickability (Safari "Save as PDF" + iOS Preview):
+       — The PDF generator attaches the hyperlink annotation to the anchor's
+         layout box. With display:inline or width:auto inline-block the
+         annotation can collapse and the link becomes unclickable.
+         display:inline-flex + explicit width/height gives the generator a
+         concrete rectangle, which is what iOS Preview needs.
+       — The Material icon span has an inline style="font-size:14px" from
+         materialIcon(), so !important is required to scale it down. */
     #section-projects.print-compact .project-link {
-        display: inline-block;
-        width: auto;
-        height: auto;
-        margin: 0 2px;
-        /* Expand the clickable region without changing the visual size of the
-           glyph — the PDF generator uses the anchor's box as the hyperlink hit
-           area, and a 10×10 region is too small to click comfortably. */
-        padding: 2px 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        margin: 0 3px;
+        padding: 0;
         background: none;
         border-radius: 0;
         vertical-align: middle;
