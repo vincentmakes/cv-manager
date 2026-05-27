@@ -2043,24 +2043,28 @@ body.has-preview-banner .container {
     }
     /* Compact print: project link sits inline right after the title as a small,
        borderless icon. Without this override .project-link's display:flex +
-       28px box + grey button background bumps it onto its own line. */
+       28px box + grey button background bumps it onto its own line.
+       The Material icon span has an inline style="font-size:14px" from
+       materialIcon(), so the !important is required to scale it down. */
     #section-projects.print-compact .project-link {
-        display: inline;
+        display: inline-block;
         width: auto;
         height: auto;
-        margin: 0 0 0 4px;
+        margin: 0 4px;
         padding: 0;
         background: none;
         border-radius: 0;
-        vertical-align: baseline;
+        vertical-align: middle;
         color: var(--primary);
+        line-height: 1;
     }
     #section-projects.print-compact .project-link svg,
     #section-projects.print-compact .project-link .material-symbols-outlined {
-        width: 9px;
-        height: 9px;
-        font-size: 9px;
+        width: 10px !important;
+        height: 10px !important;
+        font-size: 10px !important;
         vertical-align: middle;
+        line-height: 1;
     }
     #section-projects.print-compact .project-description {
         display: inline;
