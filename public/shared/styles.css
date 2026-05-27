@@ -2050,8 +2050,11 @@ body.has-preview-banner .container {
         display: inline-block;
         width: auto;
         height: auto;
-        margin: 0 4px;
-        padding: 0;
+        margin: 0 2px;
+        /* Expand the clickable region without changing the visual size of the
+           glyph — the PDF generator uses the anchor's box as the hyperlink hit
+           area, and a 10×10 region is too small to click comfortably. */
+        padding: 2px 4px;
         background: none;
         border-radius: 0;
         vertical-align: middle;
