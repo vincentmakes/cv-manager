@@ -404,12 +404,9 @@
     border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: 14px;
-    background: #fff;
     transition: all 0.15s ease;
 }
 
-input[type="date"].form-input { background: #fff; color: var(--gray-700); }
-input[type="date"].form-input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
 
 .form-input:focus, .form-textarea:focus, .form-select:focus {
     outline: none;
