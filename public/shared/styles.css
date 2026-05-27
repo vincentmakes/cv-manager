@@ -2041,6 +2041,27 @@ body.has-preview-banner .container {
         font-weight: 700;
         margin: 0;
     }
+    /* Compact print: project link sits inline right after the title as a small,
+       borderless icon. Without this override .project-link's display:flex +
+       28px box + grey button background bumps it onto its own line. */
+    #section-projects.print-compact .project-link {
+        display: inline;
+        width: auto;
+        height: auto;
+        margin: 0 0 0 4px;
+        padding: 0;
+        background: none;
+        border-radius: 0;
+        vertical-align: baseline;
+        color: var(--primary);
+    }
+    #section-projects.print-compact .project-link svg,
+    #section-projects.print-compact .project-link .material-symbols-outlined {
+        width: 9px;
+        height: 9px;
+        font-size: 9px;
+        vertical-align: middle;
+    }
     #section-projects.print-compact .project-description {
         display: inline;
         font-size: 11px;
