@@ -2067,7 +2067,7 @@ body.has-preview-banner .container {
         display: none !important;
     }
     #section-projects.print-compact .project-link::after {
-        content: attr(href);
+        content: "{" attr(href) "}";
     }
     #section-projects.print-compact .project-description {
         display: inline;
