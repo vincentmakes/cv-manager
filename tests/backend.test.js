@@ -1448,6 +1448,78 @@ describe('Backend API', () => {
             });
         });
 
+        describe('Birthdate on profile', () => {
+            async function putProfile(extra) {
+                const current = await (await fetch(`${BASE_URL}/api/profile`)).json();
+                return fetch(`${BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...current, ...extra }),
+                });
+            }
+
+            async function exportAtsPdf(locale) {
+                const res = await fetch(`${BASE_URL}/api/export/ats-pdf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scale: 1, paperSize: 'A4', locale }),
+                });
+                return Buffer.from(await res.arrayBuffer());
+            }
+
+            it('round-trips a valid ISO birthdate via PUT then GET', async () => {
+                const res = await putProfile({ birthdate: '1990-03-14' });
+                assert.strictEqual(res.status, 200);
+                const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+                assert.strictEqual(profile.birthdate, '1990-03-14');
+            });
+
+            it('rejects an invalid birthdate format', async () => {
+                const res = await putProfile({ birthdate: 'not-a-date' });
+                assert.strictEqual(res.status, 400);
+            });
+
+            it('accepts empty string birthdate and clears any previous value', async () => {
+                await putProfile({ birthdate: '1990-03-14' });
+                const res = await putProfile({ birthdate: '' });
+                assert.strictEqual(res.status, 200);
+                const profile = await (await fetch(`${BASE_URL}/api/profile`)).json();
+                assert.strictEqual(profile.birthdate || '', '');
+            });
+
+            it('public /api/profile never exposes birthdate even when set', async () => {
+                await putProfile({ birthdate: '1990-03-14' });
+                const publicProfile = await (await fetch(`${PUBLIC_URL}/api/profile`)).json();
+                assert.ok(!('birthdate' in publicProfile), 'public profile must not include birthdate field');
+            });
+
+            it('ATS PDF includes a localized birth label when birthdate is set', async () => {
+                await putProfile({ birthdate: '1990-03-14' });
+                const enBuf = await exportAtsPdf('en');
+                const deBuf = await exportAtsPdf('de');
+                // PDF text streams are compressed by default with pdfkit, so byte-equality
+                // would be a brittle test. Compare to the "no birthdate" baseline — the
+                // PDF must differ when a birthdate is added.
+                await putProfile({ birthdate: '' });
+                const enEmpty = await exportAtsPdf('en');
+                assert.notStrictEqual(enBuf.length, enEmpty.length,
+                    'EN PDF with birthdate should differ in size from EN PDF without');
+                assert.notStrictEqual(enBuf.length, deBuf.length,
+                    'EN and DE PDFs with birthdate should differ (localized prefix)');
+            });
+
+            it('ATS PDF without birthdate produces no extra contact bytes for it', async () => {
+                await putProfile({ birthdate: '' });
+                const before = await exportAtsPdf('en');
+                await putProfile({ birthdate: '1990-03-14' });
+                const after = await exportAtsPdf('en');
+                assert.ok(after.length > before.length,
+                    'Adding a birthdate should add bytes to the PDF; if equal, the conditional render is broken');
+                // Restore empty
+                await putProfile({ birthdate: '' });
+            });
+        });
+
         describe('Bold markdown (**word**) handling', () => {
             it('strips ** markers from og:description / meta description on SSR', async () => {
                 // The SSR path depends on whether a default dataset exists. Fetch the

@@ -1478,6 +1478,11 @@ function profileForm(d) {
                 <input type="text" class="form-input" id="f-phone" value="${escapeHtml(d.phone || '')}">
             </div>
         </div>
+        <div class="form-group">
+            <label class="form-label">${t('form.birthdate')}</label>
+            <input type="date" class="form-input" id="f-birthdate" value="${escapeHtml(d.birthdate || '')}">
+            <div class="form-hint">${t('form.birthdate_hint')}</div>
+        </div>
     `;
 }
 
@@ -1757,6 +1762,7 @@ async function saveItem() {
                 linkedin: val('f-linkedin'),
                 email: val('f-email'),
                 phone: val('f-phone'),
+                birthdate: val('f-birthdate'),
                 visible: true,
                 profile_picture_enabled: checked('f-profilePictureEnabled'),
                 picture_propagate: propagate,

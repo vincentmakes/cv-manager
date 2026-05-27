@@ -2029,7 +2029,6 @@ body.has-preview-banner .container {
         break-inside: avoid;
     }
     #section-projects.print-compact .tech-tags,
-    #section-projects.print-compact .project-link,
     #section-projects.print-compact .drag-handle,
     #section-projects.print-compact .item-actions { display: none !important; }
     #section-projects.print-compact .project-header {
