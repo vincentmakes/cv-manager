@@ -1478,10 +1478,13 @@ function profileForm(d) {
                 <input type="text" class="form-input" id="f-phone" value="${escapeHtml(d.phone || '')}">
             </div>
         </div>
-        <div class="form-group">
-            <label class="form-label">${t('form.birthdate')}</label>
-            <input type="date" class="form-input" id="f-birthdate" value="${escapeHtml(d.birthdate || '')}">
-            <div class="form-hint">${t('form.birthdate_hint')}</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">${t('form.birthdate')}</label>
+                <input type="date" class="form-input" id="f-birthdate" value="${escapeHtml(d.birthdate || '')}">
+                <div class="form-hint">${t('form.birthdate_hint')}</div>
+            </div>
+            <div></div>
         </div>
     `;
 }

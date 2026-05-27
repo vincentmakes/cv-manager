@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.50.1] - 2026-05-27
+
+### Changed
+- **Birthdate input in the profile modal is now half-width** (matching email/phone) instead of stretching across the full row, and the native browser grey background on `<input type="date">` is overridden with an explicit white fill so it visually matches the other text inputs.
+
 ## [1.50.0] - 2026-05-27
 
 ### Added
