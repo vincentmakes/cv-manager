@@ -2041,38 +2041,33 @@ body.has-preview-banner .container {
         font-weight: 700;
         margin: 0;
     }
-    /* Compact print: project link sits inline right after the title as a small,
-       borderless icon. Without this override .project-link's default display:flex
-       + 28px box + grey button background bumps it onto its own line.
-       Notes on PDF clickability (Safari "Save as PDF" + iOS Preview):
-       — The PDF generator attaches the hyperlink annotation to the anchor's
-         layout box. With display:inline or width:auto inline-block the
-         annotation can collapse and the link becomes unclickable.
-         display:inline-flex + explicit width/height gives the generator a
-         concrete rectangle, which is what iOS Preview needs.
-       — The Material icon span has an inline style="font-size:14px" from
-         materialIcon(), so !important is required to scale it down. */
+    /* Compact print: print the project URL as visible text after the title
+       instead of an icon. The Material icon span is hidden and the anchor's
+       ::after pseudo-element emits the href as text — the resulting PDF link
+       annotation attaches to actual rendered glyphs, which is the most
+       reliably clickable form across PDF viewers (incl. iOS Preview).
+       The anchor itself stays inline so it doesn't force a line break. */
     #section-projects.print-compact .project-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 14px;
-        height: 14px;
-        margin: 0 3px;
+        display: inline;
+        margin: 0 0 0 4px;
         padding: 0;
         background: none;
         border-radius: 0;
-        vertical-align: middle;
-        color: var(--primary);
-        line-height: 1;
+        color: var(--gray-600);
+        font-size: 9px;
+        font-weight: 400;
+        text-decoration: none;
+        vertical-align: baseline;
+        line-height: inherit;
+        width: auto;
+        height: auto;
     }
     #section-projects.print-compact .project-link svg,
     #section-projects.print-compact .project-link .material-symbols-outlined {
-        width: 10px !important;
-        height: 10px !important;
-        font-size: 10px !important;
-        vertical-align: middle;
-        line-height: 1;
+        display: none !important;
+    }
+    #section-projects.print-compact .project-link::after {
+        content: attr(href);
     }
     #section-projects.print-compact .project-description {
         display: inline;
