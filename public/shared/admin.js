@@ -1481,7 +1481,7 @@ function profileForm(d) {
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">${t('form.birthdate')}</label>
-                <input type="text" class="form-input" id="f-birthdate" value="${escapeHtml(d.birthdate || '')}" placeholder="YYYY-MM-DD" pattern="\\d{4}-\\d{2}-\\d{2}" maxlength="10" inputmode="numeric" autocomplete="bday">
+                <input type="date" class="form-input form-input-date" id="f-birthdate" value="${escapeHtml(d.birthdate || '')}" autocomplete="bday">
                 <div class="form-hint">${t('form.birthdate_hint')}</div>
             </div>
             <div></div>
