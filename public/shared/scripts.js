@@ -26,6 +26,7 @@ const icons = {
     email: materialIcon('email', 14),
     phone: materialIcon('phone', 14),
     location: materialIcon('location_on', 14),
+    birthday: materialIcon('cake', 14),
     linkedin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
     languages: materialIcon('language', 14),
     link: materialIcon('open_in_new', 14),
@@ -781,6 +782,24 @@ function formatTimelinePeriod(item) {
     return item.period || '';
 }
 
+// Format an ISO YYYY-MM-DD birthdate for display using the active locale.
+// Returns '' for empty/invalid input so callers can skip rendering entirely.
+function formatBirthdate(value, locale) {
+    if (!value || typeof value !== 'string') return '';
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return '';
+    const year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return '';
+    // Construct date in UTC to avoid timezone shifting the day.
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const loc = locale || (typeof I18n !== 'undefined' && I18n.locale) || 'en';
+    try {
+        return new Intl.DateTimeFormat(loc, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(date);
+    } catch (_e) {
+        return new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(date);
+    }
+}
+
 // Load Profile (shared between admin and public)
 async function loadProfile(includePrivate = false) {
     const p = await api('/api/profile');
@@ -829,6 +848,10 @@ async function loadProfile(includePrivate = false) {
     const badges = [];
     if (includePrivate && p.email) badges.push(`<a href="mailto:${escapeHtml(p.email)}" class="contact-badge" itemprop="email">${icons.email} ${escapeHtml(p.email)}</a>`);
     if (includePrivate && p.phone) badges.push(`<a href="tel:${escapeHtml(p.phone)}" class="contact-badge" itemprop="telephone">${icons.phone} ${escapeHtml(p.phone)}</a>`);
+    if (includePrivate && p.birthdate) {
+        const formatted = formatBirthdate(p.birthdate);
+        if (formatted) badges.push(`<span class="contact-badge" itemprop="birthDate" content="${escapeHtml(p.birthdate)}">${icons.birthday} ${escapeHtml(formatted)}</span>`);
+    }
     if (p.location) badges.push(`<span class="contact-badge" itemprop="address">${icons.location} ${escapeHtml(p.location)}</span>`);
     if (p.linkedin) badges.push(`<a href="${escapeHtml(p.linkedin)}" class="contact-badge" target="_blank" rel="noopener" itemprop="url">${icons.linkedin} LinkedIn</a>`);
     if (p.languages) badges.push(`<span class="contact-badge">${icons.languages} ${escapeHtml(p.languages)}</span>`);

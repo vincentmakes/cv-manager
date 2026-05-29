@@ -2029,7 +2029,6 @@ body.has-preview-banner .container {
         break-inside: avoid;
     }
     #section-projects.print-compact .tech-tags,
-    #section-projects.print-compact .project-link,
     #section-projects.print-compact .drag-handle,
     #section-projects.print-compact .item-actions { display: none !important; }
     #section-projects.print-compact .project-header {
@@ -2041,6 +2040,34 @@ body.has-preview-banner .container {
         font-size: 11px;
         font-weight: 700;
         margin: 0;
+    }
+    /* Compact print: print the project URL as visible text after the title
+       instead of an icon. The Material icon span is hidden and the anchor's
+       ::after pseudo-element emits the href as text — the resulting PDF link
+       annotation attaches to actual rendered glyphs, which is the most
+       reliably clickable form across PDF viewers (incl. iOS Preview).
+       The anchor itself stays inline so it doesn't force a line break. */
+    #section-projects.print-compact .project-link {
+        display: inline;
+        margin: 0 0 0 4px;
+        padding: 0;
+        background: none;
+        border-radius: 0;
+        color: var(--gray-600);
+        font-size: 9px;
+        font-weight: 400;
+        text-decoration: none;
+        vertical-align: baseline;
+        line-height: inherit;
+        width: auto;
+        height: auto;
+    }
+    #section-projects.print-compact .project-link svg,
+    #section-projects.print-compact .project-link .material-symbols-outlined {
+        display: none !important;
+    }
+    #section-projects.print-compact .project-link::after {
+        content: "(" attr(href) ")";
     }
     #section-projects.print-compact .project-description {
         display: inline;

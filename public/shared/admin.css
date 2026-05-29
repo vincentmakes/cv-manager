@@ -404,8 +404,41 @@
     border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: 14px;
+    line-height: 1.2;
+    color: var(--gray-700);
+    background: #fff;
     transition: all 0.15s ease;
 }
+
+/* Normalize native <input type="date"> so it visually matches the other
+   .form-input text fields. Chromium renders the value through a shadow-DOM
+   ::-webkit-datetime-edit tree with its own line metrics, intrinsic
+   min-width, padding, and placeholder color — without these overrides the
+   field looks taller, wider and lighter than the surrounding inputs. */
+.form-input-date {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+}
+.form-input-date::-webkit-datetime-edit,
+.form-input-date::-webkit-datetime-edit-fields-wrapper,
+.form-input-date::-webkit-datetime-edit-text,
+.form-input-date::-webkit-datetime-edit-year-field,
+.form-input-date::-webkit-datetime-edit-month-field,
+.form-input-date::-webkit-datetime-edit-day-field {
+    color: inherit;
+    padding: 0;
+    line-height: 1.2;
+    font-family: inherit;
+    font-size: inherit;
+}
+.form-input-date::-webkit-calendar-picker-indicator {
+    opacity: 0.55;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 4px;
+}
+
 
 .form-input:focus, .form-textarea:focus, .form-select:focus {
     outline: none;

@@ -4,6 +4,14 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.50.0] - 2026-05-27
+
+### Added
+- **Date of birth field on profile** (#167). Common on CVs in many European countries, especially Germany. A new `birthdate` column on the `profile` table (added via automatic migration), edited from the profile modal with a native `<input type="date">` sized to half the modal width (matching the email and phone fields) and forced to a white background so it visually matches the other text inputs. When set, it renders as a contact badge in the admin view and as a localized "Born / Geb. / Né(e) le / …" line on the ATS PDF and static-site exports, formatted via `Intl.DateTimeFormat` in the active locale (e.g. "14. März 1990" in DE, "March 14, 1990" in EN). When empty, nothing renders anywhere. Treated as sensitive PII: the public read-only server strips `birthdate` from `/api/profile`, `/api/datasets/slug/:slug`, and `/api/datasets/id/:id`, and the static-site export also excludes it — so it is never exposed on the public site even when a dataset is explicitly marked public. `form.birthdate`, `form.birthdate_hint`, and `contact.born` translation keys added to all 8 locale files.
+
+### Fixed
+- **Project link disappeared in compact print mode** (#168). When the Projects section had the "print compact" toggle on, `#section-projects.print-compact .project-link { display: none !important }` in `public/shared/styles.css` hid the link icon during printing, even though the same link was always rendered by the ATS PDF export and by the non-compact print view. Removed `.project-link` from that selector list so the link icon now appears next to the project title in compact print mode — consistent with the ATS export.
+
 ## [1.49.5] - 2026-05-06
 
 ### Fixed
