@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.50.1] - 2026-06-20
+
+### Changed
+- **Bumped `multer` from 2.1.1 to 2.2.0** (#170) to patch two security advisories: CVE-2026-5038 (GHSA-3p4h-7m6x-2hcm) and CVE-2026-5079 (GHSA-72gw-mp4g-v24j). No code changes required — the file-upload handlers in `src/server.js` use only stable multer APIs unaffected by the upgrade.
+
 ## [1.50.0] - 2026-05-27
 
 ### Added
