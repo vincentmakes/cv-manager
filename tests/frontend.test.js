@@ -395,7 +395,7 @@ describe('Frontend files', () => {
         // Extract pure functions from scripts.js for unit testing in Node.js
         // We parse and eval the function definitions to test them without a browser
 
-        let normalizeDate, formatDate, formatDateATS, parseDateForSort, materialIcon, getSkillIcon;
+        let normalizeDate, formatDate, formatDateATS, formatDateRange, parseDateForSort, materialIcon, getSkillIcon;
 
         it('can extract and load pure functions from scripts.js', () => {
             const scriptsContent = fs.readFileSync(path.join(ROOT, 'public', 'shared', 'scripts.js'), 'utf8');
@@ -445,6 +445,20 @@ describe('Frontend files', () => {
             };
             formatDateATS = createFormatDateATS(); // default English instance for existing tests
             formatDateATS.withLocale = createFormatDateATS; // expose factory for localization tests
+
+            // Extract formatDateRange (issue #172 — both-empty renders nothing).
+            // It calls the global formatDate / escapeHtml / t, which we inject.
+            const formatDateRangeMatch = scriptsContent.match(/function formatDateRange\(startDate, endDate, opts = \{\}\)\s*\{[\s\S]*?^}/m);
+            assert.ok(formatDateRangeMatch, 'Should find formatDateRange function');
+            const body = formatDateRangeMatch[0]
+                .replace(/^function formatDateRange\(startDate, endDate, opts = \{\}\)\s*\{/, '')
+                .replace(/\}$/, '');
+            const tFn = (key) => (enTranslations[key] !== undefined ? enTranslations[key] : key);
+            const escFn = (s) => String(s == null ? '' : s);
+            const rangeImpl = new Function('startDate', 'endDate', 'opts', 't', 'formatDate', 'escapeHtml',
+                `opts = opts || {}; ${body}`);
+            formatDateRange = (startDate, endDate, opts, formatter = createFormatDate('MMM YYYY')) =>
+                rangeImpl(startDate, endDate, opts, tFn, formatter, escFn);
 
             // Extract getSkillIcon (needs icons object)
             const getSkillIconMatch = scriptsContent.match(/function getSkillIcon\(iconHint, categoryName\)\s*\{[\s\S]*?^}/m);
@@ -607,6 +621,42 @@ describe('Frontend files', () => {
             assert.strictEqual(formatDateATS.withLocale(de)('2024-01'), 'Januar 2024');
             assert.strictEqual(formatDateATS.withLocale(de)('2024-03'), 'März 2024');
             assert.strictEqual(formatDateATS.withLocale(fr)('2020-06'), 'Juin 2020');
+        });
+
+        // --- formatDateRange tests (issue #172) ---
+        it('formatDateRange: returns empty string when BOTH dates are empty', () => {
+            assert.strictEqual(formatDateRange('', ''), '');
+            assert.strictEqual(formatDateRange(null, null), '');
+            assert.strictEqual(formatDateRange(undefined, undefined), '');
+        });
+
+        it('formatDateRange: returns empty string when both dates are empty even with wrapTime', () => {
+            assert.strictEqual(formatDateRange('', '', { wrapTime: true, startProp: 'startDate', endProp: 'endDate' }), '');
+        });
+
+        it('formatDateRange: shows "start - Present" when only the start date is set', () => {
+            assert.strictEqual(formatDateRange('2020-01', ''), 'Jan 2020 - Present');
+        });
+
+        it('formatDateRange: shows "start - end" when both dates are set', () => {
+            assert.strictEqual(formatDateRange('2020-01', '2022-06'), 'Jan 2020 - Jun 2022');
+        });
+
+        it('formatDateRange: shows only the end date (no leading dash) when start is empty', () => {
+            assert.strictEqual(formatDateRange('', '2022-06'), 'Jun 2022');
+        });
+
+        it('formatDateRange: wrapTime wraps parts in <time> elements with itemprops', () => {
+            const html = formatDateRange('2020-01', '2022-06', { wrapTime: true, startProp: 'startDate', endProp: 'endDate' });
+            assert.match(html, /<time itemprop="startDate" datetime="2020-01">Jan 2020<\/time>/);
+            assert.match(html, /<time itemprop="endDate" datetime="2022-06">Jun 2022<\/time>/);
+        });
+
+        it('formatDateRange: honors a custom formatter (ATS)', () => {
+            assert.strictEqual(
+                formatDateRange('2020-01', '', { formatter: formatDateATS }, formatDateATS),
+                'January 2020 - Present'
+            );
         });
 
         // --- parseDateForSort tests ---

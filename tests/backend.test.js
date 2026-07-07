@@ -163,6 +163,35 @@ describe('Backend API', () => {
             }
         });
 
+        it('GET /api/timeline: omits the date period when both dates are empty (issue #172)', async () => {
+            const createRes = await fetch(`${BASE_URL}/api/experiences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ job_title: 'No Dates Role', company_name: 'NoDateCo', start_date: '', end_date: '' }),
+            });
+            const { id } = await createRes.json();
+            const res = await fetch(`${BASE_URL}/api/timeline`);
+            const data = await res.json();
+            const item = data.find(x => x.id === id);
+            assert.ok(item, 'created experience should appear in the timeline');
+            assert.strictEqual(item.period, '', 'period must be empty (no dash, no "Present") when both dates are blank');
+        });
+
+        it('GET /api/timeline: shows "start - Present" when only the start date is set (issue #172)', async () => {
+            const createRes = await fetch(`${BASE_URL}/api/experiences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ job_title: 'Ongoing Role', company_name: 'OngoingCo', start_date: '2021-03', end_date: '' }),
+            });
+            const { id } = await createRes.json();
+            const res = await fetch(`${BASE_URL}/api/timeline`);
+            const data = await res.json();
+            const item = data.find(x => x.id === id);
+            assert.ok(item);
+            assert.ok(/Present$/.test(item.period), `ongoing role should end with "Present", got "${item.period}"`);
+            assert.ok(item.period.includes('-'), 'ongoing role should include a dash before "Present"');
+        });
+
         it('GET /api/experiences includes logo_filename field', async () => {
             const res = await fetch(`${BASE_URL}/api/experiences`);
             assert.strictEqual(res.status, 200);
