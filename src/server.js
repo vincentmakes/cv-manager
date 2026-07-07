@@ -1433,9 +1433,13 @@ if (!PUBLIC_ONLY) {
 }
 
 function formatPeriod(startDate, endDate) {
-    const start = startDate ? formatDateShort(startDate) : '';
+    // Both dates empty → render nothing (no dash, no "Present"). See issue #172.
+    if (!startDate && !endDate) return '';
+    // End date only → just show the end date (no leading dash).
+    if (!startDate) return formatDateShort(endDate);
+    // Start present, end empty → ongoing.
     const end = endDate ? formatDateShort(endDate) : 'Present';
-    return `${start} - ${end}`;
+    return `${formatDateShort(startDate)} - ${end}`;
 }
 
 function formatDateShort(dateStr) {
@@ -3189,11 +3193,10 @@ if (PUBLIC_ONLY) {
         if (!data) return '';
         const join = (parts) => parts.filter(p => p != null && String(p).trim() !== '').join(' · ');
         const dateRange = (s, e) => {
-            const a = formatDateShort(s || '');
+            if (!s && !e) return '';
+            if (!s) return formatDateShort(e);
             const b = e ? formatDateShort(e) : 'Present';
-            if (!a && !b) return '';
-            if (!a) return b;
-            return `${a} – ${b}`;
+            return `${formatDateShort(s)} – ${b}`;
         };
         const lines = [];
         if (sectionKey === 'about') {
@@ -3851,6 +3854,15 @@ if (PUBLIC_ONLY) {
                 return dateStr;
             }
 
+            // Start–end range for the ATS PDF. Returns '' when both dates are
+            // empty so no date line is drawn (see issue #172); only a start date
+            // yields "start – Present"; only an end date yields the end date.
+            function fmtRange(startDate, endDate) {
+                if (!startDate && !endDate) return '';
+                if (!startDate) return fmtDate(endDate);
+                return `${fmtDate(startDate)} – ${endDate ? fmtDate(endDate) : t('present')}`;
+            }
+
             function getSectionName(key) {
                 const orderEntry = sectionOrder.find(s => s.key === key);
                 const cs = (cvData.customSections || []).find(s => s.section_key === key);
@@ -4088,7 +4100,7 @@ if (PUBLIC_ONLY) {
                             advanceY(6);
                         }
                         const title = exp.job_title || '';
-                        const dateStr = `${fmtDate(exp.start_date)} – ${exp.end_date ? fmtDate(exp.end_date) : t('present')}`;
+                        const dateStr = fmtRange(exp.start_date, exp.end_date);
 
                         // Job title on its own line as H3
                         ensureSpace(sz(10) * 1.3 + 4);
@@ -4107,7 +4119,7 @@ if (PUBLIC_ONLY) {
                         }
 
                         // Date on its own line
-                        addParagraph(dateStr, sz(9), { color: '#666' });
+                        if (dateStr) addParagraph(dateStr, sz(9), { color: '#666' });
 
                         if (exp.location) {
                             addParagraph(exp.location, sz(8.5), { color: '#777' });
@@ -4134,7 +4146,7 @@ if (PUBLIC_ONLY) {
                             advanceY(6);
                         }
                         const title = edu.degree_title || '';
-                        const dateStr = `${fmtDate(edu.start_date)} – ${edu.end_date ? fmtDate(edu.end_date) : t('present')}`;
+                        const dateStr = fmtRange(edu.start_date, edu.end_date);
 
                         // Degree on its own line as H3
                         ensureSpace(sz(10) * 1.3 + 4);
@@ -4153,7 +4165,7 @@ if (PUBLIC_ONLY) {
                         }
 
                         // Date on its own line
-                        addParagraph(dateStr, sz(9), { color: '#666' });
+                        if (dateStr) addParagraph(dateStr, sz(9), { color: '#666' });
 
                         if (edu.description) addMarkdownDescription(edu.description, sz(9), { color: '#555' });
                     });

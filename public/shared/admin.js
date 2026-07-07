@@ -1144,10 +1144,7 @@ async function loadEducation() {
                         <span itemprop="name">${escapeHtml(edu.institution_name)}</span>
                     </div>
                 </div>
-                <span class="item-date">
-                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> -
-                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
-                </span>
+                <span class="item-date">${formatDateRange(edu.start_date, edu.end_date, { wrapTime: true })}</span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${renderMarkdown(edu.description, { mode: 'block' })}</div>` : ''}
         </article>

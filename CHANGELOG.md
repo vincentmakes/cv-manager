@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.50.2] - 2026-07-07
+
+### Fixed
+- **Empty education/experience dates no longer render "- Present"** (#172). When both the start and end date of an education, experience, or timeline entry were left blank, the date slot showed a stray "- Present" (or a lone dash). Dates are now rendered through a shared `formatDateRange()` helper (client) and updated `formatPeriod()` / `fmtRange()` logic (server) that render nothing at all when both dates are empty, show "start - Present" for ongoing entries, and show just the end date when only an end date is set. Applies consistently across the admin editor, the public read-only site, server-side rendered pages, and the ATS text/PDF exports.
+
 ## [1.50.1] - 2026-06-20
 
 ### Changed

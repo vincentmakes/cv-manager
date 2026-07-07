@@ -592,6 +592,39 @@ function formatDateATS(dateStr) {
     return dateStr;
 }
 
+// Build the inner content for an item's start–end date slot.
+// Returns '' when BOTH dates are empty, so nothing (no dash, no "Present") is
+// rendered — see issue #172. When only a start date is present the range reads
+// "start - Present" (ongoing role); when only an end date is present just the
+// end date is shown (no leading dash).
+//
+// opts:
+//   wrapTime  — wrap each part in a <time> element (for schema.org / semantic HTML)
+//   startProp / endProp — itemprop values for the <time> elements (requires wrapTime)
+//   formatter — date formatting function (defaults to formatDate)
+function formatDateRange(startDate, endDate, opts = {}) {
+    const { wrapTime = false, startProp = '', endProp = '', formatter = formatDate } = opts;
+    const hasStart = !!startDate;
+    const hasEnd = !!endDate;
+    if (!hasStart && !hasEnd) return '';
+
+    const fmt = (d) => formatter(d) || escapeHtml(d || '');
+    const timeEl = (prop, dateAttr, text) => {
+        const propAttr = prop ? ` itemprop="${prop}"` : '';
+        return `<time${propAttr} datetime="${dateAttr || ''}">${text}</time>`;
+    };
+
+    const startHtml = wrapTime ? timeEl(startProp, startDate, fmt(startDate)) : fmt(startDate);
+
+    if (hasEnd) {
+        const endHtml = wrapTime ? timeEl(endProp, endDate, fmt(endDate)) : fmt(endDate);
+        return hasStart ? `${startHtml} - ${endHtml}` : endHtml;
+    }
+    // start present, end empty → ongoing
+    const presentHtml = wrapTime ? timeEl(endProp, '', t('present')) : t('present');
+    return `${startHtml} - ${presentHtml}`;
+}
+
 // Parse date string into comparable numeric value for sorting
 // Handles formats: "2020", "2020-01", "Jan 2020", etc.
 function parseDateForSort(dateStr) {
@@ -1541,10 +1574,7 @@ async function loadExperiencesReadOnly() {
                         <span itemprop="name">${escapeHtml(exp.company_name)}</span>
                     </div>
                 </div>
-                <span class="item-date">
-                    <time itemprop="startDate" datetime="${exp.start_date || ''}">${formatDate(exp.start_date)}</time> -
-                    <time itemprop="endDate" datetime="${exp.end_date || ''}">${exp.end_date ? formatDate(exp.end_date) : t('present')}</time>
-                </span>
+                <span class="item-date">${formatDateRange(exp.start_date, exp.end_date, { wrapTime: true, startProp: 'startDate', endProp: 'endDate' })}</span>
             </div>
             ${exp.location ? `<div class="item-location">${escapeHtml(exp.location)}</div>` : ''}
             ${exp.highlights && exp.highlights.length ? `
@@ -1594,10 +1624,7 @@ async function loadEducationReadOnly() {
                         <span itemprop="name">${escapeHtml(edu.institution_name)}</span>
                     </div>
                 </div>
-                <span class="item-date">
-                    <time datetime="${edu.start_date || ''}">${formatDate(edu.start_date) || escapeHtml(edu.start_date || '')}</time> -
-                    <time datetime="${edu.end_date || ''}">${edu.end_date ? (formatDate(edu.end_date) || escapeHtml(edu.end_date)) : t('present')}</time>
-                </span>
+                <span class="item-date">${formatDateRange(edu.start_date, edu.end_date, { wrapTime: true })}</span>
             </div>
             ${edu.description ? `<div class="item-location" itemprop="description">${renderMarkdown(edu.description, { mode: 'block' })}</div>` : ''}
         </article>
@@ -1711,7 +1738,8 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Position: ${exp.job_title}`);
                 ats.push(`Company: ${exp.company_name}`);
-                ats.push(`Duration: ${formatDateATS(exp.start_date)} - ${exp.end_date ? formatDateATS(exp.end_date) : t('present')}`);
+                const expDuration = formatDateRange(exp.start_date, exp.end_date, { formatter: formatDateATS });
+                if (expDuration) ats.push(`Duration: ${expDuration}`);
                 if (exp.location) ats.push(`Location: ${exp.location}`);
                 if (exp.summary) ats.push(`Summary: ${exp.summary}`);
                 if (exp.highlights && exp.highlights.length > 0) {
@@ -1731,7 +1759,8 @@ async function generateATSContent() {
                 ats.push('');
                 ats.push(`Degree: ${edu.degree_title}`);
                 ats.push(`Institution: ${edu.institution_name}`);
-                ats.push(`Duration: ${formatDateATS(edu.start_date)} - ${edu.end_date ? formatDateATS(edu.end_date) : t('present')}`);
+                const eduDuration = formatDateRange(edu.start_date, edu.end_date, { formatter: formatDateATS });
+                if (eduDuration) ats.push(`Duration: ${eduDuration}`);
                 if (edu.description) ats.push(`Details: ${edu.description}`);
             });
         ats.push('');
@@ -1810,13 +1839,10 @@ function renderExperienceCard(opts) {
         ? `<div class="item-subtitle" itemprop="memberOf" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">${escapeHtml(subtitle)}</span></div>`
         : `<div class="item-subtitle"><span>${escapeHtml(subtitle)}</span></div>`;
 
-    let dateHtml;
-    if (schemaOrg) {
-        dateHtml = `<time itemprop="startDate" datetime="${startDate || ''}">${formatDate(startDate)}</time> - <time itemprop="endDate" datetime="${endDate || ''}">${endDate ? formatDate(endDate) : t('present')}</time>`;
-    } else {
-        dateHtml = `${formatDate(startDate)} - ${endDate ? formatDate(endDate) : t('present')}`;
-    }
-    if (showDuration) {
+    let dateHtml = schemaOrg
+        ? formatDateRange(startDate, endDate, { wrapTime: true, startProp: 'startDate', endProp: 'endDate' })
+        : formatDateRange(startDate, endDate);
+    if (showDuration && dateHtml) {
         dateHtml += ` <span class="item-duration">${calculateDuration(startDate, endDate)}</span>`;
     }
 
