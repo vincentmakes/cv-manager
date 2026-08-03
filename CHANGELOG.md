@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.50.3] - 2026-08-03
+
+### Changed
+- **Bumped transitive dependencies `brace-expansion` (2.0.3 → 2.1.4) and `body-parser` (1.20.5 → 1.20.6)** (#178) to patch security advisories: GHSA-mh99-v99m-4gvg and CVE-2026-13149 (ReDoS in `brace-expansion`, reached via `minimatch` → `readdir-glob` → `archiver`), and CVE-2026-12590 / GHSA-v422-hmwv-36x6 in `body-parser`, reached via `express`. No code changes required — `body-parser` 1.20.6 now throws on unparseable `limit` values instead of silently disabling size enforcement, and the only body-parser call site, `express.json({ limit: '10mb' })` in `src/server.js`, already passes a valid limit string.
+
 ## [1.50.2] - 2026-07-07
 
 ### Fixed
