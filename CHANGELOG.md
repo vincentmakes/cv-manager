@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.50.4] - 2026-08-17
+
+### Changed
+- **Larger profile picture on screen and in print.** The header photo was noticeably small, especially on a printed CV where it rendered at 70px against a 110px on-screen size. `.profile-image` in `public/shared/styles.css` now sizes to 140px on desktop (was 110px), 110px on mobile (was 90px) and 100px when printing (was 70px), with the fallback initials scaled proportionally (44px / 34px / 30px). The change is confined to that one stylesheet, so it applies identically to the admin view, the public read-only site and the static-site export. Saved picture crops are unaffected — `applyProfilePictureCrop()` derives its transform from the image's natural dimensions, not from the rendered circle size — and the "open to work" ring, which is sized in percentages, scales with the photo.
+
 ## [1.50.3] - 2026-08-03
 
 ### Changed
