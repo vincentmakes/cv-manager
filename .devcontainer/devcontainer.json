@@ -1,0 +1,17 @@
+{
+    "name": "CV Manager demo",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+    "postCreateCommand": "npm install",
+    "postAttachCommand": "npm start",
+    "forwardPorts": [3000, 3001],
+    "portsAttributes": {
+        "3000": {
+            "label": "Admin (editor)",
+            "onAutoForward": "openPreview"
+        },
+        "3001": {
+            "label": "Public (read-only)",
+            "onAutoForward": "silent"
+        }
+    }
+}

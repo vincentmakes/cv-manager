@@ -5,6 +5,16 @@
 
 This is a CV / Resume management system with an editable theme, persistent database storage, and Docker deployment ready for Unraid.  
 
+## Try It in Your Browser (demo)
+
+Launch a demo straight from GitHub — a Codespace installs and starts the app automatically, nothing to set up:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vincentmakes/cv-manager?quickstart=1)
+
+Give it a minute to build — the editor (port 3000) then opens automatically in a preview tab. The public read-only view is on port 3001 (see the Ports panel).
+
+> **For demo purposes only.** Codespaces run on your GitHub account's free monthly allowance, auto-stop when idle, and are meant to be discarded — don't build your real CV here. For real use, install locally with the Quick Start options below.
+
 <img width="600"  alt="cv1" src="https://github.com/user-attachments/assets/6e20de1e-2001-4097-9844-2aeb611bc53e" />  
 
 <img width="600"  alt="cv2" src="https://github.com/user-attachments/assets/339cec06-2c6b-4024-99dd-5d97f2960478" />  
@@ -32,16 +42,6 @@ This is a CV / Resume management system with an editable theme, persistent datab
 - **SEO Ready**: Dynamic robots.txt and sitemap.xml for the public site
 
 ## Quick Start (Docker)
-
-### Try It in Your Browser (demo)
-
-Spin up CV Manager in a free [Play with Docker](https://labs.play-with-docker.com) sandbox — nothing to install, the published Docker Hub image is pulled automatically:
-
-[![Try in PWD](https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png)](https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/vincentmakes/cv-manager/main/docker-compose.pwd.yml)
-
-Once the stack is up, click the **3000** port badge for the editor and **3001** for the public read-only view.
-
-> **For demo purposes only.** Play with Docker requires a free Docker account, sessions last at most 4 hours, and everything is wiped when the session ends — don't build your real CV here. For real use, install locally with the options below.
 
 ### One-Line Install
 ``` bash
