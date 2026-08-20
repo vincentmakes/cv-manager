@@ -33,15 +33,15 @@ This is a CV / Resume management system with an editable theme, persistent datab
 
 ## Quick Start (Docker)
 
-### Deploy to Koyeb (one click, no install)
+### Try It in Your Browser (demo)
 
-Run the editable CV Manager in the cloud without installing anything — Koyeb pulls the image straight from Docker Hub and exposes the admin interface (port 3000):
+Spin up CV Manager in a free [Play with Docker](https://labs.play-with-docker.com) sandbox — nothing to install, the published Docker Hub image is pulled automatically:
 
-[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=docker&image=docker.io/vincentmakes/cv-manager:latest&name=cv-manager&ports=3000;http;/)
+[![Try in PWD](https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png)](https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/vincentmakes/cv-manager/main/docker-compose.pwd.yml)
 
-> **Notes:**
-> - The admin interface has **no built-in authentication** — anyone with the deployment URL can edit your CV. Keep the URL private, or restrict access on the Koyeb side.
-> - Instance storage is **ephemeral**: the database resets when the instance is redeployed. Use **Export** (toolbar) regularly to back up your CV as JSON, and **Import** to restore it.
+Once the stack is up, click the **3000** port badge for the editor and **3001** for the public read-only view.
+
+> **For demo purposes only.** Play with Docker requires a free Docker account, sessions last at most 4 hours, and everything is wiped when the session ends — don't build your real CV here. For real use, install locally with the options below.
 
 ### One-Line Install
 ``` bash

@@ -1,0 +1,11 @@
+# Demo stack for Play with Docker (https://labs.play-with-docker.com)
+# Referenced by the "Try in PWD" button in the README.
+# Pulls the published image — no build, no volume: all data lives only
+# for the duration of the PWD session (max 4 hours) and is then wiped.
+version: "3.3"
+services:
+  cv-manager:
+    image: vincentmakes/cv-manager:latest
+    ports:
+      - "3000:3000"
+      - "3001:3001"
