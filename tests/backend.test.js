@@ -3374,6 +3374,85 @@ describe('Backend API', () => {
         });
     });
 
+    // These routes use Express path syntax that changed between Express 4 and 5
+    // (bare '*' catch-alls and the inline-regex ':lang([a-z]{2})' param), and the
+    // clean-language handler used to work by assigning to req.query, which Express 5
+    // exposes as a read-only getter. Nothing covered them before, so a router
+    // regression could reach production silently.
+    describe('Public site routing (clean language URLs and catch-all)', () => {
+        let enDataset, deDataset;
+
+        before(async () => {
+            const enRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Routing EN', language: 'en' }),
+            });
+            enDataset = await enRes.json();
+
+            const deRes = await fetch(`${BASE_URL}/api/datasets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Routing DE', language: 'de', language_group: enDataset.language_group }),
+            });
+            deDataset = await deRes.json();
+
+            await fetch(`${BASE_URL}/api/datasets/${enDataset.id}/default`, { method: 'PUT' });
+        });
+
+        it('serves the default dataset at /', async () => {
+            const res = await fetch(`${PUBLIC_URL}/`);
+            assert.strictEqual(res.status, 200);
+            const html = await res.text();
+            assert.match(html, /window\.DATASET_LANG = "en"/);
+        });
+
+        it('clean language URL /de serves the German sibling of the default', async () => {
+            const res = await fetch(`${PUBLIC_URL}/de`);
+            assert.strictEqual(res.status, 200);
+            const html = await res.text();
+            assert.match(html, /window\.DATASET_LANG = "de"/);
+            assert.match(html, new RegExp(`window\\.DATASET_ID = ${deDataset.id};`));
+        });
+
+        it('?lang= query parameter still selects the sibling', async () => {
+            const res = await fetch(`${PUBLIC_URL}/?lang=de`);
+            assert.strictEqual(res.status, 200);
+            const html = await res.text();
+            assert.match(html, /window\.DATASET_LANG = "de"/);
+        });
+
+        it('a single segment that is not a 2-letter code falls back to the default', async () => {
+            const res = await fetch(`${PUBLIC_URL}/notalang`);
+            assert.strictEqual(res.status, 200);
+            const html = await res.text();
+            assert.match(html, /window\.DATASET_LANG = "en"/);
+        });
+
+        it('public catch-all serves the SPA for unknown deep paths', async () => {
+            const res = await fetch(`${PUBLIC_URL}/some/unknown/deep/path`);
+            assert.strictEqual(res.status, 200);
+            assert.match(res.headers.get('content-type') || '', /text\/html/);
+        });
+
+        it('admin catch-all serves the SPA for unknown deep paths', async () => {
+            const res = await fetch(`${BASE_URL}/some/unknown/deep/path`);
+            assert.strictEqual(res.status, 200);
+            assert.match(res.headers.get('content-type') || '', /text\/html/);
+        });
+
+        it('catch-all does not swallow real public API routes', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/profile`);
+            assert.strictEqual(res.status, 200);
+            assert.match(res.headers.get('content-type') || '', /application\/json/);
+        });
+
+        it('public server still rejects non-GET methods', async () => {
+            const res = await fetch(`${PUBLIC_URL}/api/profile`, { method: 'POST' });
+            assert.strictEqual(res.status, 405);
+        });
+    });
+
     describe('Security', () => {
         it('public /api/profile does not expose email or phone', async () => {
             // Store profile with sensitive data via admin

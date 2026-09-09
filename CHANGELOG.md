@@ -4,6 +4,15 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.51.0] - 2026-09-09
+
+### Changed
+- **Upgraded `express` from 4.22.2 to 5.2.1 and `multer` from 2.2.0 to 2.3.0**, clearing all four outstanding security advisories (`npm audit` now reports 0 vulnerabilities). `multer` 2.3.0 patches three denial-of-service issues: GHSA-wc9g-mqfw-jrwm (crafted multipart field names), GHSA-qfvm-cv95-jqjf (file-descriptor leak on aborted uploads) and GHSA-535w-7cp7-47q4 (oversized array index in field names), plus the low-severity GHSA-qvfw-j98x-7q72 file-size-limit bypass. The `express` upgrade pulls in `qs` 6.16.0, which patches GHSA-4mjr-xmp4-gh2g (DoS via attacker-controlled `isBuffer`) and GHSA-x5fp-wj9c-mxmx (array-limit bypass); `qs` 6.16.0 is the first release fixing the former, and no `express` 4.x release ships it, so the major upgrade was the only clean route. Node 18 or newer is now required — the Dockerfile (`node:20-alpine`) and CI already satisfy this.
+- **Adapted the routers in `src/server.js` to Express 5.** Three changes were needed, all behaviour-preserving: the three bare `'*'` catch-all routes became `'/{*splat}'` (path-to-regexp v8 rejects a bare `*` and the server would not boot); the two `'/:lang([a-z]{2})'` clean-language-URL routes became `'/:lang'` with the two-letter check moved into the handler (inline regex params were removed in path-to-regexp v8), with non-matching segments falling through to the same catch-all rendering as before; and `servePublicIndex()` now takes an explicit `langOverride` argument instead of the handler assigning to `req.query.lang`, which Express 5 exposes as a read-only getter — that assignment silently no-ops, which would have made `/de` and friends quietly serve the default language.
+
+### Added
+- **Regression tests for public site routing** (`tests/backend.test.js`, `Public site routing` block) covering the clean language URLs (`/de` serves the German sibling of the default dataset), the `?lang=` query equivalent, a non-language single segment falling back to the default, the admin and public catch-alls serving the SPA for unknown deep paths, and the catch-alls not shadowing the real public API routes or the non-GET rejection. None of these routes had test coverage before, which is why the Express 5 breakage surfaced only as a failed server boot.
+
 ## [1.50.4] - 2026-08-17
 
 ### Changed
