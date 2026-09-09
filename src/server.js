@@ -528,7 +528,9 @@ function injectPublicBodySSR(html, data) {
     return html;
 }
 
-function servePublicIndex(req, res) {
+// langOverride carries the language from clean URLs like /de. Express 5 exposes
+// req.query as a read-only getter, so it cannot be written to by the route handler.
+function servePublicIndex(req, res, langOverride) {
     try {
         // Check if a default dataset exists — serve from it instead of live DB
         let defaultDataset = null;
@@ -536,7 +538,7 @@ function servePublicIndex(req, res) {
             // Find THE one default variant
             const primary = db.prepare('SELECT * FROM saved_datasets WHERE is_default = 1').get();
             if (primary) {
-                const requestedLang = req.query.lang;
+                const requestedLang = langOverride || req.query.lang;
                 if (requestedLang && primary.language_group && requestedLang !== primary.language) {
                     // Visitor requested a different language — find sibling in same language group
                     // No is_public check: siblings of the default are always accessible for language switching
@@ -2130,9 +2132,12 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/id/:id', (req, res) => { serveDatasetDataById(req, res); });
     // Clean language URLs for default dataset: /en, /de, /fr, etc.
-    publicApp.get('/:lang([a-z]{2})', (req, res) => { req.query.lang = req.params.lang; servePublicIndex(req, res); });
+    // path-to-regexp v8 (Express 5) dropped inline regex params, so the two-letter
+    // check moved into the handler. Non-matching segments fall through to the same
+    // servePublicIndex the catch-all route below would serve.
+    publicApp.get('/:lang', (req, res) => { const lang = /^[a-z]{2}$/.test(req.params.lang) ? req.params.lang : undefined; servePublicIndex(req, res, lang); });
 
-    publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
+    publicApp.get('/{*splat}', (req, res) => { servePublicIndex(req, res); });
     publicApp.listen(PUBLIC_PORT, '0.0.0.0', () => { console.log(`CV Manager (Public Read-Only) running at http://localhost:${PUBLIC_PORT}`); });
 
 } else {
@@ -4446,7 +4451,7 @@ if (PUBLIC_ONLY) {
         }
     });
 
-    app.get('*', (req, res) => { res.sendFile(path.join(__dirname, '../public/index.html')); });
+    app.get('/{*splat}', (req, res) => { res.sendFile(path.join(__dirname, '../public/index.html')); });
 
     // Public Read-Only Server (Port 3001)
     const publicApp = express();
@@ -4553,8 +4558,11 @@ if (PUBLIC_ONLY) {
     publicApp.get('/api/datasets/slug/:slug', (req, res) => { serveDatasetData(req, res); });
     publicApp.get('/api/datasets/id/:id', (req, res) => { serveDatasetDataById(req, res); });
     // Clean language URLs for default dataset: /en, /de, /fr, etc.
-    publicApp.get('/:lang([a-z]{2})', (req, res) => { req.query.lang = req.params.lang; servePublicIndex(req, res); });
-    publicApp.get('*', (req, res) => { servePublicIndex(req, res); });
+    // path-to-regexp v8 (Express 5) dropped inline regex params, so the two-letter
+    // check moved into the handler. Non-matching segments fall through to the same
+    // servePublicIndex the catch-all route below would serve.
+    publicApp.get('/:lang', (req, res) => { const lang = /^[a-z]{2}$/.test(req.params.lang) ? req.params.lang : undefined; servePublicIndex(req, res, lang); });
+    publicApp.get('/{*splat}', (req, res) => { servePublicIndex(req, res); });
 
     app.listen(PORT, '0.0.0.0', () => { console.log(`CV Manager v${CURRENT_VERSION} (Admin) running at http://localhost:${PORT}`); });
     publicApp.listen(PUBLIC_PORT, '0.0.0.0', () => { console.log(`CV Manager (Public Read-Only) running at http://localhost:${PUBLIC_PORT}`); });

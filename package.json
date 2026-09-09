@@ -1,6 +1,6 @@
 {
   "name": "cv-manager",
-  "version": "1.50.4",
+  "version": "1.51.0",
   "description": "Professional CV Management System",
   "main": "src/server.js",
   "scripts": {
@@ -15,8 +15,8 @@
     "better-sqlite3": "^9.4.3",
     "cors": "^2.8.5",
     "diff": "^9.0.0",
-    "express": "^4.22.2",
-    "multer": "^2.2.0",
+    "express": "^5.2.1",
+    "multer": "^2.3.0",
     "pdfkit": "^0.17.2"
   }
 }
