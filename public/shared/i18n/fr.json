@@ -147,6 +147,7 @@
     "form.remove": "Supprimer",
     "form.picture_hint": "Recommandé : Image carrée, au moins 200x200 pixels. JPEG, PNG ou WebP.",
     "form.markdown_hint": "Markdown : **gras**, *italique*, appuyez sur Entrée pour passer à la ligne, commencez une ligne par - pour une puce.",
+    "form.markdown_bullets_hint": "Markdown : **gras**, *italique*. Appuyez sur Entrée pour une nouvelle puce ; chaque ligne s'affiche comme une puce distincte.",
     "form.apply_picture_globally": "Appliquer cette photo à tous les jeux de données",
     "form.delete_picture": "Supprimer la photo",
     "form.no_pictures_available": "Aucune photo dans la bibliothèque. Téléchargez-en une d'abord.",

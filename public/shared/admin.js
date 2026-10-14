@@ -1559,7 +1559,7 @@ function experienceForm(d) {
         <div class="form-group">
             <label class="form-label">${t('form.highlights')}</label>
             <textarea class="form-textarea" id="f-highlights" rows="6">${(d.highlights || []).join('\n')}</textarea>
-            <div class="form-hint">${t('form.markdown_hint')}</div>
+            <div class="form-hint">${t('form.markdown_bullets_hint')}</div>
         </div>
     `;
 }
@@ -5926,7 +5926,7 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('custom_item.bullet_points')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="8" placeholder="First bullet point\nSecond bullet point\nThird bullet point">${escapeHtml(item.description || '')}</textarea>
-                <div class="form-hint">${t('form.markdown_hint')}</div>
+                <div class="form-hint">${t('form.markdown_bullets_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'free-text') {
@@ -5995,7 +5995,7 @@ function openCustomItemModal(sectionId, itemId = null) {
             <div class="form-group">
                 <label class="form-label">${t('form.highlights')}</label>
                 <textarea class="form-textarea" id="ci-description" rows="6">${escapeHtml(item.description || '')}</textarea>
-                <div class="form-hint">${t('form.markdown_hint')}</div>
+                <div class="form-hint">${t('form.markdown_bullets_hint')}</div>
             </div>
         `;
     } else if (section.layout_type === 'picture-grid') {

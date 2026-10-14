@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.51.1] - 2026-10-14
+
+### Fixed
+- Hint text under Key Highlights and Bullet Points fields no longer tells users to start a line with `-` for a bullet; these fields always render each line as a bullet (#186).
+
 ## [1.51.0] - 2026-09-09
 
 ### Changed
