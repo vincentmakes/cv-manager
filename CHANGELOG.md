@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.51.2] - 2026-10-14
+
+### Fixed
+- **Cleared all outstanding `npm audit` advisories** (`npm audit` now reports 0 vulnerabilities). `multer` 2.3.0 → 2.4.0 patches GHSA-3pph-fpjx-jg34 (disk-fill denial of service from orphaned writes on aborted uploads), which affected the admin server's image upload endpoints. The transitive `proxy-addr` 2.0.7 → 2.0.8 (via `express`) patches the critical GHSA-jqcg-44mw-7w3h (IP spoofing via IPv4-mapped IPv6 trust subnets); CV Manager does not enable `trust proxy`, so the vulnerable path was not reachable, but the per-IP rate limiters depend on `req.ip` being correct if it ever is. The transitive `brace-expansion` 2.1.4 → 2.1.7 (via `archiver`) patches GHSA-q2hr-2g5m-vwhr, GHSA-qhr7-859c-m2p7 and GHSA-6j4f-fj2g-mc7p (CPU/stack-exhaustion denial of service); it only ever expanded glob patterns supplied by the app itself.
+
 ## [1.51.1] - 2026-10-14
 
 ### Fixed
