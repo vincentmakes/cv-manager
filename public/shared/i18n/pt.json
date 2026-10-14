@@ -147,6 +147,7 @@
     "form.remove": "Remover",
     "form.picture_hint": "Recomendado: Imagem quadrada, pelo menos 200x200 pixels. JPEG, PNG ou WebP.",
     "form.markdown_hint": "Markdown: **negrito**, *itálico*, pressione Enter para uma nova linha, comece uma linha com - para um marcador.",
+    "form.markdown_bullets_hint": "Markdown: **negrito**, *itálico*. Pressione Enter para um novo marcador; cada linha é exibida como um marcador próprio.",
     "form.apply_picture_globally": "Aplicar esta foto a todos os conjuntos de dados",
     "form.delete_picture": "Eliminar foto",
     "form.no_pictures_available": "Ainda não há fotos na biblioteca. Carregue uma primeiro.",

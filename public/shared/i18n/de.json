@@ -147,6 +147,7 @@
     "form.remove": "Entfernen",
     "form.picture_hint": "Empfohlen: Quadratisches Bild, mindestens 200x200 Pixel. JPEG, PNG oder WebP.",
     "form.markdown_hint": "Markdown: **fett**, *kursiv*, Enter drücken für eine neue Zeile, Zeile mit - beginnen für einen Aufzählungspunkt.",
+    "form.markdown_bullets_hint": "Markdown: **fett**, *kursiv*. Enter drücken für einen neuen Aufzählungspunkt; jede Zeile wird als eigener Punkt angezeigt.",
     "form.apply_picture_globally": "Dieses Bild auf alle Datensätze anwenden",
     "form.delete_picture": "Bild löschen",
     "form.no_pictures_available": "Noch keine Bilder in der Bibliothek. Laden Sie zuerst eines hoch.",

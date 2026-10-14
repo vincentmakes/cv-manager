@@ -147,6 +147,7 @@
     "form.remove": "Rimuovi",
     "form.picture_hint": "Consigliato: immagine quadrata, almeno 200x200 pixel. JPEG, PNG o WebP.",
     "form.markdown_hint": "Markdown: **grassetto**, *corsivo*, premi Invio per andare a capo, inizia una riga con - per un elenco puntato.",
+    "form.markdown_bullets_hint": "Markdown: **grassetto**, *corsivo*. Premi Invio per un nuovo punto elenco; ogni riga viene mostrata come punto separato.",
     "form.apply_picture_globally": "Applica questa foto a tutti i dataset",
     "form.delete_picture": "Elimina foto",
     "form.no_pictures_available": "Nessuna foto nella libreria. Caricane una prima.",
