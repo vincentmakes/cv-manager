@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.51.3] - 2026-10-31
+
+### Fixed
+- **Bumped `multer` from 2.4.0 to 2.5.0** (#191) to patch CVE-2026-113872 (GHSA-q7qp-rjg7-q26m, high severity): a single unauthenticated request that is aborted while an asynchronous `fileFilter` is still pending could resume an already torn-down parsing stream and crash the Node.js process with an unhandled `'error'` event. CV Manager's five upload handlers in `src/server.js` all use synchronous `fileFilter` callbacks, so the crash path was not reachable, but the dependency is now patched regardless. 2.5.0 also accepts a field value of exactly `limits.fieldSize` bytes and no longer attempts to unlink an undefined path after a `LIMIT_FILE_SIZE` abort. No code changes required.
+
 ## [1.51.2] - 2026-10-14
 
 ### Fixed
