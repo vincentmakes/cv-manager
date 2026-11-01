@@ -4,6 +4,11 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.52.1] - 2026-11-01
+
+### Fixed
+- **Cleared the last outstanding `npm audit` advisory** (`npm audit` now reports 0 vulnerabilities). `minimatch` 10.2.6 (GHSA-g3hv-75wg-m249, moderate: globparts amplification denial of service) was pinned by `readdir-glob@3.0.0`, the newest release, whose `^10.2.2` range cannot reach the fix in 11.0.1. `package.json` now carries an npm `overrides` entry forcing `minimatch` to `^11.0.1`. `readdir-glob` only uses the `Minimatch` constructor and `.match()`, both unchanged in minimatch 11, and archiver's `.append()`, `.file()`, `.glob()` and `.directory()` were verified to still work with the override — CV Manager's static-site export only uses the first two. The override can be removed once `readdir-glob` moves to minimatch 11 upstream.
+
 ## [1.52.0] - 2026-11-01
 
 ### Changed
