@@ -11,7 +11,7 @@
     "test:backend": "node --test tests/backend.test.js"
   },
   "dependencies": {
-    "archiver": "^7.0.1",
+    "archiver": "^8.0.0",
     "better-sqlite3": "^9.4.3",
     "cors": "^2.8.5",
     "diff": "^9.0.0",
