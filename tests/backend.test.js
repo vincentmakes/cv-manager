@@ -1477,6 +1477,23 @@ describe('Backend API', () => {
             });
         });
 
+        describe('Static site export (ZIP)', () => {
+            it('GET /api/export/static-site returns a ZIP containing the site files', async () => {
+                const res = await fetch(`${BASE_URL}/api/export/static-site`);
+                assert.strictEqual(res.status, 200);
+                assert.strictEqual(res.headers.get('content-type'), 'application/zip');
+                assert.match(res.headers.get('content-disposition') || '', /_static_site\.zip"$/);
+                const buf = Buffer.from(await res.arrayBuffer());
+                assert.ok(buf.length > 0, 'ZIP must be non-empty');
+                assert.strictEqual(buf.slice(0, 2).toString('latin1'), 'PK', 'must start with the ZIP local-file-header magic');
+                // Entry names are stored uncompressed in ZIP headers, so they are greppable as plain bytes.
+                const raw = buf.toString('latin1');
+                for (const entry of ['index.html', 'data.json', 'shared/styles.css', 'shared/scripts.js', 'shared/i18n.js', 'shared/i18n/en.json']) {
+                    assert.ok(raw.includes(entry), `ZIP must contain ${entry}`);
+                }
+            });
+        });
+
         describe('Birthdate on profile', () => {
             async function putProfile(extra) {
                 const current = await (await fetch(`${BASE_URL}/api/profile`)).json();

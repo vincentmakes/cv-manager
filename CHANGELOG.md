@@ -4,6 +4,16 @@ All notable changes to CV Manager will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.52.0] - 2026-11-01
+
+### Changed
+- **Upgraded `archiver` from 7.0.1 to 8.0.0 and adapted the static-site export to its new API** (#192). archiver 8 is ESM-only and no longer exports the `archiver(format, options)` factory — it exports `ZipArchive` / `TarArchive` / `JsonArchive` classes instead. The Dependabot bump alone left `GET /api/export/static-site` throwing `TypeError: archiver is not a function` (surfaced as a 500 "Failed to generate static site"), which CI did not catch because the endpoint had no test. `src/server.js` now does `const { ZipArchive } = require('archiver')` and `new ZipArchive({ zlib: { level: 9 } })`, and attaches an `error` listener to the archive so a failure mid-stream is logged and the response is ended instead of becoming an unhandled rejection. Loading an ESM package via `require()` needs Node 20.19+ (or 22.12+); `package.json` now declares `"engines": { "node": ">=20.19.0" }`. The Dockerfile (`node:20-alpine`) and CI already run a qualifying 20.x. The upgrade also drops `archiver-utils`, `glob` and the old `minimatch` 5 / 9 trees from the dependency graph.
+- **Bumped `body-parser` from 2.3.0 to 2.4.0** (#192) to patch CVE-2026-111181 (GHSA-27r3-jxmh-p828, high severity): a single unauthenticated request with `Content-Encoding: gzip` whose body is one valid compressed frame followed by trailing bytes crashed the Node.js process via an unhandled error on the finished inflate stream. Default options were affected, and the admin server mounts `express.json({ limit: '10mb' })` globally, so this path was reachable. Also bumps `qs` 6.16.0 → 6.17.1 (GHSA-6pq8-jhm2-2vcw, moderate: `qs.stringify` with `arrayFormat: 'comma'` throwing on a non-callable `toString`; CV Manager never calls `qs.stringify` and Express 5 uses the simple query parser, so not reachable) and removes `glob` entirely (GHSA-3g3m-2fjr-6pw4), which only ever came in through archiver's unused glob support.
+- **Remaining advisory, documented:** `npm audit` still reports `minimatch` 10.2.6 (GHSA-g3hv-75wg-m249, moderate, globparts amplification) because `readdir-glob@3.0.0` — the newest release — pins `minimatch ^10.2.2` and the fix is in 11.0.1. It is only reachable through `archive.glob()` / `archive.directory()`, which CV Manager does not use; it will clear when readdir-glob moves to minimatch 11.
+
+### Added
+- **Regression test for the static-site ZIP export** (`tests/backend.test.js`, `Static site export (ZIP)` block): asserts a 200, `application/zip`, the `PK` magic bytes and the presence of `index.html`, `data.json` and the shared CSS/JS/i18n entries. This endpoint had no coverage before, which is how the archiver 8 breakage got past CI.
+
 ## [1.51.3] - 2026-10-31
 
 ### Fixed

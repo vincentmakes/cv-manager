@@ -6,7 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const { diffLines } = require('diff');
 
 const app = express();
@@ -4385,7 +4385,12 @@ if (PUBLIC_ONLY) {
             html = html.replace(/fetch\('\/shared\//g, "fetch('./shared/");
 
             // Create ZIP
-            const archive = archiver('zip', { zlib: { level: 9 } });
+            const archive = new ZipArchive({ zlib: { level: 9 } });
+            archive.on('error', (err) => {
+                console.error('Static site export error:', err);
+                if (!res.headersSent) res.status(500).json({ error: 'Failed to generate static site' });
+                else res.end();
+            });
 
             res.setHeader('Content-Type', 'application/zip');
             res.setHeader('Content-Disposition', `attachment; filename="${(name).replace(/[^a-zA-Z0-9]/g, '_')}_static_site.zip"`);
