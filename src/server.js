@@ -4447,7 +4447,8 @@ if (PUBLIC_ONLY) {
                 }
             }
 
-            archive.finalize();
+            // finalize() returns a promise that rejects on abort; the 'error' listener above already handles it.
+            archive.finalize().catch(() => {});
         } catch (err) {
             console.error('Static site export error:', err);
             if (!res.headersSent) {
